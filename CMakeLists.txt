@@ -1,19 +1,97 @@
 ﻿#VERSION
 cmake_minimum_required (VERSION 3.8)
 
+#PROJECT 
+project(natl)
+
 #OPTIONS
 option(NATL_TESTS "enable tests" ON)
 option(NATL_PROFILE "enable profile" ON)
-option(NATL_MODULES "disable modules" OFF)
+option(NATL_MODULES "disable modules" ON)
 option(NATL_COMPILER_WARNINGS "disable compiler warnings" ON)
+option(NATL_EMSCRIPTEN "natl emscripten" ON)
+option(NATL_HTML_OUTPUT "natl html output" ON)
+option(NATL_JS_OUTPUT "natl js output" ON)
 
 set(NATL_TESTS ON)
-set(NATL_TESTS ON)
-set(NATL_MODULES ON)
+set(NATL_PROFILE OFF)
+set(NATL_MODULES OFF)
+set(NATL_HEADERS ON)
 set(NATL_COMPILER_WARNINGS OFF)
+set(NATL_EMSCRIPTEN OFF)
+set(NATL_HTML_OUTPUT OFF)
 
-#PROJECT 
-project(natl)
+#OPTIONS 
+set(NATL_CXX_COMPILER_FLAGS "")
+set(NATL_CXX_LINK_FLAGS "")
+
+if(NATL_COMPILER_WARNINGS) 
+	message("natl compiler warnings")
+	if(MSVC)
+		list(APPEND NATL_CXX_COMPILER_FLAGS "/W4" "/WX")
+	else()
+		list(APPEND NATL_CXX_COMPILER_FLAGS "-Wall" "-Wextra" "-Wpedantic" "-Werror")
+	endif()
+endif()
+
+if(NATL_PROFILE) 
+	message("natl profile")
+	if(MSVC)
+		list(APPEND NATL_CXX_COMPILER_FLAGS "/Zi")
+		list(APPEND NATL_CXX_LINK_FLAGS "/DEBUG" "/OPT:REF" "/OPT:ICF" "/PROFILE")
+	endif()
+endif()
+
+set(NATL_HEADERS_CXX_COMPILER_FLAGS ${NATL_CXX_COMPILER_FLAGS})
+set(NATL_HEADERS_CXX_LINK_FLAGS ${NATL_CXX_LINK_FLAGS})
+
+set(NATL_MODULES_CXX_COMPILER_FLAGS ${NATL_CXX_COMPILER_FLAGS})
+set(NATL_MODULES_CXX_LINK_FLAGS ${NATL_CXX_LINK_FLAGS})
+
+if(NATL_MODULES) 
+	message("natl modules")
+	if(NATL_EMSCRIPTEN)
+		
+	elseif(MSVC)
+		list(APPEND NATL_MODULES_CXX_COMPILER_FLAGS "/EHsc" "/nologo" "/nologo" "/MTd" "/std:c++latest" "/experimental:module")
+	else()
+		list(APPEND NATL_MODULES_CXX_COMPILER_FLAGS "std=c++20")
+	endif()
+endif()
+
+if(NATL_HEADERS)
+	message("natl headers")
+	if(NATL_EMSCRIPTEN)
+		list(APPEND NATL_HEADER_CXX_COMPILER_FLAGS "-std=gnu++20")
+	elseif(MSVC)
+		list(APPEND NATL_HEADER_CXX_COMPILER_FLAGS "/EHsc" "/nologo" "/MTd" "/std:c++20")
+	else()
+		list(APPEND NATL_HEADER_CXX_COMPILER_FLAGS "std=c++20")
+	endif()
+endif()
+
+if(NATL_MODULES)
+	list(APPEND NATL_CXX_COMPILE_DEFINITIONS "NATL_MODULES")
+	set(NATL_CXX_COMPILER_FLAGS ${NATL_MODULES_CXX_COMPILER_FLAGS})
+	set(NATL_CXX_LINK_FLAGS ${NATL_MODULES_CXX_LINK_FLAGS})
+else()
+	list(APPEND NATL_CXX_COMPILE_DEFINITIONS "NATL_HEADERS")
+	set(NATL_CXX_COMPILER_FLAGS ${NATL_HEADER_CXX_COMPILER_FLAGS})
+	set(NATL_CXX_LINK_FLAGS ${NATL_HEADERS_CXX_LINK_FLAGS})
+endif()
+
+#COMPILE DEFINITIONS
+set(NATL_CXX_COMPILE_DEFINITIONS "")
+if(NATL_MODULES)
+	list(APPEND NATL_CXX_COMPILE_DEFINITIONS "NATL_MODULES")
+else()
+	list(APPEND NATL_CXX_COMPILE_DEFINITIONS "NATL_HEADERS")
+endif()
+
+if(NATL_EMSCRIPTEN)
+	list(APPEND ${PROJECT_LABEL}_CXX_COMPILE_DEFINITIONS "${PROJECT_LABEL}_EMSCRIPTEN")
+endif()
+
 
 #PROJECT LIBRARY
 add_subdirectory(natl)

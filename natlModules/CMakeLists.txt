@@ -1,5 +1,5 @@
 ﻿#LIBRARY
-add_library(natl)
+add_library(natlModules)
 
 #FLAGS
 foreach(NATL_CXX_COMPILER_FLAG IN LISTS NATL_CXX_COMPILER_FLAGS)
