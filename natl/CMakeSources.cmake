@@ -3,7 +3,6 @@ natl/container.h
 natl/error.h
 natl/functional.h
 natl/iterators.h
-natl/optional.h
 natl/partitioner.h
 natl/pch.h
 natl/test.h

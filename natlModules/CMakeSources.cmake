@@ -11,7 +11,6 @@ natlModules/container.ixx
 natlModules/error.ixx
 natlModules/functional.ixx
 natlModules/iterators.ixx
-natlModules/optional.ixx
 natlModules/partitioner.ixx
 natlModules/test.ixx
 natlModules/timer.ixx

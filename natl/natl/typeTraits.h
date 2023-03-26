@@ -33,6 +33,10 @@ endModule*/
 
 	template<class Type> 
 	concept IsTriviallyRelocatable = std::is_trivially_copyable_v<Type> || NonTrivialIsTriviallyRelocatable<Type>;
+	
+	template<class Type>
+	using remove_cvref_t = std::remove_cv_t<std::remove_reference_t<Type>>;
+
 
 	template <class Type> Type noexceptExpression(Type) noexcept;
 }

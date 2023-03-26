@@ -165,7 +165,7 @@ namespace natl {
 
 	template<class Type>
 	concept ViewConstructable = HasBegin<Type> && HasEnd<Type> && HasIteratorType<Type>;
-
+	
 	template<ViewConstructable Container, class Iter = Container::iterator>
 	View<Iter> createView(Container& container) {
 		return View<Iter>(container.begin(), container.end());

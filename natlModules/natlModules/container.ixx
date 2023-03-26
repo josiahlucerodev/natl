@@ -73,4 +73,35 @@ namespace natl {
 		using reference = std::iterator_traits<typename Contanier::iterator>::reference;
 		using iterator_category = std::iterator_traits<typename Contanier::iterator>::iterator_category;
 	};
+
+	template <class Iter>
+	constexpr void* voidPtrAddressFromIter(Iter iter) noexcept {
+		if constexpr (std::is_pointer_v<Iter>) {
+			return static_cast<void*>(iter);
+		} else {
+			return static_cast<void*>(std::addressof<decltype(*iter)>(*iter));
+		}
+	}
+
+	template <class Type, class... Args>
+	constexpr Type* constructAt(Type* const location, Args&&... args) noexcept(
+		noexcept(::new(voidPtrAddressFromIter<Type>(location)) Type(std::forward<Args>(args)...))) {
+		return ::new (voidPtrAddressFromIter<Type>(location)) Type(std::forward<Args>(args)...);
+	}
+
+	template <class Type, class... Args>
+	constexpr void constructInPlace(Type& iter, Args&&... args) noexcept(
+		std::is_nothrow_constructible_v<Type, Args...>) {
+		if (std::is_constant_evaluated()) {
+			std::construct_at(std::addressof<Type>(iter), std::forward<Type>(args)...);
+		} else {
+			::new (voidPtrAddressFromIter<Type>(std::addressof<Type>(iter))) Type(std::forward<Args>(args)...);
+		}
+	}
+
+	template <typename Optional_T> struct GetOptionalContainedType;
+	template<typename T>
+	struct GetOptionalContainedType<std::optional<T>> {
+		using type = T;
+	};
 }
