@@ -12,9 +12,12 @@ natlModules/error.ixx
 natlModules/functional.ixx
 natlModules/iterators.ixx
 natlModules/partitioner.ixx
+natlModules/pointer.ixx
+natlModules/repeat.ixx
 natlModules/test.ixx
 natlModules/timer.ixx
 natlModules/typeTraits.ixx
+natlModules/uninitialized.ixx
 natlModules/view.ixx
 )
 

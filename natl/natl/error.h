@@ -14,17 +14,24 @@ endModule*/
 
 //interface
 /*export*/ namespace natl {
-	inline void fatalError(const bool conditional, const std::string_view message) {
-		if (conditional) {
-			std::cout << message;
-			std::cin.get();
-			assert(true);
-		}
-	}
-
-	constexpr void fatalError(const bool conditional, const std::string_view message) {
-		if (conditional) {
-			throw std::logic_error(message.data());
-		}
-	}
+    constexpr void fatalError(const std::string_view message) {
+        if constexpr (std::is_constant_evaluated()) {
+            //throw std::logic_error(message.data());
+        }
+        else {
+            std::cout << message;
+            std::cin.get();
+            assert(true);
+        }
+    }
+    constexpr void fatalError(const bool conditional, const std::string_view message) {
+        if (conditional) {
+            fatalError(message);
+        }
+    }
+    constexpr void fatalErrorVerify(const bool conditional, const std::string_view message) {
+        if (!conditional) {
+            fatalError(message);
+        }
+    }
 }

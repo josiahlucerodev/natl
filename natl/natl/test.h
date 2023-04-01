@@ -12,6 +12,35 @@ endModule*/
 
 //interface
 namespace natl {
+	class TestTypeStdOut {
+	public:
+		TestTypeStdOut(const TestTypeStdOut&) { std::cout << "const ref constructed\n"; }
+		TestTypeStdOut(TestTypeStdOut&) { std::cout << "ref constructed\n"; }
+		TestTypeStdOut(TestTypeStdOut&&) { std::cout << "moved\n"; }
+		TestTypeStdOut(const TestTypeStdOut&&) { std::cout << "const moved\n"; }
+		TestTypeStdOut() { std::cout << "constructed\n"; }
+		~TestTypeStdOut() { std::cout << "destructed\n"; }
+	};
+
+	struct TestTypeMoved {};
+	struct TestTypeConstructed {};
+	struct TestTypeDestructed {};
+
+	class TestTypeThrow {
+		TestTypeThrow(TestTypeThrow&&) { throw TestTypeMoved(); }
+		TestTypeThrow() { throw TestTypeConstructed(); }
+		~TestTypeThrow() noexcept(false) { throw TestTypeDestructed(); }
+	};
+
+	class TestTypeCondition {
+	public:
+		bool constructed;
+		constexpr TestTypeCondition() { constructed = true; }
+		constexpr ~TestTypeCondition() { constructed = false; }
+	};
+
+	class TestType {};
+
 	class TestInvaildValue {
 		std::string message;
 	public:
