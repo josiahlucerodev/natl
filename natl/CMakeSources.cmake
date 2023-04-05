@@ -4,13 +4,14 @@ natl/error.h
 natl/functional.h
 natl/iterators.h
 natl/partitioner.h
-natl/pch.h
 natl/pointer.h
 natl/repeat.h
 natl/test.h
 natl/timer.h
 natl/typeTraits.h
 natl/uninitialized.h
+natl/uninitializedArray.h
+natl/uninitializedValue.h
 natl/view.h
 )
 

@@ -1,1 +1,0 @@
-python.exe HeaderModuleCovert.py %cd%/../natlModules

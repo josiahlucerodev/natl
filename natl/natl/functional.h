@@ -1,17 +1,10 @@
-//header
 #pragma once
-//own
-#include "pch.h"
-//endHeader
 
-/*module
-export module natl.functional;
 //std
-import std;
-endModule*/
+#include <typeTraits.h>
 
 //interface
-/*export*/ namespace natl {
+namespace natl {
 	template<typename ReturnType, typename... TypeArgs>
 	class Function {};
 

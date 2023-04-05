@@ -1,16 +1,7 @@
-#ifdef NATL_MODULES
-//std
-import std;
-//own
-import natl.timer;
-import natl.test;
-import natl.uninitialized;
-#else 
-//own
+//natl
 #include <natl/pch.h>
 #include <natl/test.h>
-#include <natl/uninitialized.h>
-#endif //NATL_MODULES
+#include <natl/uninitializedArray.h>
 
 consteval void constexprTest() {
 	natl::UninitilizedArray<natl::TestType, 2> array = { natl::TestType(), natl::TestType() };

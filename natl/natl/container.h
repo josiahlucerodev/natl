@@ -1,15 +1,13 @@
-//header
 #pragma once
-//own
-#include "pch.h"
-#include "iterators.h"
-//endHeader
 
-/*module
-export module natl.container;
 //std
-import std;
-endModule*/
+#include <cstdint>
+#include <iterator>
+#include <type_traits>
+#include <concepts>
+
+//own
+#include "iterators.h"
 
 //interface
 namespace natl {

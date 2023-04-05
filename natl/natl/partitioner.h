@@ -1,25 +1,16 @@
-//header
 #pragma once
+
+//std
+#include <optional>
+#include <cstdint>
+
 //own
-#include "pch.h"
 #include "iterators.h"
 #include "container.h"
 #include "typeTraits.h"
-//endHeader
-
-
-/*module
-export module natl.partitioner;
-//std
-import std;
-//own
-import natl.iterators;
-import natl.typeTraits;
-import natl.container;
-endModule*/
 
 //interface
-/*export*/ namespace natl {
+namespace natl {
 	template <class Type>
 	class Partition {
 	public:

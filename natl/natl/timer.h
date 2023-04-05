@@ -1,17 +1,13 @@
-//header
 #pragma once
-//own
-#include "pch.h"
-//endHeader
 
-/*module
-export module natl.timer;
 //std
-import std;
-endModule*/
+#include <string>
+#include <cstdint>
+#include <chrono>
+#include <string_view>
 
 //interface
-/*export*/ namespace natl {
+namespace natl {
 	struct TimeSave {
 		std::string name = "not defined";
 		std::uint64_t nanoseconds = 0;

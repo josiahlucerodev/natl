@@ -1,19 +1,14 @@
-//header
 #pragma once
+
+//std
+#include <cstdint>
+#include <optional>
+#include <iterators.h>
+
 //own
 #include "pch.h"
 #include "container.h"
-#include "iterators.h".h"
-//endHeader
-
-/*module
-export module natl.view;
-//std
-import std;
-//own
-import natl.iterators
-import natl.container
-endModule*/
+#include "iterators.h"
 
 //interface
 namespace natl {

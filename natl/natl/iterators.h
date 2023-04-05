@@ -1,18 +1,15 @@
-//header
 #pragma once
-//own
-#include "pch.h"
-#include "typeTraits.h"
-//endHeader
 
-/*module
-export module natl.iterators;
 //std
-import std;
-endModule*/
+#include <cstring>
+#include <iterator>
+#include <type_traits>
+
+//own
+#include "typeTraits.h"
 
 //interface 
-/*export*/ namespace natl {
+namespace natl {
 	template<class T>
 	class RandomAccessIterator {
 	public:

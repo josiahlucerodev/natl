@@ -24,21 +24,14 @@ endforeach()
 
 
 #LINK
-if(NATL_MODULES)
-    target_link_libraries(${NatlTestName} 
-	    PRIVATE 
-		    natl
-    )
-else()
-    target_link_libraries(${NatlTestName} 
-	    PRIVATE 
-		    natl
-    )
-    include_directories(${NatlTestName} 
-	    PRIVATE 
-	    $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/natl>
-    )
-endif()
+target_link_libraries(${NatlTestName} 
+	PRIVATE 
+		natl
+)
+include_directories(${NatlTestName} 
+	PRIVATE 
+	$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/natl>
+)
 
 #OUTPUT
 set_target_properties(${NatlTestName}

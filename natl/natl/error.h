@@ -1,21 +1,13 @@
-//header
 #pragma once
-//own
-#include "pch.h"
-//endHeader
 
-/*module
-export module natl.container;
 //std
-import std;
-//own
-import natl.error;
-endModule*/
+#include <string_view>
+#include <iostream>
 
 //interface
-/*export*/ namespace natl {
+namespace natl {
     constexpr void fatalError(const std::string_view message) {
-        if constexpr (std::is_constant_evaluated()) {
+        if (std::is_constant_evaluated()) {
             //throw std::logic_error(message.data());
         }
         else {

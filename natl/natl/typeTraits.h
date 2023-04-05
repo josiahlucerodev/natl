@@ -1,20 +1,11 @@
-//header
 #pragma once
-//own
-#include "pch.h"
-//endHeader
-
-
-/*module
-export module natl.typeTraits;
 
 //std
-import std;
-
-endModule*/
+#include <concepts>
+#include <type_traits>
 
 //interface
-/*export*/ namespace natl {
+namespace natl {
 	template<class Type>
 	concept isNotConst = requires {
 		!std::is_const<Type>::value;

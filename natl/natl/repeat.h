@@ -1,17 +1,11 @@
-//header
 #pragma once
-//own
-#include "pch.h"
-//endHeader
 
-/*module
-export module natl.repeat;
-//std
-import std;
-endModule*/
+//own
+#include <cstdint>
+#include <concepts>
 
 //interface
-/*export*/ namespace natl {
+namespace natl {
     class RepeatIterator {
     public:
         using iterator_concept = std::contiguous_iterator_tag;

@@ -1,14 +1,10 @@
-//header
 #pragma once
-//own
-#include "pch.h"
-//endHeader
 
-/*module
-export module natl.test;
 //std
-import std;
-endModule*/
+#include <cstdint>
+#include <iostream>
+#include <string>
+#include <string_view>
 
 //interface
 namespace natl {

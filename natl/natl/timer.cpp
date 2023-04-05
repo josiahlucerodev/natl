@@ -1,19 +1,7 @@
-//header
 #pragma once
+
 //interface
 #include "timer.h"
-//own
-#include "pch.h"
-//endHeader
-
-/*module
-module;
-module natl.timer;
-
-//std
-import std;
-
-endModule*/
 
 //implementation
 namespace natl {
