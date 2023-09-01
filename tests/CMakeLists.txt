@@ -1,4 +1,6 @@
 ﻿include(testUtils.cmake)
 
 natl_Standard_Test(NatlPartitionerTest partitioner)
+natl_Standard_Test(NatlStringConvert stringConvert)
 natl_Standard_Test(NatlUninitializedTest uninitialized)
+natl_Standard_Test(NatlPoolTest pool)

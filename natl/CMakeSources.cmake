@@ -1,4 +1,6 @@
 set(HEADER_FILES
+natl/batchPool.h
+natl/bitArray.h
 natl/container.h
 natl/error.h
 natl/functional.h
@@ -6,6 +8,8 @@ natl/iterators.h
 natl/partitioner.h
 natl/pointer.h
 natl/repeat.h
+natl/stringConvert.h
+natl/stringView.h
 natl/test.h
 natl/timer.h
 natl/typeTraits.h
