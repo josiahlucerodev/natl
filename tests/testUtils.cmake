@@ -1,44 +1,34 @@
 function(natl_Standard_Test NatlTestName TestDir)
 
-  #EXE
+#EXE
 add_executable(${NatlTestName} ${TestDir}/main.cpp)
 
 #OPTION
-if(NATL_HTML_OUTPUT)
-    set(CMAKE_EXECUTABLE_SUFFIX .html)
+exe_emscripten_setup(${NatlTestName} TRUE)
+
+#OPTIONS
+set_property(TARGET ${NatlTestName} PROPERTY CXX_STANDARD 20)
+set_property(TARGET ${NatlTestName} PROPERTY CXX_STANDARD_REQUIRED On)
+
+if(OPALET_PROFILE)
+	ENABLE_PROFILING(${NatlTestName})
 endif()
 
-#FLAGS
-foreach(NATL_CXX_COMPILER_FLAG IN LISTS NATL_CXX_COMPILER_FLAGS)
-    target_compile_options(${NatlTestName} PUBLIC "${NATL_CXX_COMPILER_FLAG}")
-endforeach()
-
-foreach(NATL_CXX_LINK_FLAG IN LISTS NATL_CXX_LINK_FLAGS)
-    target_link_options(${NatlTestName} PUBLIC "${NATL_CXX_LINK_FLAG}")
-endforeach()
-
-#COMPILE DEFINITIONS
-foreach(NATL_CXX_COMPILE_DEFINITION IN LISTS NATL_CXX_COMPILE_DEFINITIONS)
-    target_compile_definitions(${NatlTestName} PRIVATE "${NATL_CXX_COMPILE_DEFINITION}")
-endforeach()
-
+if(OPALET_WARNINGS)
+	ENABLE_WARNINGS(${NatlTestName} TRUE)
+endif()
 
 #LINK
 target_link_libraries(${NatlTestName} 
 	PRIVATE 
-		natl
-)
-include_directories(${NatlTestName} 
-	PRIVATE 
-	$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/natl>
-)
+	natl)
+
+target_include_directories(${NatlTestName}  
+	PUBLIC 
+	"$CACHE{NATL_INCLUDE_DIR}"
+	$<BUILD_INTERFACE:$CACHE{NATL_INCLUDE_DIR}>)
 
 #OUTPUT
-set_target_properties(${NatlTestName}
-    PROPERTIES
-    ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib"
-    LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib"
-    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
-)
+SET_STANDARD_OUTPUT(${NatlTestName})
 
 endfunction()

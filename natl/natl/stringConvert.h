@@ -5,6 +5,7 @@
 
 //own
 #include "stringView.h"
+#include "expect.h"
 
 //interface
 namespace natl {
@@ -48,7 +49,6 @@ namespace natl {
 		const std::uint32_t length = string.length();
 		std::conditional_t<std::is_signed_v<Interger>, std::int64_t, std::uint64_t> value = 0;
 		std::uint64_t mul = 1; std::uint32_t pos = 0;
-		convertError = StringNumericConvertError::none;
 
 		for (std::int64_t i = length - 1; i > endIndex; i--) {
 			const char numberCharacter = string.c_str()[i];
@@ -90,6 +90,7 @@ namespace natl {
 			value *= -1;
 		}
 
+		convertError = StringNumericConvertError::none;
 		return value;
 	}
 
@@ -97,6 +98,17 @@ namespace natl {
 	constexpr  Interger stringDecimalToInt(const StringView& string) {
 		StringNumericConvertError convertError;
 		return stringDecimalToInt<Interger>(string, convertError);
+	}
+
+	template<typename Interger>
+	constexpr Expect<Interger, StringNumericConvertError> stringDecimalToIntExpect(const StringView& string) {
+		StringNumericConvertError convertError = StringNumericConvertError::unknown;
+		Interger value = stringDecimalToInt<Interger>(string, convertError);
+		if (convertError != StringNumericConvertError::none) {
+			return unexpected<StringNumericConvertError>(convertError);
+		} else {
+			return value;
+		}
 	}
 
 	constexpr std::int32_t convertHexCharacterToNumber(const char& character) {
@@ -136,11 +148,10 @@ namespace natl {
 			return 0;
 		}
 
-		_assert<std::is_signed_v<Interger>>("stringHexadecimalToInt: Interger cannot be signed");
+		static_assert<std::is_signed_v<Interger>>("stringHexadecimalToInt: Interger cannot be signed");
 		const std::uint32_t length = string.length();
 		std::uint64_t value = 0;
 		std::uint64_t mul = 1; std::uint32_t pos = 0;
-		convertError = StringNumericConvertError::none;
 
 		for (std::int64_t i = length - 1; i > -1; i--) {
 			const char numberCharacter = string.c_str()[i];
@@ -172,6 +183,7 @@ namespace natl {
 			}
 		}
 
+		convertError = StringNumericConvertError::none;
 		return value;
 	}
 
@@ -179,6 +191,17 @@ namespace natl {
 	constexpr Interger stringHexadecimalToInt(const StringView& string) {
 		StringNumericConvertError convertError;
 		return stringHexadecimalToInt<Interger>(string, convertError);
+	}
+
+	template<typename Interger>
+	constexpr Expect<Interger, StringNumericConvertError> stringHexadecimalToIntExpect(const StringView& string) {
+		StringNumericConvertError convertError = StringNumericConvertError::unknown;
+		Interger value = stringHexadecimalToInt<Interger>(string, convertError);
+		if (convertError != StringNumericConvertError::none) {
+			return unexpected<StringNumericConvertError>(convertError);
+		} else {
+			return value;
+		}
 	}
 
 	constexpr std::int32_t convertBinaryCharacterToNumber(const char& character) {
@@ -208,7 +231,6 @@ namespace natl {
 		const std::uint32_t length = string.length();
 		std::uint64_t value = 0;
 		std::uint64_t mul = 1; std::uint32_t pos = 0;
-		convertError = StringNumericConvertError::none;
 
 		for (std::int64_t i = length - 1; i > -1; i--) {
 			const char numberCharacter = string.c_str()[i];
@@ -240,6 +262,7 @@ namespace natl {
 			}
 		}
 
+		convertError = StringNumericConvertError::none;
 		return value;
 	}
 
@@ -247,6 +270,17 @@ namespace natl {
 	constexpr Interger stringBinaryToInt(const StringView& string) {
 		StringNumericConvertError convertError;
 		return stringBinaryToInt<Interger>(string, convertError);
+	}
+
+	template<typename Interger>
+	constexpr Expect<Interger, StringNumericConvertError> stringBinaryToIntExpect(const StringView& string) {
+		StringNumericConvertError convertError = StringNumericConvertError::unknown;
+		Interger value = stringBinaryToInt<Interger>(string, convertError);
+		if (convertError != StringNumericConvertError::none) {
+			return unexpected<StringNumericConvertError>(convertError);
+		} else {
+			return value;
+		}
 	}
 
 	template<typename Float>
@@ -310,6 +344,7 @@ namespace natl {
 			return std::numeric_limits<Float>::lowest();
 		}
 
+		convertError = StringNumericConvertError::none;
 		return isNegative ? -result : result;
 	}
 
@@ -317,5 +352,16 @@ namespace natl {
 	constexpr Float stringDecimalToFloat(const StringView& string) {
 		StringNumericConvertError convertError;
 		return stringDecimalToFloat<Float>(string, convertError);
+	}
+
+	template<typename Float>
+	constexpr Expect<Float, StringNumericConvertError> stringDecimalToFloatExpect(const StringView& string) {
+		StringNumericConvertError convertError = StringNumericConvertError::unknown;
+		Float value = stringDecimalToFloat<Float>(string, convertError);
+		if (convertError != StringNumericConvertError::none) {
+			return unexpected<StringNumericConvertError>(convertError);
+		} else {
+			return value;
+		}
 	}
 }
