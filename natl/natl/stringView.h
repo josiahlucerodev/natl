@@ -9,9 +9,11 @@
 
 //interface
 namespace natl {
-	class StringView {
+
+	template<class CharType>
+	class BaseStringView {
 	public:
-		using value_type = char;
+		using value_type = CharType;
 		using reference = value_type&;
 		using const_reference = const value_type&;
 		using optional_reference = std::optional<std::reference_wrapper<value_type>>;
@@ -21,48 +23,49 @@ namespace natl {
 		using optional_pointer = std::optional<value_type*>;
 		using optional_const_pointer = std::optional<const value_type*>;
 		using difference_value_type = std::ptrdiff_t;
-		using size_value_type = std::size_t;
+		using size_type = std::size_t;
 
 		using iterator = RandomAccessIterator<value_type>;
 		using const_iterator = RandomAccessIterator<const value_type>;
 		using reverse_iterator = ReverseRandomAccessIterator<value_type>;
 		using const_reverse_iterator = ReverseRandomAccessIterator<const value_type>;
 	private:
-		std::size_t stringLength;
+		size_type stringLength;
 		const char* dataPtr;
 	public:
-		StringView() = default;
-		~StringView() = default;
-		constexpr StringView(const char string[]) : dataPtr(string), stringLength(0) {
+		BaseStringView() = default;
+		~BaseStringView() = default;
+		constexpr BaseStringView(const char string[]) : dataPtr(string), stringLength(0) {
 			const char* tempDataPtr = string;
 			while (*tempDataPtr++) { stringLength++; }
 		}
-		constexpr StringView(const char* stringPtr, const std::size_t length)
+		constexpr BaseStringView(const char* stringPtr, const size_type length)
 			: dataPtr(stringPtr), stringLength(length) {}
-		constexpr StringView(const std::string& string)
+		constexpr BaseStringView(const std::string& string)
 			: dataPtr(string.c_str()), stringLength(string.length()) {}
-		constexpr StringView(std::string& string)
+		constexpr BaseStringView(std::string& string)
 			: dataPtr(string.c_str()), stringLength(string.length()) {}
 	public:
 		constexpr const char* c_str() const noexcept { return dataPtr; }
+		constexpr const char* cStr() const noexcept { return dataPtr; }
 		constexpr const char* cString() const noexcept { return dataPtr; }
 		constexpr std::string toString() const noexcept { return std::string(dataPtr, size()); }
-		constexpr std::size_t length() const noexcept { return stringLength; }
-		constexpr std::size_t size() const noexcept { return stringLength; }
-		constexpr std::size_t hash() const noexcept {
-			std::size_t c = 0;
-			std::size_t hashValue = 5381;
+		constexpr size_type length() const noexcept { return stringLength; }
+		constexpr size_type size() const noexcept { return stringLength; }
+		constexpr size_type hash() const noexcept {
+			size_type c = 0;
+			size_type hashValue = 5381;
 			const char* dataPtr = dataPtr;
 			while ((c = *dataPtr++))
 				hashValue = ((hashValue << 5) + hashValue) + c;
 			return hashValue;
 		}
-		constexpr bool operator==(const StringView& other) const noexcept {
+		constexpr bool operator==(const BaseStringView& other) const noexcept {
 			if (length() != other.length()) {
 				return false;
 			}
 
-			for (std::size_t i = 0; i < length(); i++) {
+			for (size_type i = 0; i < length(); i++) {
 				if (dataPtr[i] != other.dataPtr[i]) {
 					return false;
 				}
@@ -82,5 +85,19 @@ namespace natl {
 		constexpr const_reverse_iterator crbegin() const noexcept { return const_reverse_iterator(endPtr()); }
 		constexpr const_reverse_iterator rend() const noexcept { return const_reverse_iterator(beginPtr()); }
 		constexpr const_reverse_iterator crend() const noexcept { return const_reverse_iterator(beginPtr()); }
+
+		constexpr reference at(const size_type index) noexcept requires(isNotConst<CharType>) { return dataPtr[index]; };
+		constexpr const_reference at(const size_type index) const noexcept { return dataPtr[index]; };
+		constexpr reference operator[] (const size_type index) { return at(index); }
+		constexpr const_reference operator[] (const size_type index) const { return at(index); }
+
+		constexpr size_type frontIndex() const noexcept { return 0; }
+		constexpr size_type backIndex() const noexcept { return size() ? size() - 1 : 0; }
+		constexpr reference front() noexcept requires(isNotConst<CharType>) { return at(frontIndex()); }
+		constexpr const_reference front() const noexcept { return at(frontIndex()); }
+		constexpr reference back() noexcept { return at(backIndex()); }
+		constexpr const_reference back() const noexcept { return at(backIndex()); }
 	};
+
+	using StringView = BaseStringView<char>;
 }

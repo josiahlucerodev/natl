@@ -130,9 +130,9 @@ namespace natl {
 		std::memcpy(dstVoidPtr, firstVoidPtr, count);
 
 		if constexpr (std::is_pointer_v<DstIter>) {
-			return reinterpret_cast<DstIter>(DstIter + count);
-		}
-		else {
+
+			return reinterpret_cast<DstIter>(dstPtr + count);
+		}else {
 			return dst + (lastPtr - firstPtr);
 		}
 	}
@@ -178,8 +178,7 @@ namespace natl {
 	constexpr decltype(auto) unwrappedIterator(Iter&& iter) noexcept {
 		if constexpr (std::is_pointer_v<std::decay_t<Iter>>) {
 			return iter + 0;
-		}
-		else {
+		} else {
 			return iter;
 		}
 	}
@@ -189,8 +188,7 @@ namespace natl {
 	constexpr value_type* getIterValuePtr(Iter iter) noexcept {
 		if constexpr (std::is_pointer_v<std::decay_t<Iter>>) {
 			return iter;
-		}
-		else {
+		} else {
 			return &*iter;
 		}
 	}

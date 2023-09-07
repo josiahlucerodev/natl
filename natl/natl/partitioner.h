@@ -133,8 +133,7 @@ namespace natl {
 		constexpr bool sizeMatchCopy(std::initializer_list<Type> initList) noexcept requires(isNotConst<Type>) {
 			if (initList.size() != size()) { 
 				return false; 
-			}
-			else {
+			} else {
 				copy(initList);
 				return true;
 			}

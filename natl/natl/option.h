@@ -15,12 +15,12 @@ namespace natl {
 		constexpr Option() = default;
 		constexpr Option(const DataType& data) : isValid(true), data(data) { }
 		constexpr Option(DataType&& data) : isValid(true), data(data) { }
-		constexpr Option(OptionEmpty) : isValid(false), data() { }
+		constexpr Option(OptionEmpty empty) : isValid(false), data() { }
 
 		constexpr DataType& value()& { return data; }
 		constexpr const DataType& value() const& { return data; };
-		constexpr DataType&& value()&& { return data; };
-		constexpr const DataType&& value() const&& { return data; };
+		//constexpr DataType&& value()&& { return data; };
+		//constexpr const DataType&& value() const&& { return data; };
 
 		constexpr const DataType* operator->() const noexcept { return data; }
 		constexpr DataType* operator->() noexcept { return data; }

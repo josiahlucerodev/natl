@@ -6,6 +6,9 @@
 #include <chrono>
 #include <string_view>
 
+//own
+#include "dynamicArray.h"
+
 //interface
 namespace natl {
 	struct TimeSave {
@@ -35,7 +38,7 @@ namespace natl {
 	};
 	class VectorTimeSave {
 		std::string name;
-		std::vector<TimeSave> timeSavesVector;
+		DynamicArray<TimeSave> timeSavesVector;
 	public:
 		VectorTimeSave();
 		VectorTimeSave(const std::string_view& inputName);

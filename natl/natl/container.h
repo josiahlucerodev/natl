@@ -73,4 +73,9 @@ namespace natl {
 		using reference = std::iterator_traits<typename Contanier::iterator>::reference;
 		using iterator_category = std::iterator_traits<typename Contanier::iterator>::iterator_category;
 	};
+
+	template <typename... Contaniers>
+	constexpr std::size_t sumContaniersSizes(const Contaniers&... contaniers) noexcept {
+		return (contaniers.size() + ...);
+	}
 }

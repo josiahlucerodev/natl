@@ -148,7 +148,7 @@ namespace natl {
 			return 0;
 		}
 
-		static_assert<std::is_signed_v<Interger>>("stringHexadecimalToInt: Interger cannot be signed");
+		static_assert(std::is_signed_v<Interger>, "stringHexadecimalToInt: Interger cannot be signed");
 		const std::uint32_t length = string.length();
 		std::uint64_t value = 0;
 		std::uint64_t mul = 1; std::uint32_t pos = 0;

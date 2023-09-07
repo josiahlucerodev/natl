@@ -54,14 +54,12 @@ namespace natl {
         }
 
         std::size_t remainCount = count;
-        for (; remainCount > 0; (void) ++first, --remainCount) {
+        for (std::size_t index = 0; index < count; (void) ++first, index++) {
             std::construct_at<
                 typename IterPtrTraits<NoThrowForwardIter>::value_type,
                 typename IterPtrTraits<decltype(first)>::value_type
-            >(&*dst, std::forward<typename IterPtrTraits<decltype(first)>::value_type>(*first));
+            >(((& *dst) + index), std::forward<typename IterPtrTraits<decltype(first)>::value_type>(*first));
         }
-
-        std::uninitialized_fill;
 
         return dst;
     }
@@ -105,6 +103,7 @@ namespace natl {
             if constexpr (IsIterPtrZeroMemsetAble<Iter, ValueType> && CanGetSizeFormIterPtrSub<Iter, std::size_t>) {
                 if (bitTestZero<value>(value)) {
                     iterPtrMemset<Iter>(first, 0, count);
+                    return;
                 }
             }
         }
@@ -113,6 +112,36 @@ namespace natl {
         for (; remainCount > 0; ++first, (void) --remainCount) {
             std::construct_at<typename IterPtrTraits<Iter>::value_type, ValueType>
                 (&*first, std::forward<ValueType>(value));
+        }
+    }
+
+    template<class DataType>
+    constexpr void defualtConstructAll(DataType* dataPtr, const std::size_t count) 
+        noexcept(std::is_nothrow_constructible<DataType>) {
+
+        if (!std::is_constant_evaluated()) {
+            if constexpr (IsIterPtrZeroMemsetAble<DataType*, DataType> && CanGetSizeFormIterPtrSub<DataType*, std::size_t>) {
+                iterPtrMemset<DataType*>(dataPtr,0, count);
+                return;
+            }
+        }
+
+        for (std::size_t index = 0; index < count; index++) {
+            std::construct_at<DataType>(&dataPtr[index]);
+        }
+    }
+
+    template<class DataType>
+    constexpr void defualtDeconstructAll(DataType* dataPtr, const std::size_t count) 
+        noexcept(std::is_nothrow_destructible_v<DataType>) {
+        if (!std::is_constant_evaluated()) {
+            if constexpr (std::is_trivially_destructible_v<DataType>) {
+                iterPtrMemset<DataType*>(dataPtr, 0, count);
+            }
+        }
+
+        for (std::size_t index = 0; index < count; index++) {
+            std::destroy_at<DataType>(dataPtr);
         }
     }
 }
