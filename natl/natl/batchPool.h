@@ -1,16 +1,15 @@
 #pragma once
 
-//std
-#include <vector>
-#include <cstdint>
+//own
+#include "dynamicArray.h"
 
 //interface
 namespace natl {
 	template<class Type, std::size_t BatchSize = 100>
 	class BatchPool {
 	private:
-		std::vector<std::vector<Type>> batchs;
-		std::vector<Type>* activeBatch;
+		DynamicArray<DynamicArray<Type>> batchs;
+		DynamicArray<Type>* activeBatch;
 	public:
 		constexpr BatchPool() = default;
 		constexpr ~BatchPool() = default;
@@ -39,7 +38,7 @@ namespace natl {
 	template<class DataType, std::size_t BatchSize = 100>
 	class BatchHeap {
 		BatchPool<DataType, BatchSize> pool;
-		std::vector<DataType*> freeSlots;
+		DynamicArray<DataType*> freeSlots;
 		constexpr bool isFreeSlotsEmpty() noexcept {
 			return freeSlots.empty();
 		}
@@ -49,16 +48,17 @@ namespace natl {
 			}
 
 			for (std::size_t i = 0; i < BatchSize; i++) {
-				freeSlots.push_back(pool.newElement());
+				freeSlots.pushBack(pool.newElement());
 			}
 		}
 	public:
 		constexpr inline DataType* newElement() noexcept {
 			allocNewElements();
 			DataType* element = freeSlots.front();
-			freeSlots.pop_back();
+			freeSlots.popBack();
 			return element;
 		};
 		constexpr inline std::size_t capacity() noexcept { return pool.capacity(); }
 		constexpr inline std::size_t size() noexcept { return pool.size(); }
 	};
+}

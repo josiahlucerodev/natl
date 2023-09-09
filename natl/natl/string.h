@@ -4,6 +4,7 @@
 #include "typeTraits.h"
 #include "iterators.h"
 #include "allocator.h"
+#include "option.h"
 #include "stringView.h"
 #include "dynamicArray.h"
 
@@ -17,8 +18,6 @@ namespace natl {
 		using value_type = CharType;
 		using reference = CharType&;
 		using const_reference = const CharType&;
-		using optional_reference = Option<std::reference_wrapper<CharType>>;
-		using optional_const_reference = Option<std::reference_wrapper<const CharType>>;
 		using pointer = CharType*;
 		using const_pointer = const CharType*;
 		using optional_pointer = Option<CharType*>;
@@ -105,22 +104,33 @@ namespace natl {
 
 		constexpr reference back() noexcept { return at(backIndex()); }
 		constexpr const_reference back() const noexcept { return at(backIndex()); }
-		constexpr BaseStringViewType toStringView() noexcept { return BaseStringViewType(data(), size()); }
+		constexpr BaseStringViewType toStringView() const noexcept { return BaseStringViewType(data(), size()); }
 	private:
 		constexpr void removeNullTerminatingCharacter() noexcept {
-			if (isNotEmpty()) { characters.pop_back(); }
+			if (isNotEmpty()) { characters.popBack(); }
 		}
 		constexpr void addNullTerminatingCharacter() {
-			characters.push_back(CharType('\0'));
+			characters.pushBack(CharType('\0'));
 		}
 	public:
-
 		constexpr void reserve(const size_type newCapacity) noexcept { characters.reserve(newCapacity + 1); }
 
 		constexpr void clear() noexcept { characters.clear(); }
-		constexpr void push_back(const CharType& value) noexcept { characters.push_back(value); }
-		constexpr void push_back(CharType&& value) noexcept { characters.push_back(value); }
-		constexpr void pop_back() noexcept { characters.pop_back(); }
+		constexpr void pushBack(const CharType& value) noexcept { 
+			removeNullTerminatingCharacter();
+			characters.pushBack(value); 
+			addNullTerminatingCharacter();
+		}
+		constexpr void pushBack(CharType&& value) noexcept { 
+			removeNullTerminatingCharacter();
+			characters.pushBack(value);
+			addNullTerminatingCharacter();
+		}
+		constexpr void popBack() noexcept { 
+			removeNullTerminatingCharacter();
+			characters.popBack();
+			addNullTerminatingCharacter();
+		}
 
 		constexpr void append(const BaseString& str) noexcept {
 			if (str.isEmpty()) { return; }
@@ -144,6 +154,11 @@ namespace natl {
 			characters.append(stringPtr, length);
 			addNullTerminatingCharacter();
 		}
+
+		constexpr void append(const CharType* stringPtr) noexcept {
+			append(BaseStringViewType(stringPtr));
+		}
+
 
 		constexpr size_type compare(const BaseString& str) const noexcept {
 			size_type index = 0;
@@ -171,29 +186,50 @@ namespace natl {
 
 		constexpr BaseString& operator=(const BaseString& src) noexcept {
 			characters = src.characters;
+			return *this;
 		}
 		constexpr BaseString& operator=(BaseString&& src) noexcept {
 			characters = std::move(src.characters);
+			return *this;
 		}
 
 		constexpr BaseString& operator=(const BaseStringViewType& stringView) noexcept {
-			reserve(stringView);
+			clear();
+			append(stringView);
+			return *this;
+		};
 
-			for (size_type i = 0; i < stringView.length(); i++) {
-				characters.push_back(stringView[i]);
-			}
+		constexpr BaseString& operator=(const CharType* cStr) noexcept {
+			clear();
+			append(BaseStringViewType(cStr));
+			return *this;
 		};
 
 		constexpr BaseString& operator+=(const BaseString& src) noexcept {
 			append(src);
+			return *this;
 		}
 
 		constexpr BaseString& operator+=(const BaseStringViewType& stringView) noexcept {
 			append(stringView);
+			return *this;
 		}
 
-		constexpr BaseString operator+(const BaseString& rhsString) {
+		constexpr BaseString& operator+=(const CharType* srcCStr) noexcept {
+			append(BaseStringViewType(srcCStr));
+			return *this;
+		}
+
+		constexpr BaseString operator+(const BaseString& rhsString) noexcept  {
 			return merge<BaseString, BaseString>(*this, rhsString);
+		}
+
+		constexpr BaseString operator+(const StringView& rhsStringView) noexcept {
+			return merge<BaseString, StringView>(*this, rhsStringView);
+		}
+
+		constexpr explicit operator BaseStringViewType() const noexcept {
+			return toStringView();
 		}
 
 	private:
@@ -216,7 +252,7 @@ namespace natl {
 			size_type dstSize = sumContaniersSizes<StringTypes...>(srcStrings...);
 			dstString.reserve(dstSize);
 			appendStringsToString<StringTypes...>(dstString, srcStrings...);
-			dstString.push_back(CharType('\0'));
+			dstString.pushBack(CharType('\0'));
 
 			return dstString;
 		}

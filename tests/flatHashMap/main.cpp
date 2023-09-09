@@ -2,6 +2,7 @@
 //natl
 #include <natl/flatHashMap.h>
 #include <natl/repeat.h>
+#include <natl/option.h>
 
 
 NATL_STATIC_ALLOCATOR_INSTANCE(natl::StaticAllocatorWithCounters, TestStaticAllocator);
@@ -16,7 +17,7 @@ constexpr int compileTimeTest() {
 
 	map.find(0);
 
-	return map.find(0).value().unwrap().data;
+	return map.find(0).value()->data;
 }
 
 
@@ -28,7 +29,7 @@ constexpr int testFlatHashMap() {
 	map.insert(3, compileTimeTest());
 	map.insert(3, compileTimeTest());
 
-	return map.find(3).value().unwrap().data;
+	return map.find(2).value()->data;
 }
 
 

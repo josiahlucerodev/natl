@@ -78,4 +78,31 @@ namespace natl {
 	constexpr std::size_t sumContaniersSizes(const Contaniers&... contaniers) noexcept {
 		return (contaniers.size() + ...);
 	}
+
+	template <typename DataType>
+	constexpr void swap(DataType& a, DataType& b) noexcept {
+		DataType temp = std::move(a);
+		a = std::move(b);
+		b = std::move(temp);
+	}
+
+	template<class ForwardIter1, class ForwardIter2>
+	constexpr void iterSwap(ForwardIter1 a, ForwardIter2 b) noexcept {
+		swap<typename ForwardIter1::value_type>(*a, *b);
+	}
+
+	template<class BidirectionalIter> 
+	constexpr void reverse(BidirectionalIter first, BidirectionalIter last) noexcept {
+		using iterator_category = typename std::iterator_traits<BidirectionalIter>::iterator_category;
+		if constexpr (std::is_base_of_v<std::random_access_iterator_tag, iterator_category>) {
+			if (first == last) { return; }
+			for (--last; first < last; (void)++first, --last) {
+				iterSwap<BidirectionalIter, BidirectionalIter>(first, last);
+			}
+		} else {
+			while (first != last && first != --last) {
+				iterSwap<BidirectionalIter, BidirectionalIter>(first++, last);
+			}
+		}
+	}
 }

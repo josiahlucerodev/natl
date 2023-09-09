@@ -1,20 +1,19 @@
 
 //natl
 #include <natl/batchPool.h>
+#include <natl/dynamicArray.h>
 #include <natl/repeat.h>
 #include <natl/test.h>
-#include <natl/container.h>
 
 
 bool standardBatchPoolTest(int) {
 	using TestType = std::uint32_t;
 	
 	natl::BatchPool<TestType> batchPool;
-	std::vector<TestType*> elementPtrs;
-	
+	natl::DynamicArray<TestType*> elementPtrs;
 
 	for (const int index : natl::Repeat(1000)) {
-		elementPtrs.push_back(batchPool.newElement());
+		elementPtrs.pushBack(batchPool.newElement());
 	}
 	for (const int index : natl::Repeat(1000)) {
 		*elementPtrs[index] = index;

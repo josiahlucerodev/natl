@@ -1,10 +1,11 @@
 #pragma once
 
 //std
-#include <cstdint>
 #include <iostream>
-#include <string>
-#include <string_view>
+
+//own
+#include "stringView.h"
+#include "string.h"
 
 //interface
 namespace natl {
@@ -38,26 +39,26 @@ namespace natl {
 	class TestType {};
 
 	class TestInvaildValue {
-		std::string message;
+		String message;
 	public:
-		TestInvaildValue(const std::string_view& message) : message(message) {}
-		TestInvaildValue(const std::string& message) : message(message) {}
+		TestInvaildValue(const StringView& message) : message(message) {}
+		TestInvaildValue(const String& message) : message(message) {}
 		TestInvaildValue(const char* message) : message(message) {}
 	public:
-		std::string_view getMessageView() const { return message; };
-		std::string& getMessage() { return message; };
-		const std::string& getMessage() const { return message; };
+		StringView getMessageView() const { return static_cast<StringView>(message); };
+		String& getMessage() { return message; };
+		const String& getMessage() const { return message; };
 	};
 
 	template<class Type>
-	void testVaildateValue(Type value, Type correctValue, const std::string_view& message) {
+	void testVaildateValue(Type value, Type correctValue, const StringView& message) {
 		if (value != correctValue) {
 			throw TestInvaildValue(message);
 		}
 	}
 
 	template<class Type>
-	void testVaildateValue(Type value, Type correctValue, const std::string& message) {
+	void testVaildateValue(Type value, Type correctValue, const String& message) {
 		if (value != correctValue) {
 			throw TestInvaildValue(message);
 		}
@@ -70,14 +71,14 @@ namespace natl {
 		}
 	}
 
-	void runTest(bool(*func)(int), const std::size_t repeatCount, const std::string& testName) {
+	void runTest(bool(*func)(int), const std::size_t repeatCount, const String& testName) {
 		std::cout << "Test " << testName << "\n";
 		std::size_t failCount = 0;
 		for (std::size_t i = 0; i < repeatCount; i++) {
 			try {
 				func(i);
 			} catch (const TestInvaildValue& invaildValue) {
-				std::cout << "iteration " << i << " failed: invaild value " << invaildValue.getMessageView() << "\n";
+				std::cout << "iteration " << i << " failed: invaild value " << invaildValue.getMessageView().cStr() << "\n";
 				failCount++;
 			}
 		}
@@ -90,7 +91,7 @@ namespace natl {
 		std::cout << "\n";
 	}
 
-	void testStart(const std::string& testName) {
+	void testStart(const String& testName) {
 		std::cout << testName << "\n";
 	}
 }

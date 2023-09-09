@@ -2,13 +2,11 @@
 
 //std
 #include <cstdint>
-#include <optional>
-#include <iterators.h>
 
 //own
-#include "pch.h"
 #include "container.h"
 #include "iterators.h"
+#include "option.h"
 
 //interface
 namespace natl {
@@ -18,12 +16,10 @@ namespace natl {
 		using value_type = Type;
 		using reference = Type&;
 		using const_reference = const Type&;
-		using optional_reference = std::optional<std::reference_wrapper<Type>>;
-		using optional_const_reference = std::optional<std::reference_wrapper<const Type>>;
 		using pointer = Type*;
 		using const_pointer = Type*;
-		using optional_pointer = std::optional<Type*>;
-		using optional_const_pointer = std::optional<const Type*>;
+		using optional_pointer = Option<Type*>;
+		using optional_const_pointer = Option<const Type*>;
 		using difference_type = std::ptrdiff_t;
 		using size_type = std::size_t;
 
@@ -44,72 +40,63 @@ namespace natl {
 		pointer data() const noexcept { return beginPtr; };
 
 		pointer getBeginPtr() noexcept { return beginPtr; }
-		const_pointer getConstBeginPtr() const noexcept { return beginPtr; }
+		const_pointer getBeginPtr() const noexcept { return beginPtr; }
 		pointer getEndPtr() noexcept { return endPtr; }
-		const_pointer getConstEndPtr() const noexcept { return endPtr; }
+		const_pointer getEndPtr() const noexcept { return endPtr; }
 
 		iterator begin() noexcept { return iterator(getBeginPtr()); }
-		const_iterator begin() const noexcept { return const_iterator(getConstBeginPtr()); }
-		const_iterator cbegin() const noexcept { return const_iterator(getConstBeginPtr()); }
+		const_iterator begin() const noexcept { return const_iterator(getBeginPtr()); }
+		const_iterator cbegin() const noexcept { return const_iterator(getBeginPtr()); }
 		iterator end() noexcept { return iterator(getEndPtr()); }
-		const_iterator end() const noexcept { return const_iterator(getConstEndPtr()); }
-		const_iterator cend() const noexcept { return const_iterator(getConstEndPtr()); }
+		const_iterator end() const noexcept { return const_iterator(getEndPtr()); }
+		const_iterator cend() const noexcept { return const_iterator(getEndPtr()); }
 		reverse_iterator rbegin() noexcept { return reverse_iterator(getEndPtr()); }
-		const_reverse_iterator rbegin() const noexcept { return const_reverse_iterator(getConstEndPtr()); }
-		const_reverse_iterator crbegin() const noexcept { return const_reverse_iterator(getConstEndPtr()); }
+		const_reverse_iterator rbegin() const noexcept { return const_reverse_iterator(getEndPtr()); }
+		const_reverse_iterator crbegin() const noexcept { return const_reverse_iterator(getEndPtr()); }
 		reverse_iterator rend() noexcept { return reverse_iterator(getBeginPtr()); }
-		const_reverse_iterator rend() const noexcept { return const_reverse_iterator(getConstBeginPtr()); }
-		const_reverse_iterator crend() const noexcept { return const_reverse_iterator(getConstBeginPtr()); }
+		const_reverse_iterator rend() const noexcept { return const_reverse_iterator(getBeginPtr()); }
+		const_reverse_iterator crend() const noexcept { return const_reverse_iterator(getBeginPtr()); }
 
 		bool isEmpty() const noexcept { return !bool(viewSize); }
 		bool isNotEmpty() const noexcept { return bool(viewSize); }
 		operator bool() const noexcept { return isNotEmpty(); }
 
-		const_reference getConstRefAt(size_type& index) const { return beginPtr[index]; };
 		reference getRefAt(size_type& index) { return beginPtr[index]; };
-		const pointer getConstPtrAt(size_type& index) const { return &beginPtr[index]; };
+		const_reference getRefAt(size_type& index) const { return beginPtr[index]; };
 		pointer getPtrAt(size_type& index) { return &beginPtr[index]; };
+		const pointer getPtrAt(size_type& index) const { return &beginPtr[index]; };
 
 		size_type clampIndex(const size_type index) { return std::clamp<size_type>(index, 0, viewSize); }
 
-		const pointer getClampedConstRefAt(size_type& index) const { return beginPtr[clampIndex(index)]; }
 		reference getClampedRefAt(size_type& index) { return beginPtr[clampIndex(index)]; }
-		const pointer getClampedConstPtrAt(size_type& index) const { return &beginPtr[clampIndex(index)]; }
+		const pointer getClampedRefAt(size_type& index) const { return beginPtr[clampIndex(index)]; }
 		pointer getClampedPtrAt(size_type& index) { return &beginPtr[clampIndex(index)]; }
+		const pointer getClampedPtrAt(size_type& index) const { return &beginPtr[clampIndex(index)]; }
 
 		size_type getFrontIndex() { return 0; }
 		size_type getBackIndex() { return viewSize ? 0 : viewSize - 1; }
 
 		reference front() { return getRefAt(getFrontIndex()); }
-		const_reference front() const { return getConstRefAt(getFrontIndex()); }
+		const_reference front() const { return getRefAt(getFrontIndex()); }
 		reference back() { return getRefAt(getBackIndex()); }
-		const_reference back() const { return getConstRefAt(getBackIndex()); }
+		const_reference back() const { return getRefAt(getBackIndex()); }
 
 		bool has(size_type& index) const { return index < viewSize; };
 		bool notHave(size_type& index) const { return index >= viewSize; };
 
-		optional_const_reference optionalGetConstRefAt(size_type& index) const {
-			if (notHave(index)) { return optional_const_reference(); }
-			return optional_const_reference(getConstRefAt(index));
-		};
-		optional_reference optionalGetRefAt(size_type& index) {
-			if (notHave(index)) { return optional_reference(); }
-			return optional_reference(getRefAt(index));
-		};
-
-		optional_const_pointer optionalGetConstPtrAt(size_type& index) {
-			if (notHave(index)) { return optional_const_pointer(); }
-			return optional_const_pointer(getConstPtrAt(index));
-		};
 		optional_pointer optionalGetPtrAt(size_type& index) {
 			if (notHave(index)) { return optional_pointer(); }
 			return optional_pointer(getPtrAt(index));
 		};
+		optional_const_pointer optionalGetPtrAt(size_type& index) const {
+			if (notHave(index)) { return optional_const_pointer(); }
+			return optional_const_pointer(getPtrAt(index));
+		};
 
-		optional_reference optionalFront() { return optionalGetRefAt(getFrontIndex()); }
-		optional_const_reference optionalFront() const { return optionalGetConstRefAt(getFrontIndex()); }
-		optional_reference optionalBack() { return optionalGetRefAt(getBackIndex()); }
-		optional_const_reference optionalBack() const { return optionalGetConstRefAt(getBackIndex()); }
+		optional_pointer optionalFront() { return optionalGetRefAt(getFrontIndex()); }
+		optional_const_pointer optionalFront() const { return optionalGetRefAt(getFrontIndex()); }
+		optional_pointer optionalBack() { return optionalGetRefAt(getBackIndex()); }
+		optional_const_pointer optionalBack() const { return optionalGetRefAt(getBackIndex()); }
 
 		void copy(std::initializer_list<Type> initList) {
 			const size_type count = std::max<size_type>(initList.size(), size());

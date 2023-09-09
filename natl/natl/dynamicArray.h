@@ -1,13 +1,10 @@
 #pragma once 
 
-//std
-#include <type_traits>
-
 //own
+#include "typeTraits.h"
 #include "iterators.h"
 #include "option.h"
 #include "allocator.h"
-#include "pointer.h"
 #include "uninitialized.h"
 
 //interface
@@ -19,8 +16,6 @@ namespace natl {
 		using value_type = DataType;
 		using reference = DataType&;
 		using const_reference = const DataType&;
-		using optional_reference = Option<PtrWrapper<DataType>>;
-		using optional_const_reference = Option<PtrWrapper<const DataType>>;
 		using pointer = DataType*;
 		using const_pointer = const DataType*;
 		using optional_pointer = Option<DataType*>;
@@ -161,7 +156,7 @@ namespace natl {
 			endDataPtr = beginDataPtr;
 		}
 
-		constexpr void push_back(const DataType& value) {
+		constexpr void pushBack(const DataType& value) {
 			if (size() == capacity()) {
 				reserve(size() + 1);
 			}
@@ -169,7 +164,7 @@ namespace natl {
 			std::construct_at<DataType, const DataType&>(&back(), value);
 		}
 
-		constexpr void push_back(DataType&& value) {
+		constexpr void pushBack(DataType&& value) {
 			if (size() == capacity()) {
 				reserve((size() + 1) * 2);
 			}
@@ -177,7 +172,7 @@ namespace natl {
 			std::construct_at<DataType, DataType>(&back(), static_cast<DataType&&>(value));
 		}
 
-		constexpr void pop_back() {
+		constexpr void popBack() {
 			if (isEmpty()) { return; }
 			std::destroy_at<DataType>(endDataPtr);
 			endDataPtr--;
@@ -201,7 +196,7 @@ namespace natl {
 			endDataPtr = beginDataPtr + newSize;
 		}
 
-		constexpr DynamicArray& operator=(DynamicArray& src) {
+		constexpr DynamicArray& operator=(const DynamicArray& src) {
 			deconstructAllData();
 			freeDataVerify();
 

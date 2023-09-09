@@ -1,13 +1,11 @@
 #pragma once
 
-//std
-#include <optional>
-#include <cstdint>
-
 //own
+#include "typeTraits.h"
 #include "iterators.h"
 #include "container.h"
-#include "typeTraits.h"
+#include "option.h"
+#include "dynamicArray.h"
 
 //interface
 namespace natl {
@@ -17,12 +15,10 @@ namespace natl {
 		using value_type = Type;
 		using reference = Type&;
 		using const_reference = const Type&;
-		using optional_reference = std::optional<std::reference_wrapper<Type>>;
-		using optional_const_reference = std::optional<std::reference_wrapper<const Type>>;
 		using pointer = Type*;
 		using const_pointer = const Type*;
-		using optional_pointer = std::optional<Type*>;
-		using optional_const_pointer = std::optional<const Type*>;
+		using optional_pointer = Option<Type*>;
+		using optional_const_pointer = Option<const Type*>;
 		using difference_type = std::ptrdiff_t;
 		using size_type = std::size_t;
 
@@ -95,13 +91,13 @@ namespace natl {
 
 
 		/*
-		optional_const_reference optionalGetConstRefAt(const size_type index) const {
-			if (notHave(index)) { return optional_const_reference(); }
-			return optional_const_reference(at(index));
+		optional_const_pointer optionalGetConstRefAt(const size_type index) const {
+			if (notHave(index)) { return optional_const_pointer(); }
+			return optional_const_pointer(at(index));
 		};
-		optional_reference optionalGetRefAt(const size_type index) {
-			if (notHave(index)) { return optional_reference(); }
-			return optional_reference(at(index));
+		optional_pointer optionalGetRefAt(const size_type index) {
+			if (notHave(index)) { return optional_pointer(); }
+			return optional_pointer(at(index));
 		};
 
 		optional_const_pointer optionalGetConstPtrAt(const size_type index) {
@@ -113,10 +109,10 @@ namespace natl {
 			return optional_pointer(at(index));
 		};
 
-		optional_reference optionalFront() { return optionalGetRefAt(frontIndex()); }
-		optional_const_reference optionalFront() const { return optionalGetConstRefAt(frontIndex()); }
-		optional_reference optionalBack() { return optionalGetRefAt(backIndex()); }
-		optional_const_reference optionalBack() const { return optionalGetConstRefAt(backIndex()); }
+		optional_pointer optionalFront() { return optionalGetRefAt(frontIndex()); }
+		optional_const_pointer optionalFront() const { return optionalGetConstRefAt(frontIndex()); }
+		optional_pointer optionalBack() { return optionalGetRefAt(backIndex()); }
+		optional_const_pointer optionalBack() const { return optionalGetConstRefAt(backIndex()); }
 		*/
 
 		constexpr void assign(std::initializer_list<Type> initList) noexcept requires(isConst<Type>) {
@@ -219,7 +215,7 @@ namespace natl {
 		using reverse_iterator = ReverseRandomAccessIterator<Type>;
 		using const_reverse_iterator = ReverseRandomAccessIterator<const Type>;
 	private:
-		std::vector<Type> data;
+		DynamicArray<Type> data;
 		size_type partitionIndex;
 	public:
 		DynamicPartitioner() : data(), partitionIndex(0) {}
@@ -230,9 +226,9 @@ namespace natl {
 		 bool isFull() const noexcept { return capacity() < partitionIndex + 1; };
 		 bool isEmpty() const noexcept { return partitionIndex == 0; };
 		 bool isNotEmpty() const noexcept { return partitionIndex != 0; };
-		 void shrinkToFit() { data.shrink_to_fit(); }
+		 void shrinkToFit() { data.shrinkToFit(); }
 		 void clear() { data.clear(); }
-		 void fullClear() { std::vector<Type> trash; trash.swap(data); }
+		 void fullClear() { DynamicArray<Type> trash; trash.swap(data); }
 		 Partition<Type> newPartition(const size_type partiationSize) {
 			if (capacity() < partitionIndex + partiationSize) {
 				return Partition<Type>(nullptr, 0);

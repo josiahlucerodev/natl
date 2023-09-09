@@ -71,7 +71,7 @@ namespace nasimd {
 			}
 		};
 
-		constexpr BitArrayBitStorageType(const std::string_view value) noexcept {
+		constexpr BitArrayBitStorageType(const StringView value) noexcept {
 			if constexpr (wordCount != 0) {
 				bitsArray[0] = value;
 			} else {

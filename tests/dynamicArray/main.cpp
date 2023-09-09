@@ -5,12 +5,12 @@
 constexpr int compileTimeTest() {
 	natl::DynamicArray<int> array{};
 
-	array.push_back(1);
-	array.push_back(2);
-	array.push_back(3);
-	array.push_back(4);
-	array.push_back(5);
-	array.push_back(6);
+	array.pushBack(1);
+	array.pushBack(2);
+	array.pushBack(3);
+	array.pushBack(4);
+	array.pushBack(5);
+	array.pushBack(6);
 
 	return array.at(5);
 }
@@ -19,12 +19,12 @@ NATL_STATIC_ALLOCATOR_INSTANCE(natl::StaticAllocatorWithCounters, TestStaticAllo
 int testStaticAllocator() {
 	natl::DynamicArray<int, TestStaticAllocator> array{};
 
-	array.push_back(1);
-	array.push_back(2);
-	array.push_back(3);
-	array.push_back(4);
-	array.push_back(5);
-	array.push_back(6);
+	array.pushBack(1);
+	array.pushBack(2);
+	array.pushBack(3);
+	array.pushBack(4);
+	array.pushBack(5);
+	array.pushBack(6);
 
 	return array.at(5);
 }

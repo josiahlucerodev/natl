@@ -1,27 +1,23 @@
 #pragma once
 
-//std
-#include <cstdint>
-#include <bit>
-
 //interface 
 namespace natl {
-	template<typename T>
-	concept Hashable = requires(T a)
-	{
-		{ std::hash<T>{}(a) } -> std::convertible_to<std::size_t>;
-	};
 
 	template<class DataType>
 	concept HasStaticHashFunction = requires(DataType value) {
-		{ DataType::hash(value) } -> std::same_as<std::size_t>;
+		{ DataType::staticHash(value) } -> std::same_as<std::size_t>;
 	};
 
 	template<class DataType>
 	struct Hash {
 		constexpr static std::size_t hash(const DataType& dataType) 
 			requires(HasStaticHashFunction<DataType>) 
-		{ return DataType::hash(dataType); }
+		{ return DataType::staticHash(dataType); }
+	};
+
+	template<typename T>
+	concept Hashable = requires(T a) {
+		{ Hash<T>{}(a) } -> std::convertible_to<std::size_t>;
 	};
 
 	template<> struct Hash<std::int8_t> {

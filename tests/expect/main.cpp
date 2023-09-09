@@ -15,7 +15,7 @@ constexpr natl::Expect<bool, TestError> testFunc() {
 
 int main() {
 	constexpr natl::Expect<bool, TestError> number = testFunc();
-	constexpr natl::Expect<float, natl::StringNumericConvertError> number2 = natl::stringDecimalToFloatExpect<float>("3.3");
+	constexpr natl::Expect<float, natl::StringNumericConvertError> number2 = natl::stringToFloatExpect<float>("3.3");
 
 	if (number.hasValue()) {
 		std::cout << "number: " << number.value() << "\n";

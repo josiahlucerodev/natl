@@ -1,11 +1,8 @@
 #pragma once 
 
-//std
-#include <cstdint>
-#include <string>
-
 //own
 #include "iterators.h"
+#include "option.h"
 
 //interface
 namespace natl {
@@ -16,12 +13,10 @@ namespace natl {
 		using value_type = CharType;
 		using reference = value_type&;
 		using const_reference = const value_type&;
-		using optional_reference = std::optional<std::reference_wrapper<value_type>>;
-		using optional_const_reference = std::optional<std::reference_wrapper<const value_type>>;
 		using pointer = value_type*;
 		using const_pointer = const value_type*;
-		using optional_pointer = std::optional<value_type*>;
-		using optional_const_pointer = std::optional<const value_type*>;
+		using optional_pointer = Option<value_type*>;
+		using optional_const_pointer = Option<const value_type*>;
 		using difference_value_type = std::ptrdiff_t;
 		using size_type = std::size_t;
 
@@ -41,15 +36,15 @@ namespace natl {
 		}
 		constexpr BaseStringView(const char* stringPtr, const size_type length)
 			: dataPtr(stringPtr), stringLength(length) {}
-		constexpr BaseStringView(const std::string& string)
-			: dataPtr(string.c_str()), stringLength(string.length()) {}
-		constexpr BaseStringView(std::string& string)
-			: dataPtr(string.c_str()), stringLength(string.length()) {}
+		//constexpr BaseStringView(const String& string)
+		//	: dataPtr(string.cStr()), stringLength(string.length()) {}
+		//constexpr BaseStringView(String& string)
+		//	: dataPtr(string.cStr()), stringLength(string.length()) {}
 	public:
 		constexpr const char* c_str() const noexcept { return dataPtr; }
 		constexpr const char* cStr() const noexcept { return dataPtr; }
 		constexpr const char* cString() const noexcept { return dataPtr; }
-		constexpr std::string toString() const noexcept { return std::string(dataPtr, size()); }
+		//constexpr String toString() const noexcept { return String(dataPtr, size()); }
 		constexpr size_type length() const noexcept { return stringLength; }
 		constexpr size_type size() const noexcept { return stringLength; }
 		constexpr size_type hash() const noexcept {

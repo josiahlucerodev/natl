@@ -24,6 +24,6 @@ add_subdirectory(natl)
 
 #TEST
 if(NATL_TRANSPILER_IS_ROOT)
-	message("natl tests")
+	message("natl: tests")
 	add_subdirectory(tests)
 endif()

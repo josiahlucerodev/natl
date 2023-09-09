@@ -3,60 +3,64 @@
 //interface
 #include "timer.h"
 
+//own
+#include "stringView.h"
+#include "stringConvert.h"
+
 //implementation
 namespace natl {
 	//Time Save
 	TimeSave::TimeSave() = default;
-	TimeSave::TimeSave(const std::string_view& inputString) : name(inputString) {}
-	std::string_view TimeSave::getName() { return name; }
+	TimeSave::TimeSave(const StringView& inputString) : name(inputString) {}
+	StringView TimeSave::getName() { return name.toStringView(); }
 	std::uint64_t  TimeSave::getNanoseconds() { return nanoseconds; }
 	std::uint64_t  TimeSave::getMicroseconds() { return microseconds; }
 	long double TimeSave::getMiliseconds() { return miliseconds; }
 	long double TimeSave::getSeconds() { return seconds; }
 	void TimeSave::print() {
-		std::cout << name << "\n";
+		std::cout << name.cStr() << "\n";
 		std::cout << "nanoseconds: " << nanoseconds << "\n";
 		std::cout << "microseconds: " << microseconds << "\n";
 		std::cout << "milliseconds: " << std::fixed << miliseconds << "\n";
 		std::cout << "seconds: " << std::fixed << seconds << "\n";
 	}
 	void TimeSave::condensedPrint() {
-		std::cout << name << "\n";
+		std::cout << name.cStr() << "\n";
 		std::cout << "nanoseconds: " << nanoseconds << "   ";
 		std::cout << "microseconds: " << microseconds << "   ";
 		std::cout << "milliseconds: " << std::fixed << miliseconds << "   ";
 		std::cout << "seconds: " << std::fixed << seconds << "\n";
 	}
-	void TimeSave::changeName(const std::string_view&& input) {
+	void TimeSave::changeName(const StringView&& input) {
 		name = input;
 	}
-	std::string TimeSave::string() {
-		std::string outputString;
+	String TimeSave::string() {
+		String outputString;
 		outputString += name;
 		outputString += "\n";
 		outputString += " microseconds: ";
-		outputString += std::to_string(microseconds);
+		outputString += intToStringDecimal<std::uint64_t>(microseconds);
 		outputString += "\n";
 		outputString += " milliseconds: ";
-		outputString += std::to_string(miliseconds);
+		outputString += floatToString<long double>(miliseconds);
 		outputString += "\n";
 		outputString += " seconds: ";
-		outputString += std::to_string(seconds);
+		outputString += floatToString<long double>(seconds);
 		outputString += "\n";
 		return outputString;
 	}
-	std::string TimeSave::condensedString() {
-		std::string outputString;
+	String TimeSave::condensedString() {
+		String outputString;
 		outputString += name;
 		outputString += "\n";
 		outputString += " microseconds: ";
-		outputString += std::to_string(microseconds);
+		outputString += intToStringDecimal<std::uint64_t>(microseconds);
 		outputString += "   ";
 		outputString += " milliseconds: ";
-		outputString += std::to_string(miliseconds);
+		outputString += floatToString<long double>(miliseconds);
 		outputString += "   ";
 		outputString += " seconds: ";
-		outputString += std::to_string(seconds);
+		outputString += floatToString<long double>(seconds);
 		outputString += "\n";
 		return outputString;
 	}
@@ -86,26 +90,26 @@ namespace natl {
 		return outputTime;
 	}
 
-	//VectorTimeSave
-	VectorTimeSave::VectorTimeSave() = default;
-	VectorTimeSave::VectorTimeSave(const std::string_view& inputName) : name(inputName) {}
-	VectorTimeSave::VectorTimeSave(const std::string& inputName) : name(inputName) {}
-	void VectorTimeSave::print() {
+	//TimeSaveCollection
+	TimeSaveCollection::TimeSaveCollection() = default;
+	TimeSaveCollection::TimeSaveCollection(const StringView& inputName) : name(inputName) {}
+	TimeSaveCollection::TimeSaveCollection(const String& inputName) : name(inputName) {}
+	void TimeSaveCollection::print() {
 		std::cout << name << " collection\n";
 		for (unsigned int i = 0; i < timeSavesVector.size(); i++)
 		{
 			timeSavesVector[i].print();
 		}
 	}
-	void VectorTimeSave::condensedPrint() {
+	void TimeSaveCollection::condensedPrint() {
 		std::cout << name << " collection\n";
 		for (unsigned int i = 0; i < timeSavesVector.size(); i++)
 		{
 			timeSavesVector[i].condensedPrint();
 		}
 	}
-	std::string VectorTimeSave::string() {
-		std::string outputvalue;
+	String TimeSaveCollection::string() {
+		String outputvalue;
 		outputvalue += name;
 		outputvalue += " collection\n";
 		for (unsigned int i = 0; i < timeSavesVector.size(); i++)
@@ -114,8 +118,8 @@ namespace natl {
 		}
 		return outputvalue;
 	}
-	std::string VectorTimeSave::condensedString() {
-		std::string outputvalue;
+	String TimeSaveCollection::condensedString() {
+		String outputvalue;
 		outputvalue += name;
 		outputvalue += " collection\n";
 		for (unsigned int i = 0; i < timeSavesVector.size(); i++)
@@ -124,7 +128,7 @@ namespace natl {
 		}
 		return outputvalue;
 	}
-	TimeSave VectorTimeSave::average() {
+	TimeSave TimeSaveCollection::average() {
 		TimeSave average;
 		average = timeSavesVector[0];
 		for (int i = 1; i < timeSavesVector.size(); i++)
@@ -133,46 +137,46 @@ namespace natl {
 				(average.getMiliseconds() + timeSavesVector[i].getMiliseconds()) / 2,
 				(average.getSeconds() + timeSavesVector[i].getSeconds()) / 2);
 		}
-		std::string tempName;
+		String tempName;
 		tempName = name;
 		tempName += " collection average";
-		average.changeName(tempName);
+		average.changeName(tempName.toStringView());
 		return average;
 	}
-	void VectorTimeSave::changeName(const std::string_view& nameInput) {
+	void TimeSaveCollection::changeName(const StringView& nameInput) {
 		name = nameInput;
 	}
-	void VectorTimeSave::changeName(const std::string& nameInput) {
+	void TimeSaveCollection::changeName(const String& nameInput) {
 		name = nameInput;
 	}
-	void VectorTimeSave::inputTimeSave(TimeSave inputValue) {
-		timeSavesVector.push_back(inputValue);
+	void TimeSaveCollection::inputTimeSave(TimeSave inputValue) {
+		timeSavesVector.pushBack(inputValue);
 	}
-	VectorTimeSave VectorTimeSave::operator+= (TimeSave inputValue) {
-		timeSavesVector.push_back(inputValue);
+	TimeSaveCollection TimeSaveCollection::operator+= (TimeSave inputValue) {
+		timeSavesVector.pushBack(inputValue);
 		return *this;
 	}
-	VectorTimeSave VectorTimeSave::operator+= (VectorTimeSave inputValue) {
+	TimeSaveCollection TimeSaveCollection::operator+= (TimeSaveCollection inputValue) {
 		for (unsigned int i = 0; i < inputValue.timeSavesVector.size(); i++)
 		{
-			timeSavesVector.push_back(inputValue.timeSavesVector[i]);
+			timeSavesVector.pushBack(inputValue.timeSavesVector[i]);
 		}
 		return *this;
 	}
 
 	// Timer
 	Timer::Timer() { start(); };
-	Timer::Timer(const std::string_view& nameIn) : name(nameIn) { start(); }
+	Timer::Timer(const StringView& nameIn) : name(nameIn) { start(); }
 	void Timer::start() {
 		startpoint = std::chrono::high_resolution_clock::now();
 	}
-	void Timer::start(const std::string_view& nameIn) {
+	void Timer::start(const StringView& nameIn) {
 		changeName(nameIn);
 		start();
 	}
 	void Timer::getTimeSave(TimeSave& timeSaveInput) {
 		std::uint64_t microseconds = getMicroseconds();
-		timeSaveInput.changeName(name);
+		timeSaveInput.changeName(name.toStringView());
 		timeSaveInput.nanoseconds = getNanoseconds();
 		timeSaveInput.microseconds = microseconds;
 		timeSaveInput.miliseconds = microseconds * 0.001L;
@@ -183,7 +187,7 @@ namespace natl {
 		getTimeSave(outputTimeSave);
 		return outputTimeSave;
 	}
-	void Timer::changeName(const std::string_view& nameIn) {
+	void Timer::changeName(const StringView& nameIn) {
 		name = nameIn;
 	}
 	std::uint64_t Timer::getNanoseconds() {

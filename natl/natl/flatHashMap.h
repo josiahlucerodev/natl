@@ -88,6 +88,12 @@ namespace natl {
 		constexpr FlatHashMapEntry(const Key& key, const DataType& data, const bool used)
 			: key(key), data(data), used(used) {}
 
+		constexpr FlatHashMapEntry(const FlatHashMapEntry& src) {
+			key = src.key;
+			data = src.data;
+			used = src.used;
+		}
+
 		constexpr FlatHashMapEntry(FlatHashMapEntry&&)
 			requires(std::is_trivially_constructible_v<Key>&& std::is_trivially_constructible_v<DataType>) = default;
 		constexpr FlatHashMapEntry(FlatHashMapEntry&& src) {
@@ -127,8 +133,6 @@ namespace natl {
 		using value_type = Entry&;
 		using reference = Entry&;
 		using const_reference = const Entry&;
-		using optional_reference = Option<PtrWrapper<Entry>>;
-		using optional_const_reference = Option<PtrWrapper<const Entry>>;
 		using pointer = Entry*;
 		using const_pointer = const Entry*;
 		using optional_pointer = Option<Entry*>;
@@ -150,9 +154,16 @@ namespace natl {
 		DynamicArray<Entry, Alloc> table;
 	public:
 		constexpr FlatHashMap() = default;
-		constexpr ~FlatHashMap() {
-			
+		constexpr FlatHashMap(const FlatHashMap& src) : inSize{}, table{} {
+			inSize = src.inSize;
+			table = src.table;
 		}
+		constexpr FlatHashMap(FlatHashMap&& src) : inSize{}, table{} {
+			inSize = src.inSize;
+			table = std::move(src.table);
+		}
+
+		constexpr ~FlatHashMap() = default;
 
 		constexpr size_type size() const noexcept { return inSize; }
 		constexpr size_type count() const noexcept { return inSize; }
@@ -266,30 +277,30 @@ namespace natl {
 			return end();
 		}
 
-		constexpr optional_reference find(const Key& key) {
+		constexpr optional_pointer find(const Key& key) {
 			size_type index = hashFun(key) % capacity();
 			size_type originalIndex = index;
 
 			while (true) {
 				if (compareFun(table[index].key, key)) {
-					return optional_reference(table[index]);
+					return optional_pointer(&table[index]);
 				}
 
 				index = (index + 1) % capacity();
 				if (index == originalIndex) {
-					break ; 
+					break; 
 				}
 			}
-			return optional_reference(natl::OptionEmpty()); 
+			return optional_pointer(natl::OptionEmpty()); 
 		}
 
-		constexpr optional_const_reference find(const Key& key) const {
+		constexpr optional_const_pointer find(const Key& key) const {
 			size_type index = hashFun(key) % capacity();
 			size_type originalIndex = index;
 
 			while (true) {
 				if (compareFun(table[index].key, key)) {
-					return optional_const_reference(table[index]);
+					return optional_const_pointer(&table[index]);
 				}
 
 				index = (index + 1) % capacity();
@@ -297,7 +308,7 @@ namespace natl {
 					break;
 				}
 			}
-			return optional_const_reference();
+			return optional_const_pointer();
 		}
 
 		bool contains(const Key& key) const {

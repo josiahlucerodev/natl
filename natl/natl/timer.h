@@ -1,73 +1,73 @@
 #pragma once
 
 //std
-#include <string>
 #include <cstdint>
 #include <chrono>
-#include <string_view>
 
 //own
 #include "dynamicArray.h"
+#include "string.h"
+#include "stringView.h"
 
 //interface
 namespace natl {
 	struct TimeSave {
-		std::string name = "not defined";
+		String name = "not defined";
 		std::uint64_t nanoseconds = 0;
 		std::uint64_t microseconds = 0;
 		long double miliseconds = 0;
 		long double seconds = 0;
 	public:
 		TimeSave();
-		TimeSave(const std::string_view& inputString);
+		TimeSave(const StringView& inputString);
 	public:
-		std::string_view getName();
+		StringView getName();
 		std::uint64_t getNanoseconds();
 		std::uint64_t getMicroseconds();
 		long double getMiliseconds();
 		long double getSeconds();
 		void print();
 		void condensedPrint();
-		void changeName(const std::string_view&& input);
-		std::string string();
-		std::string condensedString();
+		void changeName(const StringView&& input);
+		String string();
+		String condensedString();
 		void inputTimeValues(std::uint64_t inputMicroseconds, long double inputMiliseconds, long double inputSeconds);
 		void inputTimeValues(TimeSave inputTimeSave);
 		TimeSave operator= (TimeSave& inputTime);
 		TimeSave operator- (TimeSave inputTime);
 	};
-	class VectorTimeSave {
-		std::string name;
+	class TimeSaveCollection {
+		String name;
 		DynamicArray<TimeSave> timeSavesVector;
 	public:
-		VectorTimeSave();
-		VectorTimeSave(const std::string_view& inputName);
-		VectorTimeSave(const std::string& inputName);
+		TimeSaveCollection();
+		TimeSaveCollection(const StringView& inputName);
+		TimeSaveCollection(const String& inputName);
 	public:
 		void print();
 		void condensedPrint();
-		std::string string();
-		std::string condensedString();
+		String string();
+		String condensedString();
 		TimeSave average();
-		void changeName(const std::string_view& nameInput);
-		void changeName(const std::string& nameInput);
+		void changeName(const StringView& nameInput);
+		void changeName(const String& nameInput);
 		void inputTimeSave(TimeSave inputValue);
-		VectorTimeSave operator+= (TimeSave inputValue);
-		VectorTimeSave operator+= (VectorTimeSave inputValue);
+		TimeSaveCollection operator+= (TimeSave inputValue);
+		TimeSaveCollection operator+= (TimeSaveCollection inputValue);
 	};
 
 	class Timer {
-		std::string name = "not defined";
+		String name = "not defined";
 		std::chrono::time_point<std::chrono::high_resolution_clock> startpoint;
 	public:
 		Timer();
-		Timer(const std::string_view& nameIn);
+		Timer(const StringView& nameIn);
 	public:
 		void start();
-		void start(const std::string_view& nameIn);
+		void start(const StringView& nameIn);
 		TimeSave getTimeSave();
 		void getTimeSave(TimeSave& outputtime);
-		void changeName(const std::string_view& nameIn);
+		void changeName(const StringView& nameIn);
 		std::uint64_t getNanoseconds();
 		std::uint64_t getMicroseconds();
 		long double getMiliseconds();
@@ -92,7 +92,7 @@ namespace natl {
 	class FunctionProfileTimer {
 		Timer timer;
 	public:
-		FunctionProfileTimer(const std::string_view& name) : timer(name) { timer.start(); };
+		FunctionProfileTimer(const StringView& name) : timer(name) { timer.start(); };
 		~FunctionProfileTimer();
 	};
 }
