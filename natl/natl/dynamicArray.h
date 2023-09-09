@@ -13,6 +13,7 @@ namespace natl {
 	template<class DataType,
 		class Alloc = Allocator>
 	class DynamicArray : AllocatorStorage<DataType, Alloc> {
+	public:
 		using value_type = DataType;
 		using reference = DataType&;
 		using const_reference = const DataType&;
