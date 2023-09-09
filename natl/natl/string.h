@@ -62,7 +62,7 @@ namespace natl {
 		constexpr size_type freeSpaceSize() const noexcept { return characters.freeSpaceSize(); }
 		constexpr pointer data() noexcept requires(isNotConst<CharType>) { return characters.data(); }
 		constexpr const_pointer data() const noexcept { return characters.data(); };
-		constexpr const CharType* cStr() noexcept { return characters.data(); }
+		constexpr const CharType* cStr() const noexcept { return characters.data(); }
 
 		constexpr pointer beginPtr() noexcept requires(isNotConst<CharType>) { return characters.beginPtr(); }
 		constexpr const_pointer beginPtr() const noexcept { return characters.beginPtr(); }
