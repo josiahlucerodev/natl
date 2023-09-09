@@ -159,7 +159,7 @@ namespace natl {
 			}
 
 			const size_type constructSize = newSize - oldSize;
-			defualtConstructAll<DataType>(beginDataPtr, constructSize);
+			defualtConstructAll<DataType>(endDataPtr, constructSize);
 			endDataPtr = beginDataPtr + newSize;
 		}
 
@@ -215,6 +215,11 @@ namespace natl {
 
 			uninitializedCopyCountNoOverlap<const_pointer, pointer>(dataType.begin(), endDataPtr, dataType.size());
 			endDataPtr = beginDataPtr + newSize;
+		}
+
+		constexpr void fill(const DataType&& value) noexcept {
+			if (isEmpty()) { return; }
+			fillCount<pointer, DataType>(data(), value, size());
 		}
 
 		constexpr DynamicArray& operator=(const DynamicArray& src) noexcept {

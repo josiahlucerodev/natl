@@ -31,6 +31,8 @@ int testStaticAllocator() {
 
 	natl::Partition<int> partition = natl::makePartition<decltype(array)>(array);
 
+	array.fill(2);
+
 	return array.at(5);
 }
 

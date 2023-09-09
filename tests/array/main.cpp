@@ -6,6 +6,7 @@
 constexpr int compileTimeTest() {
 	natl::Array<int, 3> array = {2, 3, 4};
 	array = { 2, 3, 7 };
+	array.fill(3);
 	return array.at(2);
 }
 

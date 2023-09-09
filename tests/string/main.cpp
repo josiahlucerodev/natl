@@ -9,11 +9,11 @@ constexpr int compileTimeTest() {
 	natl::String the = "the";
 	natl::String the2 = "the";
 	natl::String the3 = the + the2;
-	return 3;
+	the3.resize(9);
+	return the3.at(8);
 }
 
 int main() {
-	//constexpr 
 	constexpr int number = compileTimeTest();
 
 	natl::String the = "the";

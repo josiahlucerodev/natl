@@ -103,8 +103,13 @@ namespace natl {
 		constexpr optional_pointer optionalBack() noexcept { return optionalAt(backIndex()); }
 		constexpr optional_const_pointer optionalBack() const noexcept { return optionalAt(backIndex()); }
 
+		constexpr void fill(const DataType& value) noexcept {
+			if (isEmpty()) { return; }
+			fillCount<pointer, DataType>(data(), value, size());
+		}
+
 		constexpr Array& operator=(std::initializer_list<DataType> dataSrc) noexcept {
-			uninitializedCopyCountNoOverlap<const_pointer, pointer>(dataSrc.begin(), dataStorage, std::min<std::size_t>(dataSrc.size(), size()));
+			copyCountNoOverlap<const_pointer, pointer>(dataSrc.begin(), dataStorage, std::min<std::size_t>(dataSrc.size(), size()));
 			return *this;
 		}
 	};

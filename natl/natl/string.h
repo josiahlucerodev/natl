@@ -115,6 +115,12 @@ namespace natl {
 	public:
 		constexpr void reserve(const size_type newCapacity) noexcept { characters.reserve(newCapacity + 1); }
 
+		constexpr void resize(const size_type newSize) noexcept { 
+			removeNullTerminatingCharacter();
+			characters.resize(newSize);
+			addNullTerminatingCharacter();
+		}
+
 		constexpr void clear() noexcept { characters.clear(); }
 		constexpr void pushBack(const CharType& value) noexcept { 
 			removeNullTerminatingCharacter();
@@ -159,6 +165,12 @@ namespace natl {
 			append(BaseStringViewType(stringPtr));
 		}
 
+		constexpr void fill(const char character) noexcept {
+			if (isEmpty()) { return; }
+			removeNullTerminatingCharacter();
+			characters.fill(character);
+			addNullTerminatingCharacter();
+		}
 
 		constexpr size_type compare(const BaseString& str) const noexcept {
 			size_type index = 0;
