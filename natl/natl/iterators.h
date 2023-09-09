@@ -23,7 +23,9 @@ namespace natl {
 	private:
 		T* dataPtr;
 	public:
+		constexpr RandomAccessIterator() = default;
 		constexpr RandomAccessIterator(T* const dataPtr) noexcept : dataPtr(dataPtr) {}
+		constexpr ~RandomAccessIterator() = default;
 	private:
 		constexpr iterator& getSelf() noexcept { return *this; }
 		constexpr const iterator& getSelf() const noexcept { return *this; }
@@ -44,11 +46,11 @@ namespace natl {
 		constexpr iterator& operator--() noexcept { dataPtr--; return getSelf(); }
 		constexpr iterator operator--(int) noexcept { iterator tempIt = getSelf(); --getSelf().dataPtr; return tempIt; }
 
-		constexpr iterator& operator+=(const size_type offset) noexcept { dataPtr += offset; return getSelf(); }
-		constexpr iterator operator+(const size_type offset) const noexcept { return iterator(dataPtr + offset); }
-		constexpr friend iterator operator+(const size_type offset, iterator& rhs) noexcept { rhs += offset; return rhs; }
-		constexpr iterator& operator-=(const size_type offset) noexcept { dataPtr -= offset; return getSelf(); }
-		constexpr iterator operator-(const size_type offset) const noexcept { return iterator(dataPtr -= offset); }
+		constexpr iterator& operator+=(const difference_type offset) noexcept { dataPtr += offset; return getSelf(); }
+		constexpr iterator operator+(const difference_type offset) const noexcept { return iterator(dataPtr + offset); }
+		constexpr friend iterator operator+(const difference_type offset, const iterator& rhs) noexcept { return iterator(rhs.dataPtr + offset); }
+		constexpr iterator& operator-=(const difference_type offset) noexcept { dataPtr -= offset; return getSelf(); }
+		constexpr iterator operator-(const difference_type offset) const noexcept { return iterator(dataPtr -= offset); }
 		constexpr difference_type operator-(const iterator rhs) const noexcept { return getSelf().dataPtr - rhs.dataPtr; }
 	};
 

@@ -7,7 +7,7 @@
 
 //own
 #include "error.h"
-#include "uninitialized.h"
+#include "dataMovement.h"
 
 //interator
 namespace natl {
@@ -35,35 +35,14 @@ namespace natl {
         constexpr ArraySizeTypeIterator& getSelf() noexcept { return *this; }
         constexpr const ArraySizeTypeIterator& getSelf() const noexcept { return *this; }
         constexpr reference getValue() noexcept { return *(arrayBeingPtr + arrayIndex); };
-
-        constexpr void verifyOffset(const std::size_t offset) const noexcept {
-            fatalErrorVerify(offset != 0 && arrayBeingPtr, "array iterator array ptr uninitilized");
-            fatalErrorVerify(offset < 0 && (arrayIndex >= (std::size_t{ 0 } - static_cast<std::size_t>(offset))), "array iterator offset before begin");
-            fatalErrorVerify(offset > 0 && ((arrayIndex + offset) > sizeArray), "array iterator offset after end");
-        }
     public:
         constexpr reference operator*() noexcept //requires(!std::is_const<Type>)
         {
-            fatalErrorVerify(arrayBeingPtr, "array iterator dereference array ptr uninitilized");
-            fatalErrorVerify(arrayIndex < sizeArray, "array iterator dereference out of bounds");
             return getValue();
         }
-        constexpr const_reference operator*() const noexcept {
-            fatalErrorVerify(arrayBeingPtr, "array iterator dereference array ptr uninitilized");
-            fatalErrorVerify(arrayIndex < sizeArray, "array iterator dereference out of bounds");
-            return getValue();
-        }
-        constexpr pointer operator->() const noexcept {
-            fatalErrorVerify(arrayBeingPtr, "array iterator dereference array ptr uninitilized");
-            fatalErrorVerify(arrayIndex < sizeArray, "array iterator dereference out of bounds");
-            return &getValue();
-        }
-        constexpr reference operator[](const size_type index) const noexcept {
-            fatalErrorVerify(arrayBeingPtr, "array iterator array ptr uninitilized");
-            fatalErrorVerify(index < 0, "array iterator index points before begin");
-            fatalErrorVerify(index > 0, "array iterator index points after end");
-            return arrayBeingPtr + index;
-        };
+        constexpr const_reference operator*() const noexcept { return getValue(); }
+        constexpr pointer operator->() const noexcept { return &getValue(); }
+        constexpr reference operator[](const size_type index) const noexcept { return arrayBeingPtr + index; };
 
         constexpr bool operator== (const ArraySizeTypeIterator rhs) const noexcept { return arrayIndex == rhs.arrayIndex; }
         constexpr bool operator!= (const ArraySizeTypeIterator rhs) const noexcept { return arrayIndex != rhs.arrayIndex; }
@@ -72,12 +51,7 @@ namespace natl {
         constexpr bool operator<=(const ArraySizeTypeIterator rhs) const noexcept { return arrayIndex <= rhs.arrayIndex; }
         constexpr bool operator>=(const ArraySizeTypeIterator rhs) const noexcept { return arrayIndex >= rhs.arrayIndex; }
 
-        constexpr ArraySizeTypeIterator& operator++() noexcept {
-            fatalError(arrayBeingPtr, "array iterator increment array ptr uninitilized");
-            fatalError(arrayIndex < sizeArray, "array iterator increment out of bounds");
-            arrayIndex++;
-            return getSelf();
-        }
+        constexpr ArraySizeTypeIterator& operator++() noexcept { arrayIndex++; return getSelf(); }
 
         constexpr ArraySizeTypeIterator operator++(int) noexcept {
             ArraySizeTypeIterator tempIt = getSelf();
@@ -85,8 +59,6 @@ namespace natl {
             return tempIt;
         }
         constexpr ArraySizeTypeIterator& operator--() noexcept {
-            fatalError(arrayBeingPtr, "array iterator increment array ptr uninitilized");
-            fatalError(arrayIndex != sizeArray, "array iterator increment out of bounds");
             arrayIndex--;
             return getSelf();
         }
@@ -97,7 +69,6 @@ namespace natl {
             return tempIt;
         }
         constexpr ArraySizeTypeIterator& operator+=(const size_type offset) noexcept {
-            verifyOffset(offset);
             arrayBeingPtr += offset;
             return getSelf();
         }
@@ -151,7 +122,6 @@ namespace natl {
         constexpr UninitilizedArraySizeType() {}
         constexpr ~UninitilizedArraySizeType() {}
         constexpr UninitilizedArraySizeType(std::initializer_list<Type> initList) {
-            fatalErrorVerify(size() == initList.size(), "UninitilizedArraySizeType<Type, SizeType, size> initializer_list constructor must be the same size as array");
             uninitializedCopyNoOverlap(initList.begin(), initList.end(), begin());
         };
 
@@ -254,14 +224,8 @@ namespace natl {
         constexpr const_reverse_iterator rend() const noexcept { return const_reverse_iterator(begin()); }
         constexpr const_reverse_iterator crend() const noexcept { return const_reverse_iterator(begin()); }
 
-        constexpr reference at(const size_type index) noexcept requires(!std::is_const_v<Type>) {
-            fatalError("UninitilizedArraySizeType<Type, SizeType, 0> at undefined");
-            return *data();
-        };
-        constexpr const_reference at(const size_type index) const noexcept {
-            fatalError("UninitilizedArraySizeType<Type, SizeType, 0> at undefined");
-            return *data();
-        };
+        constexpr reference at(const size_type index) noexcept requires(!std::is_const_v<Type>) { return *(data() + index); };
+        constexpr const_reference at(const size_type index) const noexcept { return *(data() + index); };
 
         constexpr size_type clamp(const size_type value, const size_type min, const size_type max) const noexcept {
             const size_type t = value < min ? min : value;
@@ -271,32 +235,14 @@ namespace natl {
         constexpr size_type frontIndex() const noexcept { return 0; }
         constexpr size_type backIndex() const noexcept { return 0; }
 
-        constexpr reference atClamped(const size_type index) noexcept requires(!std::is_const_v<Type>) {
-            fatalError("UninitilizedArraySizeType<Type, SizeType, 0> atClamped undefined");
-            return *data();
-        }
-        constexpr const_pointer atClamped(const size_type index) const noexcept {
-            fatalError("UninitilizedArraySizeType<Type, SizeType, 0> atClamped undefined");
-            return *data();
-        }
+        constexpr reference atClamped(const size_type index) noexcept requires(!std::is_const_v<Type>) { return *data(); }
+        constexpr const_pointer atClamped(const size_type index) const noexcept { return *data(); }
 
-        constexpr reference front() noexcept requires(!std::is_const_v<Type>) {
-            fatalError("UninitilizedArraySizeType<Type, SizeType, 0> front undefined");
-            return at(frontIndex());
-        }
-        constexpr const_reference front() const noexcept {
-            fatalError("UninitilizedArraySizeType<Type, SizeType, 0> front undefined");
-            return at(frontIndex());
-        }
+        constexpr reference front() noexcept requires(!std::is_const_v<Type>) { return at(frontIndex()); }
+        constexpr const_reference front() const noexcept { return at(frontIndex()); }
 
-        constexpr reference back() noexcept requires(!std::is_const_v<Type>) {
-            fatalError("UninitilizedArraySizeType<Type, SizeType, 0> back undefined");
-            return at(backIndex());
-        }
-        constexpr const_reference back() const noexcept {
-            fatalError("UninitilizedArraySizeType<Type, SizeType, 0> back undefined");
-            return at(backIndex());
-        }
+        constexpr reference back() noexcept requires(!std::is_const_v<Type>) { return at(backIndex()); }
+        constexpr const_reference back() const noexcept { return at(backIndex()); }
 
         constexpr bool empty() const noexcept { return true; }
         constexpr bool isEmpty() const noexcept { return true; }

@@ -1,158 +1,16 @@
-#pragma once
+#pragma once 
+
+//std
+#include <cstdint>
 
 //own
-#include "typeTraits.h"
 #include "iterators.h"
-#include "container.h"
-#include "option.h"
+#include "array.h"
 #include "dynamicArray.h"
+#include "partition.h"
 
-//interface
+//interface 
 namespace natl {
-	template <class Type>
-	class Partition {
-	public:
-		using value_type = Type;
-		using reference = Type&;
-		using const_reference = const Type&;
-		using pointer = Type*;
-		using const_pointer = const Type*;
-		using optional_pointer = Option<Type*>;
-		using optional_const_pointer = Option<const Type*>;
-		using difference_type = std::ptrdiff_t;
-		using size_type = std::size_t;
-
-		using iterator = RandomAccessIterator<Type>;
-		using const_iterator = RandomAccessIterator<const Type>;
-		using reverse_iterator = ReverseRandomAccessIterator<Type>; 
-		using const_reverse_iterator = ReverseRandomAccessIterator<const Type>;
-	private:
-		pointer dataPtr;
-		size_type sizePartition;
-	public:
-		constexpr Partition() = default;
-		constexpr ~Partition() = default;
-		constexpr Partition(pointer dataPtr, const size_type size) : dataPtr(dataPtr), sizePartition(size) {}
-		constexpr Partition(std::initializer_list<Type> initList) 
-			noexcept requires(isConst<Type>) : 
-			dataPtr(initList.begin()), 
-			sizePartition(initList.size()) {}
-
-		constexpr size_type size() const noexcept { return sizePartition; }
-		constexpr pointer data() noexcept requires(isNotConst<Type>) { return dataPtr; }
-		constexpr const_pointer data() const noexcept { return dataPtr; };
-
-		constexpr pointer beginPtr() noexcept requires(isNotConst<Type>) { return dataPtr; }
-		constexpr const_pointer beginPtr() const noexcept { return dataPtr; }
-		constexpr pointer endPtr() noexcept requires(isNotConst<Type>)  { return dataPtr + sizePartition; }
-		constexpr const_pointer endPtr() const noexcept { return dataPtr + sizePartition; }
-
-		constexpr iterator begin() noexcept requires(isNotConst<Type>) { return iterator(beginPtr()); }
-		constexpr const_iterator begin() const noexcept { return const_iterator(beginPtr()); }
-		constexpr const_iterator cbegin() const noexcept { return const_iterator(beginPtr()); }
-		constexpr iterator end() noexcept requires(isNotConst<Type>) { return iterator(endPtr()); }
-		constexpr const_iterator end() const noexcept { return const_iterator(endPtr()); }
-		constexpr const_iterator cend() const noexcept { return const_iterator(endPtr()); }
-		constexpr reverse_iterator rbegin() noexcept requires(isNotConst<Type>) { return reverse_iterator(endPtr()); }
-		constexpr const_reverse_iterator rbegin() const noexcept { return const_reverse_iterator(endPtr()); }
-		constexpr const_reverse_iterator crbegin() const noexcept { return const_reverse_iterator(endPtr()); }
-		constexpr reverse_iterator rend() noexcept requires(isNotConst<Type>) { return reverse_iterator(beginPtr()); }
-		constexpr const_reverse_iterator rend() const noexcept { return const_reverse_iterator(beginPtr()); }
-		constexpr const_reverse_iterator crend() const noexcept { return const_reverse_iterator(beginPtr()); }
-
-		constexpr bool isEmpty() const noexcept { return !bool(sizePartition); }
-		constexpr bool isNotEmpty() const noexcept { return bool(sizePartition); }
-		constexpr operator bool() const noexcept { return isNotEmpty(); }
-
-		constexpr reference at(const size_type index) noexcept requires(isNotConst<Type>) { return dataPtr[index]; };
-		constexpr const_reference at(const size_type index) const noexcept { return dataPtr[index]; };
-
-		constexpr size_type clamp(const size_type value, const size_type min, const size_type max) const noexcept {
-			const size_type t = value < min ? min : value;
-			return t > max ? max : t;
-		}
-
-		constexpr size_type clampIndex(const size_type index) const noexcept { return clamp(index, 0, sizePartition - 1); }
-
-		constexpr reference atClamped(const size_type index) noexcept requires(isNotConst<Type>) { return dataPtr[clampIndex(index)]; }
-		constexpr const_pointer atClamped(const size_type index) const noexcept { return dataPtr[clampIndex(index)]; }
-
-		constexpr size_type frontIndex() const noexcept { return 0; }
-		constexpr size_type backIndex() const noexcept { return sizePartition ? sizePartition - 1 : 0; }
-
-		constexpr reference front() noexcept requires(isNotConst<Type>) { return at(frontIndex()); }
-		constexpr const_reference front() const noexcept { return at(frontIndex()); }
-
-		constexpr reference back() noexcept { return at(backIndex()); }
-		constexpr const_reference back() const noexcept { return at(backIndex()); }
-
-		constexpr bool has(const size_type index) const noexcept { return index < sizePartition; }
-		constexpr bool notHave(const size_type index) const noexcept { return index >= sizePartition; }
-
-
-		/*
-		optional_const_pointer optionalGetConstRefAt(const size_type index) const {
-			if (notHave(index)) { return optional_const_pointer(); }
-			return optional_const_pointer(at(index));
-		};
-		optional_pointer optionalGetRefAt(const size_type index) {
-			if (notHave(index)) { return optional_pointer(); }
-			return optional_pointer(at(index));
-		};
-
-		optional_const_pointer optionalGetConstPtrAt(const size_type index) {
-			if (notHave(index)) { return optional_const_pointer(); }
-			return optional_const_pointer(at(index));
-		};
-		optional_pointer optionalGetPtrAt(const size_type index) {
-			if (notHave(index)) { return optional_pointer(); }
-			return optional_pointer(at(index));
-		};
-
-		optional_pointer optionalFront() { return optionalGetRefAt(frontIndex()); }
-		optional_const_pointer optionalFront() const { return optionalGetConstRefAt(frontIndex()); }
-		optional_pointer optionalBack() { return optionalGetRefAt(backIndex()); }
-		optional_const_pointer optionalBack() const { return optionalGetConstRefAt(backIndex()); }
-		*/
-
-		constexpr void assign(std::initializer_list<Type> initList) noexcept requires(isConst<Type>) {
-			dataPtr = initList.begin();
-			sizePartition = initList.size();
-		}
-
-		constexpr void copy(std::initializer_list<Type> initList) noexcept requires(isNotConst<Type>) {
-			const size_type count = std::max<size_type>(initList.size(), size());
-			for (size_type i = 0; i < count; i++) {
-				at(i) = initList[i];
-			}
-		}
-		constexpr bool sizeMatchCopy(std::initializer_list<Type> initList) noexcept requires(isNotConst<Type>) {
-			if (initList.size() != size()) { 
-				return false; 
-			} else {
-				copy(initList);
-				return true;
-			}
-		}
-
-		constexpr void operator=(std::initializer_list<Type> initList) noexcept requires(isConst<Type>) {  
-			dataPtr = initList.begin();
-			sizePartition = initList.size();
-		}
-	};
-
-	template<class Container>
-	concept ContainerPartitionConstructable =
-		HasIteratorType<Container> &&
-		HasBeginIteratorToPtr<Container> &&
-		HasSizeMethod<Container> &&
-		std::random_access_iterator<typename Container::iterator>;
-	template<class Container>
-		requires(ContainerPartitionConstructable<Container>)
-	Partition<typename ContainerIteratorTraits<Container>::value_type> newPartitionFromContainer(Container& container) {
-		return Partition<typename ContainerIteratorTraits<Container>::value_type>(&*container.begin(), container.size());
-	}
-
 	template<class Type, std::size_t size>
 	class FixedPartitioner {
 		using pointer = Type*;
@@ -163,17 +21,17 @@ namespace natl {
 		using reverse_iterator = ReverseRandomAccessIterator<Type>;
 		using const_reverse_iterator = ReverseRandomAccessIterator<const Type>;
 	public:
-		std::array<Type, size> partitionData;
+		natl::Array<Type, size> partitionData;
 		size_type partitionIndex;
 	public:
-		 size_type size() const noexcept { return partitionData.size(); }
-		 size_type capacity() const noexcept { return partitionData.capacity(); }
-		 bool isFull() const noexcept { return capacity() < size(); };
-		 bool isEmpty() const noexcept { return partitionIndex == 0; };
-		 bool isNotEmpty() const noexcept { return partitionIndex != 0; };
-		 pointer data() const noexcept { return partitionData; }
-		 void clear() noexcept { partitionIndex = 0; }
-		 Partition<Type> newPartition(const size_type partiationSize) {
+		constexpr size_type size() const noexcept { return partitionData.size(); }
+		constexpr size_type capacity() const noexcept { return partitionData.capacity(); }
+		constexpr bool isFull() const noexcept { return capacity() < size(); };
+		constexpr bool isEmpty() const noexcept { return partitionIndex == 0; };
+		constexpr bool isNotEmpty() const noexcept { return partitionIndex != 0; };
+		constexpr pointer data() const noexcept { return partitionData; }
+		constexpr void clear() noexcept { partitionIndex = 0; }
+		constexpr Partition<Type> newPartition(const size_type partiationSize) {
 			if (capacity() < partitionIndex + partiationSize) {
 				return Partition<Type>(nullptr, 0);
 			}
@@ -183,23 +41,23 @@ namespace natl {
 			return partition;
 		}
 	public:
-		pointer beginPtr() noexcept { return partitionData.begin(); }
-		const_pointer beginPtr() const noexcept { return partitionData.cbegin(); }
-		pointer endPtr() noexcept { return partitionData.end(); }
-		const_pointer endPtr() const noexcept { return partitionData.cend(); }
+		constexpr pointer beginPtr() noexcept { return partitionData.begin(); }
+		constexpr const_pointer beginPtr() const noexcept { return partitionData.cbegin(); }
+		constexpr pointer endPtr() noexcept { return partitionData.end(); }
+		constexpr const_pointer endPtr() const noexcept { return partitionData.cend(); }
 
-		iterator begin() noexcept { return iterator(beginPtr()); }
-		const_iterator begin() const noexcept { return const_iterator(beginPtr()); }
-		const_iterator cbegin() const noexcept { return const_iterator(beginPtr()); }
-		iterator end() noexcept { return iterator(endPtr()); }
-		const_iterator end() const noexcept { return const_iterator(endPtr()); }
-		const_iterator cend() const noexcept { return const_iterator(endPtr()); }
-		reverse_iterator rbegin() noexcept { return reverse_iterator(endPtr()); }
-		const_reverse_iterator rbegin() const noexcept { return const_reverse_iterator(endPtr()); }
-		const_reverse_iterator crbegin() const noexcept { return const_reverse_iterator(endPtr()); }
-		reverse_iterator rend() noexcept { return reverse_iterator(beginPtr()); }
-		const_reverse_iterator rend() const noexcept { return const_reverse_iterator(beginPtr()); }
-		const_reverse_iterator crend() const noexcept { return const_reverse_iterator(beginPtr()); }
+		constexpr iterator begin() noexcept { return iterator(beginPtr()); }
+		constexpr const_iterator begin() const noexcept { return const_iterator(beginPtr()); }
+		constexpr const_iterator cbegin() const noexcept { return const_iterator(beginPtr()); }
+		constexpr iterator end() noexcept { return iterator(endPtr()); }
+		constexpr const_iterator end() const noexcept { return const_iterator(endPtr()); }
+		constexpr const_iterator cend() const noexcept { return const_iterator(endPtr()); }
+		constexpr reverse_iterator rbegin() noexcept { return reverse_iterator(endPtr()); }
+		constexpr const_reverse_iterator rbegin() const noexcept { return const_reverse_iterator(endPtr()); }
+		constexpr const_reverse_iterator crbegin() const noexcept { return const_reverse_iterator(endPtr()); }
+		constexpr reverse_iterator rend() noexcept { return reverse_iterator(beginPtr()); }
+		constexpr const_reverse_iterator rend() const noexcept { return const_reverse_iterator(beginPtr()); }
+		constexpr const_reverse_iterator crend() const noexcept { return const_reverse_iterator(beginPtr()); }
 	};
 
 	class DynamicBytePartitioner;
@@ -220,16 +78,16 @@ namespace natl {
 	public:
 		DynamicPartitioner() : data(), partitionIndex(0) {}
 
-		 void resize(const size_type newCapacity) { data.resize(newCapacity); }
-		 size_type size() const noexcept { return partitionIndex + 1; }
-		 size_type capacity() const noexcept { return data.capacity(); }
-		 bool isFull() const noexcept { return capacity() < partitionIndex + 1; };
-		 bool isEmpty() const noexcept { return partitionIndex == 0; };
-		 bool isNotEmpty() const noexcept { return partitionIndex != 0; };
-		 void shrinkToFit() { data.shrinkToFit(); }
-		 void clear() { data.clear(); }
-		 void fullClear() { DynamicArray<Type> trash; trash.swap(data); }
-		 Partition<Type> newPartition(const size_type partiationSize) {
+		constexpr void resize(const size_type newCapacity) noexcept { data.resize(newCapacity); }
+		constexpr size_type size() const noexcept { return partitionIndex + 1; }
+		constexpr size_type capacity() const noexcept { return data.capacity(); }
+		constexpr bool isFull() const noexcept { return capacity() < partitionIndex + 1; };
+		constexpr bool isEmpty() const noexcept { return partitionIndex == 0; };
+		constexpr bool isNotEmpty() const noexcept { return partitionIndex != 0; };
+		constexpr void shrinkToFit() noexcept { data.shrinkToFit(); }
+		constexpr void clear() noexcept { data.clear(); }
+		constexpr void fullClear() noexcept { DynamicArray<Type> trash; trash.swap(data); }
+		constexpr Partition<Type> newPartition(const size_type partiationSize) noexcept {
 			if (capacity() < partitionIndex + partiationSize) {
 				return Partition<Type>(nullptr, 0);
 			}
@@ -238,36 +96,36 @@ namespace natl {
 			partitionIndex += partiationSize;
 			return partition;
 		}
-		void swap(DynamicPartitioner<Type>& dst) {
+		constexpr void swap(DynamicPartitioner<Type>& dst) noexcept {
 			dst.data.swap(data);
 			size_type tempPartitionIndex = partitionIndex;
 			partitionIndex = dst.partitionIndex;
 			dst.partitionIndex = tempPartitionIndex;
 		}
-	
-		pointer beginPtr() noexcept { return data.begin(); }
-		const_pointer beginPtr() const noexcept { return data.cbegin(); }
-		pointer endPtr() noexcept { return data.end(); }
-		const_pointer endPtr() const noexcept { return data.cend(); }
 
-		iterator begin() noexcept { return iterator(beginPtr()); }
-		const_iterator begin() const noexcept { return const_iterator(beginPtr()); }
-		const_iterator cbegin() const noexcept { return const_iterator(beginPtr()); }
-		iterator end() noexcept { return iterator(endPtr()); }
-		const_iterator end() const noexcept { return const_iterator(endPtr()); }
-		const_iterator cend() const noexcept { return const_iterator(endPtr()); }
-		reverse_iterator rbegin() noexcept { return reverse_iterator(endPtr()); }
-		const_reverse_iterator rbegin() const noexcept { return const_reverse_iterator(endPtr()); }
-		const_reverse_iterator crbegin() const noexcept { return const_reverse_iterator(endPtr()); }
-		reverse_iterator rend() noexcept { return reverse_iterator(beginPtr()); }
-		const_reverse_iterator rend() const noexcept { return const_reverse_iterator(beginPtr()); }
-		const_reverse_iterator crend() const noexcept { return const_reverse_iterator(beginPtr()); }
+		constexpr pointer beginPtr() noexcept { return data.begin(); }
+		constexpr const_pointer beginPtr() const noexcept { return data.cbegin(); }
+		constexpr pointer endPtr() noexcept { return data.end(); }
+		constexpr const_pointer endPtr() const noexcept { return data.cend(); }
+
+		constexpr iterator begin() noexcept { return iterator(beginPtr()); }
+		constexpr const_iterator begin() const noexcept { return const_iterator(beginPtr()); }
+		constexpr const_iterator cbegin() const noexcept { return const_iterator(beginPtr()); }
+		constexpr iterator end() noexcept { return iterator(endPtr()); }
+		constexpr const_iterator end() const noexcept { return const_iterator(endPtr()); }
+		constexpr const_iterator cend() const noexcept { return const_iterator(endPtr()); }
+		constexpr reverse_iterator rbegin() noexcept { return reverse_iterator(endPtr()); }
+		constexpr const_reverse_iterator rbegin() const noexcept { return const_reverse_iterator(endPtr()); }
+		constexpr const_reverse_iterator crbegin() const noexcept { return const_reverse_iterator(endPtr()); }
+		constexpr reverse_iterator rend() noexcept { return reverse_iterator(beginPtr()); }
+		constexpr const_reverse_iterator rend() const noexcept { return const_reverse_iterator(beginPtr()); }
+		constexpr const_reverse_iterator crend() const noexcept { return const_reverse_iterator(beginPtr()); }
 	public:
 		friend class DynamicBytePartitioner;
 	};
 
 
-	 inline std::size_t alignmentOffset(std::uint8_t* ptr, std::size_t alignment) noexcept {
+	inline std::size_t alignmentOffset(std::uint8_t* ptr, std::size_t alignment) noexcept {
 		std::size_t offset = static_cast<std::size_t>(reinterpret_cast<std::uintptr_t>(ptr) & (alignment - 1));
 		if (offset != 0) { offset = alignment - offset; }// number of bytes to skip 
 		return offset;
@@ -287,7 +145,7 @@ namespace natl {
 		DynamicBytePartitioner() : DynamicPartitioner<std::uint8_t>() {}
 	public:
 		template<class Type>
-		Partition<Type> newPartition(const size_type partiationSize) {
+		Partition<Type> newPartition(const size_type partiationSize) noexcept {
 			const size_type offset = alignmentOffset(data.data(), alignof(Type));
 			const size_type partiationByteSize = partiationSize * sizeof(Type) + offset;
 			if (capacity() < partiationByteSize) {
@@ -308,19 +166,19 @@ namespace natl {
 		Partition<Type> partition;
 		size_type partitionIndex;
 	public:
-		SubPartitioner() = default;
-		SubPartitioner(const Partition<Type>& partition) : partition(partition), partitionIndex(0) {}
+		constexpr SubPartitioner() = default;
+		constexpr SubPartitioner(const Partition<Type>& partition) : partition(partition), partitionIndex(0) {}
 
-		 size_type size() const noexcept { return partitionIndex + 1; }
-		 size_type capacity() const noexcept { return partition.size(); }
-		 bool isFull() const noexcept { return capacity() < size(); };
-		 bool isEmpty() const noexcept { return partitionIndex == 0; };
-		 bool isNotEmpty() const noexcept { return partitionIndex != 0; };
-		 void clear() noexcept { return partitionIndex = 0; };
-		 Partition<Type> getInternalPartition() const { return partition; };
-		 void assign(const Partition<Type>& assignPartition) { partition = assignPartition; partitionIndex = 0; };
+		constexpr size_type size() const noexcept { return partitionIndex + 1; }
+		constexpr size_type capacity() const noexcept { return partition.size(); }
+		constexpr bool isFull() const noexcept { return capacity() < size(); };
+		constexpr bool isEmpty() const noexcept { return partitionIndex == 0; };
+		constexpr bool isNotEmpty() const noexcept { return partitionIndex != 0; };
+		constexpr void clear() noexcept { return partitionIndex = 0; };
+		constexpr Partition<Type> getInternalPartition() const noexcept { return partition; };
+		constexpr void assign(const Partition<Type>& assignPartition) noexcept { partition = assignPartition; partitionIndex = 0; };
 
-		Partition<Type> newPartition(const size_type partiationSize) {
+		constexpr Partition<Type> newPartition(const size_type partiationSize) noexcept {
 			if (capacity() < partiationSize) {
 				return Partition<Type>(nullptr, 0);
 			}

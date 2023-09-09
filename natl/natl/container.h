@@ -56,15 +56,13 @@ namespace natl {
 		{ container.cend() } -> IteratorConvertableToPtr;
 	};
 
-
 	template<class Contanier>
 	concept HasSizeMethod = requires(const Contanier container) {
 		{ container.size() } -> std::convertible_to<std::size_t>;
 	};
 
-
 	template<class Contanier>
-	requires(HasIteratorType<Contanier>)
+		requires(HasIteratorType<Contanier>)
 	struct ContainerIteratorTraits {
 	public:
 		using difference_type = std::iterator_traits<typename Contanier::iterator>::difference_type;
@@ -91,7 +89,7 @@ namespace natl {
 		swap<typename ForwardIter1::value_type>(*a, *b);
 	}
 
-	template<class BidirectionalIter> 
+	template<class BidirectionalIter>
 	constexpr void reverse(BidirectionalIter first, BidirectionalIter last) noexcept {
 		using iterator_category = typename std::iterator_traits<BidirectionalIter>::iterator_category;
 		if constexpr (std::is_base_of_v<std::random_access_iterator_tag, iterator_category>) {
@@ -99,7 +97,8 @@ namespace natl {
 			for (--last; first < last; (void)++first, --last) {
 				iterSwap<BidirectionalIter, BidirectionalIter>(first, last);
 			}
-		} else {
+		}
+		else {
 			while (first != last && first != --last) {
 				iterSwap<BidirectionalIter, BidirectionalIter>(first++, last);
 			}

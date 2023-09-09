@@ -1,11 +1,14 @@
 #pragma once 
 
+//std
+#include <initializer_list>
+
 //own
 #include "typeTraits.h"
 #include "iterators.h"
 #include "option.h"
 #include "allocator.h"
-#include "uninitialized.h"
+#include "dataMovement.h"
 
 //interface
 namespace natl {
@@ -53,6 +56,14 @@ namespace natl {
 			src.beginDataPtr = nullptr; src.endDataPtr = nullptr; src.inCapacity = 0;
 		}
 
+		constexpr DynamicArray(std::initializer_list<DataType> src) : beginDataPtr{}, endDataPtr{}, inCapacity{} {
+			if (src.size() > 0) {
+				this->reserve(src.size());
+				uninitializedCopyCountNoOverlap<const_pointer, pointer>(src.begin(), beginDataPtr, src.size());
+				endDataPtr = beginDataPtr + src.size();
+			}
+		}
+
 		constexpr ~DynamicArray() { 
 			deconstructAllData(); 
 			freeData();
@@ -88,8 +99,8 @@ namespace natl {
 
 		constexpr reference at(const size_type index) noexcept requires(isNotConst<DataType>) { return beginDataPtr[index]; };
 		constexpr const_reference at(const size_type index) const noexcept { return beginDataPtr[index]; };
-		constexpr reference operator[] (const size_type index) { return at(index); }
-		constexpr const_reference operator[] (const size_type index) const { return at(index); }
+		constexpr reference operator[] (const size_type index) noexcept { return at(index); }
+		constexpr const_reference operator[] (const size_type index) const noexcept { return at(index); }
 
 		constexpr size_type frontIndex() const noexcept { return 0; }
 		constexpr size_type backIndex() const noexcept { return size() ? size() - 1 : 0; }
@@ -112,7 +123,7 @@ namespace natl {
 		constexpr reference atClamped(const size_type index) noexcept requires(isNotConst<DataType>) { return beginDataPtr[clampIndex(index)]; }
 		constexpr const_pointer atClamped(const size_type index) const noexcept { return beginDataPtr[clampIndex(index)]; }
 
-		constexpr void reserve(const size_type newCapacity) {
+		constexpr void reserve(const size_type newCapacity) noexcept {
 			if (newCapacity <= capacity()) { return; }
 			pointer newDataBeginLocation = this->template alloc<DataType>(newCapacity);
 			pointer newDataEndLocation = newDataBeginLocation + size();
@@ -127,7 +138,7 @@ namespace natl {
 			inCapacity = newCapacity;
 		}
 
-		constexpr void resize(const size_type newSize) {
+		constexpr void resize(const size_type newSize) noexcept {
 			const size_type oldSize = size();
 			if (oldSize == newSize) {
 				return;
@@ -143,7 +154,7 @@ namespace natl {
 				return;
 			}
 
-			if (newSize > capacity()) { 
+			if (newSize > capacity()) {
 				reserve(newSize);
 			}
 
@@ -152,12 +163,12 @@ namespace natl {
 			endDataPtr = beginDataPtr + newSize;
 		}
 
-		constexpr void clear() {
+		constexpr void clear() noexcept {
 			deconstructAllData();
 			endDataPtr = beginDataPtr;
 		}
 
-		constexpr void pushBack(const DataType& value) {
+		constexpr void pushBack(const DataType& value) noexcept {
 			if (size() == capacity()) {
 				reserve(size() + 1);
 			}
@@ -165,7 +176,7 @@ namespace natl {
 			std::construct_at<DataType, const DataType&>(&back(), value);
 		}
 
-		constexpr void pushBack(DataType&& value) {
+		constexpr void pushBack(DataType&& value) noexcept {
 			if (size() == capacity()) {
 				reserve((size() + 1) * 2);
 			}
@@ -179,7 +190,7 @@ namespace natl {
 			endDataPtr--;
 		}
 
-		constexpr void append(const DynamicArray& src) {
+		constexpr void append(const DynamicArray& src) noexcept {
 			if (src.isEmpty()) { return; }
 			const size_type newSize = size() + src.size();
 			reserve(newSize);
@@ -188,16 +199,25 @@ namespace natl {
 			endDataPtr = beginDataPtr + newSize;
 		}
 
-		constexpr void append(const DataType* srcPtr, const size_type scrSize) {
-			if (!srcPtr) { return; }
-			const size_type newSize = size() + scrSize;
+		constexpr void append(const DataType* srcPtr, const size_type srcSize) noexcept {
+			if (!srcPtr || srcSize == 0) { return; }
+			const size_type newSize = size() + srcSize;
 			reserve(newSize);
 
-			uninitializedCopyCountNoOverlap<const_pointer, pointer>(srcPtr, endDataPtr, scrSize);
+			uninitializedCopyCountNoOverlap<const_pointer, pointer>(srcPtr, endDataPtr, srcSize);
 			endDataPtr = beginDataPtr + newSize;
 		}
 
-		constexpr DynamicArray& operator=(const DynamicArray& src) {
+		constexpr void append(std::initializer_list<DataType>& dataType) noexcept {
+			if (dataType.size() == 0) { return; }
+			const size_type newSize = size() + dataType.size();
+			reserve(newSize);
+
+			uninitializedCopyCountNoOverlap<const_pointer, pointer>(dataType.begin(), endDataPtr, dataType.size());
+			endDataPtr = beginDataPtr + newSize;
+		}
+
+		constexpr DynamicArray& operator=(const DynamicArray& src) noexcept {
 			deconstructAllData();
 			freeDataVerify();
 
@@ -214,7 +234,7 @@ namespace natl {
 			return *this;
 		}
 
-		constexpr DynamicArray& operator=(DynamicArray&& src) {
+		constexpr DynamicArray& operator=(DynamicArray&& src) noexcept {
 			deconstructAllData();
 			freeDataVerify();
 
@@ -223,16 +243,34 @@ namespace natl {
 
 			return *this;
 		}
+
+		constexpr DynamicArray& operator=(std::initializer_list<DataType> src) noexcept {
+			deconstructAllData();
+			freeDataVerify();
+
+			beginDataPtr = nullptr;
+			endDataPtr = nullptr;
+			inCapacity = 0;
+
+			if (src.size() > 0) {
+				this->reserve(src.size());
+				uninitializedCopyCountNoOverlap<const_pointer, pointer>(src.begin(), beginDataPtr, src.size());
+				endDataPtr = beginDataPtr + src.size();
+			}
+
+			return *this;
+		}
+
 	private:
-		constexpr void deconstructAllData() {
+		constexpr void deconstructAllData() noexcept {
 			if constexpr (!std::is_trivially_destructible_v<DataType>) {
 				defualtDeconstructAll<DataType>(beginDataPtr, size());
 			}
 		}
-		constexpr void freeData() {
+		constexpr void freeData() noexcept {
 			this->template free<DataType>(beginDataPtr);
 		}
-		constexpr void freeDataVerify() {
+		constexpr void freeDataVerify() noexcept {
 			if (beginDataPtr != nullptr) {
 				this->template free<DataType>(beginDataPtr);
 			}

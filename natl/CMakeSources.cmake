@@ -1,8 +1,10 @@
 set(HEADER_FILES
 natl/allocator.h
+natl/array.h
 natl/batchPool.h
 natl/bitArray.h
 natl/container.h
+natl/dataMovement.h
 natl/dynamicArray.h
 natl/error.h
 natl/expect.h
@@ -11,6 +13,7 @@ natl/functional.h
 natl/hash.h
 natl/iterators.h
 natl/option.h
+natl/partition.h
 natl/partitioner.h
 natl/pointer.h
 natl/repeat.h
@@ -20,7 +23,6 @@ natl/stringView.h
 natl/test.h
 natl/timer.h
 natl/typeTraits.h
-natl/uninitialized.h
 natl/uninitializedArray.h
 natl/uninitializedValue.h
 natl/view.h

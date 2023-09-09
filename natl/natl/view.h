@@ -129,7 +129,6 @@ namespace natl {
 		Iter end() const noexcept { return endIter; }
 	};
 
-
 	template<class Type>
 	PtrView<Type> createPtrView(Type* const ptr, const std::size_t size) {
 		return PtrView<Type>(ptr, size);
@@ -139,7 +138,7 @@ namespace natl {
 	concept PtrViewConstructable = HasBegin<Type> && std::random_access_iterator<Type>;
 
 	template<PtrViewConstructable Container,
-		class Iter = Container::iterator, 
+		class Iter = Container::iterator,
 		typename ValueType = typename std::iterator_traits<Iter>::value_type>
 	PtrView<ValueType> createPtrViewFromContainer(ValueType* const ptr, const std::size_t size) {
 		return PtrView<ValueType>(ptr, size);
@@ -147,7 +146,7 @@ namespace natl {
 
 	template<class Type>
 	concept ViewConstructable = HasBegin<Type> && HasEnd<Type> && HasIteratorType<Type>;
-	
+
 	template<ViewConstructable Container, class Iter = Container::iterator>
 	View<Iter> createView(Container& container) {
 		return View<Iter>(container.begin(), container.end());
