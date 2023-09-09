@@ -11,7 +11,7 @@ if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR) #IS ROOT
 	include(externals/nacmake/externals_nacmake.cmake)
 else()
 	#NACMAKE
-	if(not PROJECT_EXISTS nacmake)
+	if(NOT TARGET nacmake)
 		message(FATAL_ERROR "natl: requires nacmake")
 	endif()
 endif()
