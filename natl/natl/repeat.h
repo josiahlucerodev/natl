@@ -20,8 +20,11 @@ namespace natl {
         constexpr RepeatIterator& getSelf() noexcept { return *this; };
         constexpr const RepeatIterator& getSelf() const noexcept { return *this; };
     public:
-
         std::size_t index;
+
+        constexpr RepeatIterator() : index(0) {}
+        constexpr RepeatIterator(const std::size_t index) : index(index) {}
+
         constexpr reference operator*() noexcept { return index; }
         constexpr const_reference operator*() const noexcept { return index; }
         constexpr const_reference operator->() const noexcept { return index; }
@@ -93,9 +96,9 @@ namespace natl {
     private:
         std::size_t count;
     public:
-        constexpr Repeat() = default;
-        constexpr ~Repeat() = default;
+        constexpr Repeat() : count(0) {}
         constexpr Repeat(const std::size_t count) : count(count) {}
+        constexpr ~Repeat() = default;
 
         constexpr std::size_t size() const noexcept { return count; }
         constexpr size_type beginIndex() const noexcept { return 0; };
@@ -127,10 +130,10 @@ namespace natl {
         std::size_t repeatFrom;
         std::size_t repeatTo;
     public:
-        constexpr RepeatFromTo() = default;
-        constexpr ~RepeatFromTo() = default;
+        constexpr RepeatFromTo() : repeatFrom(0), repeatTo(0) {}
         constexpr RepeatFromTo(const std::size_t repeatFrom, const std::size_t repeatTo) : repeatFrom(repeatFrom), repeatTo(repeatTo) {}
         constexpr RepeatFromTo(const std::size_t count) : repeatFrom(0), repeatTo(count) {}
+        constexpr ~RepeatFromTo() = default;
 
         constexpr std::size_t size() const noexcept { return repeatTo - repeatFrom; }
         constexpr size_type beginIndex() const noexcept { return repeatFrom; };

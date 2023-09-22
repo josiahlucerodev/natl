@@ -27,10 +27,10 @@ namespace nasimd {
 			BitArrayBitStorageType* bitArrayPtr;
 			std::size_t index;
 		public:
-			constexpr reference() = default;
-			constexpr ~reference() = default;
+			constexpr reference() : bitArrayPtr(nullptr), index(0) {}
 			constexpr reference(BitArrayBitStorageType* const bitArrayPtr, const std::size_t index) noexcept : 
 				bitArrayPtr(bitArrayPtr), index(index) {}
+			constexpr ~reference() = default;
 
 			constexpr reference& operator=(const bool value) noexcept {
 				return bitArrayPtr->set(index, value);
@@ -52,7 +52,7 @@ namespace nasimd {
 			}
 		};
 
-		constexpr BitArrayBitStorageType() = default;
+		constexpr BitArrayBitStorageType() : bitsArray() {}
 		constexpr ~BitArrayBitStorageType() = default;
 
 		constexpr BitArrayBitStorageType(const BitIndex bitIndex) {

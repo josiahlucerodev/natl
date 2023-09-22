@@ -41,11 +41,11 @@ namespace natl {
 	class TestInvaildValue {
 		String message;
 	public:
-		TestInvaildValue(const StringView& message) : message(message) {}
+		TestInvaildValue(const StringView& message) : message(message.toString()) {}
 		TestInvaildValue(const String& message) : message(message) {}
 		TestInvaildValue(const char* message) : message(message) {}
 	public:
-		StringView getMessageView() const { return static_cast<StringView>(message); };
+		StringView getMessageView() const { return StringView(message); };
 		String& getMessage() { return message; };
 		const String& getMessage() const { return message; };
 	};

@@ -2,11 +2,11 @@
 
 //std
 #include <cstdint>
+#include <vector>
 
 //own
 #include "iterators.h"
 #include "array.h"
-#include "dynamicArray.h"
 #include "partition.h"
 
 //interface 
@@ -24,6 +24,8 @@ namespace natl {
 		natl::Array<Type, size> partitionData;
 		size_type partitionIndex;
 	public:
+		constexpr FixedPartitioner() : partitionData(), partitionIndex(0) {}
+
 		constexpr size_type size() const noexcept { return partitionData.size(); }
 		constexpr size_type capacity() const noexcept { return partitionData.capacity(); }
 		constexpr bool isFull() const noexcept { return capacity() < size(); };
@@ -73,7 +75,7 @@ namespace natl {
 		using reverse_iterator = ReverseRandomAccessIterator<Type>;
 		using const_reverse_iterator = ReverseRandomAccessIterator<const Type>;
 	private:
-		DynamicArray<Type> data;
+		std::vector<Type> data;
 		size_type partitionIndex;
 	public:
 		DynamicPartitioner() : data(), partitionIndex(0) {}
@@ -86,7 +88,7 @@ namespace natl {
 		constexpr bool isNotEmpty() const noexcept { return partitionIndex != 0; };
 		constexpr void shrinkToFit() noexcept { data.shrinkToFit(); }
 		constexpr void clear() noexcept { data.clear(); }
-		constexpr void fullClear() noexcept { DynamicArray<Type> trash; trash.swap(data); }
+		constexpr void fullClear() noexcept { std::vector<Type> trash; trash.swap(data); }
 		constexpr Partition<Type> newPartition(const size_type partiationSize) noexcept {
 			if (capacity() < partitionIndex + partiationSize) {
 				return Partition<Type>(nullptr, 0);
@@ -166,7 +168,7 @@ namespace natl {
 		Partition<Type> partition;
 		size_type partitionIndex;
 	public:
-		constexpr SubPartitioner() = default;
+		constexpr SubPartitioner() : partition(), partitionIndex(0) {};
 		constexpr SubPartitioner(const Partition<Type>& partition) : partition(partition), partitionIndex(0) {}
 
 		constexpr size_type size() const noexcept { return partitionIndex + 1; }

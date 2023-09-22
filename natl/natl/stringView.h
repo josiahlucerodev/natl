@@ -1,8 +1,12 @@
 #pragma once 
 
+//std
+#include <string>
+
 //own
 #include "iterators.h"
 #include "option.h"
+#include "string.h"
 
 //interface
 namespace natl {
@@ -28,7 +32,7 @@ namespace natl {
 		size_type stringLength;
 		const char* dataPtr;
 	public:
-		BaseStringView() = default;
+		BaseStringView() : stringLength(0), dataPtr(nullptr) {}
 		~BaseStringView() = default;
 		constexpr BaseStringView(const char string[]) : dataPtr(string), stringLength(0) {
 			const char* tempDataPtr = string;
@@ -36,15 +40,13 @@ namespace natl {
 		}
 		constexpr BaseStringView(const char* stringPtr, const size_type length)
 			: dataPtr(stringPtr), stringLength(length) {}
-		//constexpr BaseStringView(const String& string)
-		//	: dataPtr(string.cStr()), stringLength(string.length()) {}
-		//constexpr BaseStringView(String& string)
-		//	: dataPtr(string.cStr()), stringLength(string.length()) {}
+		constexpr BaseStringView(const String& string)
+			: dataPtr(string.c_str()), stringLength(string.length()) {}
 	public:
 		constexpr const char* c_str() const noexcept { return dataPtr; }
 		constexpr const char* cStr() const noexcept { return dataPtr; }
 		constexpr const char* cString() const noexcept { return dataPtr; }
-		//constexpr String toString() const noexcept { return String(dataPtr, size()); }
+		constexpr String toString() const noexcept { return String(dataPtr, size()); }
 		constexpr size_type length() const noexcept { return stringLength; }
 		constexpr size_type size() const noexcept { return stringLength; }
 		constexpr size_type hash() const noexcept {
@@ -55,6 +57,15 @@ namespace natl {
 				hashValue = ((hashValue << 5) + hashValue) + c;
 			return hashValue;
 		}
+		constexpr static size_type staticHash(const BaseStringView& stringView) noexcept {
+			size_type c = 0;
+			size_type hashValue = 5381;
+			const char* dataPtr = stringView.dataPtr;
+			while ((c = *dataPtr++))
+				hashValue = ((hashValue << 5) + hashValue) + c;
+			return hashValue;
+		}
+
 		constexpr bool operator==(const BaseStringView& other) const noexcept {
 			if (length() != other.length()) {
 				return false;
@@ -92,6 +103,8 @@ namespace natl {
 		constexpr const_reference front() const noexcept { return at(frontIndex()); }
 		constexpr reference back() noexcept { return at(backIndex()); }
 		constexpr const_reference back() const noexcept { return at(backIndex()); }
+
+		constexpr String toString() { return String(cStr(), size()); }
 	};
 
 	using StringView = BaseStringView<char>;

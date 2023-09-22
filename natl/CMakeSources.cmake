@@ -3,9 +3,9 @@ natl/allocator.h
 natl/array.h
 natl/batchPool.h
 natl/bitArray.h
+natl/commonHashs.h
 natl/container.h
 natl/dataMovement.h
-natl/dynamicArray.h
 natl/error.h
 natl/expect.h
 natl/flatHashMap.h
@@ -29,6 +29,7 @@ natl/view.h
 )
 
 set(SOURCE_FILES
+natl/allocator.cpp
 natl/timer.cpp
 )
 

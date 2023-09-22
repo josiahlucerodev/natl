@@ -32,7 +32,7 @@ namespace natl {
 		DataType data;
 		ErrorType errorData;
 	public:
-		constexpr Expect() = default;
+		constexpr Expect() : isValid(false), data(), errorData() {}
 		constexpr Expect(const DataType& data) : isValid(true), data(data), errorData() { }
 		constexpr Expect(DataType&& data) : isValid(true), data(data), errorData() { }
 		constexpr Expect(const ErrorType& error) : isValid(false), data(), errorData(error) { }

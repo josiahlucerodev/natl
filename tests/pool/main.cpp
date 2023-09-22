@@ -1,7 +1,6 @@
 
 //natl
 #include <natl/batchPool.h>
-#include <natl/dynamicArray.h>
 #include <natl/repeat.h>
 #include <natl/test.h>
 
@@ -10,10 +9,10 @@ bool standardBatchPoolTest(int) {
 	using TestType = std::uint32_t;
 	
 	natl::BatchPool<TestType> batchPool;
-	natl::DynamicArray<TestType*> elementPtrs;
+	std::vector<TestType*> elementPtrs;
 
 	for (const int index : natl::Repeat(1000)) {
-		elementPtrs.pushBack(batchPool.newElement());
+		elementPtrs.push_back(batchPool.newElement());
 	}
 	for (const int index : natl::Repeat(1000)) {
 		*elementPtrs[index] = index;

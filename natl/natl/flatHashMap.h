@@ -4,11 +4,11 @@
 #include <cstdint>
 
 //own
+#include "hash.h"
+#include "iterators.h"
 #include "allocator.h"
 #include "dynamicArray.h"
-#include "hash.h"
-#include "pointer.h"
-
+#include "option.h"
 
 //interface
 namespace natl {
@@ -27,7 +27,7 @@ namespace natl {
 		pointer beginPtr;
 		pointer endPtr;
 	public:
-		constexpr FlatHashMapIterator() = default;
+		constexpr FlatHashMapIterator() : dataPtr(nullptr), beginPtr(nullptr), endPtr(nullptr) {};
 		constexpr FlatHashMapIterator(pointer const dataPtr, pointer const beginPtr, pointer const endPtr) noexcept
 			: dataPtr(dataPtr), beginPtr(beginPtr), endPtr(endPtr) {}
 	private:
@@ -66,16 +66,14 @@ namespace natl {
 		constexpr bool operator>=(const iterator rhs) const noexcept { return dataPtr >= rhs.dataPtr; }
 	};
 
-	template<class Key>
-	using FlatMapHashFunctionType = std::size_t(*) (const Key&);
-
-	template<class Key>
-	using FlatMapCompareFunctionType = bool(*) (const Key&, const Key&);
-
 	template<class DataType>
-	constexpr bool FlatMapHashFunctionDefualtCompare(const DataType& lhs, const DataType& rhs) {
-		return lhs == rhs;
-	}
+	class FlatMapHashCompare {
+	public:
+		constexpr static bool compare(const DataType& lhs, const DataType& rhs) {
+			return lhs == rhs;
+		}
+	};
+
 	template<class Key, class DataType>
 	class FlatHashMapEntry {
 	public:
@@ -84,9 +82,10 @@ namespace natl {
 	private:
 		bool used;
 	public:
-		constexpr FlatHashMapEntry() = default;
+		constexpr FlatHashMapEntry() : key(), data(), used(false) {};
 		constexpr FlatHashMapEntry(const Key& key, const DataType& data, const bool used)
 			: key(key), data(data), used(used) {}
+		constexpr ~FlatHashMapEntry() {}
 
 		constexpr FlatHashMapEntry(const FlatHashMapEntry& src) {
 			key = src.key;
@@ -102,14 +101,14 @@ namespace natl {
 			used = src.used;
 		}
 
-		constexpr FlatHashMapEntry& operator=(FlatHashMapEntry&& src) {
+		constexpr FlatHashMapEntry& operator=(FlatHashMapEntry&& src) noexcept {
 			key = std::move(src.key);
 			data = std::move(src.data);
 			used = src.used;
 			return *this;
 		}
 
-		constexpr FlatHashMapEntry& operator=(const FlatHashMapEntry& src) {
+		constexpr FlatHashMapEntry& operator=(const FlatHashMapEntry& src) noexcept {
 			key = src.key;
 			data = src.data;
 			used = src.used;
@@ -122,9 +121,10 @@ namespace natl {
 		constexpr bool isUsed() const { return used; }
 	};
 
-	template<class Key, class DataType, class Alloc = Allocator,
-		FlatMapHashFunctionType<Key> hashFun = Hash<Key>::hash,
-		FlatMapCompareFunctionType<Key> compareFun = FlatMapHashFunctionDefualtCompare<Key>>
+	template<class Key, class DataType,
+		class Hash = Hash<Key>,
+		class Compare = FlatMapHashCompare<Key>,
+		class Alloc = DefaultAllocator<FlatHashMapEntry<Key, DataType>>>
 	class FlatHashMap {
 		using Entry = FlatHashMapEntry<Key, DataType>;
 	public:
@@ -139,21 +139,19 @@ namespace natl {
 		using optional_const_pointer = Option<const Entry*>;
 		using difference_type = std::ptrdiff_t;
 		using size_type = std::size_t;
-		using allocator_type = Alloc;
 
 		//TODO
 		using iterator = FlatHashMapIterator<Entry>;
 		using const_iterator = FlatHashMapIterator<const Entry>;
 		using reverse_iterator = std::reverse_iterator<FlatHashMapIterator<Entry>>;
 		using const_reverse_iterator = std::reverse_iterator<FlatHashMapIterator<const Entry>>;
-		using alloc_traits = AllocatorTraits<Alloc>;
 
 		static constexpr double load_factor = 0.7;
 	private:
 		size_type inSize;
 		DynamicArray<Entry, Alloc> table;
 	public:
-		constexpr FlatHashMap() = default;
+		constexpr FlatHashMap() : inSize(0), table() {}
 		constexpr FlatHashMap(const FlatHashMap& src) : inSize{}, table{} {
 			inSize = src.inSize;
 			table = src.table;
@@ -176,8 +174,8 @@ namespace natl {
 	private:
 		constexpr pointer beginPtr() noexcept requires(isNotConst<DataType>) { return table.data(); }
 		constexpr const_pointer beginPtr() const noexcept { return table.data(); }
-		constexpr pointer endPtr() noexcept requires(isNotConst<DataType>) { return table.endPtr(); }
-		constexpr const_pointer endPtr() const noexcept { return table.endPtr(); }
+		constexpr pointer endPtr() noexcept requires(isNotConst<DataType>) { return table.data() + table.size(); }
+		constexpr const_pointer endPtr() const noexcept { return table.data() + table.size(); }
 
 	public:
 		constexpr iterator begin() noexcept requires(isNotConst<DataType>) { return iterator(beginPtr(), beginPtr(), endPtr()); }
@@ -195,13 +193,13 @@ namespace natl {
 
 	public:
 		constexpr iterator insert(const Key& key, const DataType& data) {
-			if (inSize >= capacity() * load_factor) {
-				resizeAndRehash();
-			}
+			resizeAndRehash();
 
-			pointer dataLocation ;
-			std::size_t index = hashFun(key) % capacity();
-			while (table[index].used) {
+			return end();
+
+			pointer dataLocation = nullptr;
+			std::size_t index = Hash::hash(key) % capacity();
+			while (table[index].isUsed()) {
 				if (table[index].key == key) {
 					dataLocation = &table[index];
 					dataLocation->data = data;
@@ -219,14 +217,12 @@ namespace natl {
 		};
 
 		constexpr iterator insert(Key&& key, DataType&& data) {
-			if (inSize >= capacity() * load_factor) {
-				resizeAndRehash();
-			}
+			resizeAndRehash();
 
-			pointer dataLocation;
-			std::size_t index = hashFun(key) % capacity();
+			pointer dataLocation = nullptr;
+			std::size_t index = Hash::hash(key) % capacity();
 			while (table[index].isUsed()) {
-				if (compareFun(table[index].key, key)) {
+				if (Compare::compare(table[index].key, key)) {
 					dataLocation = &table[index];
 					dataLocation->data = data;
 					dataLocation->key = key;
@@ -244,11 +240,11 @@ namespace natl {
 		};
 
 		constexpr iterator findIterator(const Key& key) {
-			size_type index = hashFun(key) % capacity();
+			size_type index = Hash::hash(key) % capacity();
 			size_type originalIndex = index;
 
 			while (true) {
-				if (compareFun(table[index].key, key)) {
+				if (Compare::compare(table[index].key, key)) {
 					return iterator(&table[index].data, beginPtr(), endPtr());
 				}
 
@@ -261,11 +257,11 @@ namespace natl {
 		}
 
 		constexpr const_iterator findIterator(const Key& key) const {
-			size_type index = hashFun(key) % capacity();
+			size_type index = Hash::hash(key) % capacity();
 			size_type originalIndex = index;
 
 			while (true) {
-				if (compareFun(table[index].key, key)) {
+				if (Compare::compare(table[index].key, key)) {
 					return const_iterator(&table[index].data, beginPtr(), endPtr());
 				}
 
@@ -278,11 +274,11 @@ namespace natl {
 		}
 
 		constexpr optional_pointer find(const Key& key) {
-			size_type index = hashFun(key) % capacity();
+			size_type index = Hash::hash(key) % capacity();
 			size_type originalIndex = index;
 
 			while (true) {
-				if (compareFun(table[index].key, key)) {
+				if (Compare::compare(table[index].key, key)) {
 					return optional_pointer(&table[index]);
 				}
 
@@ -295,11 +291,11 @@ namespace natl {
 		}
 
 		constexpr optional_const_pointer find(const Key& key) const {
-			size_type index = hashFun(key) % capacity();
+			size_type index = Hash::hash(key) % capacity();
 			size_type originalIndex = index;
 
 			while (true) {
-				if (compareFun(table[index].key, key)) {
+				if (Compare::compare(table[index].key, key)) {
 					return optional_const_pointer(&table[index]);
 				}
 
@@ -315,17 +311,18 @@ namespace natl {
 			return find(key).hasValue();
 		}
 		constexpr void resizeAndRehash() {
-			resizeAndRehash((capacity() + 10) * 2);
+			if (inSize >= capacity() * load_factor) {
+				resizeAndRehash((capacity() + 10) * 2);
+			}
 		}
 		constexpr void resizeAndRehash(const size_type newCapacity) {
 			if (newCapacity <= capacity()) { return; }
 
-			DynamicArray<Entry, Alloc> newTable{};
-			newTable.resize(newCapacity);
-			
+			DynamicArray<Entry, Alloc> newTable(newCapacity);
+
 			for (const Entry& entry : table) {
 				if (entry.isUsed()) {
-					std::size_t index = hashFun(entry.key) % newCapacity;
+					std::size_t index = Hash::hash(entry.key) % newCapacity;
 
 					while (newTable[index].isUsed()) {
 						index = (index + 1) % newCapacity;
@@ -336,7 +333,6 @@ namespace natl {
 				}
 			}
 			table = static_cast<DynamicArray<Entry, Alloc>&&>(newTable);
-			//table = newTable; adds dealloc error 
 		}
 
 		constexpr void clear() {
@@ -351,11 +347,18 @@ namespace natl {
 		constexpr FlatHashMap& operator=(FlatHashMap& src) {
 			table = src.table;
 			inSize = src.inSize;
+
+			return *this;
 		}
 
 		constexpr FlatHashMap& operator=(FlatHashMap&& src) {
 			table = std::move(src.table);
 			inSize = src.inSize;
+
+			return *this;
 		}
 	};
 }
+
+//additional includes for end use
+#include "commonHashs.h"

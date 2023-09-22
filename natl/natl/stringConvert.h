@@ -5,8 +5,8 @@
 
 //own
 #include "stringView.h"
-#include "string.h"
 #include "expect.h"
+#include "string.h"
 
 //interface
 namespace natl {
@@ -387,13 +387,13 @@ namespace natl {
 
 		while (number > 0) {
 			const char digitChar = '0' + (number % 10); 
-			result.pushBack(digitChar);
+			result.push_back(digitChar);
 			number /= 10; 
 		}
 
 		if constexpr (std::is_signed_v<Interger>) {
 			if (isNegative) {
-				result.pushBack('-');
+				result.push_back('-');
 			}
 		}
 
@@ -476,13 +476,13 @@ namespace natl {
 		const std::int64_t integerPart = static_cast<std::int64_t>(number);
 
 		result = intToStringDecimal<std::int64_t>(integerPart);
-		result.pushBack('.');
+		result.push_back('.');
 
 		float fractionalPart = number - static_cast<Float>(static_cast<int>(number));
 		for (std::size_t i = 0; i < precision && fractionalPart < 1.0; ++i) {
 			fractionalPart *= 10;
 			const char digitCharacter = '0' + static_cast<std::int64_t>(fractionalPart);
-			result.pushBack(digitCharacter);
+			result.push_back(digitCharacter);
 			fractionalPart -= static_cast<std::int64_t>(fractionalPart);
 		}
 

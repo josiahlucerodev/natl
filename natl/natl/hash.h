@@ -4,15 +4,20 @@
 namespace natl {
 
 	template<class DataType>
-	concept HasStaticHashFunction = requires(DataType value) {
+	concept HasStaticHashFunction = requires(const DataType& value) {
 		{ DataType::staticHash(value) } -> std::same_as<std::size_t>;
 	};
 
 	template<class DataType>
 	struct Hash {
+	public:
 		constexpr static std::size_t hash(const DataType& dataType) 
-			requires(HasStaticHashFunction<DataType>) 
+			requires(HasStaticHashFunction<DataType>)
 		{ return DataType::staticHash(dataType); }
+		constexpr static std::size_t hash(const DataType& dataType)
+			requires(std::is_pointer_v<DataType>) {
+			return std::bit_cast<std::size_t, DataType>(dataType);
+		}
 	};
 
 	template<typename T>

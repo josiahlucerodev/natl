@@ -5,7 +5,6 @@
 #include <chrono>
 
 //own
-#include "dynamicArray.h"
 #include "string.h"
 #include "stringView.h"
 
@@ -38,7 +37,7 @@ namespace natl {
 	};
 	class TimeSaveCollection {
 		String name;
-		DynamicArray<TimeSave> timeSavesVector;
+		std::vector<TimeSave> timeSavesVector;
 	public:
 		TimeSaveCollection();
 		TimeSaveCollection(const StringView& inputName);

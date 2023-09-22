@@ -1,97 +1,125 @@
-#pragma once 
+#pragma once
 
-//std
-#include <type_traits>
+//own
+#include <cstdint>
+#include <iostream>
+#include <bit>
 
-//interface 
+//interface
 namespace natl {
-	template<class Alloc>
-	struct AllocatorTraits {
-	public:
-		using size_type = typename Alloc::size_type;
-		using value_type = typename Alloc::value_type;
-	};
 
-	template<class DataType, class Alloc>
-	class AllocatorStorage : public Alloc {
-	public:
-		using size_type = std::size_t;
-	public:
-		constexpr AllocatorStorage() = default;
-		
-		
-	};
-
+	template<class DataType>
 	class Allocator {
 	public:
+		using value_type = DataType;
+		using reference = DataType&;
+		using const_reference = const DataType&;
+		using pointer = DataType*;
+		using const_pointer = const DataType*;
+		using difference_type = std::ptrdiff_t;
 		using size_type = std::size_t;
 	public:
 		constexpr Allocator() = default;
+		constexpr Allocator(const Allocator&) = default;
+		constexpr Allocator(Allocator&&) = default;
+		template <typename U> constexpr Allocator(const Allocator<U>&) noexcept {}
+
 		constexpr ~Allocator() = default;
-	public:
-		template<class DataType>
-		constexpr DataType* alloc(const size_type count) {
-			return new DataType[count];
-		}
-		template<class DataType>
-		constexpr void free(DataType* data) {
-			delete[] data;
-		}
+		Allocator operator=(const Allocator&) {}
+		Allocator operator=(Allocator&&) {}
 
-		//constexpr DataType* alloc(const size_type count) { return new DataType[count]; }
-		//constexpr void free(DataType* data) { return delete[] data; }
+		[[nodiscard]] constexpr pointer allocate(const std::size_t number) noexcept { 
+			return std::allocator<DataType>().allocate(number);
+		}
+		constexpr void deallocate(const pointer ptr, const std::size_t number) noexcept { 
+			if (!ptr) { return; }
+			std::allocator<DataType>().deallocate(ptr, number);
+		}
+		constexpr void deallocate(const pointer ptr) noexcept { 
+			if (!ptr) { return; }
+			std::allocator<DataType>().deallocate(ptr, 0);
+		}
 	};
 
-
-	class StaticAllocatorWithCounters {
+	template<class DataType, class Alloc = Allocator<DataType>>
+	class AllocatorStorage {
 	public:
-		std::size_t allocations;
-		std::size_t deallocations;
+		using value_type = DataType;
+		using reference = DataType&;
+		using const_reference = const DataType&;
+		using pointer = DataType*;
+		using const_pointer = const DataType*;
+		using difference_type = std::ptrdiff_t;
 		using size_type = std::size_t;
-
+		Alloc allocator;
 	public:
+		constexpr AllocatorStorage(const Alloc& allocator = Alloc()) : allocator(allocator) {}
+		constexpr ~AllocatorStorage() = default;
+		[[nodiscard]] constexpr pointer allocate(const std::size_t number) noexcept { return allocator.allocate(number); }
+		constexpr void deallocate(const pointer ptr, const std::size_t number) noexcept { return allocator.deallocate(ptr, number); }
+		constexpr void deallocate(const pointer ptr) noexcept { allocator.deallocate(ptr); }
+		constexpr Alloc& getAllocator(const pointer ptr) noexcept { return allocator; }
+		constexpr const Alloc& getAllocator(const pointer ptr) const noexcept { return allocator; }
+	};
+
+	struct TrackerAllocatorData {
+		std::uint64_t allocs;
+		std::uint64_t deallocs;
+		std::vector<void*> allocPtrs;
+		std::vector<void*> deallocPtrs;
+	};
+
+	extern TrackerAllocatorData trackerAllocatorData;
+
+	template<class DataType>
+	class TrackerAllocator {
+	public:
+		using value_type = DataType;
+		using reference = DataType&;
+		using const_reference = const DataType&;
+		using pointer = DataType*;
+		using const_pointer = const DataType*;
+		using difference_type = std::ptrdiff_t;
 		using size_type = std::size_t;
 	public:
-		constexpr StaticAllocatorWithCounters() : allocations(0), deallocations(0) {}
-		constexpr StaticAllocatorWithCounters(StaticAllocatorWithCounters& sa) 
-			: allocations(sa.allocations), deallocations(sa.deallocations) {}
+		constexpr TrackerAllocator() = default;
+		constexpr TrackerAllocator(const TrackerAllocator&) = default;
+		constexpr TrackerAllocator(TrackerAllocator&&) = default;
+		template <typename U> constexpr TrackerAllocator(const TrackerAllocator<U>&) noexcept {}
 
-		template<class DataType>
-		constexpr DataType* alloc(const size_type count) { 
-			allocations++;
-			DataType* data = new DataType[count];
-			std::cout << "allocated: " << data << "\n";
-			return data;
+		constexpr ~TrackerAllocator() = default;
+		TrackerAllocator operator=(const TrackerAllocator&) {}
+		TrackerAllocator operator=(TrackerAllocator&&) {}
+
+		[[nodiscard]] constexpr pointer allocate(const std::size_t number) noexcept { 
+			pointer dataPtr = std::allocator<DataType>().allocate(number);
+			trackerAllocatorData.allocs++;
+			trackerAllocatorData.allocPtrs.push_back(dataPtr);
+			return dataPtr;
 		}
-		template<class DataType>
-		constexpr void free(DataType* data) {  
-			deallocations++;
-			std::cout << "deallocated: " << data << "\n";
-			delete[] data;
+
+		constexpr static bool havePtr(const pointer ptr) noexcept {
+			for (void* testPtr : trackerAllocatorData.allocPtrs) {
+				if (std::bit_cast<void*, const pointer>(ptr) == testPtr) {
+					return true;
+				}
+			}
+
+			std::cout << "natl: TrackerAllocator error: ptr " << ptr << " was not allocated from TrackerAllocator\n";
+			return false;
+		}
+
+		constexpr void deallocate(const pointer ptr) noexcept {
+			if (!ptr || !havePtr(ptr)) { return; }
+			trackerAllocatorData.deallocs++;
+			trackerAllocatorData.deallocPtrs.push_back(ptr);
+			std::allocator<DataType>().deallocate(ptr, 0);
+		}
+		constexpr void deallocate(const pointer ptr, const std::size_t number) noexcept {
+			std::allocator<DataType>().deallocate(ptr, number);
 		}
 	};
 
-#define NATL_GET_UNQUIE_ID __COUNTER__
-
-
-	template<class StaticAllocator, std::size_t id>
-	class StaticAllocatorWrapper {
-	public:
-		static StaticAllocator allocator;
-
-		template<class DataType>
-		constexpr DataType* alloc(const std::size_t count) {
-			return allocator.template alloc<DataType>(count);
-		}
-		template<class DataType>
-		constexpr void free(DataType* data) {
-			allocator.template free<DataType>(data);
-		}
-	};
-
-
-#define NATL_STATIC_ALLOCATOR_INSTANCE(StaticAllocatorType, StaticAllocatorName) \
-	constexpr inline std::size_t StaticAllocatorName##Id = NATL_GET_UNQUIE_ID; \
-	using StaticAllocatorName = natl::StaticAllocatorWrapper<StaticAllocatorType, StaticAllocatorName##Id>; \
-	StaticAllocatorType StaticAllocatorName::allocator = StaticAllocatorType();
-} 
+	template<class DataType>
+	using DefaultAllocator = Allocator<DataType>;
+}

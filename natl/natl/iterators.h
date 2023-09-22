@@ -23,7 +23,7 @@ namespace natl {
 	private:
 		T* dataPtr;
 	public:
-		constexpr RandomAccessIterator() = default;
+		constexpr RandomAccessIterator() : dataPtr(nullptr) {}
 		constexpr RandomAccessIterator(T* const dataPtr) noexcept : dataPtr(dataPtr) {}
 		constexpr ~RandomAccessIterator() = default;
 	private:
