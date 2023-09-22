@@ -14,9 +14,6 @@ namespace natl {
 	class BasicString : public std::basic_string<CharType, CharTraits, Alloc> {
 	public:
 		using std::basic_string<CharType, CharTraits, Alloc>::basic_string;
-		constexpr ~BasicString() { 
-			//delete[] &this->front();
-		}
 	};
 
 	template<class Alloc = DefaultAllocator<char>>

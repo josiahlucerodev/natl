@@ -140,7 +140,6 @@ namespace natl {
 		using difference_type = std::ptrdiff_t;
 		using size_type = std::size_t;
 
-		//TODO
 		using iterator = FlatHashMapIterator<Entry>;
 		using const_iterator = FlatHashMapIterator<const Entry>;
 		using reverse_iterator = std::reverse_iterator<FlatHashMapIterator<Entry>>;
