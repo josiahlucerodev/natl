@@ -32,8 +32,8 @@ namespace natl {
 		size_type stringLength;
 		const char* dataPtr;
 	public:
-		BaseStringView() : stringLength(0), dataPtr(nullptr) {}
-		~BaseStringView() = default;
+		constexpr BaseStringView() : stringLength(0), dataPtr(nullptr) {}
+		constexpr ~BaseStringView() = default;
 		constexpr BaseStringView(const char string[]) : dataPtr(string), stringLength(0) {
 			const char* tempDataPtr = string;
 			while (*tempDataPtr++) { stringLength++; }

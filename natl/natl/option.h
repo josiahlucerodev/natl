@@ -32,7 +32,8 @@ namespace natl {
 		constexpr const DataType&& operator*() const&& noexcept { return data; }
 		constexpr DataType&& operator*() && noexcept { return data; }
 
-		constexpr bool hasValue() const { return isValid; }
+		constexpr bool hasValue() const noexcept { return isValid; }
+		constexpr bool notHaveValue() const noexcept { return !isValid; }
 		constexpr explicit operator bool() const noexcept { return isValid; }
 
 		constexpr std::size_t staticHash(const Option& option) requires(Hashable<DataType>) {

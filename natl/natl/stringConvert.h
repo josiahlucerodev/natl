@@ -17,6 +17,22 @@ namespace natl {
 		none,
 	};
 
+	constexpr StringView convertErrorToStringView(const StringNumericConvertError convertError) {
+		switch (convertError) {
+		case StringNumericConvertError::unknown:
+			return "unknown";
+		case StringNumericConvertError::invalid:
+			return "invalid";
+		case StringNumericConvertError::valueExceedsLimits:
+			return "value exceeds numeric limits";
+		case StringNumericConvertError::none:
+			return "none";
+		default:
+			return "unknown case";
+		}
+	}
+
+
 	constexpr std::int32_t convertDecimalCharacterToNumber(const char& character) noexcept {
 		return character - 48;
 	}
