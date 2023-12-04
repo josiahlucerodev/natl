@@ -167,7 +167,7 @@ namespace natl {
 	};
 
 	template<class DataType, Size... Dimensions>
-	class MDArray : private Array<DataType, multiplySizes(Dimensions...)> {
+	class MDArray {
 		using value_type = DataType;
 		using reference = DataType&;
 		using const_reference = const DataType&;
@@ -178,27 +178,26 @@ namespace natl {
 		using difference_type = PtrDiff;
 		using size_type = Size;
 
-		using iterator = RandomAccessIterator<DataType>;
-		using const_iterator = RandomAccessIterator<const DataType>;
-		using reverse_iterator = ReverseRandomAccessIterator<DataType>;
-		using const_reverse_iterator = ReverseRandomAccessIterator<const DataType>;
-
-		using Alloc = DefaultAllocator<DataType>;
-
 		//movement info  
 		constexpr static bool triviallyRelocatable = IsTriviallyRelocatable<DataType>;
 		constexpr static bool triviallyDefaultConstructible = IsTriviallyDefaultConstructible<DataType>;
 		constexpr static bool triviallyCompareable = IsTriviallyCompareable<DataType>;
 	private:
+		using BaseArray = Array<DataType, multiplySizes(Dimensions...)>;
+		BaseArray dataArray;
+	public:
 		//constructor
-		using InheritedArray = Array<DataType, multiplySizes(Dimensions...)>;
+		constexpr MDArray() noexcept : dataArray() {};
+		constexpr MDArray(std::initializer_list<DataType> dataSrc) noexcept : dataArray(dataSrc) {};
+		constexpr MDArray(const MDArray& other) noexcept : dataArray(other.asArray()) {};
+		constexpr MDArray(MDArray&& other) noexcept : dataArray(other.asArray()) {};
 	
 		//util
 		constexpr MDArray& self() noexcept { return *this; }
 		constexpr const MDArray& self() const noexcept { return *this; }
 
-		constexpr InheritedArray& asArray() noexcept { return static_cast<InheritedArray&>(*this); }
-		constexpr const InheritedArray& asArray() const noexcept { static_cast<const InheritedArray&>(*this); }
+		constexpr BaseArray& asArray() noexcept { return dataArray; }
+		constexpr const BaseArray& asArray() const noexcept { dataArray; }
 
 		//assignment 
 		constexpr MDArray& operator=(const MDArray& other) noexcept {
@@ -216,7 +215,6 @@ namespace natl {
 
 	public:
 		//index calculation
-		template <Size, typename T> using AlwaysT = T;
 		constexpr Size calculateLinearIndex(AlwaysT<Dimensions, Size>... indexesArgs) const noexcept {
 			constexpr Size dimensions[] = { Dimensions... };
 			Size indexes[] = { indexesArgs... };
@@ -230,7 +228,6 @@ namespace natl {
 			}
 			return index;
 		}
-		template <Size, typename T> using AlwaysT = T;
 		constexpr Size calculateLinearIndexBounded(AlwaysT<Dimensions, Size>... indexesArgs) const noexcept {
 			constexpr Size dimensions[] = { Dimensions... };
 			const Size indexes[] = { indexesArgs... };
@@ -255,7 +252,7 @@ namespace natl {
 		constexpr const_pointer data() const noexcept {  return asArray().data(); };
 
 		//capacity 
-		constexpr bool isEmpty() const noexcept { return !bool(InheritedArray::size()); }
+		constexpr bool isEmpty() const noexcept { return !bool(BaseArray::size()); }
 		constexpr bool isNotEmpty() const noexcept { return !isEmpty(); }
 		constexpr operator bool() const noexcept { return isNotEmpty(); }
 
@@ -264,12 +261,20 @@ namespace natl {
 		}
 		template<Size dimensionIndex>
 		consteval static Size dimensionSize() noexcept {
-			static_assert(dimensionIndex >= numberOfDimension(), "natl: MDArray dimensionSize() call | error: dimensionIndex >= numberOfDimension");
+			static_assert(dimensionIndex < numberOfDimension(), "natl: MDArray dimensionSize() call | error: dimensionIndex >= numberOfDimension");
 			constexpr Size dimensions[] = { Dimensions... };
 			return dimensions[dimensionIndex];
 		}
 		consteval static Size size() noexcept {
-			return InheritedArray::size();
+			return BaseArray::size();
+		}
+
+		//operations
+		constexpr void fill(const DataType& value) noexcept {
+			asArray().fill(value);
+		}
+		constexpr void swap(MDArray& other) noexcept {
+			asArray().swap(other.asArray());
 		}
 	};
 

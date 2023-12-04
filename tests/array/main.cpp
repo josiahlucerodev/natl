@@ -21,4 +21,5 @@ int main() {
 	constexpr int number = compileTimeTest();
 	natl::MDArray<int, 3, 4> array;
 
+
 }

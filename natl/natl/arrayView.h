@@ -10,6 +10,8 @@
 #include "container.h"
 #include "option.h"
 #include "limits.h"
+#include "peramaterPackOperations.h"
+#include "dataMovement.h"
 
 //interface
 namespace natl {
@@ -20,7 +22,6 @@ namespace natl {
 		{ arrayViewLike.size() } -> std::convertible_to<Size>;
 		{ arrayViewLike[std::declval<Size>()] } -> std::convertible_to<DataType>;
 	};
-
 
 	template <class DataType>
 	class ArrayView {
@@ -37,7 +38,7 @@ namespace natl {
 
 		using iterator = RandomAccessIterator<DataType>;
 		using const_iterator = RandomAccessIterator<const DataType>;
-		using reverse_iterator = ReverseRandomAccessIterator<DataType>; 
+		using reverse_iterator = ReverseRandomAccessIterator<DataType>;
 		using const_reverse_iterator = ReverseRandomAccessIterator<const DataType>;
 
 		//movement info 
@@ -51,10 +52,10 @@ namespace natl {
 		//constructor 
 		constexpr ArrayView() : dataPtr(nullptr), arraySize(0) {}
 		constexpr ArrayView(pointer dataPtr, const size_type size) : dataPtr(dataPtr), arraySize(size) {}
-		constexpr ArrayView(const ArrayView& other) noexcept requires(isConst<DataType>) : dataPtr(other.data()), arraySize(other.size()) {}
+		constexpr ArrayView(const ArrayView& other) noexcept : dataPtr(other.data()), arraySize(other.size()) {}
 		constexpr ArrayView(std::initializer_list<DataType> initList) noexcept requires(isConst<DataType>) : dataPtr(initList.begin()), arraySize(initList.size()) {}
 		template<class ArrayViewLike>
-			requires(!std::is_same_v<ArrayViewLike, std::initializer_list<DataType>> && IsArrayViewLike<ArrayViewLike, DataType>)
+			requires(!std::is_same_v<ArrayViewLike, std::initializer_list<DataType>>&& IsArrayViewLike<ArrayViewLike, DataType>)
 		constexpr ArrayView(const ArrayViewLike& arrayViewLike) noexcept requires(isConst<DataType>) : dataPtr(arrayViewLike.data()), arraySize(arrayViewLike.size()) {}
 
 		//destructor
@@ -65,7 +66,7 @@ namespace natl {
 		constexpr const ArrayView& self() const noexcept { return *this; }
 
 		//assignment 
-		constexpr ArrayView& operator=(const ArrayView& other) noexcept { 
+		constexpr ArrayView& operator=(const ArrayView& other) noexcept {
 			dataPtr = other.dataPtr;
 			arraySize = other.arraySize;
 			return self();
@@ -79,7 +80,7 @@ namespace natl {
 		//iterators 
 		constexpr pointer beginPtr() noexcept requires(isNotConst<DataType>) { return dataPtr; }
 		constexpr const_pointer beginPtr() const noexcept { return dataPtr; }
-		constexpr pointer endPtr() noexcept requires(isNotConst<DataType>)  { return dataPtr + arraySize; }
+		constexpr pointer endPtr() noexcept requires(isNotConst<DataType>) { return dataPtr + arraySize; }
 		constexpr const_pointer endPtr() const noexcept { return dataPtr + arraySize; }
 
 		constexpr iterator begin() noexcept requires(isNotConst<DataType>) { return iterator(beginPtr()); }
@@ -187,6 +188,14 @@ namespace natl {
 
 		constexpr bool has(const size_type index) const noexcept { return index < arraySize; }
 		constexpr bool notHave(const size_type index) const noexcept { return index >= arraySize; }
+
+		//operations
+		constexpr void fill(const DataType& value) noexcept requires(isNotConst<DataType>) {
+			fillCount<pointer, DataType>(data(), value, size());
+		}
+		constexpr void swap(ArrayView& other) noexcept {
+			swap<ArrayView>(self(), other);
+		}
 	};
 
 	template<class Container>
@@ -207,4 +216,220 @@ namespace natl {
 	constexpr ArrayView<typename ContainerIteratorTraits<Container>::value_type> makeArrayView(Container& container) noexcept {
 		return ArrayView<typename ContainerIteratorTraits<Container>::value_type>(&*container.begin(), container.size());
 	}
+
+	struct SpatialRegion {
+	public:
+		Size offset;
+		Size extent;
+		Size size;
+	public:
+		//constructor
+		SpatialRegion() = default;
+		SpatialRegion(const Size offset, const Size extent, const Size size) : offset(offset), extent(extent), size(size) {}
+	};
+
+	namespace impl {
+		struct MDArrayViewDim {};
+		template<class DataType, MDArrayViewDim... Dimensions>
+		class MDArrayViewDimensions {
+		public:
+			using value_type = DataType;
+			using reference = DataType&;
+			using const_reference = const DataType&;
+			using pointer = DataType*;
+			using const_pointer = const DataType*;
+			using optional_pointer = Option<DataType*>;
+			using optional_const_pointer = Option<const DataType*>;
+			using difference_type = PtrDiff;
+			using size_type = Size;
+
+			//movement info  
+			constexpr static bool triviallyRelocatable = IsTriviallyRelocatable<DataType>;
+			constexpr static bool triviallyDefaultConstructible = IsTriviallyDefaultConstructible<DataType>;
+			constexpr static bool triviallyCompareable = IsTriviallyCompareable<DataType>;
+
+			using BaseArrayView = ArrayView<DataType>;
+		public:
+			DataType* dataPtr;
+			SpatialRegion spatialRegions[sizeof...(Dimensions)];
+		public:
+			//constructor
+			constexpr MDArrayViewDimensions() : dataPtr(), spatialRegions() {}
+			constexpr MDArrayViewDimensions(const MDArrayViewDimensions& other) noexcept = default;
+			constexpr MDArrayViewDimensions(MDArrayViewDimensions&& other) noexcept = default;
+			constexpr MDArrayViewDimensions(std::initializer_list<DataType> dataSrc) noexcept requires(isConst<DataType>) : dataPtr(dataSrc) {}
+			constexpr MDArrayViewDimensions(DataType* dataSrc, const CustomAlwaysType<MDArrayViewDim, Dimensions, SpatialRegion>&... regions) noexcept : dataPtr(dataSrc) {
+				const SpatialRegion regionsArray[] = {regions...};
+				uninitializedCopyCountNoOverlap<const SpatialRegion*, SpatialRegion*>(regionsArray, spatialRegions, numberOfDimension());
+			}
+		
+			//destructor 
+			constexpr ~MDArrayViewDimensions() noexcept = default;
+
+			//util
+			constexpr MDArrayViewDimensions& self() noexcept { return *this; }
+			constexpr const MDArrayViewDimensions& self() const noexcept { return *this; }
+
+			//index calculation 
+			constexpr Size calculateLinearIndex(CustomAlwaysType<MDArrayViewDim, Dimensions, Size>... indexesArgs) const noexcept {
+				const Size indexes[] = { indexesArgs... };
+				Size index = 0;
+				for (Size i = 0; i < numberOfDimension(); ++i) {
+					Size mul = 1;
+					for (Size j = 0; j < i; ++j) {
+						mul *= spatialRegions[j].size;
+					}
+					index += (indexes[i] + spatialRegions[i].offset) * mul;
+				}
+				return index;
+			}
+			constexpr Size calculateLinearIndexBounded(CustomAlwaysType<MDArrayViewDim, Dimensions, Size>... indexesArgs) const noexcept {
+				const Size indexes[] = { indexesArgs... };
+				Size index = 0;
+				for (Size i = 0; i < numberOfDimension(); ++i) {
+					Size mul = 1;
+					for (Size j = 0; j < i; ++j) {
+						mul *= spatialRegions[j].size;
+					}
+					index += (std::min<Size>(indexes[i], spatialRegions[i].extent) + spatialRegions[i].offset) * mul;
+				}
+				return index;
+			}
+
+			//element access
+			constexpr reference at(CustomAlwaysType<MDArrayViewDim, Dimensions, Size>... indices) noexcept requires(isNotConst<DataType>) { return data()[calculateLinearIndex(indices...)]; }
+			constexpr const_reference at(CustomAlwaysType<MDArrayViewDim, Dimensions, Size>... indices) const noexcept { return data()[calculateLinearIndex(indices...)]; }
+			
+			constexpr reference atBounded(CustomAlwaysType<MDArrayViewDim, Dimensions, Size>... indices) noexcept requires(isNotConst<DataType>) { return data()[calculateLinearIndexBounded(indices...)]; }
+			constexpr const_reference atBounded(CustomAlwaysType<MDArrayViewDim, Dimensions, Size>... indices) const noexcept { return data()[calculateLinearIndexBounded(indices...)]; }
+
+			constexpr pointer data() noexcept requires(isNotConst<DataType>) { return dataPtr; };
+			constexpr const_pointer data() const noexcept { return dataPtr; };
+
+			//capacity 
+			constexpr bool isEmpty() const noexcept { return !dataPtr; }
+			constexpr bool isNotEmpty() const noexcept { return !isEmpty(); }
+			constexpr operator bool() const noexcept { return isNotEmpty(); }
+
+			consteval static Size numberOfDimension() noexcept {
+				return sizeof...(Dimensions);
+			}
+			template<Size dimensionIndex>
+			constexpr Size dimensionSize() const noexcept {
+				static_assert(dimensionIndex < numberOfDimension(), "natl: MDArrayViewDimensions dimensionSize() call | error: dimensionIndex >= numberOfDimension");
+				return spatialRegions[dimensionIndex].extent;
+			}
+			constexpr Size dimensionSize(const Size index) const noexcept {
+				return spatialRegions[std::min<Size>(index, numberOfDimension())].extent;
+			}
+			constexpr Size size() noexcept {
+				Size calculatedSize = 1;
+				for (Size i = 0; i < numberOfDimension(); i++) {
+					calculatedSize *= spatialRegions[i].extent;
+				}
+				return calculatedSize;
+			}
+
+
+			//assignment 
+			constexpr MDArrayViewDimensions& operator=(const MDArrayViewDimensions& other) noexcept = default;
+			constexpr MDArrayViewDimensions& operator=(MDArrayViewDimensions&& other) noexcept = default;
+
+			template<Size index>
+			constexpr void fill(const DataType& value) noexcept requires(isNotConst<DataType>) {
+				if constexpr (index > 0) {
+					fill<index - 1>(value);
+				}
+			}
+
+			template <typename T, size_t N>
+			std::array<T, N> linearIndexToCoordinates(int linearIndex, const std::array<T, N>& dimensions) {
+				std::array<T, N> coordinates;
+
+				for (size_t i = N; i > 0; --i) {
+					coordinates[i - 1] = linearIndex % dimensions[i - 1];
+					linearIndex /= dimensions[i - 1];
+				}
+
+				return coordinates;
+			}
+
+			//operations
+			constexpr void fill(const DataType& value) noexcept requires(isNotConst<DataType>) {
+				const Size count = size();
+				for (Size fillIndex = 0; fillIndex < count; fillIndex++) {
+					Size linearIndex = fillIndex;
+					Size coordinates[numberOfDimension()];
+					for (int i = numberOfDimension(); i > 0; --i) {
+						coordinates[i - 1] = linearIndex % spatialRegions[i - 1].extent;
+						linearIndex /= spatialRegions[i - 1].extent;
+					}
+
+					Size index = 0;
+					for (Size i = 0; i < numberOfDimension(); ++i) {
+						Size mul = 1;
+						for (Size j = 0; j < i; ++j) {
+							mul *= spatialRegions[j].size;
+						}
+						index += (coordinates[i] + spatialRegions[i].offset) * mul;
+					}
+
+					dataPtr[index] = value;
+				}
+			}
+			constexpr void swap(MDArrayViewDimensions& other) noexcept {
+				swap<MDArrayViewDimensions>(self(), other);
+			}
+		};
+
+
+		template <typename DataType, typename Seq> struct MDArrayViewImpl;
+		template <typename DataType, Size... Is>
+		struct MDArrayViewImpl<DataType, std::index_sequence<Is...>> {
+			using MDArrayViewType = 
+				MDArrayViewDimensions<
+				DataType, 
+				AlwaysType<Is, MDArrayViewDim>{} ...
+				> ;
+		};
+	}
+
+	template <typename DataType, Size DimensionNumber>
+	class MDArrayView : public impl::MDArrayViewImpl<DataType, std::make_index_sequence<DimensionNumber>>::MDArrayViewType {
+	public:
+		using value_type = DataType;
+		using reference = DataType&;
+		using const_reference = const DataType&;
+		using pointer = DataType*;
+		using const_pointer = const DataType*;
+		using optional_pointer = Option<DataType*>;
+		using optional_const_pointer = Option<const DataType*>;
+		using difference_type = PtrDiff;
+		using size_type = Size;
+
+		using MDArrayViewImplType = impl::MDArrayViewImpl<DataType, std::make_index_sequence<DimensionNumber>>::MDArrayViewType;
+		using BaseArrayView = MDArrayViewImplType::BaseArrayView;
+	public:
+		//movement info  
+		constexpr static bool triviallyRelocatable = IsTriviallyRelocatable<DataType>;
+		constexpr static bool triviallyDefaultConstructible = IsTriviallyDefaultConstructible<DataType>;
+		constexpr static bool triviallyCompareable = IsTriviallyCompareable<DataType>;
+		
+		//constructor
+		constexpr MDArrayView() noexcept = default;
+		constexpr MDArrayView(const MDArrayView& other) noexcept = default;
+		constexpr MDArrayView(MDArrayView&& other) noexcept = default;
+		constexpr MDArrayView(std::initializer_list<DataType> dataSrc) noexcept requires(isConst<DataType>) : MDArrayViewImplType(dataSrc) {}
+		using MDArrayViewImplType::MDArrayViewImplType;
+
+		//util 
+		constexpr MDArrayView& self() noexcept { return *this; }
+		constexpr const MDArrayView& self() const noexcept { return *this; }
+
+		constexpr MDArrayViewImplType& selfAsMDArrayViewImpl() noexcept { return static_cast<MDArrayViewImplType&>(*this); }
+		constexpr const MDArrayViewImplType& selfAsMDArrayViewImpl() const noexcept { return static_cast<const MDArrayViewImplType&>(*this); }
+
+		constexpr MDArrayView& operator=(const MDArrayView& other) noexcept = default;
+		constexpr MDArrayView& operator=(MDArrayView&& other) noexcept = default;
+	};
 }

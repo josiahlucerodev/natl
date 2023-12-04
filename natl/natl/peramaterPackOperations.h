@@ -23,4 +23,7 @@ namespace natl {
     constexpr SizeType multiplySizes(SizeType first, Sizes... rest) noexcept {
         return first * multiplySizes(rest...);
     }
+
+    template <Size, typename T> using AlwaysType = T;
+    template <typename NumberType, NumberType, typename Type> using CustomAlwaysType = Type;
 }

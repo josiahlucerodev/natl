@@ -173,7 +173,7 @@ namespace natl {
 	void iterPtrMemset(DstIter dst, const int value, const size_t count) {
 		typename IterPtrTraits<DstIter>::value_type* const dstPtr = iteratorToAddress<DstIter>(dst);
 		void* const dstVoidPtr = reinterpret_cast<void* const>(dstPtr);
-		std::memset(dstVoidPtr, value, count);
+		std::memset(dstVoidPtr, value, static_cast<Size>(count) * sizeof(IterPtrTraits<DstIter>::value_type));
 	}
 
 	template <class SrcIter, class DstIter>
@@ -188,7 +188,7 @@ namespace natl {
 		const typename IterPtrTraits<BIter>::value_type* const bPtr = iteratorToAddress<BIter>(b);
 		const void* const aVoidPtr = reinterpret_cast<const void* const>(aPtr);
 		const void* const bVoidPtr = reinterpret_cast<const void* const>(bPtr);
-		return std::memcmp(aVoidPtr, bVoidPtr, static_cast<std::size_t>(count));
+		return std::memcmp(aVoidPtr, bVoidPtr, static_cast<Size>(count) * sizeof(IterPtrTraits<AIter>::value_type));
 	}
 
 

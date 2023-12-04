@@ -10,11 +10,11 @@ exe_emscripten_setup(${NatlTestName} TRUE)
 set_property(TARGET ${NatlTestName} PROPERTY CXX_STANDARD 20)
 set_property(TARGET ${NatlTestName} PROPERTY CXX_STANDARD_REQUIRED On)
 
-if(OPALET_PROFILE)
+if(NACMAKE_PROFILE)
 	ENABLE_PROFILING(${NatlTestName})
 endif()
 
-if(OPALET_WARNINGS)
+if(NACMAKE_WARNINGS)
 	ENABLE_WARNINGS(${NatlTestName} TRUE)
 endif()
 
