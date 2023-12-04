@@ -77,11 +77,27 @@ namespace natl {
 		return (contaniers.size() + ...);
 	}
 
+	template <typename T>
+	constexpr typename std::remove_reference<T>::type&& move(T&& arg) noexcept {
+		return static_cast<typename std::remove_reference<T>::type&&>(arg);
+	}
+
+	template <typename T>
+	constexpr T&& forward(typename std::remove_reference<T>::type& arg) noexcept {
+		return static_cast<T&&>(arg);
+	}
+
+	template <typename T>
+	constexpr T&& forward(typename std::remove_reference<T>::type&& arg) noexcept {
+		static_assert(!std::is_lvalue_reference<T>::value, "template argument substituting T is an lvalue reference type");
+		return static_cast<T&&>(arg);
+	}
+
 	template <typename DataType>
 	constexpr void swap(DataType& a, DataType& b) noexcept {
-		DataType temp = std::move(a);
-		a = std::move(b);
-		b = std::move(temp);
+		DataType temp = move(a);
+		a = move(b);
+		b = move(temp);
 	}
 
 	template<class ForwardIter1, class ForwardIter2>

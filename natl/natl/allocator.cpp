@@ -1,5 +1,3 @@
-#pragma 
-
 //own
 #include "allocator.h"
 

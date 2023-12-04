@@ -4,6 +4,7 @@
 #include <cstdint>
 
 //own
+#include "basicTypes.h"
 #include "stringView.h"
 #include "expect.h"
 #include "string.h"
@@ -33,12 +34,12 @@ namespace natl {
 	}
 
 
-	constexpr std::int32_t convertDecimalCharacterToNumber(const char& character) noexcept {
-		return character - 48;
+	constexpr ui64 convertDecimalCharacterToNumber(const char& character) noexcept {
+		return static_cast<ui64>(character) - 48ULL;
 	}
-	constexpr bool checkIfStringConvertInRange(const bool hardEnd, const bool softEnd, const std::uint64_t maxEndingPosValue,
-		const std::uint64_t maxTrailingValue, const std::int32_t number, const std::uint64_t value) noexcept {
-		return hardEnd || (number > maxEndingPosValue && softEnd) || (number == maxEndingPosValue && value > maxTrailingValue);
+	constexpr bool checkIfStringConvertInRange(const bool hardEnd, const bool softEnd, const ui64 maxEndingPosValue,
+		const ui64 maxTrailingValue, const ui64 number, const ui64 value) noexcept {
+		return hardEnd || (number > maxEndingPosValue && softEnd) || (static_cast<ui64>(number) == maxEndingPosValue && value > maxTrailingValue);
 	}
 	constexpr bool isCharacterDecimalDigit(const char character) noexcept {
 		switch (character) {
@@ -62,12 +63,12 @@ namespace natl {
 			}
 		}
 
-		const std::int64_t endIndex = std::is_signed_v<Interger> && string.c_str()[0] == '-' ? 0 : -1;
-		const std::uint32_t length = string.length();
-		std::conditional_t<std::is_signed_v<Interger>, std::int64_t, std::uint64_t> value = 0;
-		std::uint64_t mul = 1; std::uint32_t pos = 0;
+		const Size endIndex = std::is_signed_v<Interger> && string.c_str()[0] == '-' ? 0 : static_cast<Size>(-1);
+		const Size length = string.length();
+		std::conditional_t<std::is_signed_v<Interger>, i64, ui64> value = 0;
+		ui64 mul = 1; ui32 pos = 0;
 
-		for (std::int64_t i = length - 1; i > endIndex; i--) {
+		for (Size i = length - 1; i > endIndex; i--) {
 			const char numberCharacter = string.c_str()[i];
 			if (numberCharacter == ',') {
 				continue;
@@ -76,18 +77,18 @@ namespace natl {
 				convertError = StringNumericConvertError::invalid;
 				return 0;
 			}
-			const std::int32_t number = convertDecimalCharacterToNumber(numberCharacter);
+			const ui64 number = convertDecimalCharacterToNumber(numberCharacter);
 
-			if constexpr (std::same_as<std::int64_t, Interger>) { //9223372036854775807
-				if (checkIfStringConvertInRange(pos > 18, pos == 18, 9, 223372036854775807, number, value)) {
+			if constexpr (std::same_as<i64, Interger>) { //9223372036854775807
+				if (checkIfStringConvertInRange(pos > 18, pos == 18, 9, 223372036854775807, number, static_cast<ui64>(value))) {
 					convertError = StringNumericConvertError::valueExceedsLimits;
-					return string.c_str()[0] == '-' ? std::numeric_limits<std::int64_t>::min() : std::numeric_limits<std::int64_t>::max();
+					return string.c_str()[0] == '-' ? std::numeric_limits<i64>::min() : std::numeric_limits<i64>::max();
 				}
 			}
-			else if constexpr (std::same_as<std::uint64_t, Interger>) { //18,446,744,073,709,551,615
-				if (checkIfStringConvertInRange(pos > 19, pos == 19, 1, 8446744073709551615, number, value)) {
+			else if constexpr (std::same_as<ui64, Interger>) { //18,446,744,073,709,551,615
+				if (checkIfStringConvertInRange(pos > 19, pos == 19, 1, 8446744073709551615, number, static_cast<ui64>(value))) {
 					convertError = StringNumericConvertError::valueExceedsLimits;
-					return std::numeric_limits<std::uint64_t>::max();
+					return std::numeric_limits<ui64>::max();
 				}
 			}
 
@@ -95,7 +96,7 @@ namespace natl {
 			mul = mul * 10;
 			pos += 1;
 
-			if constexpr (!std::same_as<std::int64_t, Interger> && !std::same_as<std::uint64_t, Interger>) {
+			if constexpr (!std::same_as<i64, Interger> && !std::same_as<ui64, Interger>) {
 				if (value > std::numeric_limits<Interger>::max()) {
 					convertError = StringNumericConvertError::valueExceedsLimits;
 					return std::numeric_limits<Interger>::max();
@@ -128,7 +129,7 @@ namespace natl {
 		}
 	}
 
-	constexpr std::int32_t convertHexCharacterToNumber(const char& character) noexcept {
+	constexpr ui64 convertHexCharacterToNumber(const char& character) noexcept {
 		switch (character) {
 		case '0': return 0; case '1': return 1;
 		case '2': return 2; case '3': return 3;
@@ -167,16 +168,16 @@ namespace natl {
 
 		static_assert(std::is_unsigned_v<Interger>, "stringHexadecimalToInt: Interger cannot be signed");
 
-		const std::uint32_t length = string.length();
-		std::uint64_t value = 0;
-		std::uint64_t mul = 1; std::uint32_t pos = 0;
+		const Size length = string.length();
+		ui64 value = 0;
+		ui64 mul = 1; ui32 pos = 0;
 
-		std::int64_t endIndex = -1;
+		Size endIndex = static_cast<Size>(-1);
 		if (string.length() >= 2 && string.at(0) == '0' && string.at(1) == 'x') {
 			endIndex += 2;
 		}
 
-		for (std::int64_t index = length - 1; index > endIndex; index--) {
+		for (Size index = length - 1; index > endIndex; index--) {
 			const char numberCharacter = string.c_str()[index];
 			if (numberCharacter == ',' || numberCharacter == '_') {
 				continue;
@@ -185,12 +186,12 @@ namespace natl {
 				convertError = StringNumericConvertError::invalid;
 				return 0;
 			}
-			const std::int32_t number = convertHexCharacterToNumber(numberCharacter);
+			const ui64 number = convertHexCharacterToNumber(numberCharacter);
 
-			if constexpr (std::same_as<std::uint64_t, Interger>) { //0xFFFFFFFFFFFFFFFF
+			if constexpr (std::same_as<ui64, Interger>) { //0xFFFFFFFFFFFFFFFF
 				if (pos > 15) {
 					convertError = StringNumericConvertError::valueExceedsLimits;
-					return std::numeric_limits<std::uint64_t>::max();
+					return std::numeric_limits<ui64>::max();
 				}
 			}
 
@@ -198,7 +199,7 @@ namespace natl {
 			mul = mul * 16;
 			pos += 1;
 
-			if constexpr (!std::same_as<std::uint64_t, Interger>) {
+			if constexpr (!std::same_as<ui64, Interger>) {
 				if (value > std::numeric_limits<Interger>::max()) {
 					convertError = StringNumericConvertError::valueExceedsLimits;
 					return std::numeric_limits<Interger>::max();
@@ -227,7 +228,7 @@ namespace natl {
 		}
 	}
 
-	constexpr std::int32_t convertBinaryCharacterToNumber(const char& character) noexcept {
+	constexpr ui64 convertBinaryCharacterToNumber(const char& character) noexcept {
 		switch (character) {
 		case '0': return 0; case '1': return 1;
 		default: return 0;
@@ -251,11 +252,11 @@ namespace natl {
 		}
 
 		static_assert(std::is_unsigned_v<Interger>, "stringBinaryToInt Interger cannot be signed");
-		const std::uint32_t length = string.length();
-		std::uint64_t value = 0;
-		std::uint64_t mul = 1; std::uint32_t pos = 0;
+		const Size length = string.length();
+		ui64 value = 0;
+		ui64 mul = 1; ui32 pos = 0;
 
-		for (std::int64_t i = length - 1; i > -1; i--) {
+		for (i64 i = static_cast<i64>(length) - 1; i > -1; i--) {
 			const char numberCharacter = string.c_str()[i];
 			if (numberCharacter == ',' || numberCharacter == '_') {
 				continue;
@@ -264,12 +265,12 @@ namespace natl {
 				convertError = StringNumericConvertError::invalid;
 				return 0;
 			}
-			const std::int32_t number = convertBinaryCharacterToNumber(numberCharacter);
+			const ui64 number = convertBinaryCharacterToNumber(numberCharacter);
 
-			if constexpr (std::same_as<std::uint64_t, Interger>) { //1111111111111111111111111111111111111111111111111111111111111111
+			if constexpr (std::same_as<ui64, Interger>) { //1111111111111111111111111111111111111111111111111111111111111111
 				if (pos > 63) {
 					convertError = StringNumericConvertError::valueExceedsLimits;
-					return std::numeric_limits<std::uint64_t>::max();
+					return std::numeric_limits<ui64>::max();
 				}
 			}
 
@@ -277,7 +278,7 @@ namespace natl {
 			mul = mul * 2;
 			pos += 1;
 
-			if constexpr (!std::same_as<std::uint64_t, Interger>) {
+			if constexpr (!std::same_as<ui64, Interger>) {
 				if (value > std::numeric_limits<Interger>::max()) {
 					convertError = StringNumericConvertError::valueExceedsLimits;
 					return std::numeric_limits<Interger>::max();
@@ -313,8 +314,8 @@ namespace natl {
 			return 0;
 		}
 
-		const std::uint32_t length = string.length();
-		Float result = 0.0f; Float fraction = 0.1f;
+		const Size length = string.length();
+		Float result = 0.0f; 
 		bool isNegative = false;
 		bool decimalFound = false;
 		Float decimalMul = 10.0f;
@@ -334,7 +335,7 @@ namespace natl {
 			const char numberCharacter = string.c_str()[index];
 
 			if (isCharacterDecimalDigit(numberCharacter)) {
-				const std::int32_t number = convertDecimalCharacterToNumber(numberCharacter);
+				const ui64 number = convertDecimalCharacterToNumber(numberCharacter);
 				if (decimalFound) {
 					result = result + (static_cast<Float>(number) / decimalMul);
 					decimalMul *= 10.0f;
@@ -429,8 +430,8 @@ namespace natl {
 
 		const char hexDigits[] = "0123456789ABCDEF";
 
-		int temp = number;
-		int numberOfDigits = 0;
+		ui64 temp = static_cast<ui64>(number);
+		ui64 numberOfDigits = 0;
 		while (temp != 0) {
 			temp >>= 4;
 			numberOfDigits++;
@@ -438,9 +439,9 @@ namespace natl {
 
 		char hexString[18]; 
 
-		for (std::int32_t i = numberOfDigits - 1; i >= 0; i--) {
-			int digitValue = (number >> (i * 4)) & 0xF;
-			hexString[numberOfDigits - 1 - i] = hexDigits[digitValue];
+		for (i64 i = static_cast<i64>(numberOfDigits) - 1; i >= 0; i--) {
+			ui64 digitValue = (number >> (i * 4)) & 0xF;
+			hexString[numberOfDigits - 1 - static_cast<ui64>(i)] = hexDigits[digitValue];
 		}
 		hexString[numberOfDigits] = '\0';
 
@@ -487,19 +488,19 @@ namespace natl {
 	}
 
 	template<typename Float>
-	constexpr String floatToString(const Float number, const std::uint64_t precision) noexcept {
+	constexpr String floatToString(const Float number, const ui64 precision) noexcept {
 		String result{};
-		const std::int64_t integerPart = static_cast<std::int64_t>(number);
+		const i64 integerPart = static_cast<i64>(number);
 
-		result = intToStringDecimal<std::int64_t>(integerPart);
+		result = intToStringDecimal<i64>(integerPart);
 		result.push_back('.');
 
-		float fractionalPart = number - static_cast<Float>(static_cast<int>(number));
-		for (std::size_t i = 0; i < precision && fractionalPart < 1.0; ++i) {
+		Float fractionalPart = number - static_cast<Float>(static_cast<int>(number));
+		for (std::size_t i = 0; i < precision && fractionalPart < Float(1.0); ++i) {
 			fractionalPart *= 10;
-			const char digitCharacter = '0' + static_cast<std::int64_t>(fractionalPart);
+			const char digitCharacter = '0' + static_cast<char>(static_cast<i64>(fractionalPart));
 			result.push_back(digitCharacter);
-			fractionalPart -= static_cast<std::int64_t>(fractionalPart);
+			fractionalPart -= static_cast<Float>(static_cast<i64>(fractionalPart));
 		}
 
 		return result;
@@ -507,75 +508,75 @@ namespace natl {
 
 	template<typename Float>
 	constexpr String floatToString(const Float number) noexcept {
-		return floatToString<Float>(number, std::numeric_limits<std::uint64_t>::max());
+		return floatToString<Float>(number, std::numeric_limits<ui64>::max());
 	}
 	
-	constexpr std::int64_t stringDecimalToInt(const StringView& stringView) noexcept {
-		return stringDecimalToInt<std::int64_t>(stringView);
+	constexpr i64 stringDecimalToInt(const StringView& stringView) noexcept {
+		return stringDecimalToInt<i64>(stringView);
 	}
-	constexpr std::uint64_t stringHexadecimalToInt(const StringView& stringView) noexcept {
-		return stringHexadecimalToInt<std::uint64_t>(stringView);
+	constexpr ui64 stringHexadecimalToInt(const StringView& stringView) noexcept {
+		return stringHexadecimalToInt<ui64>(stringView);
 	}
-	constexpr std::uint64_t stringBinaryToInt(const StringView& stringView) noexcept {
-		return stringBinaryToInt<std::uint64_t>(stringView);
+	constexpr ui64 stringBinaryToInt(const StringView& stringView) noexcept {
+		return stringBinaryToInt<ui64>(stringView);
 	}
-	constexpr float stringToFloat(const StringView& stringView) noexcept {
-		return stringToFloat<float>(stringView);
-	}
-
-	constexpr std::int64_t stringDecimalToInt(const StringView& stringView, StringNumericConvertError& convertError) noexcept {
-		return stringDecimalToInt<std::int64_t>(stringView, convertError);
-	}
-	constexpr std::uint64_t stringHexadecimalToInt(const StringView& stringView, StringNumericConvertError& convertError) noexcept {
-		return stringHexadecimalToInt<std::uint64_t>(stringView, convertError);
-	}
-	constexpr std::uint64_t stringBinaryToInt(const StringView& stringView, StringNumericConvertError& convertError) noexcept {
-		return stringBinaryToInt<std::uint64_t>(stringView, convertError);
-	}
-	constexpr float stringToFloat(const StringView& stringView, StringNumericConvertError& convertError) noexcept {
-		return stringToFloat<float>(stringView, convertError);
+	constexpr f32 stringToFloat(const StringView& stringView) noexcept {
+		return stringToFloat<f32>(stringView);
 	}
 
-	constexpr Expect<std::int64_t, StringNumericConvertError> stringDecimalToIntExpect(const StringView& stringView) noexcept {
-		return stringDecimalToIntExpect<std::int64_t>(stringView);
+	constexpr i64 stringDecimalToInt(const StringView& stringView, StringNumericConvertError& convertError) noexcept {
+		return stringDecimalToInt<i64>(stringView, convertError);
 	}
-	constexpr Expect<std::uint64_t, StringNumericConvertError> stringHexadecimalToIntExpect(const StringView& stringView) noexcept {
-		return stringHexadecimalToIntExpect<std::uint64_t>(stringView);
+	constexpr ui64 stringHexadecimalToInt(const StringView& stringView, StringNumericConvertError& convertError) noexcept {
+		return stringHexadecimalToInt<ui64>(stringView, convertError);
 	}
-	constexpr Expect<std::uint64_t, StringNumericConvertError> stringBinaryToIntExpect(const StringView& stringView) noexcept {
-		return stringBinaryToIntExpect<std::uint64_t>(stringView);
+	constexpr ui64 stringBinaryToInt(const StringView& stringView, StringNumericConvertError& convertError) noexcept {
+		return stringBinaryToInt<ui64>(stringView, convertError);
 	}
-	constexpr Expect<float, StringNumericConvertError> stringToFloatExpect(const StringView& stringView) noexcept {
-		return stringToFloat<float>(stringView);
+	constexpr f32 stringToFloat(const StringView& stringView, StringNumericConvertError& convertError) noexcept {
+		return stringToFloat<f32>(stringView, convertError);
 	}
 
-	constexpr String intToStringDecimal(const std::int8_t number) noexcept { return intToStringDecimal<std::int8_t>(number); };
-	constexpr String intToStringDecimal(const std::int16_t number) noexcept { return intToStringDecimal<std::int16_t>(number); };
-	constexpr String intToStringDecimal(const std::int32_t number) noexcept { return intToStringDecimal<std::int32_t>(number); };
-	constexpr String intToStringDecimal(const std::int64_t number) noexcept { return intToStringDecimal<std::int64_t>(number); };
-	constexpr String intToStringDecimal(const std::uint8_t number) noexcept { return intToStringDecimal<std::uint8_t>(number); };
-	constexpr String intToStringDecimal(const std::uint16_t number) noexcept { return intToStringDecimal<std::uint16_t>(number); };
-	constexpr String intToStringDecimal(const std::uint32_t number) noexcept { return intToStringDecimal<std::uint32_t>(number); };
-	constexpr String intToStringDecimal(const std::uint64_t number) noexcept { return intToStringDecimal<std::uint64_t>(number); };
+	constexpr Expect<i64, StringNumericConvertError> stringDecimalToIntExpect(const StringView& stringView) noexcept {
+		return stringDecimalToIntExpect<i64>(stringView);
+	}
+	constexpr Expect<ui64, StringNumericConvertError> stringHexadecimalToIntExpect(const StringView& stringView) noexcept {
+		return stringHexadecimalToIntExpect<ui64>(stringView);
+	}
+	constexpr Expect<ui64, StringNumericConvertError> stringBinaryToIntExpect(const StringView& stringView) noexcept {
+		return stringBinaryToIntExpect<ui64>(stringView);
+	}
+	constexpr Expect<f32, StringNumericConvertError> stringToFloatExpect(const StringView& stringView) noexcept {
+		return stringToFloat<f32>(stringView);
+	}
 
-	constexpr String intToStringHexadecimal(const std::int8_t number) noexcept { return intToStringHexadecimal<std::int8_t>(number); };
-	constexpr String intToStringHexadecimal(const std::int16_t number) noexcept { return intToStringHexadecimal<std::int16_t>(number); };
-	constexpr String intToStringHexadecimal(const std::int32_t number) noexcept { return intToStringHexadecimal<std::int32_t>(number); };
-	constexpr String intToStringHexadecimal(const std::int64_t number) noexcept { return intToStringHexadecimal<std::int64_t>(number); };
-	constexpr String intToStringHexadecimal(const std::uint8_t number) noexcept { return intToStringHexadecimal<std::uint8_t>(number); };
-	constexpr String intToStringHexadecimal(const std::uint16_t number) noexcept { return intToStringHexadecimal<std::uint16_t>(number); };
-	constexpr String intToStringHexadecimal(const std::uint32_t number) noexcept { return intToStringHexadecimal<std::uint32_t>(number); };
-	constexpr String intToStringHexadecimal(const std::uint64_t number) noexcept { return intToStringHexadecimal<std::uint64_t>(number); };
+	constexpr String intToStringDecimal(const i8 number) noexcept { return intToStringDecimal<i8>(number); };
+	constexpr String intToStringDecimal(const i16 number) noexcept { return intToStringDecimal<i16>(number); };
+	constexpr String intToStringDecimal(const i32 number) noexcept { return intToStringDecimal<i32>(number); };
+	constexpr String intToStringDecimal(const i64 number) noexcept { return intToStringDecimal<i64>(number); };
+	constexpr String intToStringDecimal(const ui8 number) noexcept { return intToStringDecimal<ui8>(number); };
+	constexpr String intToStringDecimal(const ui16 number) noexcept { return intToStringDecimal<ui16>(number); };
+	constexpr String intToStringDecimal(const ui32 number) noexcept { return intToStringDecimal<ui32>(number); };
+	constexpr String intToStringDecimal(const ui64 number) noexcept { return intToStringDecimal<ui64>(number); };
 
-	constexpr String intToStringBinary(const std::int8_t number) noexcept { return intToStringBinary<std::int8_t>(number); };
-	constexpr String intToStringBinary(const std::int16_t number) noexcept { return intToStringBinary<std::int16_t>(number); };
-	constexpr String intToStringBinary(const std::int32_t number) noexcept { return intToStringBinary<std::int32_t>(number); };
-	constexpr String intToStringBinary(const std::int64_t number) noexcept { return intToStringBinary<std::int64_t>(number); };
-	constexpr String intToStringBinary(const std::uint8_t number) noexcept { return intToStringBinary<std::uint8_t>(number); };
-	constexpr String intToStringBinary(const std::uint16_t number) noexcept { return intToStringBinary<std::uint16_t>(number); };
-	constexpr String intToStringBinary(const std::uint32_t number) noexcept { return intToStringBinary<std::uint32_t>(number); };
-	constexpr String intToStringBinary(const std::uint64_t number) noexcept { return intToStringBinary<std::uint64_t>(number); };
+	constexpr String intToStringHexadecimal(const i8 number) noexcept { return intToStringHexadecimal<i8>(number); };
+	constexpr String intToStringHexadecimal(const i16 number) noexcept { return intToStringHexadecimal<i16>(number); };
+	constexpr String intToStringHexadecimal(const i32 number) noexcept { return intToStringHexadecimal<i32>(number); };
+	constexpr String intToStringHexadecimal(const i64 number) noexcept { return intToStringHexadecimal<i64>(number); };
+	constexpr String intToStringHexadecimal(const ui8 number) noexcept { return intToStringHexadecimal<ui8>(number); };
+	constexpr String intToStringHexadecimal(const ui16 number) noexcept { return intToStringHexadecimal<ui16>(number); };
+	constexpr String intToStringHexadecimal(const ui32 number) noexcept { return intToStringHexadecimal<ui32>(number); };
+	constexpr String intToStringHexadecimal(const ui64 number) noexcept { return intToStringHexadecimal<ui64>(number); };
 
-	constexpr String floatToString(const float number) noexcept { return floatToString<float>(number); };
-	constexpr String floatToString(const double number) noexcept { return floatToString<double>(number); };
+	constexpr String intToStringBinary(const i8 number) noexcept { return intToStringBinary<i8>(number); };
+	constexpr String intToStringBinary(const i16 number) noexcept { return intToStringBinary<i16>(number); };
+	constexpr String intToStringBinary(const i32 number) noexcept { return intToStringBinary<i32>(number); };
+	constexpr String intToStringBinary(const i64 number) noexcept { return intToStringBinary<i64>(number); };
+	constexpr String intToStringBinary(const ui8 number) noexcept { return intToStringBinary<ui8>(number); };
+	constexpr String intToStringBinary(const ui16 number) noexcept { return intToStringBinary<ui16>(number); };
+	constexpr String intToStringBinary(const ui32 number) noexcept { return intToStringBinary<ui32>(number); };
+	constexpr String intToStringBinary(const ui64 number) noexcept { return intToStringBinary<ui64>(number); };
+
+	constexpr String floatToString(const f32 number) noexcept { return floatToString<f32>(number); };
+	constexpr String floatToString(const f64 number) noexcept { return floatToString<f64>(number); };
 }

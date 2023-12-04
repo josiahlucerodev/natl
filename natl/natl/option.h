@@ -18,7 +18,7 @@ namespace natl {
 		constexpr Option() : isValid(false), data() {}
 		constexpr Option(const DataType& data) : isValid(true), data(data) { }
 		constexpr Option(DataType&& data) : isValid(true), data(data) { }
-		constexpr Option(OptionEmpty empty) : isValid(false), data() { }
+		constexpr Option([[maybe_unused]] OptionEmpty empty) : isValid(false), data() { }
 
 		constexpr DataType& value()& { return data; }
 		constexpr const DataType& value() const& { return data; };

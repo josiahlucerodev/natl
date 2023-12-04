@@ -7,6 +7,7 @@
 
 //own
 #include "typeTraits.h"
+#include "basicTypes.h"
 
 //interface 
 namespace natl {
@@ -19,7 +20,7 @@ namespace natl {
 		using reference = T&;
 		using pointer = T*;
 		using iterator_category = std::random_access_iterator_tag;
-		using size_type = std::size_t;
+		using size_type = Size;
 	private:
 		T* dataPtr;
 	public:
@@ -128,8 +129,8 @@ namespace natl {
 		const char* const lastVoidPtr = const_cast<const char*>(reinterpret_cast<const volatile char*>(lastPtr));
 		char* const dstVoidPtr = const_cast<char*>(reinterpret_cast<const volatile char*>(dstPtr));
 
-		const std::size_t count = static_cast<std::size_t>(lastVoidPtr - firstVoidPtr);
-		std::memcpy(dstVoidPtr, firstVoidPtr, count);
+		const Size count = static_cast<Size>(lastVoidPtr - firstVoidPtr);
+		std::memcpy(dstVoidPtr, firstVoidPtr, static_cast<std::size_t>(count));
 
 		if constexpr (std::is_pointer_v<DstIter>) {
 
@@ -163,7 +164,7 @@ namespace natl {
 
 	template <class Iter, class SizeType>
 		requires(IsIterPtr<Iter> && CanGetSizeFormIterPtrSub<Iter, SizeType>)
-	void countFormIterators(const Iter& first, const Iter& last) {
+	SizeType countFormIterators(const Iter& first, const Iter& last) {
 		return static_cast<SizeType>(first - last);
 	}
 
@@ -171,9 +172,25 @@ namespace natl {
 		requires(IsIterPtr<DstIter>)
 	void iterPtrMemset(DstIter dst, const int value, const size_t count) {
 		typename IterPtrTraits<DstIter>::value_type* const dstPtr = iteratorToAddress<DstIter>(dst);
-		char* const dstVoidPtr = const_cast<char*>(reinterpret_cast<const volatile char*>(dstPtr));
-		std::memset(dstPtr, static_cast<unsigned char>(value), count);
+		void* const dstVoidPtr = reinterpret_cast<void* const>(dstPtr);
+		std::memset(dstVoidPtr, value, count);
 	}
+
+	template <class SrcIter, class DstIter>
+	concept MemcpyCompareIter = IsIterPtr<SrcIter> && IsIterPtr<DstIter> &&
+		MemcpyCompareableSrcDst<typename IterPtrTraits<SrcIter>::value_type, typename IterPtrTraits<DstIter>::value_type>;
+
+
+	template <class AIter, class BIter>
+		requires(MemcpyCompareIter<AIter, BIter>)
+	bool iterPtrMemcpy(AIter a, BIter b, const Size count) {
+		const typename IterPtrTraits<AIter>::value_type* const aPtr = iteratorToAddress<AIter>(a);
+		const typename IterPtrTraits<BIter>::value_type* const bPtr = iteratorToAddress<BIter>(b);
+		const void* const aVoidPtr = reinterpret_cast<const void* const>(aPtr);
+		const void* const bVoidPtr = reinterpret_cast<const void* const>(bPtr);
+		return std::memcmp(aVoidPtr, bVoidPtr, static_cast<std::size_t>(count));
+	}
+
 
 	template <class Iter>
 		requires(IsIterPtr<Iter>)
@@ -194,4 +211,31 @@ namespace natl {
 			return &*iter;
 		}
 	}
+
+	template <typename Iter>
+	concept IsRandomAccessIterator = IsIterPtr<Iter> || std::is_same_v<IteratorCategory<Iter>, std::random_access_iterator_tag>;
+
+	template <typename Iter>
+	typename IteratorCategory<Iter>::difference_type
+		iterDistance(Iter first, Iter last) {
+		typename std::iterator_traits<Iter>::difference_type distance = 0;
+		while (first != last) {
+			++distance;
+			++first;
+		}
+		return distance;
+	}
+
+	template <typename Iter>
+		requires(IsRandomAccessIterator<Iter>)
+	Size iterDistance(Iter first, Iter last) {
+		if constexpr (IsIterPtr<Iter>) {
+			return std::bit_cast<Size, decltype(first)>(last - first);
+		} else {
+			return std::bit_cast<Size, decltype(&*first)>(&*last - &*first);
+		}
+	}
+
+
+
 }

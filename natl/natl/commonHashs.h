@@ -1,25 +1,42 @@
 #pragma once
 
-//std
-#include <string>
-
 //own
-#include "hash.h"
-#include "string.h"
+#include "basicTypes.h"
 
 //interface 
 namespace natl {
 	//fnv1a
-	constexpr std::uint64_t fnv1aOffsetBasis = 14695981039346656037ULL;
-	constexpr std::uint64_t fnv1aPrime = 1099511628211ULL;
-	constexpr std::uint64_t fnv1aHash(const char* strPtr, const std::uint64_t hash = fnv1aOffsetBasis) noexcept {
-		return (*strPtr == '\0') ? hash : fnv1aHash(strPtr + 1, (hash ^ static_cast<std::uint64_t>(*strPtr)) * fnv1aPrime);
+	constexpr Size fnv1aOffsetBasis = 14695981039346656037ULL;
+	constexpr Size fnv1aPrime = 1099511628211ULL;
+	constexpr Size fnv1aHash(const AssciCode* strPtr, Size hash = fnv1aOffsetBasis) noexcept {
+		while (*strPtr != '\0') {
+			hash ^= static_cast<Size>(*strPtr++);
+			hash *= fnv1aPrime;
+		}
+		return hash;
+	}
+	constexpr Size fnv1aHash(const Utf32* strPtr, Size hash = fnv1aOffsetBasis) noexcept {
+		while (*strPtr != '\0') {
+			hash ^= static_cast<Size>(*strPtr++);
+			hash *= fnv1aPrime;
+		}
+		return hash;
 	}
 
-	template<>
-	struct Hash<String> {
-		constexpr static std::size_t hash(const String& string) {
-			return fnv1aHash(string.c_str());
+	constexpr Size fnv1aHash(const AssciCode* strPtr, const Size size, Size hash = fnv1aOffsetBasis) noexcept {
+		const AssciCode* endPtr = strPtr + size;
+		for (; strPtr < endPtr; strPtr++) {
+			hash ^= static_cast<Size>(*strPtr);
+			hash *= fnv1aPrime;
 		}
-	};
+		return hash;
+	}
+	constexpr Size fnv1aHash(const Utf32* strPtr, const Size size, Size hash = fnv1aOffsetBasis) noexcept {
+		const Utf32* endPtr = strPtr + size;
+		for (; strPtr < endPtr; strPtr++) {
+			hash ^= static_cast<Size>(*strPtr);
+			hash *= fnv1aPrime;
+		}
+		return hash;
+	}
 }

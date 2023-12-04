@@ -1,12 +1,29 @@
 #pragma once
 
-//own
-#include <cstdint>
-#include <iostream>
+//std
 #include <bit>
+#include <iostream>
+
+//own
+#include "basicTypes.h"
 
 //interface
 namespace natl {
+	template <typename Alloc>
+	concept IsAllocator = requires(Alloc alloc) {
+			typename Alloc::value_type;
+			typename Alloc::pointer;
+			typename Alloc::const_pointer;
+			typename Alloc::reference;
+			typename Alloc::const_reference;
+			typename Alloc::size_type;
+			typename Alloc::difference_type;
+
+			// Allocate and deallocate memory
+			{ Alloc::allocate(std::declval<typename Alloc::size_type>()) } -> std::same_as<typename Alloc::pointer>;
+			{ Alloc::deallocate(std::declval<typename Alloc::pointer>(), std::declval<typename Alloc::size_type>()) };
+	};
+
 
 	template<class DataType>
 	class Allocator {
@@ -16,8 +33,8 @@ namespace natl {
 		using const_reference = const DataType&;
 		using pointer = DataType*;
 		using const_pointer = const DataType*;
-		using difference_type = std::ptrdiff_t;
-		using size_type = std::size_t;
+		using difference_type = PtrDiff;
+		using size_type = Size;
 	public:
 		constexpr Allocator() = default;
 		constexpr Allocator(const Allocator&) = default;
@@ -28,38 +45,13 @@ namespace natl {
 		Allocator operator=(const Allocator&) {}
 		Allocator operator=(Allocator&&) {}
 
-		[[nodiscard]] constexpr pointer allocate(const std::size_t number) noexcept { 
-			return std::allocator<DataType>().allocate(number);
+		[[nodiscard]] constexpr static pointer allocate(const Size number) noexcept { 
+			return std::allocator<DataType>().allocate(static_cast<std::size_t>(number));
 		}
-		constexpr void deallocate(const pointer ptr, const std::size_t number) noexcept { 
+		constexpr void static deallocate(pointer ptr, const Size number) noexcept {
 			if (!ptr) { return; }
 			std::allocator<DataType>().deallocate(ptr, number);
 		}
-		constexpr void deallocate(const pointer ptr) noexcept { 
-			if (!ptr) { return; }
-			std::allocator<DataType>().deallocate(ptr, 0);
-		}
-	};
-
-	template<class DataType, class Alloc = Allocator<DataType>>
-	class AllocatorStorage {
-	public:
-		using value_type = DataType;
-		using reference = DataType&;
-		using const_reference = const DataType&;
-		using pointer = DataType*;
-		using const_pointer = const DataType*;
-		using difference_type = std::ptrdiff_t;
-		using size_type = std::size_t;
-		Alloc allocator;
-	public:
-		constexpr AllocatorStorage(const Alloc& allocator = Alloc()) : allocator(allocator) {}
-		constexpr ~AllocatorStorage() = default;
-		[[nodiscard]] constexpr pointer allocate(const std::size_t number) noexcept { return allocator.allocate(number); }
-		constexpr void deallocate(const pointer ptr, const std::size_t number) noexcept { return allocator.deallocate(ptr, number); }
-		constexpr void deallocate(const pointer ptr) noexcept { allocator.deallocate(ptr); }
-		constexpr Alloc& getAllocator(const pointer ptr) noexcept { return allocator; }
-		constexpr const Alloc& getAllocator(const pointer ptr) const noexcept { return allocator; }
 	};
 
 	struct TrackerAllocatorData {
@@ -79,8 +71,8 @@ namespace natl {
 		using const_reference = const DataType&;
 		using pointer = DataType*;
 		using const_pointer = const DataType*;
-		using difference_type = std::ptrdiff_t;
-		using size_type = std::size_t;
+		using difference_type = PtrDiff;
+		using size_type = Size;
 	public:
 		constexpr TrackerAllocator() = default;
 		constexpr TrackerAllocator(const TrackerAllocator&) = default;
@@ -91,7 +83,7 @@ namespace natl {
 		TrackerAllocator operator=(const TrackerAllocator&) {}
 		TrackerAllocator operator=(TrackerAllocator&&) {}
 
-		[[nodiscard]] constexpr pointer allocate(const std::size_t number) noexcept { 
+		[[nodiscard]] constexpr static pointer allocate(const Size number) noexcept {
 			pointer dataPtr = std::allocator<DataType>().allocate(number);
 			trackerAllocatorData.allocs++;
 			trackerAllocatorData.allocPtrs.push_back(dataPtr);
@@ -105,17 +97,11 @@ namespace natl {
 				}
 			}
 
-			std::cout << "natl: TrackerAllocator error: ptr " << ptr << " was not allocated from TrackerAllocator\n";
+			std::cout << "natl: TrackerAllocator error: ptr " << reinterpret_cast<void*>(ptr) << " was not allocated from TrackerAllocator\n";
 			return false;
 		}
 
-		constexpr void deallocate(const pointer ptr) noexcept {
-			if (!ptr || !havePtr(ptr)) { return; }
-			trackerAllocatorData.deallocs++;
-			trackerAllocatorData.deallocPtrs.push_back(ptr);
-			std::allocator<DataType>().deallocate(ptr, 0);
-		}
-		constexpr void deallocate(const pointer ptr, const std::size_t number) noexcept {
+		constexpr static void deallocate(pointer ptr, const Size number) noexcept {
 			std::allocator<DataType>().deallocate(ptr, number);
 		}
 	};

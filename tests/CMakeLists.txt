@@ -1,7 +1,8 @@
 ﻿include(testUtils.cmake)
 
-natl_Standard_Test(NatlPartitionTest partition)
+natl_Standard_Test(NatlArrayViewTest arrayView)
 natl_Standard_Test(NatlArrayTest array)
+natl_Standard_Test(NatlStringTest string)
 natl_Standard_Test(NatlPartitionerTest partitioner)
 natl_Standard_Test(NatlStringConvertTest stringConvert)
 natl_Standard_Test(NatlExpectTest expect)
