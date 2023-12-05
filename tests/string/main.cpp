@@ -5,7 +5,7 @@
 template<class StringType>
 class StringTest {
 public:
-    constexpr static bool testConstructionAndAccess() {
+     static bool testConstructionAndAccess() {
         StringType emptyStr;
         NATL_TEST_ASSERT(typeid(StringType).name() ,emptyStr == "", "Default construction failed");
 
@@ -31,7 +31,7 @@ public:
         return true;
     }
 
-    constexpr static bool testModification() {
+     static bool testModification() {
         StringType str = "Hello, World!";
 
         // Test appending
@@ -65,7 +65,7 @@ public:
         return true;
     }
 
-    constexpr static bool testComparison() {
+     static bool testComparison() {
         StringType str = "Hello, World! Welcome!";
         StringType sameStr = "Hello, World! Welcome!";
         NATL_TEST_ASSERT(typeid(StringType).name() ,str == sameStr, "Equality comparison failed");
@@ -81,7 +81,7 @@ public:
         return true;
     }
 
-    constexpr static bool testConcatenation() {
+     static bool testConcatenation() {
         StringType str1 = "Hello, ";
         StringType str2 = "World!";
         StringType result = str1 + str2;
@@ -91,7 +91,7 @@ public:
         return true;
     }
 
-    constexpr static bool testSubstring() {
+     static bool testSubstring() {
         StringType str = "Hello, World!";
 
         // Extract substring
@@ -109,7 +109,7 @@ public:
         return true;
     }
 
-    constexpr static bool testCharacterManipulation() {
+     static bool testCharacterManipulation() {
         StringType str = "Hello, World";
 
         // Test pushing back and popping back
@@ -131,7 +131,7 @@ public:
         return true;
     }
 
-    constexpr static bool testIterators() {
+     static bool testIterators() {
         StringType str = "Hello, World!";
 
         // Test iterating forward
@@ -151,8 +151,8 @@ public:
         return true;
     }
 
-    constexpr static bool testCStringConversion() {
-        if constexpr (std::is_same_v<typename StringType::value_type, char>) {
+     static bool testCStringConversion() {
+        if  (std::is_same_v<typename StringType::value_type, char>) {
             StringType str = "Hello, World!";
 
             // Test conversion to C-style string
@@ -163,7 +163,7 @@ public:
         return true;
     }
 
-    constexpr static bool testSwap() {
+     static bool testSwap() {
         StringType str1 = "First String";
         StringType str2 = "Second String";
 
@@ -175,7 +175,7 @@ public:
         return true;
     }
 
-    constexpr static bool testShrinkToFit() {
+     static bool testShrinkToFit() {
         StringType str;
         str.resize(10000, 'A');
         natl::Size initialCapacity = str.capacity();
@@ -201,7 +201,7 @@ public:
         return true;
     }
 
-    constexpr static bool test(int seed) {
+     static bool test(int seed) {
         bool allTestsPassed = true;
 
         allTestsPassed &= testConstructionAndAccess();

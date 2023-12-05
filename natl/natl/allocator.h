@@ -50,13 +50,13 @@ namespace natl {
 		}
 		constexpr void static deallocate(pointer ptr, const Size number) noexcept {
 			if (!ptr) { return; }
-			std::allocator<DataType>().deallocate(ptr, number);
+			std::allocator<DataType>().deallocate(ptr, static_cast<std::size_t>(number));
 		}
 	};
 
 	struct TrackerAllocatorData {
-		std::uint64_t allocs;
-		std::uint64_t deallocs;
+		i64 allocs;
+		i64 deallocs;
 		std::vector<void*> allocPtrs;
 		std::vector<void*> deallocPtrs;
 	};

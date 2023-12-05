@@ -215,7 +215,7 @@ namespace natl {
 
 	public:
 		//index calculation
-		constexpr Size calculateLinearIndex(AlwaysT<Dimensions, Size>... indexesArgs) const noexcept {
+		constexpr Size calculateLinearIndex(AlwaysType<Dimensions, Size>... indexesArgs) const noexcept {
 			constexpr Size dimensions[] = { Dimensions... };
 			Size indexes[] = { indexesArgs... };
 
@@ -228,7 +228,7 @@ namespace natl {
 			}
 			return index;
 		}
-		constexpr Size calculateLinearIndexBounded(AlwaysT<Dimensions, Size>... indexesArgs) const noexcept {
+		constexpr Size calculateLinearIndexBounded(AlwaysType<Dimensions, Size>... indexesArgs) const noexcept {
 			constexpr Size dimensions[] = { Dimensions... };
 			const Size indexes[] = { indexesArgs... };
 			Size index = 0;
@@ -242,11 +242,11 @@ namespace natl {
 		}
 
 		//element access
-		constexpr reference at(AlwaysT<Dimensions, Size>... indices) noexcept { return data()[calculateLinearIndex(indices...)]; }
-		constexpr const_reference at(AlwaysT<Dimensions, Size>... indices) const noexcept { return data()[calculateLinearIndex(indices...)]; }
+		constexpr reference at(AlwaysType<Dimensions, Size>... indices) noexcept { return data()[calculateLinearIndex(indices...)]; }
+		constexpr const_reference at(AlwaysType<Dimensions, Size>... indices) const noexcept { return data()[calculateLinearIndex(indices...)]; }
 
-		constexpr reference atBounded(AlwaysT<Dimensions, Size>... indices) noexcept { return data()[calculateLinearIndexBounded(indices...)]; }
-		constexpr const_reference atBounded(AlwaysT<Dimensions, Size>... indices) const noexcept { return data()[calculateLinearIndexBounded(indices...)]; }
+		constexpr reference atBounded(AlwaysType<Dimensions, Size>... indices) noexcept { return data()[calculateLinearIndexBounded(indices...)]; }
+		constexpr const_reference atBounded(AlwaysType<Dimensions, Size>... indices) const noexcept { return data()[calculateLinearIndexBounded(indices...)]; }
 
 		constexpr pointer data() noexcept { return asArray().data(); }
 		constexpr const_pointer data() const noexcept {  return asArray().data(); };

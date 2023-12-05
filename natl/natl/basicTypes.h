@@ -18,7 +18,7 @@ namespace natl {
 	using f32 = float;
 	using f64 = double;
 
-	using Size = std::uint64_t;
+	using Size = i64;
 	using PtrDiff = std::ptrdiff_t;
 
 	using Utf32 = char32_t;

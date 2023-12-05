@@ -19,7 +19,5 @@ constexpr int compileTimeTest() {
 
 int main() {
 	constexpr int number = compileTimeTest();
-	natl::MDArray<int, 3, 4> array;
-
-
+	natl::MDArray<int, number, 4> array;
 }

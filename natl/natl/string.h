@@ -398,12 +398,18 @@ namespace natl {
 
 		constexpr const CharType* c_str() const noexcept { return data(); }
 
-		constexpr operator BaseStringView<CharType>() const noexcept {
+		constexpr operator BaseStringView<CharType>() noexcept {
 			return BaseStringView<CharType>(data(), size());
 		}
+		constexpr operator BaseStringView<const CharType>() const noexcept {
+			return BaseStringView<const CharType>(data(), size());
+		}
 
-		constexpr BaseStringView<CharType> toStringView() const noexcept {
+		constexpr BaseStringView<CharType> toStringView() noexcept {
 			return BaseStringView<CharType>(data(), size());
+		}
+		constexpr BaseStringView<const CharType> toStringView() const noexcept {
+			return BaseStringView<const CharType>(data(), size());
 		}
 
 		//iterators 
@@ -880,7 +886,6 @@ namespace natl {
 		template <class SrcCharType>
 		constexpr BaseString& replace(const size_type pos, const size_type count, const size_type count2, SrcCharType ch) {
 			const Size index = min<Size>(size(), pos);
-			const Size srcIndex = 0;
 			const Size srcCount = count2;
 			const Size replaceSize = min<Size>(size() - index, count);
 			const Size endingSize = size() - index - replaceSize;

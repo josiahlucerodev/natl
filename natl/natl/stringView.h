@@ -382,8 +382,8 @@ namespace natl {
 			for (; lhsPtr < lhsEndPtr && *rhsPtr != RhsCharType(0); ++lhsPtr, ++rhsPtr) {
 				if (*lhsPtr != static_cast<LhsCharType>(*rhsPtr)) { return false; }
 			}
-			return lhsPtr < lhsEndPtr && *rhsPtr != RhsCharType(0) ||
-				lhsPtr == lhsEndPtr && *rhsPtr == RhsCharType(0);
+			return (lhsPtr < lhsEndPtr && *rhsPtr != RhsCharType(0)) ||
+				(lhsPtr == lhsEndPtr && *rhsPtr == RhsCharType(0));
 		}
 
 		template<class LhsCharType, class RhsCharType>
@@ -773,6 +773,7 @@ namespace natl {
 	};
 
 	using StringView = BaseStringView<char>;
+	using ConstStringView = BaseStringView<const char>;
 	using AsciiStringView = StringView;
 	using Utf32StringView = BaseStringView<char32_t>;
 

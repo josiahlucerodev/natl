@@ -35,7 +35,6 @@ natl/view.h
 
 set(SOURCE_FILES
 natl/allocator.cpp
-natl/timer.cpp
 )
 
 foreach(target_header IN LISTS HEADER_FILES)

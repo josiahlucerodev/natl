@@ -20,7 +20,7 @@ namespace natl {
 		using reference = T&;
 		using pointer = T*;
 		using iterator_category = std::random_access_iterator_tag;
-		using size_type = Size;
+		using Sizeype = Size;
 	private:
 		T* dataPtr;
 	public:
@@ -33,7 +33,7 @@ namespace natl {
 	public:
 		constexpr reference operator*() const noexcept { return *dataPtr; }
 		constexpr pointer operator->() const noexcept { return dataPtr; }
-		constexpr reference operator[](const size_type pos) const noexcept { return dataPtr[pos]; };
+		constexpr reference operator[](const Sizeype pos) const noexcept { return dataPtr[pos]; };
 
 		constexpr bool operator== (const iterator rhs) const noexcept { return dataPtr == rhs.dataPtr; }
 		constexpr bool operator!= (const iterator rhs) const noexcept { return dataPtr != rhs.dataPtr; }
@@ -170,10 +170,10 @@ namespace natl {
 
 	template <class DstIter>
 		requires(IsIterPtr<DstIter>)
-	void iterPtrMemset(DstIter dst, const int value, const size_t count) {
+	void iterPtrMemset(DstIter dst, const int value, const Size count) {
 		typename IterPtrTraits<DstIter>::value_type* const dstPtr = iteratorToAddress<DstIter>(dst);
 		void* const dstVoidPtr = reinterpret_cast<void* const>(dstPtr);
-		std::memset(dstVoidPtr, value, static_cast<Size>(count) * sizeof(IterPtrTraits<DstIter>::value_type));
+		std::memset(dstVoidPtr, value, static_cast<std::size_t>(count) * sizeof(typename IterPtrTraits<DstIter>::value_type));
 	}
 
 	template <class SrcIter, class DstIter>
