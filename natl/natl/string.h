@@ -1475,19 +1475,19 @@ namespace natl {
 	using BaseStringByteSize = BaseString<CharType, (byteSize - sizeof(BaseStringBaseMembersRef<CharType>)) / sizeof(CharType), Alloc>;
 
 	using String32 = BaseStringByteSize<char, 32>;
-	static_assert(sizeof(String32) == 32, "natl: String32 should by 32 bytes");
+	static_assert(sizeof(String32) == 32, "natl: String32 should be 32 bytes");
 
 	using String64 = BaseStringByteSize<char, 64>;
-	static_assert(sizeof(String64) == 64, "natl: String64 should by 64 bytes");
+	static_assert(sizeof(String64) == 64, "natl: String64 should be 64 bytes");
 
 	using String96 = BaseStringByteSize<char, 96>;
-	static_assert(sizeof(String96) == 96, "natl: String96 should by 96 bytes");
+	static_assert(sizeof(String96) == 96, "natl: String96 should be 96 bytes");
 
 	using String128 = BaseStringByteSize<char, 128>;
-	static_assert(sizeof(String128) == 128, "natl: String128 should by 128 bytes");
+	static_assert(sizeof(String128) == 128, "natl: String128 should be 128 bytes");
 
 	using String256 = BaseStringByteSize<char, 256>;
-	static_assert(sizeof(String256) == 256, "natl: String256 should by 256 bytes");
+	static_assert(sizeof(String256) == 256, "natl: String256 should be 256 bytes");
 
 	using AsciiString32 = String32; 
 	using AsciiString64 = String64; 
@@ -1496,22 +1496,22 @@ namespace natl {
 	using AsciiString256 = String256; 
 
 	using Utf32String32 = BaseStringByteSize<Utf32, 32>;
-	static_assert(sizeof(Utf32String32) == 32, "natl: Utf32String32 should by 32 bytes");
+	static_assert(sizeof(Utf32String32) == 32, "natl: Utf32String32 should be 32 bytes");
 
 	using Utf32String64 = BaseStringByteSize<Utf32, 64>;;
-	static_assert(sizeof(Utf32String64) == 64, "natl: Utf32String64 should by 64 bytes");
+	static_assert(sizeof(Utf32String64) == 64, "natl: Utf32String64 should be 64 bytes");
 
 	using Utf32String96 = BaseStringByteSize<Utf32, 96>;
-	static_assert(sizeof(Utf32String96) == 96, "natl: Utf32String96 should by 96 bytes");
+	static_assert(sizeof(Utf32String96) == 96, "natl: Utf32String96 should be 96 bytes");
 
 	using Utf32String128 = BaseStringByteSize<Utf32, 128>;
-	static_assert(sizeof(Utf32String128) == 128, "natl: Utf32String128 should by 128 bytes");
+	static_assert(sizeof(Utf32String128) == 128, "natl: Utf32String128 should be 128 bytes");
 
 	using Utf32String256 = BaseStringByteSize<Utf32, 256>;
-	static_assert(sizeof(Utf32String256) == 256, "natl: Utf32String256 should by 256 bytes");
+	static_assert(sizeof(Utf32String256) == 256, "natl: Utf32String256 should be 256 bytes");
 
 	using Utf32String512 = BaseStringByteSize<Utf32, 512>;
-	static_assert(sizeof(Utf32String512) == 512, "natl: Utf32String512 should by 512 bytes");
+	static_assert(sizeof(Utf32String512) == 512, "natl: Utf32String512 should be 512 bytes");
 
 	using String = String32;
 	using AsciiString = String32;
