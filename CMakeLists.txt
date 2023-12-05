@@ -16,13 +16,13 @@ else()
 endif()
 
 #IS ROOT
-CHECK_IF_IS_ROOT(NATL_TRANSPILER_IS_ROOT)
+CHECK_IF_IS_ROOT(NATL_IS_ROOT)
 
 #PROJECT LIBRARY
 add_subdirectory(natl)
 
 #TEST
-if(NATL_TRANSPILER_IS_ROOT)
+if(NATL_IS_ROOT)
 	message("natl: tests")
 	add_subdirectory(tests)
 endif()
