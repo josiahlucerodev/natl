@@ -152,7 +152,7 @@ public:
     }
 
      static bool testCStringConversion() {
-        if  (std::is_same_v<typename StringType::value_type, char>) {
+        if constexpr (std::is_same_v<typename StringType::value_type, char>) {
             StringType str = "Hello, World!";
 
             // Test conversion to C-style string
@@ -201,7 +201,7 @@ public:
         return true;
     }
 
-     static bool test(int seed) {
+     static bool test(int) {
         bool allTestsPassed = true;
 
         allTestsPassed &= testConstructionAndAccess();

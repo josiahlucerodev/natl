@@ -18,7 +18,7 @@ namespace natl {
 		none,
 	};
 
-	constexpr StringView convertErrorToStringView(const StringNumericConvertError convertError) {
+	constexpr ConstStringView convertErrorToStringView(const StringNumericConvertError convertError) {
 		switch (convertError) {
 		case StringNumericConvertError::unknown:
 			return "unknown";
@@ -51,7 +51,7 @@ namespace natl {
 		}
 	}
 	template<typename Interger>
-	constexpr  Interger stringDecimalToInt(const StringView& string, StringNumericConvertError& convertError) noexcept {
+	constexpr  Interger stringDecimalToInt(const ConstStringView& string, StringNumericConvertError& convertError) noexcept {
 		if (string.size() == 0) {
 			convertError = StringNumericConvertError::invalid;
 			return 0;
@@ -113,13 +113,13 @@ namespace natl {
 	}
 
 	template<typename Interger>
-	constexpr  Interger stringDecimalToInt(const StringView& string) noexcept {
+	constexpr  Interger stringDecimalToInt(const ConstStringView& string) noexcept {
 		StringNumericConvertError convertError;
 		return stringDecimalToInt<Interger>(string, convertError);
 	}
 
 	template<typename Interger>
-	constexpr Expect<Interger, StringNumericConvertError> stringDecimalToIntExpect(const StringView& string) noexcept {
+	constexpr Expect<Interger, StringNumericConvertError> stringDecimalToIntExpect(const ConstStringView& string) noexcept {
 		StringNumericConvertError convertError = StringNumericConvertError::unknown;
 		Interger value = stringDecimalToInt<Interger>(string, convertError);
 		if (convertError != StringNumericConvertError::none) {
@@ -160,7 +160,7 @@ namespace natl {
 	}
 
 	template<typename Interger>
-	constexpr Interger stringHexadecimalToInt(const StringView& string, StringNumericConvertError& convertError) noexcept {
+	constexpr Interger stringHexadecimalToInt(const ConstStringView& string, StringNumericConvertError& convertError) noexcept {
 		if (string.size() == 0) {
 			convertError = StringNumericConvertError::invalid;
 			return 0;
@@ -212,13 +212,13 @@ namespace natl {
 	}
 
 	template<typename Interger>
-	constexpr Interger stringHexadecimalToInt(const StringView& string) noexcept {
+	constexpr Interger stringHexadecimalToInt(const ConstStringView& string) noexcept {
 		StringNumericConvertError convertError;
 		return stringHexadecimalToInt<Interger>(string, convertError);
 	}
 
 	template<typename Interger>
-	constexpr Expect<Interger, StringNumericConvertError> stringHexadecimalToIntExpect(const StringView& string) noexcept {
+	constexpr Expect<Interger, StringNumericConvertError> stringHexadecimalToIntExpect(const ConstStringView& string) noexcept {
 		StringNumericConvertError convertError = StringNumericConvertError::unknown;
 		Interger value = stringHexadecimalToInt<Interger>(string, convertError);
 		if (convertError != StringNumericConvertError::none) {
@@ -245,7 +245,7 @@ namespace natl {
 	}
 
 	template<typename Interger>
-	constexpr Interger stringBinaryToInt(const StringView& string, StringNumericConvertError& convertError) noexcept {
+	constexpr Interger stringBinaryToInt(const ConstStringView& string, StringNumericConvertError& convertError) noexcept {
 		if (string.size() == 0) {
 			convertError = StringNumericConvertError::invalid;
 			return 0;
@@ -291,13 +291,13 @@ namespace natl {
 	}
 
 	template<typename Interger>
-	constexpr Interger stringBinaryToInt(const StringView& string) noexcept {
+	constexpr Interger stringBinaryToInt(const ConstStringView& string) noexcept {
 		StringNumericConvertError convertError;
 		return stringBinaryToInt<Interger>(string, convertError);
 	}
 
 	template<typename Interger>
-	constexpr Expect<Interger, StringNumericConvertError> stringBinaryToIntExpect(const StringView& string) noexcept {
+	constexpr Expect<Interger, StringNumericConvertError> stringBinaryToIntExpect(const ConstStringView& string) noexcept {
 		StringNumericConvertError convertError = StringNumericConvertError::unknown;
 		Interger value = stringBinaryToInt<Interger>(string, convertError);
 		if (convertError != StringNumericConvertError::none) {
@@ -308,7 +308,7 @@ namespace natl {
 	}
 
 	template<typename Float>
-	constexpr Float stringToFloat(const StringView& string, StringNumericConvertError& convertError) noexcept {
+	constexpr Float stringToFloat(const ConstStringView& string, StringNumericConvertError& convertError) noexcept {
 		if (string.size() == 0) {
 			convertError = StringNumericConvertError::invalid;
 			return 0;
@@ -372,13 +372,13 @@ namespace natl {
 	}
 
 	template<typename Float>
-	constexpr Float stringToFloat(const StringView& string) noexcept {
+	constexpr Float stringToFloat(const ConstStringView& string) noexcept {
 		StringNumericConvertError convertError;
 		return stringToFloat<Float>(string, convertError);
 	}
 
 	template<typename Float>
-	constexpr Expect<Float, StringNumericConvertError> stringToFloatExpect(const StringView& string) noexcept {
+	constexpr Expect<Float, StringNumericConvertError> stringToFloatExpect(const ConstStringView& string) noexcept {
 		StringNumericConvertError convertError = StringNumericConvertError::unknown;
 		Float value = stringToFloat<Float>(string, convertError);
 		if (convertError != StringNumericConvertError::none) {
@@ -511,42 +511,42 @@ namespace natl {
 		return floatToString<Float>(number, std::numeric_limits<ui64>::max());
 	}
 	
-	constexpr i64 stringDecimalToInt(const StringView& stringView) noexcept {
+	constexpr i64 stringDecimalToInt(const ConstStringView& stringView) noexcept {
 		return stringDecimalToInt<i64>(stringView);
 	}
-	constexpr ui64 stringHexadecimalToInt(const StringView& stringView) noexcept {
+	constexpr ui64 stringHexadecimalToInt(const ConstStringView& stringView) noexcept {
 		return stringHexadecimalToInt<ui64>(stringView);
 	}
-	constexpr ui64 stringBinaryToInt(const StringView& stringView) noexcept {
+	constexpr ui64 stringBinaryToInt(const ConstStringView& stringView) noexcept {
 		return stringBinaryToInt<ui64>(stringView);
 	}
-	constexpr f32 stringToFloat(const StringView& stringView) noexcept {
+	constexpr f32 stringToFloat(const ConstStringView& stringView) noexcept {
 		return stringToFloat<f32>(stringView);
 	}
 
-	constexpr i64 stringDecimalToInt(const StringView& stringView, StringNumericConvertError& convertError) noexcept {
+	constexpr i64 stringDecimalToInt(const ConstStringView& stringView, StringNumericConvertError& convertError) noexcept {
 		return stringDecimalToInt<i64>(stringView, convertError);
 	}
-	constexpr ui64 stringHexadecimalToInt(const StringView& stringView, StringNumericConvertError& convertError) noexcept {
+	constexpr ui64 stringHexadecimalToInt(const ConstStringView& stringView, StringNumericConvertError& convertError) noexcept {
 		return stringHexadecimalToInt<ui64>(stringView, convertError);
 	}
-	constexpr ui64 stringBinaryToInt(const StringView& stringView, StringNumericConvertError& convertError) noexcept {
+	constexpr ui64 stringBinaryToInt(const ConstStringView& stringView, StringNumericConvertError& convertError) noexcept {
 		return stringBinaryToInt<ui64>(stringView, convertError);
 	}
-	constexpr f32 stringToFloat(const StringView& stringView, StringNumericConvertError& convertError) noexcept {
+	constexpr f32 stringToFloat(const ConstStringView& stringView, StringNumericConvertError& convertError) noexcept {
 		return stringToFloat<f32>(stringView, convertError);
 	}
 
-	constexpr Expect<i64, StringNumericConvertError> stringDecimalToIntExpect(const StringView& stringView) noexcept {
+	constexpr Expect<i64, StringNumericConvertError> stringDecimalToIntExpect(const ConstStringView& stringView) noexcept {
 		return stringDecimalToIntExpect<i64>(stringView);
 	}
-	constexpr Expect<ui64, StringNumericConvertError> stringHexadecimalToIntExpect(const StringView& stringView) noexcept {
+	constexpr Expect<ui64, StringNumericConvertError> stringHexadecimalToIntExpect(const ConstStringView& stringView) noexcept {
 		return stringHexadecimalToIntExpect<ui64>(stringView);
 	}
-	constexpr Expect<ui64, StringNumericConvertError> stringBinaryToIntExpect(const StringView& stringView) noexcept {
+	constexpr Expect<ui64, StringNumericConvertError> stringBinaryToIntExpect(const ConstStringView& stringView) noexcept {
 		return stringBinaryToIntExpect<ui64>(stringView);
 	}
-	constexpr Expect<f32, StringNumericConvertError> stringToFloatExpect(const StringView& stringView) noexcept {
+	constexpr Expect<f32, StringNumericConvertError> stringToFloatExpect(const ConstStringView& stringView) noexcept {
 		return stringToFloat<f32>(stringView);
 	}
 

@@ -7,7 +7,7 @@
 #include "hash.h"
 #include "iterators.h"
 #include "allocator.h"
-#include "dynamicArray.h"
+#include "dynArray.h"
 #include "option.h"
 
 //interface
@@ -21,7 +21,7 @@ namespace natl {
 		using reference = Entry&;
 		using pointer = Entry*;
 		using iterator_category = std::random_access_iterator_tag;
-		using size_type = std::size_t;
+		using size_type = Size;
 	private:
 		pointer dataPtr;
 		pointer beginPtr;
@@ -138,24 +138,24 @@ namespace natl {
 		using optional_pointer = Option<Entry*>;
 		using optional_const_pointer = Option<const Entry*>;
 		using difference_type = std::ptrdiff_t;
-		using size_type = std::size_t;
+		using size_type = Size;
 
 		using iterator = FlatHashMapIterator<Entry>;
 		using const_iterator = FlatHashMapIterator<const Entry>;
 		using reverse_iterator = std::reverse_iterator<FlatHashMapIterator<Entry>>;
 		using const_reverse_iterator = std::reverse_iterator<FlatHashMapIterator<const Entry>>;
 
-		static constexpr double load_factor = 0.7;
+		static constexpr f64 load_factor = 0.7;
 	private:
 		size_type inSize;
-		DynamicArray<Entry, Alloc> table;
+		DynArray<Entry, Alloc> table;
 	public:
 		constexpr FlatHashMap() : inSize(0), table() {}
-		constexpr FlatHashMap(const FlatHashMap& src) : inSize{}, table{} {
+		constexpr FlatHashMap(const FlatHashMap& src) : inSize{}, table() {
 			inSize = src.inSize;
 			table = src.table;
 		}
-		constexpr FlatHashMap(FlatHashMap&& src) : inSize{}, table{} {
+		constexpr FlatHashMap(FlatHashMap&& src) : inSize{}, table() {
 			inSize = src.inSize;
 			table = std::move(src.table);
 		}
@@ -164,7 +164,7 @@ namespace natl {
 
 		constexpr size_type size() const noexcept { return inSize; }
 		constexpr size_type count() const noexcept { return inSize; }
-		constexpr size_type capacity() const noexcept { return table.capacity(); }
+		constexpr size_type capacity() const noexcept { return table.size(); }
 
 		constexpr bool isEmpty() const noexcept { return !bool(size()); }
 		constexpr bool isNotEmpty() const noexcept { return bool(size()); }
@@ -194,10 +194,8 @@ namespace natl {
 		constexpr iterator insert(const Key& key, const DataType& data) {
 			resizeAndRehash();
 
-			return end();
-
 			pointer dataLocation = nullptr;
-			std::size_t index = Hash::hash(key) % capacity();
+			Size index = Hash::hash(key) % capacity();
 			while (table[index].isUsed()) {
 				if (table[index].key == key) {
 					dataLocation = &table[index];
@@ -219,12 +217,12 @@ namespace natl {
 			resizeAndRehash();
 
 			pointer dataLocation = nullptr;
-			std::size_t index = Hash::hash(key) % capacity();
+			Size index = Hash::hash(key) % capacity();
 			while (table[index].isUsed()) {
 				if (Compare::compare(table[index].key, key)) {
 					dataLocation = &table[index];
-					dataLocation->data = data;
-					dataLocation->key = key;
+					dataLocation->data = forward<DataType>(data);
+					dataLocation->key = forward<Key>(key);
 
 					return iterator(dataLocation, beginPtr(), endPtr());
 				}
@@ -232,7 +230,9 @@ namespace natl {
 			}
 
 			dataLocation = &table[index];
-			*dataLocation = Entry(key, data, true);
+			dataLocation->data = forward<DataType>(data);
+			dataLocation->key = forward<Key>(key);
+			dataLocation->setAsUsed();
 			++inSize;
 
 			return iterator(dataLocation, beginPtr(), endPtr());
@@ -310,28 +310,27 @@ namespace natl {
 			return find(key).hasValue();
 		}
 		constexpr void resizeAndRehash() {
-			if (inSize >= capacity() * load_factor) {
+			if (inSize >= static_cast<Size>(static_cast<f64>(capacity()) * load_factor)) {
 				resizeAndRehash((capacity() + 10) * 2);
 			}
 		}
 		constexpr void resizeAndRehash(const size_type newCapacity) {
 			if (newCapacity <= capacity()) { return; }
 
-			DynamicArray<Entry, Alloc> newTable(newCapacity);
+			DynArray<Entry, Alloc> newTable(newCapacity);
 
-			for (const Entry& entry : table) {
+			for (Entry& entry : table) {
 				if (entry.isUsed()) {
-					std::size_t index = Hash::hash(entry.key) % newCapacity;
+					Size index = Hash::hash(entry.key) % newCapacity;
 
 					while (newTable[index].isUsed()) {
 						index = (index + 1) % newCapacity;
 					}
 
-					pointer dataLocation = &newTable[index];
-					*dataLocation = entry;
+					newTable[index] = forward<Entry>(entry);
 				}
 			}
-			table = static_cast<DynamicArray<Entry, Alloc>&&>(newTable);
+			table = move(newTable);
 		}
 
 		constexpr void clear() {

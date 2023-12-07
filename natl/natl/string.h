@@ -8,10 +8,11 @@
 #include "basicTypes.h"
 #include "allocator.h"
 #include "iterators.h"
-#include "stringView.h"
 #include "dataMovement.h"
 #include "algorithm.h"
 #include "container.h"
+#include "stringView.h"
+#include "arrayView.h"
 
 //interface 
 namespace natl {
@@ -47,6 +48,13 @@ namespace natl {
 		constexpr static bool triviallyRelocatable = true;
 		constexpr static bool triviallyDefaultConstructible = true;
 		constexpr static bool triviallyCompareable = false;
+		constexpr static bool triviallyDestructible = false;
+		constexpr static bool triviallyConstRefConstructedable = false;
+		constexpr static bool triviallyMoveConstructedable = false;
+
+		constexpr static bool enableSmallString = true;
+
+		using ConstBaseStringView = BaseStringView<const CharType>;
 	private:
 		Size stringSizeAndSmallStringFlag; 
 		CharType* stringPtr;
@@ -55,22 +63,67 @@ namespace natl {
 
 		//small string 
 	private:
-		constexpr void setAsSmallString() noexcept { stringSizeAndSmallStringFlag = setNthBitToZero(stringSizeAndSmallStringFlag, 63); }
-		constexpr void setAsNotSmallString() noexcept { stringSizeAndSmallStringFlag = setNthBitToOne(stringSizeAndSmallStringFlag, 63); }
+		constexpr void setAsSmallString() noexcept { 
+			if (!std::is_constant_evaluated() && enableSmallString) {
+				stringSizeAndSmallStringFlag = setNthBitToZero(stringSizeAndSmallStringFlag, 63); 
+			}
+		}
+		constexpr void setAsNotSmallString() noexcept { 
+			if (!std::is_constant_evaluated() && enableSmallString) {
+				stringSizeAndSmallStringFlag = setNthBitToOne(stringSizeAndSmallStringFlag, 63);
+			}
+		}
+		constexpr void setSize(const Size newSize) noexcept {
+			stringSizeAndSmallStringFlag = (stringSizeAndSmallStringFlag & ~0x7FFFFFFFFFFFFFFFULL) | newSize;
+		}
 	public:
-		constexpr bool isSmallString() const noexcept { return !(stringSizeAndSmallStringFlag & ~0x7FFFFFFFFFFFFFFFULL); }
-		constexpr bool isNotSmallString() const noexcept { return !isSmallString(); }
+		constexpr bool isSmallString() const noexcept { 
+			if (std::is_constant_evaluated() || !enableSmallString) {
+				return false;
+			} else {
+				return !(stringSizeAndSmallStringFlag & ~0x7FFFFFFFFFFFFFFFULL);
+			}
+		}
+		constexpr bool isNotSmallString() const noexcept { 
+			return !isSmallString();
+		}
 		constexpr static Size smallStringCapacity() noexcept {
-			if (std::is_constant_evaluated()) {
+			if (std::is_constant_evaluated() || !enableSmallString) {
 				return 0;
 			} else {
 				return bufferSize + ((sizeof(stringPtr) + sizeof(stringCapacity)) / sizeof(CharType));
 			}
 		}
+		constexpr const CharType* smallStringLocation() const noexcept {
+			if (std::is_constant_evaluated()) {
+				return nullptr;
+			}
+			else {
+				return reinterpret_cast<const CharType*>(reinterpret_cast<const ui8*>(this) + sizeof(stringSizeAndSmallStringFlag));
+			}
+		}
+		constexpr CharType* smallStringLocation() noexcept {
+			if (std::is_constant_evaluated()) {
+				return nullptr;
+			}
+			else {
+				return reinterpret_cast<CharType*>(reinterpret_cast<ui8*>(this) + sizeof(stringSizeAndSmallStringFlag));
+			}
+		}
+
+		constexpr Size capacity() const noexcept { return isSmallString() ? smallStringCapacity() : stringCapacity; };
+
+		constexpr Size size() const noexcept { return stringSizeAndSmallStringFlag & 0x7FFFFFFFFFFFFFFFULL; }
+		constexpr size_type length() const noexcept { return size(); };
+		constexpr size_type max_size() const noexcept { return 0x7FFFFFFFFFFFFFFFULL; };
 	private:
 		constexpr void baseConstructorInit() noexcept {
 			stringSizeAndSmallStringFlag = 0;
 			stringPtr = 0;
+			stringCapacity = 0;
+			if (std::is_constant_evaluated()) {
+				uninitializedFill<CharType*, CharType>(smallStringStorage, smallStringStorage + bufferSize, CharType(0));
+			}
 		}
 		constexpr BaseString& self() noexcept { return *this; }
 		constexpr const BaseString& self() const noexcept { return *this; }
@@ -89,34 +142,41 @@ namespace natl {
 			baseConstructorInit();
 			assign(str);
 		}
+		constexpr BaseString(const CharType* str, const Size count) noexcept {
+			baseConstructorInit();
+			assign(str, count);
+		}
 
 		constexpr BaseString(const Size count, const CharType character) noexcept {
-			stringSizeAndSmallStringFlag = 0;
-			stringPtr = 0;
+			baseConstructorInit();
 			assign(count, character);
 		}
 
 		template<class StringViewLike>
-			requires(IsStringViewLike<StringViewLike, CharType>)
+			requires(IsStringViewLike<StringViewLike, const CharType>)
 		constexpr BaseString(const StringViewLike& str) noexcept {
 			baseConstructorInit();
 			assign<StringViewLike>(str);
 		}
 
-		constexpr BaseString(const char* str) noexcept requires(std::is_same_v<CharType, Utf32>) {
+		constexpr BaseString(const char* str, const Size count) noexcept requires(std::is_same_v<std::decay_t<CharType>, Utf32>) {
+			baseConstructorInit();
+			assign(str, count);
+		}
+
+		constexpr BaseString(const char* str) noexcept requires(std::is_same_v<std::decay_t<CharType>, Utf32>) {
 			baseConstructorInit();
 			assign(str);
 		}
 
-		constexpr BaseString(const Size count, const char character) noexcept requires(std::is_same_v<CharType, Utf32>) {
-			stringSizeAndSmallStringFlag = 0;
-			stringPtr = 0;
+		constexpr BaseString(const Size count, const char character) noexcept requires(std::is_same_v<std::decay_t<CharType>, Utf32>) {
+			baseConstructorInit();
 			assign(character, count);
 		}
 
 		template<class StringViewLike>
 			requires(IsStringViewLike<StringViewLike, char>)
-		constexpr BaseString(const StringViewLike& str) noexcept requires(std::is_same_v<CharType, Utf32>) {
+		constexpr BaseString(const StringViewLike& str) noexcept requires(std::is_same_v<std::decay_t<CharType>, Utf32>) {
 			baseConstructorInit();
 			assignStringViewLike<StringViewLike>(str);
 		}
@@ -142,20 +202,20 @@ namespace natl {
 			return assign(character);
 		}
 		template<class StringViewLike>
-			requires(IsStringViewLike<StringViewLike, CharType>)
+			requires(IsStringViewLike<StringViewLike, const CharType>)
 		constexpr BaseString& operator=(const StringViewLike& stringView) noexcept {
 			return assign<StringViewLike>(stringView);
 		}
 
-		constexpr BaseString& operator=(const char* str) noexcept requires(std::is_same_v<CharType, Utf32>) {
+		constexpr BaseString& operator=(const char* str) noexcept requires(std::is_same_v<std::decay_t<CharType>, Utf32>) {
 			return assign(str);
 		}
-		constexpr BaseString& operator=(const char character) noexcept requires(std::is_same_v<CharType, Utf32>) {
+		constexpr BaseString& operator=(const char character) noexcept requires(std::is_same_v<std::decay_t<CharType>, Utf32>) {
 			return assign(character);
 		}
 		template<class StringViewLike>
 			requires(IsStringViewLike<StringViewLike, char>)
-		constexpr BaseString& operator=(const StringViewLike& stringView) noexcept requires(std::is_same_v<CharType, Utf32>) {
+		constexpr BaseString& operator=(const StringViewLike& stringView) noexcept requires(std::is_same_v<std::decay_t<CharType>, Utf32>) {
 			return assign<StringViewLike>(stringView);
 		}
 
@@ -202,14 +262,14 @@ namespace natl {
 			return self();
 		}
 
-		constexpr BaseString& assign(const CharType* str) noexcept {
+		constexpr BaseString& assign(const CharType* str, const Size count) noexcept {
 			if (str == nullptr) {
 				release();
 				stringSizeAndSmallStringFlag = 0;
 				return self();
 			}
 
-			const Size srcStringSize = cstringLength(str);
+			const Size srcStringSize = count;
 			const CharType* srcStringPtrFirst = str;
 			const CharType* srcStringPtrLast = srcStringPtrFirst + srcStringSize;
 
@@ -223,6 +283,16 @@ namespace natl {
 			setSize(srcStringSize);
 			addNullTerminater();
 			return self();
+		}
+
+		constexpr BaseString& assign(const CharType* str) noexcept {
+			if (str == nullptr) {
+				release();
+				stringSizeAndSmallStringFlag = 0;
+				return self();
+			}
+
+			return assign(str, cstringLength(str));
 		}
 
 		constexpr BaseString& assign(const Size count, CharType character) noexcept {
@@ -249,7 +319,7 @@ namespace natl {
 		}
 
 		template<class StringViewLike>
-			requires(IsStringViewLike<StringViewLike, CharType>)
+			requires(IsStringViewLike<StringViewLike, const CharType>)
 		constexpr BaseString& assign(const StringViewLike& stringView) noexcept {
 			if (stringView.size() == 0) {
 				release();
@@ -273,8 +343,8 @@ namespace natl {
 			return self();
 		}
 
-		constexpr BaseString& assign(const char* str) noexcept requires(std::is_same_v<CharType, Utf32>) {
-			const Size stringSize = cstringLength(str);
+		constexpr BaseString& assign(const char* str, const Size count) noexcept requires(std::is_same_v<std::decay_t<CharType>, Utf32>) {
+			const Size stringSize = count;
 			if (stringSize == 0) {
 				release();
 				stringSizeAndSmallStringFlag = 0;
@@ -288,7 +358,8 @@ namespace natl {
 			CharType* stringDst = nullptr;
 			if (srcStringSize + 1 < smallStringCapacity()) {
 				stringDst = smallStringLocation();
-			} else {
+			}
+			else {
 				reserve(srcStringSize);
 				stringDst = stringPtr;
 			}
@@ -302,7 +373,16 @@ namespace natl {
 			return self();
 		}
 
-		constexpr BaseString& assign(const char character, const Size count = 1) noexcept requires(std::is_same_v<CharType, Utf32>) {
+		constexpr BaseString& assign(const char* str) noexcept requires(std::is_same_v<std::decay_t<CharType>, Utf32>) {
+			if (str == nullptr) {
+				release();
+				stringSizeAndSmallStringFlag = 0;
+				return self();
+			}
+			return assign(str, cstringLength(str));
+		}
+
+		constexpr BaseString& assign(const char character, const Size count = 1) noexcept requires(std::is_same_v<std::decay_t<CharType>, Utf32>) {
 			if (count == 0) {
 				release();
 				stringSizeAndSmallStringFlag = 0;
@@ -328,7 +408,7 @@ namespace natl {
 
 		template<class StringViewLike>
 			requires(IsStringViewLike<StringViewLike, char>)
-		constexpr BaseString& assign(const StringViewLike& stringView) noexcept requires(std::is_same_v<CharType, Utf32>) {
+		constexpr BaseString& assign(const StringViewLike& stringView) noexcept requires(std::is_same_v<std::decay_t<CharType>, Utf32>) {
 			if (stringView.size() == 0) {
 				release();
 				stringSizeAndSmallStringFlag = 0;
@@ -357,22 +437,6 @@ namespace natl {
 		}
 
 		//element access
-	private:
-		constexpr const CharType* smallStringLocation() const noexcept {
-			if (std::is_constant_evaluated()) {
-				return smallStringStorage;
-			} else {
-				return reinterpret_cast<const CharType*>(reinterpret_cast<const ui8*>(this) + sizeof(stringSizeAndSmallStringFlag));
-			}
-		}
-		constexpr CharType* smallStringLocation() noexcept {
-			if (std::is_constant_evaluated()) {
-				return smallStringStorage;
-			} else {
-				return reinterpret_cast<CharType*>(reinterpret_cast<ui8*>(this) + sizeof(stringSizeAndSmallStringFlag));
-			}
-		}
-	public:
 		constexpr reference at(const size_type index) noexcept { return data()[index]; };
 		constexpr const_reference at(const size_type index) const noexcept { return data()[index]; };
 
@@ -401,15 +465,22 @@ namespace natl {
 		constexpr operator BaseStringView<CharType>() noexcept {
 			return BaseStringView<CharType>(data(), size());
 		}
-		constexpr operator BaseStringView<const CharType>() const noexcept {
-			return BaseStringView<const CharType>(data(), size());
+		constexpr operator ConstBaseStringView() const noexcept {
+			return ConstBaseStringView(data(), size());
 		}
 
 		constexpr BaseStringView<CharType> toStringView() noexcept {
 			return BaseStringView<CharType>(data(), size());
 		}
-		constexpr BaseStringView<const CharType> toStringView() const noexcept {
-			return BaseStringView<const CharType>(data(), size());
+		constexpr ConstBaseStringView toStringView() const noexcept {
+			return ConstBaseStringView(data(), size());
+		}
+
+		constexpr ArrayView<CharType> toArrayView() noexcept {
+			return ArrayView<CharType>(data(), size());
+		}
+		constexpr ArrayView<const CharType> toArrayView() const noexcept {
+			return ArrayView<const CharType>(data(), size());
 		}
 
 		//iterators 
@@ -456,18 +527,15 @@ namespace natl {
 		constexpr bool isEmpty() const noexcept { return empty(); }
 		constexpr bool isNotEmpty() const noexcept { return !empty(); }
 
-		constexpr Size size() const noexcept { return stringSizeAndSmallStringFlag & 0x7FFFFFFFFFFFFFFFULL; }
-		constexpr size_type length() const noexcept { return size(); };
-		constexpr size_type max_size() const noexcept { return 0x7FFFFFFFFFFFFFFFULL; };
-
 		constexpr void reserve(Size newCapacity) noexcept {
 			newCapacity += 1;
-			if (newCapacity < smallStringCapacity()) {
+			if (newCapacity < capacity()) {
+				return;
+			} else if (newCapacity < smallStringCapacity()) {
 				setAsSmallString();
 				return;
-			} else if (newCapacity < capacity()) {
-				return;
 			}
+
 			newCapacity *= 2;
 
 			CharType* newStringPtr = Alloc::allocate(newCapacity);
@@ -476,7 +544,7 @@ namespace natl {
 			const CharType* srcStringPtrLast = srcStringPtrFirst + size();
 			uninitializedCopyNoOverlap<const CharType*, CharType*>(srcStringPtrFirst, srcStringPtrLast, newStringPtr);
 
-			if (isNotSmallString()) {
+			if (isNotSmallString() && stringPtr) {
 				Alloc::deallocate(stringPtr, capacity());
 			} 
 
@@ -484,8 +552,6 @@ namespace natl {
 			stringCapacity = newCapacity;
 			setAsNotSmallString();
 		}
-
-		constexpr Size capacity() const noexcept { return isSmallString() ? smallStringCapacity() : stringCapacity; };
 
 		constexpr void shrink_to_fit() {
 			const Size newCapacity = size() + 1;
@@ -539,27 +605,25 @@ namespace natl {
 
 		//modifiers
 	private:
-		constexpr void setSize(const Size newSize) noexcept {
-			stringSizeAndSmallStringFlag = (stringSizeAndSmallStringFlag & ~0x7FFFFFFFFFFFFFFFULL) | newSize;
-		}
-		constexpr void addNullTerminater() noexcept { *end() = 0; }
+		constexpr void addNullTerminater() noexcept { setEnd(0); }
 	public:
 		constexpr void clear() noexcept { setSize(0); }
 
-		constexpr BaseString& insert(const size_type index, const BaseStringView<CharType>& sv) noexcept {
+		constexpr BaseString& insert(const size_type index, const ConstBaseStringView& sv) noexcept {
 			if (sv.empty()) { return self(); }
 			const Size newSize = size() + sv.size();
 			reserve(newSize);
 
+			const Size relocateCount = size() - index;
 			CharType* relocateDstPtr = data() + index + sv.size();
 			const CharType* relocateSrcPtrFirst = data() + index;
-			const CharType* relocateSrcPtrLast = relocateSrcPtrFirst + sv.size();
-			uninitializedCopyNoOverlap<const CharType*, CharType*>(relocateSrcPtrFirst, relocateSrcPtrLast, relocateDstPtr);
+			const CharType* relocateSrcPtrLast = relocateSrcPtrFirst + relocateCount;
+			uninitializedCopy<const CharType*, CharType*>(relocateSrcPtrFirst, relocateSrcPtrLast, relocateDstPtr);
 
 			CharType* insertStrDstPtr = data() + index;
 			const CharType* insertStrSrcPtrFirst = sv.data();
 			const CharType* insertStrSrcPtrLast = insertStrSrcPtrFirst + sv.size();
-			uninitializedCopyNoOverlap<const CharType*, CharType*>(insertStrSrcPtrFirst, insertStrSrcPtrLast, insertStrDstPtr);
+			uninitializedCopy<const CharType*, CharType*>(insertStrSrcPtrFirst, insertStrSrcPtrLast, insertStrDstPtr);
 
 			setSize(newSize);
 			addNullTerminater();
@@ -570,10 +634,11 @@ namespace natl {
 			const Size newSize = size() + count;
 			reserve(newSize);
 
+			const Size relocateCount = size() - index;
 			CharType* relocateDstPtr = data() + index + count;
 			const CharType* relocateSrcPtrFirst = data() + index;
-			const CharType* relocateSrcPtrLast = relocateSrcPtrFirst + count;
-			uninitializedCopyNoOverlap<const CharType*, CharType*>(relocateSrcPtrFirst, relocateSrcPtrLast, relocateDstPtr);
+			const CharType* relocateSrcPtrLast = relocateSrcPtrFirst + relocateCount;
+			uninitializedCopy<const CharType*, CharType*>(relocateSrcPtrFirst, relocateSrcPtrLast, relocateDstPtr);
 
 			const CharType* insertDstPtrFirst = data() + index;
 			const CharType* insertDstPtrLast = insertDstPtrFirst + count;
@@ -585,10 +650,10 @@ namespace natl {
 		}
 
 		constexpr BaseString& insert(const size_type index, const CharType* str) noexcept {
-			return insert(index, BaseStringView<CharType>(str));
+			return insert(index, ConstBaseStringView(str));
 		}
 		constexpr BaseString& insert(const size_type index, const CharType* str, const size_type count) noexcept {
-			return insert(index, BaseStringView<CharType>(str, min<Size>(cstringLength(str), count)));
+			return insert(index, ConstBaseStringView(str, min<Size>(cstringLength(str), count)));
 		}
 		constexpr BaseString& insert(const size_type index, const BaseString& str) noexcept {
 			return insert(index, str.toStringView());
@@ -609,14 +674,14 @@ namespace natl {
 		}
 		
 		template<class StringViewLike>
-			requires(IsStringViewLike<StringViewLike, CharType>)
+			requires(IsStringViewLike<StringViewLike, const CharType> && !std::is_same_v<StringViewLike, ConstBaseStringView>)
 		constexpr BaseString& insert(const size_type index, const StringViewLike& stringView) noexcept {
-			return insert(index, BaseStringView<CharType>(stringView.data(), stringView.size()));
+			return insert(index, ConstBaseStringView(stringView.data(), stringView.size()));
 		}
 		template< class StringViewLike>
-			requires(IsStringViewLike<StringViewLike, CharType>)
+			requires(IsStringViewLike<StringViewLike, const CharType>)
 		constexpr BaseString& insert(const size_type index, const StringViewLike& stringView, size_type t_index, size_type count = 0xFFFFFFFFFFFFFFFF) noexcept {
-			return insert(index, BaseStringView<CharType>(stringView.data() + t_index, min<size_type>(stringView.size(), count)));
+			return insert(index, ConstBaseStringView(stringView.data() + t_index, min<size_type>(stringView.size(), count)));
 		}
 
 		constexpr BaseString& erase(const size_type index, const size_type count = 0xFFFFFFFFFFFFFFFF) noexcept {
@@ -652,7 +717,7 @@ namespace natl {
 		constexpr void push_back(const CharType character) noexcept {
 			const Size newSize = size() + 1;
 			reserve(newSize);
-			*end() = character;
+			setEnd(character);
 			setSize(newSize);
 			addNullTerminater();
 		}
@@ -730,7 +795,7 @@ namespace natl {
 		}
 
 		template<class StringViewLike>
-			requires(IsStringViewLike<StringViewLike, CharType>)
+			requires(IsStringViewLike<StringViewLike, const CharType>)
 		constexpr BaseString& append(const StringViewLike& stringView) noexcept {
 			const Size count = stringView.size();
 			const Size newSize = size() + count;
@@ -747,7 +812,7 @@ namespace natl {
 		}
 
 		template<class StringViewLike>
-			requires(IsStringViewLike<StringViewLike, CharType>)
+			requires(IsStringViewLike<StringViewLike, const CharType>)
 		constexpr BaseString& append(const StringViewLike& stringView, size_type pos, size_type count = 0xFFFFFFFFFFFFFFFF) noexcept {
 			const Size newCount = min<Size>(stringView.size() - pos, count);
 			const Size newSize = size() + newCount;
@@ -763,7 +828,7 @@ namespace natl {
 			return self();
 		}
 
-		constexpr BaseString& append(const char* str) noexcept requires(std::is_same_v<CharType, Utf32>) {
+		constexpr BaseString& append(const char* str) noexcept requires(std::is_same_v<std::decay_t<CharType>, Utf32>) {
 			const Size count = cstringLength(str);
 			const Size newSize = size() + count;
 			reserve(newSize);
@@ -781,7 +846,7 @@ namespace natl {
 			return self();
 		}
 
-		constexpr BaseString& append(const Size count, const char character) noexcept requires(std::is_same_v<CharType, Utf32>) {
+		constexpr BaseString& append(const Size count, const char character) noexcept requires(std::is_same_v<std::decay_t<CharType>, Utf32>) {
 			const Size newSize = size() + count;
 			reserve(newSize);
 
@@ -798,7 +863,7 @@ namespace natl {
 
 		template<class StringViewLike>
 			requires(IsStringViewLike<StringViewLike, char>)
-		constexpr BaseString& append(const StringViewLike& stringView) noexcept requires(std::is_same_v<CharType, Utf32>) {
+		constexpr BaseString& append(const StringViewLike& stringView) noexcept requires(std::is_same_v<std::decay_t<CharType>, Utf32>) {
 			const Size count = stringView.size();
 			const Size newSize = size() + count;
 			reserve(newSize);
@@ -831,24 +896,24 @@ namespace natl {
 			return append(rhs);
 		}
 		template<class StringLike>
-			requires(std::is_convertible_v<StringLike, BaseStringView<CharType>> && !IsStringViewLike<StringLike, CharType>)
+			requires(std::is_convertible_v<StringLike, ConstBaseStringView> && !IsStringViewLike<StringLike, CharType>)
 		constexpr BaseString& operator+=(const StringLike& rhs) noexcept {
 			return append(rhs);
 		}
-		constexpr BaseString& operator+=(const char* rhs) noexcept requires(std::is_same_v<CharType, Utf32>) {
+		constexpr BaseString& operator+=(const char* rhs) noexcept requires(std::is_same_v<std::decay_t<CharType>, Utf32>) {
 			return append(rhs);
 		}
-		constexpr BaseString& operator+=(const char rhs) noexcept requires(std::is_same_v<CharType, Utf32>) {
+		constexpr BaseString& operator+=(const char rhs) noexcept requires(std::is_same_v<std::decay_t<CharType>, Utf32>) {
 			return append(rhs);
 		}
 		template<class StringLike>
 			requires(IsStringViewLike<StringLike, char>)
-		constexpr BaseString& operator+=(const StringLike& rhs) noexcept requires(std::is_same_v<CharType, Utf32>) {
+		constexpr BaseString& operator+=(const StringLike& rhs) noexcept requires(std::is_same_v<std::decay_t<CharType>, Utf32>) {
 			return append(rhs);
 		}
 
 		template <class SrcCharType>
-		constexpr BaseString& replace(const size_type pos, const size_type count, const BaseStringView<SrcCharType>& sv, const size_type pos2, const size_type count2 = npos) {
+		constexpr BaseString& replace(const size_type pos, const size_type count, const BaseStringView<const SrcCharType>& sv, const size_type pos2, const size_type count2 = npos) {
 			const Size index = min<Size>(size(), pos);
 			const Size srcIndex = min<Size>(sv.size(), pos2);
 			const Size srcCount = min<Size>(sv.size() - srcIndex, count2);
@@ -868,7 +933,7 @@ namespace natl {
 				addNullTerminater();
 			} 
 
-			if constexpr (std::is_same_v<CharType, Utf32> && std::is_same_v<SrcCharType, char>) {
+			if constexpr (std::is_same_v<std::decay_t<CharType>, Utf32> && std::is_same_v<SrcCharType, char>) {
 				CharType* dstStringPtr = data() + index;
 				const char* srcStringPtrFirst = sv.data() + srcIndex;
 				const char* srcStringPtrLast = srcStringPtrFirst + srcCount;
@@ -903,7 +968,7 @@ namespace natl {
 				addNullTerminater();
 			}
 
-			if (std::is_same_v<CharType, Utf32> && std::is_same_v<SrcCharType, char>) {
+			if (std::is_same_v<std::decay_t<CharType>, Utf32> && std::is_same_v<SrcCharType, char>) {
 				const char* dstCovertPtrFirst = data() + pos;
 				const char* dstConvertPtrLast = dstCovertPtrFirst + srcCount;
 				uninitializedFillConvert<CharType*, SrcCharType>(dstCovertPtrFirst, dstConvertPtrLast, std::forward<SrcCharType>(ch));
@@ -931,23 +996,23 @@ namespace natl {
 		}
 
 		constexpr BaseString& replace(size_type pos, size_type count, const CharType* cstr, size_type count2) noexcept {
-			return replace<CharType>(pos, count, BaseStringView<CharType>(cstr), 0, count2);
+			return replace<CharType>(pos, count, ConstBaseStringView(cstr), 0, count2);
 		}
 
 		constexpr BaseString& replace(const_iterator first, const_iterator last, const CharType* cstr, size_type count2) noexcept {
 			const Size count = iterDistance<typename const_iterator::pointer>(&*first, &*last);
 			const Size pos = iterDistance<typename const_iterator::pointer>(&*cbegin(), &*last);
-			return replace<CharType>(pos, count, BaseStringView<CharType>(cstr), 0, count2);
+			return replace<CharType>(pos, count, ConstBaseStringView(cstr), 0, count2);
 		}
 
 		constexpr BaseString& replace(size_type pos, size_type count, const CharType* cstr) noexcept {
-			return replace<CharType>(pos, count, BaseStringView<CharType>(cstr), 0, npos);
+			return replace<CharType>(pos, count, ConstBaseStringView(cstr), 0, npos);
 		}
 
 		constexpr BaseString& replace(const_iterator first, const_iterator last, const CharType* cstr) noexcept {
 			const Size count = iterDistance<typename const_iterator::pointer>(&*first, &*last);
 			const Size pos = iterDistance<typename const_iterator::pointer>(&*cbegin(), &*last);
-			return replace<CharType>(pos, count, BaseStringView<CharType>(cstr), 0, npos);
+			return replace<CharType>(pos, count, ConstBaseStringView(cstr), 0, npos);
 		}
 
 		constexpr BaseString& replace(size_type pos, size_type count, size_type count2, const CharType character) noexcept {
@@ -965,34 +1030,34 @@ namespace natl {
 			const Size count = iterDistance<typename const_iterator::pointer>(&*first, &*last);
 			const Size pos = iterDistance<typename const_iterator::pointer>(&*cbegin(), &*last);
 			const Size count2 = iterDistance<typename const_iterator::pointer>(&*first2, &*last2);
-			return replace<CharType>(pos, count, BaseStringView<CharType>(&*last, count2), 0, npos);
+			return replace<CharType>(pos, count, ConstBaseStringView(&*last, count2), 0, npos);
 		}
 
 		template< class StringViewLike>
-			requires(IsStringViewLike<StringViewLike, CharType>)
+			requires(IsStringViewLike<StringViewLike, const CharType>)
 		constexpr BaseString& replace(size_type pos, size_type count, const StringViewLike& stringView) noexcept {
-			return replace<CharType>(pos, count, BaseStringView<CharType>(stringView.data(), stringView.size()), 0, npos);
+			return replace<CharType>(pos, count, ConstBaseStringView(stringView.data(), stringView.size()), 0, npos);
 		}
 
 		template< class StringViewLike>
-			requires(IsStringViewLike<StringViewLike, CharType>)
+			requires(IsStringViewLike<StringViewLike, const CharType>)
 		constexpr BaseString& replace(const_iterator first, const_iterator last, const StringViewLike& stringView) noexcept {
 			const Size count = iterDistance<typename const_iterator::pointer>(&*first, &*last);
 			const Size pos = iterDistance<typename const_iterator::pointer>(&*cbegin(), &*last);
-			return replace<CharType>(pos, count, BaseStringView<CharType>(stringView.data(), stringView.size()), 0, npos);
+			return replace<CharType>(pos, count, ConstBaseStringView(stringView.data(), stringView.size()), 0, npos);
 		}
 
 		template< class StringViewLike>
-			requires(IsStringViewLike<StringViewLike, CharType>)
+			requires(IsStringViewLike<StringViewLike, const CharType>)
 		constexpr BaseString& replace(size_type pos, size_type count, const StringViewLike& stringView, size_type pos2, size_type count2 = npos) noexcept {
-			return replace<CharType>(pos, count, BaseStringView<CharType>(stringView.data(), stringView.size()), pos2, count2);
+			return replace<CharType>(pos, count, ConstBaseStringView(stringView.data(), stringView.size()), pos2, count2);
 		}
 
 		constexpr void resize(const size_type count) noexcept {
 			resize(count, CharType{});
 		}
 
-		constexpr void resize(const size_type count, CharType character) noexcept {
+		constexpr void resize(const size_type count, const CharType character) noexcept {
 			if (count < size()) {
 				setSize(count);
 				addNullTerminater();
@@ -1001,7 +1066,7 @@ namespace natl {
 
 				CharType* srcStringPtrFirst = endPtr();
 				CharType* srcStringPtrLast = srcStringPtrFirst + count;
-				uninitializedFill<CharType*, CharType>(srcStringPtrFirst, srcStringPtrLast, forward<CharType>(character));
+				uninitializedFill<CharType*, CharType>(srcStringPtrFirst, srcStringPtrLast, character);
 
 				setSize(count);
 				addNullTerminater();
@@ -1014,84 +1079,84 @@ namespace natl {
 
 		//Search
 		constexpr size_type find(const BaseString& v, size_type pos = 0) const noexcept {
-			return toStringView().find<CharType>(v.toStringView(), pos);
+			return toStringView().find(v.toStringView(), pos);
 		}
 		constexpr size_type find(const CharType ch, size_type pos = 0) const noexcept {
-			return toStringView().find(BaseStringView(addressof<CharType>(ch), 1), pos);
+			return toStringView().find(ConstBaseStringView(addressof<CharType>(ch), 1), pos);
 		}
 		constexpr size_type find(const CharType* s, const size_type pos, const size_type count) const noexcept {
-			return toStringView().find(BaseStringView(s, count), pos);
+			return toStringView().find(ConstBaseStringView(s, count), pos);
 		}
 		constexpr size_type find(const CharType* s, const size_type pos = 0) const noexcept {
-			return toStringView().find(BaseStringView(s), pos);
+			return toStringView().find(ConstBaseStringView(s), pos);
 		}
 		template<class StringViewLike>
-			requires(IsStringViewLike<StringViewLike, CharType> && !std::is_same_v<StringViewLike, BaseStringView<CharType>>)
+			requires(IsStringViewLike<StringViewLike, const CharType> && !std::is_same_v<StringViewLike, ConstBaseStringView>)
 		constexpr size_type find(const StringViewLike& sv, const size_type pos = 0) noexcept {
-			return toStringView().find(BaseStringView(sv.data(), sv.size()), pos);
+			return toStringView().find(ConstBaseStringView(sv.data(), sv.size()), pos);
 		}
 		template<class StringLike>
 			requires(std::is_convertible_v<StringLike, BaseStringView<CharType>> && !IsStringViewLike<StringLike, CharType>)
 		constexpr size_type find(const StringLike& sv, const size_type pos = 0) noexcept {
-			return toStringView().find(static_cast<BaseStringView<CharType>>(sv), pos);
+			return toStringView().find(static_cast<ConstBaseStringView>(sv), pos);
 		}
 
-		constexpr size_type find(char ch, const size_type pos = 0) const noexcept requires(std::is_same_v<CharType, Utf32>) {
-			return toStringView().find(BaseStringView<char>(addressof<char>(ch), 1), pos);
+		constexpr size_type find(char ch, const size_type pos = 0) const noexcept requires(std::is_same_v<std::decay_t<CharType>, Utf32>) {
+			return toStringView().find(BaseStringView<const char>(addressof<char>(ch), 1), pos);
 		}
-		constexpr size_type find(const char* s, const size_type pos, const size_type count) const noexcept requires(std::is_same_v<CharType, Utf32>) {
-			return toStringView().find(BaseStringView<char>(s, count), pos);
+		constexpr size_type find(const char* s, const size_type pos, const size_type count) const noexcept requires(std::is_same_v<std::decay_t<CharType>, Utf32>) {
+			return toStringView().find(BaseStringView<const char>(s, count), pos);
 		}
-		constexpr size_type find(const char* s, const size_type pos = 0) const noexcept requires(std::is_same_v<CharType, Utf32>) {
-			return toStringView().find(BaseStringView<char>(s), pos);
+		constexpr size_type find(const char* s, const size_type pos = 0) const noexcept requires(std::is_same_v<std::decay_t<CharType>, Utf32>) {
+			return toStringView().find(BaseStringView<const char>(s), pos);
 		}
 		template<class StringViewLike>
 			requires(IsStringViewLike<StringViewLike, char>)
-		constexpr size_type find(const StringViewLike& sv, const size_type pos = 0) const noexcept requires(std::is_same_v<CharType, Utf32>) {
-			return toStringView().find(BaseStringView<char>(sv.data(), sv.size()), pos);
+		constexpr size_type find(const StringViewLike& sv, const size_type pos = 0) const noexcept requires(std::is_same_v<std::decay_t<CharType>, Utf32>) {
+			return toStringView().find(BaseStringView<const char>(sv.data(), sv.size()), pos);
 		}
 		template<class StringLike>
-			requires(std::is_convertible_v<StringLike, BaseStringView<char>> && !IsStringViewLike<StringLike, char>)
-		constexpr size_type find(const StringLike& sv, const size_type pos = 0) noexcept requires(std::is_same_v<CharType, Utf32>) {
-			return toStringView().find(static_cast<BaseStringView<char>>(sv), pos);
+			requires(std::is_convertible_v<StringLike, ConstBaseStringView> && !IsStringViewLike<StringLike, char>)
+		constexpr size_type find(const StringLike& sv, const size_type pos = 0) noexcept requires(std::is_same_v<std::decay_t<CharType>, Utf32>) {
+			return toStringView().find(static_cast<ConstBaseStringView>(sv), pos);
 		}
 
 		constexpr size_type rfind(const BaseString& v, size_type pos = npos) const noexcept {
 			return toStringView().rfind(v.toStringView(), pos);
 		};
 		constexpr size_type rfind(CharType ch, size_type pos = npos) const noexcept {
-			return toStringView().rfind(BaseStringView(addressof<CharType>(ch), 1), pos);
+			return toStringView().rfind(ConstBaseStringView(addressof<CharType>(ch), 1), pos);
 		}
 		constexpr size_type rfind(const CharType* s, size_type pos, size_type count) const {
-			return toStringView().rfind(BaseStringView(s, count), pos);
+			return toStringView().rfind(ConstBaseStringView(s, count), pos);
 		}
 		constexpr size_type rfind(const CharType* s, const size_type pos = npos) const {
-			return toStringView().rfind(BaseStringView(s), pos);
+			return toStringView().rfind(ConstBaseStringView(s), pos);
 		}
 		template<class StringLike>
-			requires(std::is_convertible_v<StringLike, BaseStringView<CharType>> && !IsStringViewLike<StringLike, CharType>)
+			requires(std::is_convertible_v<StringLike, ConstBaseStringView> && !IsStringViewLike<StringLike, CharType>)
 		constexpr size_type rfind(const StringLike& sv, const size_type pos = npos) noexcept {
-			return toStringView().rfind(static_cast<BaseStringView<CharType>>(sv), pos);
+			return toStringView().rfind(static_cast<ConstBaseStringView>(sv), pos);
 		}
 
-		constexpr size_type rfind(char ch, const size_type pos = npos) const noexcept requires(std::is_same_v<CharType, Utf32>) {
-			return toStringView().rfind(BaseStringView<char>(addressof<char>(ch), 1), pos);
+		constexpr size_type rfind(char ch, const size_type pos = npos) const noexcept requires(std::is_same_v<std::decay_t<CharType>, Utf32>) {
+			return toStringView().rfind(BaseStringView<const char>(addressof<char>(ch), 1), pos);
 		}
-		constexpr size_type rfind(const char* s, const size_type pos, const size_type count) const noexcept requires(std::is_same_v<CharType, Utf32>) {
-			return toStringView().rfind(BaseStringView<char>(s, count), pos);
+		constexpr size_type rfind(const char* s, const size_type pos, const size_type count) const noexcept requires(std::is_same_v<std::decay_t<CharType>, Utf32>) {
+			return toStringView().rfind(BaseStringView<const char>(s, count), pos);
 		}
-		constexpr size_type rfind(const char* s, const size_type pos = npos) const noexcept requires(std::is_same_v<CharType, Utf32>) {
-			return toStringView().rfind(BaseStringView<char>(s), pos);
+		constexpr size_type rfind(const char* s, const size_type pos = npos) const noexcept requires(std::is_same_v<std::decay_t<CharType>, Utf32>) {
+			return toStringView().rfind(BaseStringView<const char>(s), pos);
 		}
 		template<class StringLike>
 			requires(IsStringViewLike<StringLike, char>)
-		constexpr size_type rfind(const StringLike& sv, const size_type pos = npos) const noexcept requires(std::is_same_v<CharType, Utf32>) {
-			return toStringView().rfind(BaseStringView<char>(sv.data(), sv.size()), pos);
+		constexpr size_type rfind(const StringLike& sv, const size_type pos = npos) const noexcept requires(std::is_same_v<std::decay_t<CharType>, Utf32>) {
+			return toStringView().rfind(BaseStringView<const char>(sv.data(), sv.size()), pos);
 		}
 		template<class StringLike>
-			requires(std::is_convertible_v<StringLike, BaseStringView<char>> && !IsStringViewLike<StringLike, char>)
-		constexpr size_type rfind(const StringLike& sv, const size_type pos = npos) noexcept requires(std::is_same_v<CharType, Utf32>) {
-			return toStringView().rfind(static_cast<BaseStringView<char>>(sv), pos);
+			requires(std::is_convertible_v<StringLike, ConstBaseStringView> && !IsStringViewLike<StringLike, char>)
+		constexpr size_type rfind(const StringLike& sv, const size_type pos = npos) noexcept requires(std::is_same_v<std::decay_t<CharType>, Utf32>) {
+			return toStringView().rfind(static_cast<ConstBaseStringView>(sv), pos);
 		}
 
 		//operations
@@ -1125,11 +1190,11 @@ namespace natl {
 			return find(s) != npos;
 		}
 
-		constexpr BaseStringView<CharType> substrView(size_type pos = 0, size_type count = npos) const& noexcept {
+		constexpr ConstBaseStringView substrView(size_type pos = 0, size_type count = npos) const& noexcept {
 			if (pos > size()) {
-				return BaseStringView<CharType>(nullptr, 0);
+				return ConstBaseStringView(nullptr, 0);
 			} else {
-				return BaseStringView<CharType>(data() + pos, min<size_type>(size() - pos, count));
+				return ConstBaseStringView(data() + pos, min<size_type>(size() - pos, count));
 			}
 		}
 		constexpr BaseString substrView(size_type pos = 0, size_type count = npos)&& {
@@ -1172,7 +1237,7 @@ namespace natl {
 			return temp;
 		}
 		template<class StringViewLike>
-			requires(IsStringViewLike<StringViewLike, CharType>)
+			requires(IsStringViewLike<StringViewLike, const CharType>)
 		friend constexpr BaseString operator+(const BaseString& lhs, const StringViewLike& rhs) noexcept {
 			BaseString temp;
 			temp.reserve(lhs.size() + rhs.size());
@@ -1191,8 +1256,8 @@ namespace natl {
 			temp.append(rhsSringView);
 			return temp;
 		}
-		friend constexpr BaseString operator+(const BaseString& lhs, const char* rhs) noexcept requires(std::is_same_v<CharType, Utf32>) {
-			BaseStringView<char> rhsSringView = BaseStringView<char>(rhs);
+		friend constexpr BaseString operator+(const BaseString& lhs, const char* rhs) noexcept requires(std::is_same_v<std::decay_t<CharType>, Utf32>) {
+			BaseStringView<const char> rhsSringView = BaseStringView<const char>(rhs);
 
 			BaseString temp;
 			temp.reserve(lhs.size() + rhsSringView.size());
@@ -1200,7 +1265,7 @@ namespace natl {
 			temp.append(rhsSringView);
 			return temp;
 		}
-		friend constexpr BaseString operator+(const BaseString& lhs, const char rhs) noexcept requires(std::is_same_v<CharType, Utf32>) {
+		friend constexpr BaseString operator+(const BaseString& lhs, const char rhs) noexcept requires(std::is_same_v<std::decay_t<CharType>, Utf32>) {
 			BaseString temp;
 			temp.reserve(lhs.size() + 1);
 			temp.append(lhs.toStringView());
@@ -1209,7 +1274,7 @@ namespace natl {
 		}
 		template<class StringViewLike>
 			requires(IsStringViewLike<StringViewLike, char>)
-		friend constexpr BaseString operator+(const BaseString& lhs, const StringViewLike& rhs) noexcept requires(std::is_same_v<CharType, Utf32>) {
+		friend constexpr BaseString operator+(const BaseString& lhs, const StringViewLike& rhs) noexcept requires(std::is_same_v<std::decay_t<CharType>, Utf32>) {
 			BaseString temp;
 			temp.reserve(lhs.size() + rhs.size());
 			temp.append(lhs.toStringView());
@@ -1238,15 +1303,15 @@ namespace natl {
 		friend constexpr bool operator==(const BaseString& lhs, const StringLike& rhs) noexcept {
 			return lhs.toStringView() == rhs;
 		}
-		friend constexpr bool operator==(const BaseString& lhs, const char* rhs) noexcept requires(std::is_same_v<CharType, Utf32>) {
+		friend constexpr bool operator==(const BaseString& lhs, const char* rhs) noexcept requires(std::is_same_v<std::decay_t<CharType>, Utf32>) {
 			return lhs.toStringView() == rhs;
 		}
-		friend constexpr bool operator==(const BaseString& lhs, const char rhs) noexcept requires(std::is_same_v<CharType, Utf32>) {
+		friend constexpr bool operator==(const BaseString& lhs, const char rhs) noexcept requires(std::is_same_v<std::decay_t<CharType>, Utf32>) {
 			return lhs.toStringView() == rhs;
 		}
 		template<class StringLike>
 			requires(IsStringViewLike<StringLike, char>)
-		friend constexpr bool operator==(const BaseString& lhs, const StringLike& rhs) noexcept requires(std::is_same_v<CharType, Utf32>) {
+		friend constexpr bool operator==(const BaseString& lhs, const StringLike& rhs) noexcept requires(std::is_same_v<std::decay_t<CharType>, Utf32>) {
 			return lhs.toStringView() == rhs;
 		}
 
@@ -1269,15 +1334,15 @@ namespace natl {
 		friend constexpr bool operator!=(const BaseString& lhs, const StringLike& rhs) noexcept {
 			return lhs.toStringView() != rhs;
 		}
-		friend constexpr bool operator!=(const BaseString& lhs, const char* rhs) noexcept requires(std::is_same_v<CharType, Utf32>) {
+		friend constexpr bool operator!=(const BaseString& lhs, const char* rhs) noexcept requires(std::is_same_v<std::decay_t<CharType>, Utf32>) {
 			return lhs.toStringView() != rhs;
 		}
-		friend constexpr bool operator!=(const BaseString& lhs, const char rhs) noexcept requires(std::is_same_v<CharType, Utf32>) {
+		friend constexpr bool operator!=(const BaseString& lhs, const char rhs) noexcept requires(std::is_same_v<std::decay_t<CharType>, Utf32>) {
 			return lhs.toStringView() != rhs;
 		}
 		template<class StringLike>
 			requires(IsStringViewLike<StringLike, char>)
-		friend constexpr bool operator!=(const BaseString& lhs, const StringLike& rhs) noexcept requires(std::is_same_v<CharType, Utf32>) {
+		friend constexpr bool operator!=(const BaseString& lhs, const StringLike& rhs) noexcept requires(std::is_same_v<std::decay_t<CharType>, Utf32>) {
 			return lhs.toStringView() != rhs;
 		}
 
@@ -1300,15 +1365,15 @@ namespace natl {
 		friend constexpr bool operator<(const BaseString& lhs, const StringLike& rhs) noexcept {
 			return lhs.toStringView() < rhs;
 		}
-		friend constexpr bool operator<(const BaseString& lhs, const char* rhs) noexcept requires(std::is_same_v<CharType, Utf32>) {
+		friend constexpr bool operator<(const BaseString& lhs, const char* rhs) noexcept requires(std::is_same_v<std::decay_t<CharType>, Utf32>) {
 			return lhs.toStringView() < rhs;
 		}
-		friend constexpr bool operator<(const BaseString& lhs, const char rhs) noexcept requires(std::is_same_v<CharType, Utf32>) {
+		friend constexpr bool operator<(const BaseString& lhs, const char rhs) noexcept requires(std::is_same_v<std::decay_t<CharType>, Utf32>) {
 			return lhs.toStringView() < rhs;
 		}
 		template<class StringLike>
 			requires(IsStringViewLike<StringLike, char>)
-		friend constexpr bool operator<(const BaseString& lhs, const StringLike& rhs) noexcept requires(std::is_same_v<CharType, Utf32>) {
+		friend constexpr bool operator<(const BaseString& lhs, const StringLike& rhs) noexcept requires(std::is_same_v<std::decay_t<CharType>, Utf32>) {
 			return lhs.toStringView() < rhs;
 		}
 
@@ -1331,15 +1396,15 @@ namespace natl {
 		friend constexpr bool operator<=(const BaseString& lhs, const StringLike& rhs) noexcept {
 			return lhs.toStringView() <= rhs;
 		}
-		friend constexpr bool operator<=(const BaseString& lhs, const char* rhs) noexcept requires(std::is_same_v<CharType, Utf32>) {
+		friend constexpr bool operator<=(const BaseString& lhs, const char* rhs) noexcept requires(std::is_same_v<std::decay_t<CharType>, Utf32>) {
 			return lhs.toStringView() <= rhs;
 		}
-		friend constexpr bool operator<=(const BaseString& lhs, const char rhs) noexcept requires(std::is_same_v<CharType, Utf32>) {
+		friend constexpr bool operator<=(const BaseString& lhs, const char rhs) noexcept requires(std::is_same_v<std::decay_t<CharType>, Utf32>) {
 			return lhs.toStringView() <= rhs;
 		}
 		template<class StringLike>
 			requires(IsStringViewLike<StringLike, char>)
-		friend constexpr bool operator<=(const BaseString& lhs, const StringLike& rhs) noexcept requires(std::is_same_v<CharType, Utf32>) {
+		friend constexpr bool operator<=(const BaseString& lhs, const StringLike& rhs) noexcept requires(std::is_same_v<std::decay_t<CharType>, Utf32>) {
 			return lhs.toStringView() <= rhs;
 		}
 
@@ -1362,15 +1427,15 @@ namespace natl {
 		friend constexpr bool operator>(const BaseString& lhs, const StringLike& rhs) noexcept {
 			return lhs.toStringView() > rhs;
 		}
-		friend constexpr bool operator>(const BaseString& lhs, const char* rhs) noexcept requires(std::is_same_v<CharType, Utf32>) {
+		friend constexpr bool operator>(const BaseString& lhs, const char* rhs) noexcept requires(std::is_same_v<std::decay_t<CharType>, Utf32>) {
 			return lhs.toStringView() > rhs;
 		}
-		friend constexpr bool operator>(const BaseString& lhs, const char rhs) noexcept requires(std::is_same_v<CharType, Utf32>) {
+		friend constexpr bool operator>(const BaseString& lhs, const char rhs) noexcept requires(std::is_same_v<std::decay_t<CharType>, Utf32>) {
 			return lhs.toStringView() > rhs;
 		}
 		template<class StringLike>
 			requires(IsStringViewLike<StringLike, char>)
-		friend constexpr bool operator>(const BaseString& lhs, const StringLike& rhs) noexcept requires(std::is_same_v<CharType, Utf32>) {
+		friend constexpr bool operator>(const BaseString& lhs, const StringLike& rhs) noexcept requires(std::is_same_v<std::decay_t<CharType>, Utf32>) {
 			return lhs.toStringView() > rhs;
 		}
 
@@ -1393,15 +1458,15 @@ namespace natl {
 		friend constexpr bool operator>=(const BaseString& lhs, const StringLike& rhs) noexcept {
 			return lhs.toStringView() >= rhs;
 		}
-		friend constexpr bool operator>=(const BaseString& lhs, const char* rhs) noexcept requires(std::is_same_v<CharType, Utf32>) {
+		friend constexpr bool operator>=(const BaseString& lhs, const char* rhs) noexcept requires(std::is_same_v<std::decay_t<CharType>, Utf32>) {
 			return lhs.toStringView() >= rhs;
 		}
-		friend constexpr bool operator>=(const BaseString& lhs, const char rhs) noexcept requires(std::is_same_v<CharType, Utf32>) {
+		friend constexpr bool operator>=(const BaseString& lhs, const char rhs) noexcept requires(std::is_same_v<std::decay_t<CharType>, Utf32>) {
 			return lhs.toStringView() >= rhs;
 		}
 		template<class StringLike>
 			requires(IsStringViewLike<StringLike, char>)
-		friend constexpr bool operator>=(const BaseString& lhs, const StringLike& rhs) noexcept requires(std::is_same_v<CharType, Utf32>) {
+		friend constexpr bool operator>=(const BaseString& lhs, const StringLike& rhs) noexcept requires(std::is_same_v<std::decay_t<CharType>, Utf32>) {
 			return lhs.toStringView() >= rhs;
 		}
 
@@ -1424,15 +1489,15 @@ namespace natl {
 		friend constexpr std::strong_ordering operator<=>(const BaseString& lhs, const StringLike& rhs) noexcept {
 			return lhs.toStringView() <=> rhs;
 		}
-		friend constexpr std::strong_ordering operator<=>(const BaseString& lhs, const char* rhs) noexcept requires(std::is_same_v<CharType, Utf32>) {
+		friend constexpr std::strong_ordering operator<=>(const BaseString& lhs, const char* rhs) noexcept requires(std::is_same_v<std::decay_t<CharType>, Utf32>) {
 			return lhs.toStringView() <=> rhs;
 		}
-		friend constexpr std::strong_ordering operator<=>(const BaseString& lhs, const char rhs) noexcept requires(std::is_same_v<CharType, Utf32>) {
+		friend constexpr std::strong_ordering operator<=>(const BaseString& lhs, const char rhs) noexcept requires(std::is_same_v<std::decay_t<CharType>, Utf32>) {
 			return lhs.toStringView() <=> rhs;
 		}
 		template<class StringLike>
 			requires(IsStringViewLike<StringLike, char>)
-		friend constexpr std::strong_ordering operator<=>(const BaseString& lhs, const StringLike& rhs) noexcept requires(std::is_same_v<CharType, Utf32>) {
+		friend constexpr std::strong_ordering operator<=>(const BaseString& lhs, const StringLike& rhs) noexcept requires(std::is_same_v<std::decay_t<CharType>, Utf32>) {
 			return lhs.toStringView() <=> rhs;
 		}
 
@@ -1466,6 +1531,15 @@ namespace natl {
 			}
 
 			return is;
+		}
+
+		//set
+		constexpr void setEnd(CharType value) noexcept {
+			if (std::is_constant_evaluated()) {
+				std::construct_at<CharType, CharType>(endPtr(), forward<CharType>(value));
+			} else {
+				*end() = value;
+			}
 		}
 	};
 
@@ -1516,5 +1590,84 @@ namespace natl {
 	using String = String32;
 	using AsciiString = String32;
 	using Utf32String = Utf32String64;
+
+	namespace literals {
+		constexpr String32 operator ""_natl_dyn_s(const char* str, std::size_t len) noexcept {
+			return String32(str, static_cast<Size>(len));
+		}
+		constexpr String32 operator ""_natl_dyn_s_32(const char* str, std::size_t len) noexcept {
+			return String32(str, static_cast<Size>(len));
+		}
+		constexpr String64 operator ""_natl_dyn_s_64(const char* str, std::size_t len) noexcept {
+			return String64(str, static_cast<Size>(len));
+		}
+		constexpr String96 operator ""_natl_dyn_s_96(const char* str, std::size_t len) noexcept {
+			return String96(str, static_cast<Size>(len));
+		}
+		constexpr String128 operator ""_natl_dyn_s_128(const char* str, std::size_t len) noexcept {
+			return String128(str, static_cast<Size>(len));
+		}
+		constexpr String256 operator ""_natl_dyn_s_256(const char* str, std::size_t len) noexcept {
+			return String256(str, static_cast<Size>(len));
+		}
+
+		constexpr AsciiString32 operator ""_natl_assci_dyn_s(const char* str, std::size_t len) noexcept {
+			return AsciiString32(str, static_cast<Size>(len));
+		}
+		constexpr AsciiString32 operator ""_natl_assci_dyn_s_32(const char* str, std::size_t len) noexcept {
+			return AsciiString32(str, static_cast<Size>(len));
+		}
+		constexpr AsciiString64 operator ""_natl_assci_dyn_s_64(const char* str, std::size_t len) noexcept {
+			return AsciiString64(str, static_cast<Size>(len));
+		}
+		constexpr AsciiString96 operator ""_natl_assci_dyn_s_96(const char* str, std::size_t len) noexcept {
+			return AsciiString96(str, static_cast<Size>(len));
+		}
+		constexpr AsciiString128 operator ""_natl_assci_dyn_s_128(const char* str, std::size_t len) noexcept {
+			return AsciiString128(str, static_cast<Size>(len));
+		}
+		constexpr AsciiString256 operator ""_natl_assci_dyn_s_256(const char* str, std::size_t len) noexcept {
+			return AsciiString256(str, static_cast<Size>(len));
+		}
+
+
+		constexpr Utf32String operator ""_natl_utf32_dyn_s(const char32_t* str, std::size_t len) noexcept {
+			return Utf32String(str, static_cast<Size>(len));
+		}
+		constexpr Utf32String32 operator ""_natl_utf32_dyn_s_32(const char32_t* str, std::size_t len) noexcept {
+			return Utf32String32(str, static_cast<Size>(len));
+		}
+		constexpr Utf32String64 operator ""_natl_utf32_dyn_s_64(const char32_t* str, std::size_t len) noexcept {
+			return Utf32String64(str, static_cast<Size>(len));
+		}
+		constexpr Utf32String128 operator ""_natl_utf32_dyn_s_128(const char32_t* str, std::size_t len) noexcept {
+			return Utf32String128(str, static_cast<Size>(len));
+		}
+		constexpr Utf32String256 operator ""_natl_utf32_dyn_s_256(const char32_t* str, std::size_t len) noexcept {
+			return Utf32String256(str, static_cast<Size>(len));
+		}
+		constexpr Utf32String512 operator ""_natl_utf32_dyn_s_512(const char32_t* str, std::size_t len) noexcept {
+			return Utf32String512(str, static_cast<Size>(len));
+		}
+
+		constexpr Utf32String operator ""_natl_utf32_dyn_s(const char* str, std::size_t len) noexcept {
+			return Utf32String(str, static_cast<Size>(len));
+		}
+		constexpr Utf32String32 operator ""_natl_utf32_dyn_s_32(const char* str, std::size_t len) noexcept {
+			return Utf32String32(str, static_cast<Size>(len));
+		}
+		constexpr Utf32String64 operator ""_natl_utf32_dyn_s_64(const char* str, std::size_t len) noexcept {
+			return Utf32String64(str, static_cast<Size>(len));
+		}
+		constexpr Utf32String128 operator ""_natl_utf32_dyn_s_128(const char* str, std::size_t len) noexcept {
+			return Utf32String128(str, static_cast<Size>(len));
+		}
+		constexpr Utf32String256 operator ""_natl_utf32_dyn_s_256(const char* str, std::size_t len) noexcept {
+			return Utf32String256(str, static_cast<Size>(len));
+		}
+		constexpr Utf32String512 operator ""_natl_utf32_dyn_s_512(const char* str, std::size_t len) noexcept {
+			return Utf32String512(str, static_cast<Size>(len));
+		}
+	}
 
 }

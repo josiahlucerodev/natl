@@ -14,10 +14,7 @@ constexpr int compileTimeTest() {
 	return array.at(2);
 }
 
-
-#include <span>
-
 int main() {
 	constexpr int number = compileTimeTest();
-	natl::MDArray<int, number, 4> array;
+	[[maybe_unused]]natl::MDArray<int, number, 4> array;
 }

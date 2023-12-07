@@ -1,7 +1,7 @@
 
 //natl
 #include <natl/expect.h>
-#include <natl/StringConvert.h>
+#include <natl/stringConvert.h>
 
 enum class TestError {
 	none,
@@ -14,8 +14,8 @@ constexpr natl::Expect<bool, TestError> testFunc() {
 }
 
 int main() {
-	constexpr natl::Expect<bool, TestError> number = testFunc();
-	constexpr natl::Expect<float, natl::StringNumericConvertError> number2 = natl::stringToFloatExpect<float>("3.3");
+	[[maybe_unused]] constexpr natl::Expect<bool, TestError> number = testFunc();
+	[[maybe_unused]] constexpr natl::Expect<float, natl::StringNumericConvertError> number2 = natl::stringToFloatExpect<float>("3.3");
 
 	if (number.hasValue()) {
 		std::cout << "number: " << number.value() << "\n";

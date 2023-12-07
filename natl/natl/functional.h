@@ -1,7 +1,7 @@
 #pragma once
 
-//std
-#include <typeTraits.h>
+//own
+#include "typeTraits.h"
 
 //interface
 namespace natl {

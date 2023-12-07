@@ -9,6 +9,7 @@
 #include "string.h"
 #include "stringView.h"
 #include "stringConvert.h"
+#include "dynArray.h"
 
 //interface
 namespace natl {
@@ -93,7 +94,7 @@ namespace natl {
 	class NamedTimeInfoCollection {
 	private:
 		String name;
-		std::vector<NamedTimeInfo> timeSavesVector;
+		DynArray<NamedTimeInfo> timeSavesVector;
 	public:
 		NamedTimeInfoCollection() noexcept = default;
 		NamedTimeInfoCollection(const StringView& inputName) noexcept : name(inputName), timeSavesVector() {}
@@ -119,7 +120,7 @@ namespace natl {
 			return self();
 		}
 		constexpr NamedTimeInfoCollection operator+= (const NamedTimeInfoCollection& inputValue) noexcept {
-			for (Size i; i < inputValue.timeSavesVector.size(); i++) {
+			for (Size i = 0; i < inputValue.timeSavesVector.size(); i++) {
 				timeSavesVector.push_back(inputValue.timeSavesVector[i]);
 			}
 			return self();
@@ -128,8 +129,7 @@ namespace natl {
 		constexpr NamedTimeInfo average() const noexcept {
 			NamedTimeInfo average;
 			average = timeSavesVector[0];
-			for (int i = 1; i < timeSavesVector.size(); i++)
-			{
+			for (Size i = 1; i < timeSavesVector.size(); i++) {
 				average.inputTimeValues(
 					(average.getNanoseconds() + timeSavesVector[i].getNanoseconds()) / 2,
 					(average.getMicroseconds() + timeSavesVector[i].getMicroseconds()) / 2,
@@ -147,8 +147,7 @@ namespace natl {
 			String outputvalue;
 			outputvalue += name;
 			outputvalue += " collection\n";
-			for (Size i; i < timeSavesVector.size(); i++)
-			{
+			for (Size i = 0; i < timeSavesVector.size(); i++) {
 				outputvalue += timeSavesVector[i].string();
 			}
 			return outputvalue;
@@ -157,7 +156,7 @@ namespace natl {
 			String outputvalue;
 			outputvalue += name;
 			outputvalue += " collection\n";
-			for (Size i; i < timeSavesVector.size(); i++)
+			for (Size i = 0; i < timeSavesVector.size(); i++)
 			{
 				outputvalue += timeSavesVector[i].condensedString();
 			}
@@ -166,15 +165,13 @@ namespace natl {
 
 		void print() const noexcept {
 			std::cout << name.toStringView() << " collection\n";
-			for (Size i; i < timeSavesVector.size(); i++)
-			{
+			for (Size i = 0; i < timeSavesVector.size(); i++) {
 				timeSavesVector[i].print();
 			}
 		}
 		void condensedPrint() const noexcept {
 			std::cout << name.toStringView() << " collection\n";
-			for (Size i; i < timeSavesVector.size(); i++)
-			{
+			for (Size i = 0; i < timeSavesVector.size(); i++) {
 				timeSavesVector[i].condensedPrint();
 			}
 		}
@@ -210,17 +207,22 @@ namespace natl {
 			return end - start;
 		}
 		f64 getMiliseconds() const noexcept {
-			return getMicroseconds() * 0.001L;
+			return static_cast<f64>(getMicroseconds()) * f64(0.001L);
 		}
 		f64 getSeconds() const noexcept {
-			return getMicroseconds() * 0.000001L;
+			return static_cast<f64>(getMicroseconds()) * f64(0.000001L);
 		}
 
 		void getNamedTimeInfo(NamedTimeInfo& timeSaveInput) const noexcept {
 			i64 microseconds = getMicroseconds();
 			i64 nonoseconds = getNanoseconds();
 			timeSaveInput.changeName(timeSaveInput.getName());
-			timeSaveInput.inputTimeValues(nonoseconds, microseconds, microseconds * f64(0.001L), microseconds * f64(0.000001L));
+			timeSaveInput.inputTimeValues(
+				nonoseconds, 
+				microseconds, 
+				static_cast<f64>(microseconds) * f64(0.001L), 
+				static_cast<f64>(microseconds) * f64(0.000001L)
+			);
 		}
 		NamedTimeInfo getNamedTimeInfo() const noexcept {
 			NamedTimeInfo outputNamedTimeInfo;

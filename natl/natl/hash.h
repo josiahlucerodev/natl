@@ -1,11 +1,14 @@
 #pragma once
 
+//std
+#include <functional>
+#include <bit>
+
 //own
 #include "basicTypes.h"
 
 //interface 
 namespace natl {
-
 	template<class DataType>
 	concept HasStaticHashFunction = requires(const DataType& value) {
 		{ DataType::staticHash(value) } -> std::same_as<Size>;
@@ -14,28 +17,34 @@ namespace natl {
 	concept HasHashFunction = requires(const DataType& value) {
 		{ value.hash() } -> std::same_as<Size>;
 	};
+	template <typename DataType>
+	concept StdHashable = requires(const DataType& a) {
+		{ std::hash<DataType>{}(a) } -> std::convertible_to<std::size_t>;
+	};
+
+
+	template<typename DataType>
+	concept Hashable = HasStaticHashFunction<DataType> || HasHashFunction<DataType> || std::is_pointer_v<DataType> || StdHashable<DataType>;
 
 	template<class DataType>
 	struct Hash {
 	public:
-		constexpr static Size hash(const DataType& dataType) requires(HasStaticHashFunction<DataType> || HasHashFunction<DataType> || std::is_pointer_v<DataType>) {
+		constexpr static Size hash(const DataType& value) requires(Hashable<DataType>) {
 			if constexpr (HasStaticHashFunction<DataType>) {
-				return DataType::staticHash(dataType); 
+				return DataType::staticHash(value);
 			} 
 			if constexpr (HasHashFunction<DataType>) {
-				return dataType.hash();
+				return value.hash();
 			}
 			if constexpr (std::is_pointer_v<DataType>) {
-				return std::bit_cast<Size, DataType>(dataType);
+				return std::bit_cast<Size, DataType>(value);
+			}
+			if constexpr (StdHashable<DataType>) {
+				return static_cast<Size>(std::hash<DataType>{}(value));
 			}
 		}
-
 	};
 
-	template<typename T>
-	concept Hashable = requires(T a) {
-		{ Hash<T>{}(a) } -> std::convertible_to<Size>;
-	};
 
 	template<> struct Hash<i8> {
 		constexpr static Size hash(const i8& value) { return static_cast<Size>(std::bit_cast<Size, i64>(static_cast<i64>(value))); }

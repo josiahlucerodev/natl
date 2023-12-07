@@ -112,8 +112,7 @@ namespace natl {
 	constexpr value_type* iteratorToAddress(Iter iter) noexcept {
 		if constexpr (std::is_pointer_v<std::decay_t<Iter>>) {
 			return iter;
-		}
-		else {
+		} else {
 			return &*iter;
 		}
 	}
@@ -133,10 +132,9 @@ namespace natl {
 		std::memcpy(dstVoidPtr, firstVoidPtr, static_cast<std::size_t>(count));
 
 		if constexpr (std::is_pointer_v<DstIter>) {
-
 			return reinterpret_cast<DstIter>(dstPtr + count);
 		}else {
-			return dst + (lastPtr - firstPtr);
+			return dst + static_cast<Size>(lastPtr - firstPtr);
 		}
 	}
 
@@ -152,7 +150,10 @@ namespace natl {
 	}
 
 	template <class Iter, class ValueType>
-	concept IsIterPtrZeroMemsetAble = IsIterPtr<Iter> && std::is_trivially_constructible_v<typename IterPtrTraits<Iter>::value_type, const ValueType&>;
+	concept IsIterPtrZeroMemsetAble = 
+		IsIterPtr<Iter> && 
+		(std::is_trivially_constructible_v<typename IterPtrTraits<Iter>::value_type, const ValueType&> ||
+		(std::is_same_v<typename IterPtrTraits<Iter>::value_type, ValueType> && IsTriviallyConstRefConstructible<typename IterPtrTraits<Iter>::value_type>));
 
 	template <class Iter, class SizeType>
 	concept CanGetSizeFormIterPtrSub = 
@@ -165,7 +166,7 @@ namespace natl {
 	template <class Iter, class SizeType>
 		requires(IsIterPtr<Iter> && CanGetSizeFormIterPtrSub<Iter, SizeType>)
 	SizeType countFormIterators(const Iter& first, const Iter& last) {
-		return static_cast<SizeType>(first - last);
+		return static_cast<SizeType>(last - first);
 	}
 
 	template <class DstIter>
@@ -216,8 +217,8 @@ namespace natl {
 	concept IsRandomAccessIterator = IsIterPtr<Iter> || std::is_same_v<IteratorCategory<Iter>, std::random_access_iterator_tag>;
 
 	template <typename Iter>
-	typename IteratorCategory<Iter>::difference_type
-		iterDistance(Iter first, Iter last) {
+	constexpr typename IteratorCategory<Iter>::difference_type
+		iterDistance(Iter first, Iter last) noexcept {
 		typename std::iterator_traits<Iter>::difference_type distance = 0;
 		while (first != last) {
 			++distance;
@@ -228,11 +229,11 @@ namespace natl {
 
 	template <typename Iter>
 		requires(IsRandomAccessIterator<Iter>)
-	Size iterDistance(Iter first, Iter last) {
+	constexpr Size iterDistance(Iter first, Iter last) noexcept {
 		if constexpr (IsIterPtr<Iter>) {
-			return std::bit_cast<Size, decltype(first)>(last - first);
+			return static_cast<Size>(last - first);
 		} else {
-			return std::bit_cast<Size, decltype(&*first)>(&*last - &*first);
+			return static_cast<Size>(&*last - &*first);
 		}
 	}
 

@@ -2,11 +2,11 @@
 
 natl_Standard_Test(NatlArrayViewTest arrayView)
 natl_Standard_Test(NatlArrayTest array)
+natl_Standard_Test(NatlDynArrayTest dynArray)
 natl_Standard_Test(NatlStringTest string)
 natl_Standard_Test(NatlPartitionerTest partitioner)
 natl_Standard_Test(NatlStringConvertTest stringConvert)
 natl_Standard_Test(NatlExpectTest expect)
 natl_Standard_Test(NatlFlatHashMapTest flatHashMap)
 natl_Standard_Test(NatlTimerTest timer)
-natl_Standard_Test(NatlUninitializedTest uninitialized)
 natl_Standard_Test(NatlPoolTest pool)

@@ -11,6 +11,10 @@
 
 //interface
 namespace natl {
+    template<class DataType>
+    constexpr DataType* addressof(DataType& val) noexcept {
+        return std::addressof<DataType>(val);
+    }
 
     template <class Iter, class NoThrowForwardIter>
         requires(IsIterPtr<Iter> && IsIterPtr<NoThrowForwardIter>)
@@ -98,7 +102,9 @@ namespace natl {
     template <class Type, class TestType>
         requires(sizeof(Type) == sizeof(TestType))
     bool bitCompare(const Type& value, const TestType& testType) noexcept {
-        return std::memcmp(&value, &testType, sizeof(TestType)) == 0;
+        const void* aptr = reinterpret_cast<const void*>(&value);
+        const void* bPtr = reinterpret_cast<const void*>(&testType);
+        return std::memcmp(aptr, bPtr, sizeof(TestType)) == 0;
     }
 
     template <class Type>
@@ -112,35 +118,86 @@ namespace natl {
         requires(IsIterPtr<Iter>)
     constexpr void uninitializedFill(Iter first, Iter last, ValueType&& value)
         noexcept(std::is_nothrow_convertible_v<typename IterPtrTraits<Iter>::value_type, ValueType>) {
-        if (std::is_constant_evaluated()) {
+        if (!std::is_constant_evaluated()) {
             if constexpr (IsIterPtrZeroMemsetAble<Iter, ValueType> && CanGetSizeFormIterPtrSub<Iter, Size>) {
                 if (bitTestZero<ValueType>(value)) {
                     iterPtrMemset<Iter>(first, 0, countFormIterators<Iter, Size>(first, last));
+                    return;
                 }
             }
         }
 
         for (; first != last; ++first) {
-        std::construct_at<typename IterPtrTraits<Iter>::value_type, ValueType>
-            (&*first, std::forward<ValueType>(value));
+            std::construct_at<typename IterPtrTraits<Iter>::value_type, ValueType>(&*first, std::forward<ValueType>(value));
         }
     }
 
     template <class Iter, class ValueType>
         requires(IsIterPtr<Iter>)
-    constexpr void uninitializedFillConvert(Iter first, Iter last, ValueType&& value)
+    constexpr void uninitializedFill(Iter first, Iter last, const ValueType& value)
         noexcept(std::is_nothrow_convertible_v<typename IterPtrTraits<Iter>::value_type, ValueType>) {
+        using IterValueType = typename std::iterator_traits<Iter>::value_type;
+
+        if (!std::is_constant_evaluated()) {
+            if constexpr (IsIterPtrZeroMemsetAble<Iter, ValueType> && CanGetSizeFormIterPtrSub<Iter, Size>) {
+                if (bitTestZero<ValueType>(value)) {
+                    iterPtrMemset<Iter>(first, 0, countFormIterators<Iter, Size>(first, last));
+                    return;
+                }
+            }
+        }
+
+        if constexpr (IsTriviallyMoveConstructible<typename IterPtrTraits<Iter>::value_type>) {
+            ValueType tempValue = value;
+            for (; first != last; ++first) {
+                std::construct_at<IterValueType, ValueType>(&*first, std::forward<ValueType>(tempValue));
+            }
+            return;
+        } else {
+            for (; first != last; ++first) {
+                if (std::is_constant_evaluated()) {
+                    ValueType tempValue = value;
+                    std::construct_at<IterValueType, ValueType>(&*first, std::forward<ValueType>(tempValue));
+                } else {
+                    ::new (static_cast<void*>(addressof<IterValueType>(*first))) IterValueType(value);
+                }
+            }
+        }
+    }
+
+    template <class Iter, class ValueType>
+        requires(IsIterPtr<Iter>)
+    constexpr void uninitializedFillConvert(Iter first, Iter last, const ValueType& value)
+        noexcept(std::is_nothrow_convertible_v<typename IterPtrTraits<Iter>::value_type, ValueType>) {
+        using IterValueType = typename std::iterator_traits<Iter>::value_type;
+        IterValueType convertedValue = static_cast<IterValueType>(value);
+
+        if constexpr (IsTriviallyMoveConstructible<typename IterPtrTraits<Iter>::value_type>) {
+            IterValueType tempValue = convertedValue;
+            for (; first != last; ++first) {
+                std::construct_at<IterValueType, IterValueType>(&*first, std::forward<IterValueType>(tempValue));
+            }
+            return;
+        }
+
         for (; first != last; ++first) {
-            std::construct_at<typename IterPtrTraits<Iter>::value_type, typename IterPtrTraits<Iter>::value_type>
-                (&*first, std::forward<typename IterPtrTraits<Iter>::value_type>(static_cast<typename IterPtrTraits<Iter>::value_type>(value)));
+            if (std::is_constant_evaluated()) {
+                IterValueType tempValue = convertedValue;
+                std::construct_at<IterValueType, IterValueType>(&*first, std::forward<IterValueType>(tempValue));
+            } else {
+                ::new (static_cast<void*>(addressof(*first))) IterValueType(static_cast<const IterValueType&>(convertedValue));
+            }
         }
     }
 
+
     template <class Iter, class ValueType>
         requires(IsIterPtr<Iter>)
-    constexpr void uninitializedFillCount(Iter first, ValueType&& value, const Size count)
+    constexpr void uninitializedFillCount(Iter first, const ValueType& value, const Size count)
         noexcept(std::is_nothrow_convertible_v<typename IterPtrTraits<Iter>::value_type, ValueType>) {
-        if (std::is_constant_evaluated()) {
+        using IterValueType = typename std::iterator_traits<Iter>::value_type;
+
+        if (!std::is_constant_evaluated()) {
             if constexpr (IsIterPtrZeroMemsetAble<Iter, ValueType> && CanGetSizeFormIterPtrSub<Iter, Size>) {
                 if (bitTestZero<ValueType>(value)) {
                     iterPtrMemset<Iter>(first, 0, count);
@@ -150,10 +207,24 @@ namespace natl {
         }
 
         Size remainCount = count;
+        if constexpr (IsTriviallyMoveConstructible<typename IterPtrTraits<Iter>::value_type>) {
+            ValueType tempValue = value;
+            for (; remainCount > 0; ++first, (void) --remainCount) {
+                std::construct_at<IterValueType, ValueType>(&*first, std::forward<ValueType>(tempValue));
+            }
+            return;
+        }
+
         for (; remainCount > 0; ++first, (void) --remainCount) {
-            std::construct_at<typename IterPtrTraits<Iter>::value_type, ValueType>(&*first, std::forward<ValueType>(value));
+            if (std::is_constant_evaluated()) {
+                ValueType tempValue = value;
+                std::construct_at<IterValueType, ValueType>(&*first, std::forward<ValueType>(tempValue));
+            } else {
+                ::new (static_cast<void*>(addressof(*first))) IterValueType(value);
+            }
         }
     }
+
 
     template <class Iter, class NoThrowForwardIter>
         requires(IsIterPtr<Iter>&& IsIterPtr<NoThrowForwardIter>)
@@ -285,7 +356,7 @@ namespace natl {
             }
         }
 
-        for (Size index = 0; index < count; index++) {
+        for (Size index = 0; index < count; index++, dataPtr++) {
             std::construct_at<DataType>(&dataPtr[index]);
         }
     }
@@ -294,18 +365,21 @@ namespace natl {
     constexpr void defualtDeconstructAll(DataType* dataPtr, const Size count) 
         noexcept(std::is_nothrow_destructible_v<DataType>) {
         if (!std::is_constant_evaluated()) {
-            if constexpr (std::is_trivially_destructible_v<DataType>) {
+            if constexpr (IsTriviallyDestructible<DataType>) {
                 iterPtrMemset<DataType*>(dataPtr, 0, count);
+                return;
             }
         }
 
-        for (Size index = 0; index < count; index++) {
+        for (Size index = 0; index < count; index++, dataPtr++) {
             std::destroy_at<DataType>(dataPtr);
         }
     }
 
-    template<class DataType> 
-    constexpr DataType* addressof(DataType& val) noexcept {
-        return std::addressof<DataType>(val);
+    template<class DataType>
+    constexpr void defualtDeconstruct(DataType* dataPtr)
+        noexcept(std::is_nothrow_destructible_v<DataType>) {
+        defualtDeconstructAll<DataType>(dataPtr, 1);
     }
+
 }

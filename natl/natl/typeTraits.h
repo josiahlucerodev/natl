@@ -10,13 +10,9 @@
 //interface
 namespace natl {
     template<class Type>
-    concept isNotConst = requires {
-        !std::is_const<Type>::value;
-    };
+    concept isNotConst = !std::is_const_v<Type>; 
     template<class Type>
-    concept isConst = requires {
-        std::is_const<Type>::value;
-    };
+    concept isConst = std::is_const_v<Type>;
 
 
     template<class Type>
@@ -41,22 +37,43 @@ namespace natl {
     template <class DataType>
     concept IsTriviallyCompareable = IsBasicType<DataType> ||
         requires() {
-            { DataType::triviallyCompareable } -> std::same_as<bool>;
+            { DataType::triviallyCompareable } -> std::convertible_to<bool>;
             { DataType::triviallyCompareable == true };
         };
 
     template <class DataType>
     concept IsTriviallyRelocatable = (std::is_trivially_copyable_v<DataType> && std::is_trivially_destructible_v<DataType>) || IsBasicType<DataType> ||
         requires() {
-            { DataType::triviallyRelocatable } -> std::same_as<bool>;
+            { DataType::triviallyRelocatable } -> std::convertible_to<bool>;
             { DataType::triviallyRelocatable == true };
     };
 
     template <class DataType>
     concept IsTriviallyDefaultConstructible = std::is_trivially_default_constructible_v<DataType> ||
         requires() {
-            { DataType::triviallyDefaultConstructible } -> std::same_as<bool>;
+            { DataType::triviallyDefaultConstructible } -> std::convertible_to<bool>;
             { DataType::triviallyDefaultConstructible == true };
+    };
+
+    template <class DataType>
+    concept IsTriviallyDestructible = std::is_trivially_destructible_v<DataType> ||
+        requires() {
+            { DataType::triviallyDestructible } -> std::convertible_to<bool>;
+            { DataType::triviallyDestructible == true };
+    };
+
+    template <class DataType>
+    concept IsTriviallyMoveConstructible = std::is_trivially_move_constructible_v<DataType> ||
+        requires() {
+            { DataType::triviallyMoveConstructedable } -> std::convertible_to<bool>;
+            { DataType::triviallyMoveConstructedable == true };
+    };
+
+    template <class DataType>
+    concept IsTriviallyConstRefConstructible = std::is_trivially_constructible_v<DataType, const DataType&> ||
+        requires() {
+            { DataType::triviallyConstRefConstructedable } -> std::convertible_to<bool>;
+            { DataType::triviallyConstRefConstructedable == true };
     };
 
     template <class Type>
@@ -67,7 +84,10 @@ namespace natl {
         !std::is_same_v<Src, void> &&
         !std::is_same_v<Dst, void> &&
         !std::is_same_v<SrcRef, void> &&
-        ((std::is_same_v<Src, Dst> && MemcopyConstructible<Src>) || (sizeof(Src) == sizeof(Dst) && std::is_trivially_constructible_v<Dst, SrcRef>));
+            (
+                (std::is_same_v<std::decay_t<Src>, std::decay_t<Dst>> && MemcopyConstructible<Src>) ||
+                (sizeof(Src) == sizeof(Dst) && std::is_trivially_constructible_v<Dst, SrcRef>)
+            );
 
     template<class Src, class Dst, class SrcRef, class DstRef>
     concept MemcopyAssignableSrcDst =

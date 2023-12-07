@@ -3,6 +3,8 @@
 //std
 #include <bit>
 #include <iostream>
+#include <vector>
+#include <algorithm>
 
 //own
 #include "basicTypes.h"
@@ -57,8 +59,34 @@ namespace natl {
 	struct TrackerAllocatorData {
 		i64 allocs;
 		i64 deallocs;
+
 		std::vector<void*> allocPtrs;
 		std::vector<void*> deallocPtrs;
+
+		 ~TrackerAllocatorData() {
+			if (allocs != deallocs) {
+				std::cout << "natl: TrackerAllocatorData error: alloc and decall mismatch - allocs: " << allocs << " deallocs: " << deallocs <<" \n";
+				std::sort(allocPtrs.begin(), allocPtrs.end());
+				std::sort(deallocPtrs.begin(), deallocPtrs.end());
+
+				Size aIndex = 0;
+				Size dIndex = 0;
+				for (; aIndex < allocPtrs.size() && dIndex < deallocPtrs.size(); aIndex++, dIndex++) {
+					while (allocPtrs[static_cast<std::size_t>(aIndex)] != deallocPtrs[static_cast<std::size_t>(dIndex)]) {
+						std::cout << "natl: TrackerAllocatorData error: ptr: " << deallocPtrs[static_cast<std::size_t>(dIndex)] << " was not deallocated\n";
+
+						dIndex++;
+						if (!(static_cast<std::size_t>(dIndex) < deallocPtrs.size())) {
+							return;
+						}
+					}
+				}
+
+			} else {
+				std::cout << "natl: TrackerAllocatorData info: number of allocs and deallocs: " << allocs << " \n";
+			}
+		}
+
 	};
 
 	extern TrackerAllocatorData trackerAllocatorData;
@@ -74,23 +102,25 @@ namespace natl {
 		using difference_type = PtrDiff;
 		using size_type = Size;
 	public:
-		constexpr TrackerAllocator() = default;
-		constexpr TrackerAllocator(const TrackerAllocator&) = default;
-		constexpr TrackerAllocator(TrackerAllocator&&) = default;
+		TrackerAllocator() = default;
+		TrackerAllocator(const TrackerAllocator&) = default;
+		TrackerAllocator(TrackerAllocator&&) = default;
 		template <typename U> constexpr TrackerAllocator(const TrackerAllocator<U>&) noexcept {}
 
-		constexpr ~TrackerAllocator() = default;
+		~TrackerAllocator() = default;
+
+
 		TrackerAllocator operator=(const TrackerAllocator&) {}
 		TrackerAllocator operator=(TrackerAllocator&&) {}
 
-		[[nodiscard]] constexpr static pointer allocate(const Size number) noexcept {
-			pointer dataPtr = std::allocator<DataType>().allocate(number);
+		[[nodiscard]] static pointer allocate(const Size number) noexcept {
+			pointer dataPtr = std::allocator<DataType>().allocate(static_cast<std::size_t>(number));
 			trackerAllocatorData.allocs++;
 			trackerAllocatorData.allocPtrs.push_back(dataPtr);
 			return dataPtr;
 		}
 
-		constexpr static bool havePtr(const pointer ptr) noexcept {
+		static bool havePtr(const pointer ptr) noexcept {
 			for (void* testPtr : trackerAllocatorData.allocPtrs) {
 				if (std::bit_cast<void*, const pointer>(ptr) == testPtr) {
 					return true;
@@ -101,11 +131,29 @@ namespace natl {
 			return false;
 		}
 
-		constexpr static void deallocate(pointer ptr, const Size number) noexcept {
-			std::allocator<DataType>().deallocate(ptr, number);
+		static void deallocate(pointer ptr, const Size number) noexcept {
+			bool found = false;
+			for (void* testPtr : trackerAllocatorData.allocPtrs) {
+				if (std::bit_cast<void*, const pointer>(ptr) == testPtr) {
+					found = true;
+					trackerAllocatorData.deallocs++;;
+					trackerAllocatorData.deallocPtrs.push_back(ptr);
+					break;
+				}
+			}
+
+			if (!found) {
+				std::cout << "natl: TrackerAllocator error: ptr " << reinterpret_cast<void*>(ptr) << " was not allocated from TrackerAllocator\n";
+				return;
+			}
+
+
+			std::allocator<DataType>().deallocate(ptr, static_cast<std::size_t>(number));
 		}
 	};
 
 	template<class DataType>
-	using DefaultAllocator = Allocator<DataType>;
+	using DefaultAllocator = 
+		Allocator<DataType>;
+		//TrackerAllocator<DataType>;
 }

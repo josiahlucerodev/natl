@@ -2,6 +2,7 @@
 
 //std
 #include <cstdint>
+#include <cstddef>
 
 //interface 
 namespace natl {
@@ -18,9 +19,9 @@ namespace natl {
 
 
 	using f32 = float;
-	using f64 = long double;
+	using f64 = double;
 
-	using Size = i64;
+	using Size = ui64;
 	using PtrDiff = std::ptrdiff_t;
 
 	using Utf32 = char32_t;
