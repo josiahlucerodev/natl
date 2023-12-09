@@ -9,6 +9,4 @@ int main() {
 	[[maybe_unused]] constexpr natl::i64 uint32DecimalTest3Constexpr = natl::stringDecimalToInt(natl::intToStringDecimal(32));
 	[[maybe_unused]] constexpr natl::i64 uint8DecimalTest1Constexpr = natl::stringDecimalToInt("32");
 	[[maybe_unused]] constexpr float floatDecimalTest1Constexpr = natl::stringToFloat("32.2");
-
-	std::variant<int> the;
 }

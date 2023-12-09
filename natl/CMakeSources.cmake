@@ -31,6 +31,7 @@ natl/stringView.h
 natl/test.h
 natl/timer.h
 natl/typeTraits.h
+natl/variant.h
 natl/view.h
 )
 
