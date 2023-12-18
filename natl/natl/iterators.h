@@ -11,21 +11,21 @@
 
 //interface 
 namespace natl {
-	template<class T>
+	template<class DataType>
 	class RandomAccessIterator {
 	public:
-		using iterator = RandomAccessIterator<T>;
+		using iterator = RandomAccessIterator<DataType>;
 		using difference_type = std::ptrdiff_t;
-		using value_type = T;
-		using reference = T&;
-		using pointer = T*;
+		using value_type = DataType;
+		using reference = DataType&;
+		using pointer = DataType*;
 		using iterator_category = std::random_access_iterator_tag;
-		using Sizeype = Size;
+		using size_type = Size;
 	private:
-		T* dataPtr;
+		DataType* dataPtr;
 	public:
 		constexpr RandomAccessIterator() : dataPtr(nullptr) {}
-		constexpr RandomAccessIterator(T* const dataPtr) noexcept : dataPtr(dataPtr) {}
+		constexpr RandomAccessIterator(DataType* const dataPtr) noexcept : dataPtr(dataPtr) {}
 		constexpr ~RandomAccessIterator() = default;
 	private:
 		constexpr iterator& getSelf() noexcept { return *this; }
@@ -33,7 +33,7 @@ namespace natl {
 	public:
 		constexpr reference operator*() const noexcept { return *dataPtr; }
 		constexpr pointer operator->() const noexcept { return dataPtr; }
-		constexpr reference operator[](const Sizeype pos) const noexcept { return dataPtr[pos]; };
+		constexpr reference operator[](const size_type pos) const noexcept { return dataPtr[pos]; };
 
 		constexpr bool operator== (const iterator rhs) const noexcept { return dataPtr == rhs.dataPtr; }
 		constexpr bool operator!= (const iterator rhs) const noexcept { return dataPtr != rhs.dataPtr; }
@@ -55,8 +55,14 @@ namespace natl {
 		constexpr difference_type operator-(const iterator rhs) const noexcept { return getSelf().dataPtr - rhs.dataPtr; }
 	};
 
-	template<class T> 
-	using ReverseRandomAccessIterator = std::reverse_iterator<RandomAccessIterator<T>>;
+	template<class DataType>
+	using ConstRandomAccessIterator = std::reverse_iterator<RandomAccessIterator<const DataType>>;
+
+	template<class DataType>
+	using ReverseRandomAccessIterator = std::reverse_iterator<RandomAccessIterator<DataType>>;
+
+	template<class DataType>
+	using ReverseConstRandomAccessIterator = std::reverse_iterator<ConstRandomAccessIterator<DataType>>;
 
 	template<class Type>
 	concept HasIteratorType = requires {
