@@ -41,6 +41,8 @@ namespace natl {
 		constexpr static bool triviallyDestructible = true;
 		constexpr static bool triviallyConstRefConstructedable = true;
 		constexpr static bool triviallyMoveConstructedable = true;
+		constexpr static bool triviallyMoveAssignable = true;
+		constexpr static bool triviallyConstRefAssignable = true;
 
 		//constructor
 		TestTypeCustomTrivialStdOut() noexcept : addressableData(0) { std::cout << "default constructed\n"; }

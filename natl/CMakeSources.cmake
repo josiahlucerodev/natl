@@ -24,9 +24,11 @@ natl/partitioner.h
 natl/peramaterPackOperations.h
 natl/pointer.h
 natl/repeat.h
+natl/serialization.h
 natl/smallDynArray.h
 natl/string.h
 natl/stringConvert.h
+natl/stringLiteral.h
 natl/stringView.h
 natl/test.h
 natl/timer.h

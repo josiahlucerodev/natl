@@ -35,7 +35,7 @@ namespace natl {
 		constexpr static bool triviallyConstRefConstructedable = false;
 		constexpr static bool triviallyMoveConstructedable = false;
 
-		constexpr static bool enableSmallArray = false;
+		constexpr static bool enableSmallArray = true;
 	private:
 		Size arraySizeAndSmallArrayFlag;
 		DataType* arrayDataPtr;
@@ -56,12 +56,12 @@ namespace natl {
 		}
 
 		constexpr void setAsSmallArray() noexcept {
-			if (!std::is_constant_evaluated() && enableSmallArray) {
+			if (enableSmallArray) {
 				arraySizeAndSmallArrayFlag = setNthBitToZero(arraySizeAndSmallArrayFlag, 63);
 			}
 		}
 		constexpr void setAsNotSmallArray() noexcept {
-			if (!std::is_constant_evaluated() && enableSmallArray) {
+			if (enableSmallArray) {
 				arraySizeAndSmallArrayFlag = setNthBitToOne(arraySizeAndSmallArrayFlag, 63);
 			}
 		}
@@ -70,7 +70,7 @@ namespace natl {
 		}
 	public:
 		constexpr bool isSmallArray() const noexcept {
-			if (std::is_constant_evaluated() || !enableSmallArray) {
+			if (!enableSmallArray) {
 				return false;
 			} else {
 				return !(arraySizeAndSmallArrayFlag & ~0x7FFFFFFFFFFFFFFFULL);
@@ -80,7 +80,7 @@ namespace natl {
 			return !isSmallArray();
 		}
 		constexpr static Size smallArrayCapacity() noexcept {
-			if (std::is_constant_evaluated() || !enableSmallArray) {
+			if (!enableSmallArray) {
 				return 0;
 			} else {
 				return bufferSize;
@@ -88,14 +88,14 @@ namespace natl {
 		}
 
 		constexpr const DataType* smallArrayLocation() const noexcept {
-			if (std::is_constant_evaluated() || !enableSmallArray) {
+			if (!enableSmallArray) {
 				return nullptr;
 			} else {
 				return smallArrayStorage;
 			}
 		}
 		constexpr DataType* smallArrayLocation() noexcept {
-			if (std::is_constant_evaluated() || !enableSmallArray) {
+			if (!enableSmallArray) {
 				return nullptr;
 			} else {
 				return smallArrayStorage;
@@ -122,35 +122,34 @@ namespace natl {
 		}
 		constexpr SmallDynArray(const DataType* srcPtr, const Size& count) noexcept {
 			baseConstructorInit();
-			assign(srcPtr, count);
+			construct(srcPtr, count);
 		}
 		constexpr SmallDynArray(const SmallDynArray& other) noexcept {
 			baseConstructorInit();
-			assign(other);
+			construct(other.data(), other.size());
 		}
 		constexpr SmallDynArray(SmallDynArray&& other) noexcept {
-			baseConstructorInit();
-			assign(forward<SmallDynArray>(other));
+			construct(forward<SmallDynArray>(other));
 		}
 		constexpr SmallDynArray(const size_type count, const DataType& value = DataType()) noexcept {
 			baseConstructorInit();
-			assign(count, value);
+			construct(count, value);
 		}
 		template<class Iter>
 			requires(IsIterPtr<Iter>&& std::is_same_v<typename IterPtrTraits<Iter>::value_type, DataType>)
 		constexpr SmallDynArray(Iter first, Iter last) noexcept {
 			baseConstructorInit();
-			assign<Iter>(first, last);
+			construct<Iter>(first, last);
 		}
 		template<class ArrayViewLike>
 			requires(IsArrayViewLike<ArrayViewLike, const DataType>)
 		constexpr SmallDynArray(const ArrayViewLike& arrayViewLike) noexcept {
 			baseConstructorInit();
-			assign<ArrayViewLike>(arrayViewLike);
+			construct(arrayViewLike.data(), arrayViewLike.size());
 		}
 		constexpr SmallDynArray(std::initializer_list<DataType> ilist) noexcept {
 			baseConstructorInit();
-			assign(ilist);
+			construct(ilist.begin(), ilist.size());
 		}
 
 		//destructor 
@@ -163,6 +162,99 @@ namespace natl {
 		//util 
 		constexpr SmallDynArray& self() noexcept { return *this; }
 		constexpr const SmallDynArray& self() const noexcept { return *this; }
+
+		//construct
+	private:
+		constexpr SmallDynArray& construct(const DataType* otherPtr, const Size& count) noexcept {
+			if (count == 0) {
+				arraySizeAndSmallArrayFlag = 0;
+				arrayCapacity = 0;
+				arrayDataPtr = nullptr;
+			} else if (count < smallArrayCapacity()) {
+				const DataType* srcDataPtrFirst = otherPtr;
+				const DataType* srcDataPtrLast = srcDataPtrFirst + count;
+				uninitializedCopyNoOverlap<const DataType*, DataType*>(srcDataPtrFirst, srcDataPtrLast, smallArrayLocation());
+
+				setAsSmallArray();
+
+				const Size newSize = count;
+				setSize(newSize);
+
+				arrayCapacity = 0;
+				arrayDataPtr = nullptr;
+			} else {
+				const Size newSize = count;
+				reserve(newSize);
+
+				const DataType* srcDataPtrFirst = otherPtr;
+				const DataType* srcDataPtrLast = srcDataPtrFirst + count;
+				uninitializedCopyNoOverlap<const DataType*, DataType*>(srcDataPtrFirst, srcDataPtrLast, data());
+
+				setSize(newSize);
+			}
+
+			return self();
+		}
+		constexpr SmallDynArray& construct(SmallDynArray&& other) noexcept {
+			if (other.isEmpty()) {
+				arraySizeAndSmallArrayFlag = other.arraySizeAndSmallArrayFlag;
+				arrayCapacity = 0;
+				arrayDataPtr = nullptr;
+			} else if (other.isSmallArray()) {
+				const DataType* srcDataPtrFirst = other.data();
+				const DataType* srcDataPtrLast = srcDataPtrFirst + other.size();
+				uninitializedCopyNoOverlap<const DataType*, DataType*>(srcDataPtrFirst, srcDataPtrLast, smallArrayLocation());
+
+				arraySizeAndSmallArrayFlag = other.arraySizeAndSmallArrayFlag;
+				arrayCapacity = 0;
+				arrayDataPtr = nullptr;
+			} else {
+				arraySizeAndSmallArrayFlag = other.arraySizeAndSmallArrayFlag;
+				arrayCapacity = other.arrayCapacity;
+				arrayDataPtr = other.arrayDataPtr;
+			}
+
+			other.arraySizeAndSmallArrayFlag = 0;
+			other.arrayCapacity = 0;
+			other.arrayDataPtr = nullptr;
+
+			return self();
+		}
+		constexpr SmallDynArray& construct(const size_type count, const DataType& value = DataType()) noexcept {
+			if (count == 0) {
+				arraySizeAndSmallArrayFlag = 0;
+				arrayCapacity = 0;
+				arrayDataPtr = nullptr;
+				return self();
+			}
+
+			reserve(count);
+
+			DataType* fillDstPtr = data();
+			DataType* fillDstPtrLast = fillDstPtr + count;
+			uninitializedFill<DataType*, DataType>(fillDstPtr, fillDstPtrLast, value);
+
+			setSize(count);
+			return self();
+		}
+
+		template<class Iter>
+			requires(IsIterPtr<Iter>&& std::is_same_v<typename IterPtrTraits<Iter>::value_type, DataType>)
+		constexpr SmallDynArray& construct(Iter first, Iter last) noexcept {
+			if constexpr (std::contiguous_iterator<Iter>) {
+				const Size count = iterDistance<Iter>(first, last);
+				const DataType* firstPtr = iteratorToAddress<Iter>(first);
+				return construct(firstPtr, count);
+			}
+
+			reserve(10);
+			for (; first != last; first++) {
+				push_back(*first);
+			}
+			return self();
+		}
+
+	public:
 
 		//assignment 
 		constexpr SmallDynArray& operator=(const SmallDynArray& other) noexcept {
@@ -274,29 +366,25 @@ namespace natl {
 		template<class Iter>
 			requires(IsIterPtr<Iter>&& std::is_same_v<typename IterPtrTraits<Iter>::value_type, DataType>)
 		constexpr SmallDynArray& assign(Iter first, Iter last) noexcept {
-			if constexpr (IsRandomAccessIterator<Iter>) {
+			if constexpr (std::contiguous_iterator<Iter>) {
 				const Size count = iterDistance<Iter>(first, last);
 				const DataType* firstPtr = iteratorToAddress<Iter>(first);
-				assign(firstPtr, count);
+				return assign(firstPtr, count);
 			}
 
-			release();
-			Size index = 0;
-			for (; first != last && index < size(); first++) {
-				at(index) = *first;
-			}
-
+			resize(0);
 			for (; first != last; first++) {
 				push_back(*first);
 			}
+			return self();
 		}
 		template<class ArrayViewLike>
 			requires(IsArrayViewLike<ArrayViewLike, const DataType>)
 		constexpr SmallDynArray& assign(const ArrayViewLike& arrayViewLike) noexcept {
-			assign(arrayViewLike.data(), arrayViewLike.size());
+			return assign(arrayViewLike.data(), arrayViewLike.size());
 		}
 		constexpr SmallDynArray& assign(std::initializer_list<DataType> ilist) noexcept {
-			assign(ilist.begin(), ilist.size());
+			return assign(ilist.begin(), ilist.size());
 		}
 
 

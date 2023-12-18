@@ -49,35 +49,35 @@ namespace natl {
 		}
 		constexpr DynArray(const DataType* srcPtr, const Size& count) noexcept {
 			baseConstructorInit();
-			assign(srcPtr, count);
+			construct(srcPtr, count);
 		}
 		constexpr DynArray(const DynArray& other) noexcept {
 			baseConstructorInit();
-			assign(other);
+			construct(other.data(), other.size());
 		}
 		constexpr DynArray(DynArray&& other) noexcept {
 			baseConstructorInit();
-			assign(forward<DynArray>(other));
+			construct(forward<DynArray>(other));
 		}
 		constexpr DynArray(const size_type count, const DataType& value = DataType()) noexcept {
 			baseConstructorInit();
-			assign(count, value);
+			construct(count, value);
 		}
 		template<class Iter>
 			requires(IsIterPtr<Iter> && std::is_same_v<typename IterPtrTraits<Iter>::value_type, DataType>)
 		constexpr DynArray(Iter first, Iter last) noexcept {
 			baseConstructorInit();
-			assign<Iter>(first, last);
+			construct<Iter>(first, last);
 		}
 		template<class ArrayViewLike>
 			requires(IsArrayViewLike<ArrayViewLike, const DataType>)
 		constexpr DynArray(const ArrayViewLike& arrayViewLike) noexcept {
 			baseConstructorInit();
-			assign<ArrayViewLike>(arrayViewLike);
+			construct(arrayViewLike.data(), arrayViewLike.size());
 		}
 		constexpr DynArray(std::initializer_list<DataType> ilist) noexcept {
 			baseConstructorInit();
-			assign(ilist);
+			construct(ilist.begin(), ilist.size());
 		}
 
 		//destructor 
@@ -88,6 +88,69 @@ namespace natl {
 		//util 
 		constexpr DynArray& self() noexcept { return *this; }
 		constexpr const DynArray& self() const noexcept { return *this; }
+
+		//construct
+	private:
+		constexpr DynArray& construct(const DataType* otherPtr, const Size& count) noexcept {
+			if (count == 0) {
+				arraySize = 0;
+				arrayCapacity = 0;
+				arrayDataPtr = nullptr;
+				return self();
+			}
+
+			const Size newSize = count;
+			reserve(newSize);
+			const DataType* srcDataPtrFirst = otherPtr;
+			const DataType* srcDataPtrLast = srcDataPtrFirst + count;
+			uninitializedCopyNoOverlap<const DataType*, DataType*>(srcDataPtrFirst, srcDataPtrLast, data());
+			setSize(newSize);
+
+			return self();
+		}
+		constexpr DynArray& construct(DynArray&& other) noexcept {
+			arraySize = other.arraySize;
+			arrayCapacity = other.arrayCapacity;
+			arrayDataPtr = other.arrayDataPtr;
+
+			other.arraySize = 0;
+			other.arrayCapacity = 0;
+			other.arrayDataPtr = nullptr;
+
+			return self();
+		}
+		constexpr DynArray& construct(const size_type count, const DataType& value = DataType()) noexcept {
+			if (count == 0) { 
+				arraySize = 0;
+				arrayCapacity = 0;
+				arrayDataPtr = nullptr;
+				return self(); 
+			}
+
+			reserve(count);
+
+			DataType* fillDstPtr = data();
+			DataType* fillDstPtrLast = fillDstPtr + count;
+			uninitializedFill<DataType*, DataType>(fillDstPtr, fillDstPtrLast, value);
+			setSize(count);
+			return self();
+		}
+
+		template<class Iter>
+			requires(IsIterPtr<Iter>&& std::is_same_v<typename IterPtrTraits<Iter>::value_type, DataType>)
+		constexpr DynArray& construct(Iter first, Iter last) noexcept {
+			if constexpr (std::contiguous_iterator<Iter>) {
+				const Size count = iterDistance<Iter>(first, last);
+				const DataType* firstPtr = iteratorToAddress<Iter>(first);
+				return construct(firstPtr, count);
+			}
+
+			reserve(10);
+			for (; first != last; first++) {
+				push_back(*first);
+			}
+			return self();
+		}
 
 		//assignment 
 		constexpr DynArray& operator=(const DynArray& other) noexcept {

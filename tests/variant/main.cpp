@@ -2,30 +2,22 @@
 //natl
 #include <natl/variant.h>
 #include <natl/dynArray.h>
+#include <natl/test.h>
 
 
 int main() {
-	//using VariantType = natl::Variant<
-	//	natl::NamedElement<"int", int>,
-	//	natl::NamedElement<"double", double>,
-	//	natl::NamedElement<"size", natl::Size>,
-	//	natl::NamedElement<"dynArray", natl::DynArray<int>>
-	//>;
-	//
-	//natl::DynArray<int> intArray(10, 1);
-	//natl::VariantAssign<"dynArray", natl::DynArray<int>> assign(intArray);
-	//VariantType testVariant;
-	//testVariant = natl::VariantAssignMove<"dynArray", natl::DynArray<int>>(natl::move(intArray));
-	//
-	//testVariant.assign<"dynArray">(natl::move(intArray));
-	//natl::Option<natl::DynArray<int>*> intArrayPtr = testVariant.get<"dynArray">();
-	//
-	//
-	//natl::DynArray<int>& intArrayRef = testVariant.get<"dynArray">();
-	//if (testVariant.isValue<"dynArray">()) {
-	//	std::cout << "dynArray";
-	//}
+	using VariantTestType = natl::Variant<
+			natl::NamedElement<"int", int>,
+			natl::NamedElement<"test type", natl::TestTypeStdOut>,
+			natl::NamedElement<"test1 type", double>,
+			natl::NamedElement<"test2 type", float>,
+			natl::NamedElement<"test3 type", short>,
+			natl::NamedElement<"test4 type", int>
+	>;
 
+	VariantTestType testValue;
+	testValue.assign<"test type">(natl::TestTypeStdOut());
+	testValue.assign<"int">(6);
 
-	return 0;
+	return testValue.get<"int">();
 }

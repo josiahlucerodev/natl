@@ -76,6 +76,20 @@ namespace natl {
             { DataType::triviallyConstRefConstructedable == true };
     };
 
+    template <class DataType>
+    concept IsTriviallyMoveAssignable = std::is_trivially_move_assignable_v<DataType> ||
+        requires() {
+            { DataType::triviallyMoveAssignable } -> std::convertible_to<bool>;
+            { DataType::triviallyMoveAssignable == true };
+    };
+
+    template <class DataType>
+    concept IsTriviallyConstRefAssignable = std::is_trivially_assignable_v<DataType, const DataType&> ||
+        requires() {
+            { DataType::triviallyConstRefAssignable } -> std::convertible_to<bool>;
+            { DataType::triviallyConstRefAssignable == true };
+    };
+
     template <class Type>
     concept MemcopyConstructible = IsTriviallyDefaultConstructible<Type> && IsTriviallyRelocatable<Type>;
 

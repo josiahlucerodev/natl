@@ -2,20 +2,21 @@
 
 //own
 #include "dynArray.h"
+#include "smallDynArray.h"
 
 //interface
 namespace natl {
 	template<class Type, std::size_t BatchSize = 100>
 	class BatchPool {
 	private:
-		DynArray<DynArray<Type>> batchs;
+		SmallDynArray<DynArray<Type>, 5> batchs;
 		DynArray<Type>* activeBatch;
 	public:
 		constexpr BatchPool() : batchs(), activeBatch(nullptr) {}
 	public:
-		constexpr inline std::size_t capacity() noexcept { return BatchSize * batchs.size(); }
-		constexpr inline std::size_t size() noexcept { return batchs.size() == 0 ? 0 : ((batchs.size() - 1) * BatchSize) + activeBatch->size(); }
-		constexpr inline static std::size_t batchSize() noexcept { return BatchSize; }
+		constexpr inline std::size_t capacity() const noexcept { return BatchSize * batchs.size(); }
+		constexpr inline std::size_t size() const noexcept { return batchs.size() == 0 ? 0 : ((batchs.size() - 1) * BatchSize) + activeBatch->size(); }
+		constexpr inline static std::size_t batchSize() const noexcept { return BatchSize; }
 		constexpr inline Type* newElement() noexcept {
 			if (needNewBatch()) {
 				newBatch();
@@ -23,6 +24,10 @@ namespace natl {
 			activeBatch->resize(activeBatch->size() + 1);
 			return &activeBatch->back();
 		};
+		constexpr void clear() noexcept {
+			batchs.clear();
+			activeBatch = nullptr;
+		}
 	private:
 		constexpr inline void newBatch() noexcept {
 			batchs.resize(batchs.size() + 1);

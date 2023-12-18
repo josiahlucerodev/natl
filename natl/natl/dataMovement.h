@@ -382,4 +382,19 @@ namespace natl {
         defualtDeconstructAll<DataType>(dataPtr, 1);
     }
 
+
+    //template<class DataType, class... Args>
+    //constexpr void constructAt(DataType* const location, Args&&... args) noexcept {
+    //    std::construct_at<DataType, Args...>(location, args...);
+    //}
+    //
+    //template<class DataType>
+    //constexpr void constructAt(DataType* const location, const DataType& value) noexcept {
+    //    if (std::is_constant_evaluated()) {
+    //        DataType tempValue = value;
+    //        std::construct_at<DataType, DataType>(location, forward<DataType>(tempValue));
+    //    } else {
+    //        ::new (static_cast<void*>(location)) DataType(value);
+    //    }
+    //}
 }
