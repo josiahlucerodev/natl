@@ -18,7 +18,9 @@ namespace natl {
 		using difference_type = std::ptrdiff_t;
 		using value_type = T;
 		using reference = T&;
+		using const_reference = const T&;
 		using pointer = T*;
+		using const_pointer = const T*;
 		using iterator_category = std::random_access_iterator_tag;
 		using Sizeype = Size;
 	private:
@@ -31,9 +33,12 @@ namespace natl {
 		constexpr iterator& getSelf() noexcept { return *this; }
 		constexpr const iterator& getSelf() const noexcept { return *this; }
 	public:
-		constexpr reference operator*() const noexcept { return *dataPtr; }
-		constexpr pointer operator->() const noexcept { return dataPtr; }
-		constexpr reference operator[](const Sizeype pos) const noexcept { return dataPtr[pos]; };
+		constexpr reference operator*() noexcept requires(isNotConst<T>) { return *dataPtr; }
+		constexpr const_reference operator*() const noexcept { return *dataPtr; }
+		constexpr pointer operator->() noexcept requires(isNotConst<T>) { return dataPtr; }
+		constexpr const_pointer operator->() const noexcept { return dataPtr; }
+		constexpr reference operator[](const Sizeype pos) noexcept requires(isNotConst<T>) { return dataPtr[pos]; };
+		constexpr const_reference operator[](const Sizeype pos) const noexcept { return dataPtr[pos]; };
 
 		constexpr bool operator== (const iterator rhs) const noexcept { return dataPtr == rhs.dataPtr; }
 		constexpr bool operator!= (const iterator rhs) const noexcept { return dataPtr != rhs.dataPtr; }
@@ -51,7 +56,7 @@ namespace natl {
 		constexpr iterator operator+(const difference_type offset) const noexcept { return iterator(dataPtr + offset); }
 		constexpr friend iterator operator+(const difference_type offset, const iterator& rhs) noexcept { return iterator(rhs.dataPtr + offset); }
 		constexpr iterator& operator-=(const difference_type offset) noexcept { dataPtr -= offset; return getSelf(); }
-		constexpr iterator operator-(const difference_type offset) const noexcept { return iterator(dataPtr -= offset); }
+		constexpr iterator operator-(const difference_type offset) const noexcept { return iterator(dataPtr - offset); }
 		constexpr difference_type operator-(const iterator rhs) const noexcept { return getSelf().dataPtr - rhs.dataPtr; }
 	};
 

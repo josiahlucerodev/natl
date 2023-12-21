@@ -15,6 +15,7 @@ natl/expect.h
 natl/flatHashMap.h
 natl/functional.h
 natl/hash.h
+natl/heapArray.h
 natl/iterators.h
 natl/lexicographicalCompare.h
 natl/limits.h
@@ -46,7 +47,7 @@ foreach(target_header IN LISTS HEADER_FILES)
 		PRIVATE
 			$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/${target_header}>
 			$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/natl/${target_header}>
-	)
+	 "natl/heapArray.h")
 endforeach()
 
 foreach(target_source IN LISTS SOURCE_FILES)

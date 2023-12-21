@@ -1,6 +1,7 @@
 ﻿include(testUtils.cmake)
 
 natl_Standard_Test(NatlArrayViewTest arrayView)
+natl_Standard_Test(NatlHeapArrayTest heapArray)
 natl_Standard_Test(NatlArrayTest array)
 natl_Standard_Test(NatlDynArrayTest dynArray)
 natl_Standard_Test(NatlStringTest string)

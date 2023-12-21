@@ -61,6 +61,11 @@ namespace natl {
 		{ container.size() } -> std::convertible_to<std::size_t>;
 	};
 
+	template<class Container, class DataType>
+	concept ContainerHasPushBackFunction = requires(Container container) {
+		{ container.push_back(std::declval<DataType>()) };
+	};
+
 	template<class Contanier>
 		requires(HasIteratorType<Contanier>)
 	struct ContainerIteratorTraits {
@@ -102,7 +107,7 @@ namespace natl {
 
 	template<class ForwardIter1, class ForwardIter2>
 	constexpr void iterSwap(ForwardIter1 a, ForwardIter2 b) noexcept {
-		swap<typename ForwardIter1::value_type>(*a, *b);
+		swap<typename IterPtrTraits<ForwardIter1>::value_type>(*a, *b);
 	}
 
 	template<class BidirectionalIter>

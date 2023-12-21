@@ -51,7 +51,7 @@ namespace natl {
 		}
 	}
 	template<typename Interger>
-	constexpr  Interger stringDecimalToInt(const ConstStringView& string, StringNumericConvertError& convertError) noexcept {
+	constexpr Interger stringDecimalToInt(const ConstStringView& string, StringNumericConvertError& convertError) noexcept {
 		if (string.size() == 0) {
 			convertError = StringNumericConvertError::invalid;
 			return 0;
@@ -63,13 +63,13 @@ namespace natl {
 			}
 		}
 
-		const Size endIndex = std::is_signed_v<Interger> && string.c_str()[0] == '-' ? 0 : static_cast<Size>(-1);
+		const i64 endIndex = std::is_signed_v<Interger> && string.c_str()[0] == '-' ? 0 : static_cast<i64>(-1);
 		const Size length = string.length();
 		std::conditional_t<std::is_signed_v<Interger>, i64, ui64> value = 0;
 		ui64 mul = 1; ui32 pos = 0;
 
-		for (Size i = length - 1; i > endIndex; i--) {
-			const char numberCharacter = string.c_str()[i];
+		for (i64 i = length - 1; static_cast<i64>(i) > endIndex; i--) {
+			const char numberCharacter = string.c_str()[static_cast<Size>(i)];
 			if (numberCharacter == ',') {
 				continue;
 			}
@@ -319,7 +319,7 @@ namespace natl {
 		bool isNegative = false;
 		bool decimalFound = false;
 		Float decimalMul = 10.0f;
-		std::size_t index = 0;
+		Size index = 0;
 
 		// Check for a sign
 		if (string.c_str()[0] == '-') {
@@ -388,11 +388,25 @@ namespace natl {
 		}
 	}
 
-	template<typename Interger>
-	constexpr String intToStringDecimal(Interger number) noexcept {
-		if (number == 0) { return String("0"); }
+	template<class DynStringContainer>
+	concept IsConvertDynStringContainer =
+		ContainerHasPushBackFunction<DynStringContainer, char>
+		&& HasIteratorType<DynStringContainer>
+		&& HasBeginIterator<DynStringContainer>
+		&& HasEndIterator<DynStringContainer> && 
+		requires(DynStringContainer& string) { 
+			{ string.append("test string", 11) }; 
+			{ string.reserve(std::declval<Size>()) }; 
+	};
 
-		String result{};
+	template<class DynStringContainer, typename Interger>
+		requires(IsConvertDynStringContainer<DynStringContainer>)
+	constexpr void intToStringDecimalType(DynStringContainer& output, Interger number) noexcept {
+		if (number == 0) { 
+			output.push_back('0');
+			return;
+		}
+
 		bool isNegative = false;
 
 		if constexpr (std::is_signed_v<Interger>) {
@@ -402,30 +416,44 @@ namespace natl {
 			}
 		}
 
+		Size count = 0;
 		while (number > 0) {
 			const char digitChar = '0' + (number % 10); 
-			result.push_back(digitChar);
+			output.push_back(digitChar);
 			number /= 10; 
+			count += 1;
 		}
 
 		if constexpr (std::is_signed_v<Interger>) {
 			if (isNegative) {
-				result.push_back('-');
+				output.push_back('-');
+				count += 1;
 			}
 		}
 
-		reverse<String::iterator>(result.begin(), result.end());
-		return result;
+		reverse<typename DynStringContainer::iterator>(output.end() - count, output.end());
 	}
 
 	template<typename Interger>
-	constexpr String intToStringHexadecimal(Interger number, const bool addPrefix) noexcept {
+	constexpr String intToStringDecimalType(Interger number) noexcept {
+		String result{};
+		intToStringDecimalType<String, Interger>(result, number);
+		return result;
+	}
+
+
+
+
+	template<class DynStringContainer, typename Interger>
+		requires(IsConvertDynStringContainer<DynStringContainer>)
+	constexpr void intToStringHexadecimalType(DynStringContainer& output, Interger number, const bool addPrefix) noexcept {
 		if (number == 0) {
 			if (addPrefix) {
-				return "0x0";
+				output.append("0x0", 3);
 			} else {
-				return "0";
+				output.push_back('0');
 			}
+			return;
 		}
 
 		const char hexDigits[] = "0123456789ABCDEF";
@@ -445,27 +473,36 @@ namespace natl {
 		}
 		hexString[numberOfDigits] = '\0';
 
-		String result{};
-		result.reserve(20);
+		output.reserve(20);
 
 		if (addPrefix) {
-			result = "0x";
+			output.append("0x", 2);
 		}
-		result.append(hexString);
 
+		output.append(hexString, numberOfDigits);
+	}
+
+	template<typename Interger>
+	constexpr String intToStringHexadecimalType(Interger number, const bool addPrefix) noexcept {
+		String result{};
+		intToStringHexadecimalType<String, Interger>(result, number, addPrefix);
 		return result;
 	}
 
 	template<typename Interger>
-	constexpr String intToStringHexadecimal(const Interger number) noexcept {
-		return intToStringHexadecimal<Interger>(number, true);
+	constexpr String intToStringHexadecimalType(const Interger number) noexcept {
+		return intToStringHexadecimalType<Interger>(number, true);
 	}
 
-	template<typename Interger>
-	constexpr String intToStringBinary(Interger n) noexcept {
-		if (n == 0) { return String("0"); }
+	template<class DynStringContainer, typename Interger>
+		requires(IsConvertDynStringContainer<DynStringContainer>)
+	constexpr void intToStringBinaryType(DynStringContainer& output, Interger n) noexcept {
+		if (n == 0) {
+			output.push_back('0');
+			return;
+		}
 
-		std::size_t index = 0;
+		Size index = 0;
 		char binaryString[65];
 		while (n > 0) {
 			if (n % 2 == 0) {
@@ -478,37 +515,49 @@ namespace natl {
 		}
 		binaryString[index] = '\0';
 
+		char* reverseBegin = binaryString;
+		char* reverseEnd = reverseBegin + index;
+		reverse<char*>(reverseBegin, reverseEnd);
 
+		const Size count = index;
+		output.append(binaryString, count);
+	}
+
+	template<typename Interger>
+	constexpr String intToStringBinaryType(Interger n) noexcept {
 		String result{};
-		result.reserve(index + 1);
-		result = binaryString;
-
-		reverse<String::iterator>(result.begin(), result.end());
+		intToStringBinaryType<String, Interger>(result, n);
 		return result;
 	}
 
-	template<typename Float>
-	constexpr String floatToString(const Float number, const ui64 precision) noexcept {
-		String result{};
+
+	template<class DynStringContainer, typename Float>
+		requires(IsConvertDynStringContainer<DynStringContainer>)
+	constexpr void floatToStringType(DynStringContainer& output, const Float number, const ui64 precision) noexcept {
 		const i64 integerPart = static_cast<i64>(number);
 
-		result = intToStringDecimal<i64>(integerPart);
-		result.push_back('.');
+		intToStringDecimalType<DynStringContainer, i64>(output, integerPart);
+		output.push_back('.');
 
 		Float fractionalPart = number - static_cast<Float>(static_cast<int>(number));
-		for (std::size_t i = 0; i < precision && fractionalPart < Float(1.0); ++i) {
+		for (Size i = 0; i < precision && fractionalPart < Float(1.0); ++i) {
 			fractionalPart *= 10;
 			const char digitCharacter = '0' + static_cast<char>(static_cast<i64>(fractionalPart));
-			result.push_back(digitCharacter);
+			output.push_back(digitCharacter);
 			fractionalPart -= static_cast<Float>(static_cast<i64>(fractionalPart));
 		}
+	}
 
+	template<typename Float>
+	constexpr String floatToStringType(const Float number, const ui64 precision) noexcept {
+		String result{};
+		floatToStringType<String, Float>(result, number, precision);
 		return result;
 	}
 
 	template<typename Float>
-	constexpr String floatToString(const Float number) noexcept {
-		return floatToString<Float>(number, std::numeric_limits<ui64>::max());
+	constexpr String floatToStringType(const Float number) noexcept {
+		return floatToStringType<Float>(number, limits<ui64>::max());
 	}
 	
 	constexpr i64 stringDecimalToInt(const ConstStringView& stringView) noexcept {
@@ -550,33 +599,113 @@ namespace natl {
 		return stringToFloat<f32>(stringView);
 	}
 
-	constexpr String intToStringDecimal(const i8 number) noexcept { return intToStringDecimal<i8>(number); };
-	constexpr String intToStringDecimal(const i16 number) noexcept { return intToStringDecimal<i16>(number); };
-	constexpr String intToStringDecimal(const i32 number) noexcept { return intToStringDecimal<i32>(number); };
-	constexpr String intToStringDecimal(const i64 number) noexcept { return intToStringDecimal<i64>(number); };
-	constexpr String intToStringDecimal(const ui8 number) noexcept { return intToStringDecimal<ui8>(number); };
-	constexpr String intToStringDecimal(const ui16 number) noexcept { return intToStringDecimal<ui16>(number); };
-	constexpr String intToStringDecimal(const ui32 number) noexcept { return intToStringDecimal<ui32>(number); };
-	constexpr String intToStringDecimal(const ui64 number) noexcept { return intToStringDecimal<ui64>(number); };
 
-	constexpr String intToStringHexadecimal(const i8 number) noexcept { return intToStringHexadecimal<i8>(number); };
-	constexpr String intToStringHexadecimal(const i16 number) noexcept { return intToStringHexadecimal<i16>(number); };
-	constexpr String intToStringHexadecimal(const i32 number) noexcept { return intToStringHexadecimal<i32>(number); };
-	constexpr String intToStringHexadecimal(const i64 number) noexcept { return intToStringHexadecimal<i64>(number); };
-	constexpr String intToStringHexadecimal(const ui8 number) noexcept { return intToStringHexadecimal<ui8>(number); };
-	constexpr String intToStringHexadecimal(const ui16 number) noexcept { return intToStringHexadecimal<ui16>(number); };
-	constexpr String intToStringHexadecimal(const ui32 number) noexcept { return intToStringHexadecimal<ui32>(number); };
-	constexpr String intToStringHexadecimal(const ui64 number) noexcept { return intToStringHexadecimal<ui64>(number); };
+	constexpr String intToStringDecimal(const i8 number) noexcept { return intToStringDecimalType<i8>(number); };
+	constexpr String intToStringDecimal(const i16 number) noexcept { return intToStringDecimalType<i16>(number); };
+	constexpr String intToStringDecimal(const i32 number) noexcept { return intToStringDecimalType<i32>(number); };
+	constexpr String intToStringDecimal(const i64 number) noexcept { return intToStringDecimalType<i64>(number); };
+	constexpr String intToStringDecimal(const ui8 number) noexcept { return intToStringDecimalType<ui8>(number); };
+	constexpr String intToStringDecimal(const ui16 number) noexcept { return intToStringDecimalType<ui16>(number); };
+	constexpr String intToStringDecimal(const ui32 number) noexcept { return intToStringDecimalType<ui32>(number); };
+	constexpr String intToStringDecimal(const ui64 number) noexcept { return intToStringDecimalType<ui64>(number); };
 
-	constexpr String intToStringBinary(const i8 number) noexcept { return intToStringBinary<i8>(number); };
-	constexpr String intToStringBinary(const i16 number) noexcept { return intToStringBinary<i16>(number); };
-	constexpr String intToStringBinary(const i32 number) noexcept { return intToStringBinary<i32>(number); };
-	constexpr String intToStringBinary(const i64 number) noexcept { return intToStringBinary<i64>(number); };
-	constexpr String intToStringBinary(const ui8 number) noexcept { return intToStringBinary<ui8>(number); };
-	constexpr String intToStringBinary(const ui16 number) noexcept { return intToStringBinary<ui16>(number); };
-	constexpr String intToStringBinary(const ui32 number) noexcept { return intToStringBinary<ui32>(number); };
-	constexpr String intToStringBinary(const ui64 number) noexcept { return intToStringBinary<ui64>(number); };
+	template<class DynStringContainer>
+		requires(IsConvertDynStringContainer<DynStringContainer>)
+	constexpr void intToStringDecimal(DynStringContainer& output, const i8 number) noexcept { intToStringDecimalType<DynStringContainer, i8>(output, number); };
+	template<class DynStringContainer>
+		requires(IsConvertDynStringContainer<DynStringContainer>)
+	constexpr void intToStringDecimal(DynStringContainer& output, const i16 number) noexcept { intToStringDecimalType<DynStringContainer, i16>(output, number); };
+	template<class DynStringContainer>
+		requires(IsConvertDynStringContainer<DynStringContainer>)
+	constexpr void intToStringDecimal(DynStringContainer& output, const i32 number) noexcept { intToStringDecimalType<DynStringContainer, i32>(output, number); };
+	template<class DynStringContainer>
+		requires(IsConvertDynStringContainer<DynStringContainer>)
+	constexpr void intToStringDecimal(DynStringContainer& output, const i64 number) noexcept { intToStringDecimalType<DynStringContainer, i64>(output, number); };
+	template<class DynStringContainer>
+		requires(IsConvertDynStringContainer<DynStringContainer>)
+	constexpr void intToStringDecimal(DynStringContainer& output, const ui8 number) noexcept { intToStringDecimalType<DynStringContainer, ui8>(output, number); };
+	template<class DynStringContainer>
+		requires(IsConvertDynStringContainer<DynStringContainer>)
+	constexpr void intToStringDecimal(DynStringContainer& output, const ui16 number) noexcept { intToStringDecimalType<DynStringContainer, ui16>(output, number); };
+	template<class DynStringContainer>
+		requires(IsConvertDynStringContainer<DynStringContainer>)
+	constexpr void intToStringDecimal(DynStringContainer& output, const ui32 number) noexcept { intToStringDecimalType<DynStringContainer, ui32>(output, number); };
+	template<class DynStringContainer>
+		requires(IsConvertDynStringContainer<DynStringContainer>)
+	constexpr void intToStringDecimal(DynStringContainer& output, const ui64 number) noexcept { intToStringDecimalType<DynStringContainer, ui64>(output, number); };
 
-	constexpr String floatToString(const f32 number) noexcept { return floatToString<f32>(number); };
-	constexpr String floatToString(const f64 number) noexcept { return floatToString<f64>(number); };
+	constexpr String intToStringHexadecimal(const i8 number) noexcept { return intToStringHexadecimalType<i8>(number); };
+	constexpr String intToStringHexadecimal(const i16 number) noexcept { return intToStringHexadecimalType<i16>(number); };
+	constexpr String intToStringHexadecimal(const i32 number) noexcept { return intToStringHexadecimalType<i32>(number); };
+	constexpr String intToStringHexadecimal(const i64 number) noexcept { return intToStringHexadecimalType<i64>(number); };
+	constexpr String intToStringHexadecimal(const ui8 number) noexcept { return intToStringHexadecimalType<ui8>(number); };
+	constexpr String intToStringHexadecimal(const ui16 number) noexcept { return intToStringHexadecimalType<ui16>(number); };
+	constexpr String intToStringHexadecimal(const ui32 number) noexcept { return intToStringHexadecimalType<ui32>(number); };
+	constexpr String intToStringHexadecimal(const ui64 number) noexcept { return intToStringHexadecimalType<ui64>(number); };
+
+	template<class DynStringContainer>
+		requires(IsConvertDynStringContainer<DynStringContainer>)
+	constexpr void intToStringHexadecimal(DynStringContainer& output, const i8 number) noexcept { intToStringHexadecimalType<DynStringContainer, i8>(output, number); };
+	template<class DynStringContainer>
+		requires(IsConvertDynStringContainer<DynStringContainer>)
+	constexpr void intToStringHexadecimal(DynStringContainer& output, const i16 number) noexcept { intToStringHexadecimalType<DynStringContainer, i16>(output, number); };
+	template<class DynStringContainer>
+		requires(IsConvertDynStringContainer<DynStringContainer>)
+	constexpr void intToStringHexadecimal(DynStringContainer& output, const i32 number) noexcept { intToStringHexadecimalType<DynStringContainer, i32>(output, number); };
+	template<class DynStringContainer>
+		requires(IsConvertDynStringContainer<DynStringContainer>)
+	constexpr void intToStringHexadecimal(DynStringContainer& output, const i64 number) noexcept { intToStringHexadecimalType<DynStringContainer, i64>(output, number); };
+	template<class DynStringContainer>
+		requires(IsConvertDynStringContainer<DynStringContainer>)
+	constexpr void intToStringHexadecimal(DynStringContainer& output, const ui8 number) noexcept { intToStringHexadecimalType<DynStringContainer, ui8>(output, number); };
+	template<class DynStringContainer>
+		requires(IsConvertDynStringContainer<DynStringContainer>)
+	constexpr void intToStringHexadecimal(DynStringContainer& output, const ui16 number) noexcept { intToStringHexadecimalType<DynStringContainer, ui16>(output, number); };
+	template<class DynStringContainer>
+		requires(IsConvertDynStringContainer<DynStringContainer>)
+	constexpr void intToStringHexadecimal(DynStringContainer& output, const ui32 number) noexcept { intToStringHexadecimalType<DynStringContainer, ui32>(output, number); };
+	template<class DynStringContainer>
+		requires(IsConvertDynStringContainer<DynStringContainer>)
+	constexpr void intToStringHexadecimal(DynStringContainer& output, const ui64 number) noexcept { intToStringHexadecimalType<DynStringContainer, ui64>(output, number); };
+
+	constexpr String intToStringBinary(const i8 number) noexcept { return intToStringBinaryType<i8>(number); };
+	constexpr String intToStringBinary(const i16 number) noexcept { return intToStringBinaryType<i16>(number); };
+	constexpr String intToStringBinary(const i32 number) noexcept { return intToStringBinaryType<i32>(number); };
+	constexpr String intToStringBinary(const i64 number) noexcept { return intToStringBinaryType<i64>(number); };
+	constexpr String intToStringBinary(const ui8 number) noexcept { return intToStringBinaryType<ui8>(number); };
+	constexpr String intToStringBinary(const ui16 number) noexcept { return intToStringBinaryType<ui16>(number); };
+	constexpr String intToStringBinary(const ui32 number) noexcept { return intToStringBinaryType<ui32>(number); };
+	constexpr String intToStringBinary(const ui64 number) noexcept { return intToStringBinaryType<ui64>(number); };
+
+	template<class DynStringContainer>
+		requires(IsConvertDynStringContainer<DynStringContainer>)
+	constexpr void intToStringBinary(DynStringContainer& output, const i8 number) noexcept { intToStringBinaryType<DynStringContainer, i8>(output, number); };
+	template<class DynStringContainer>
+		requires(IsConvertDynStringContainer<DynStringContainer>)
+	constexpr void intToStringBinary(DynStringContainer& output, const i16 number) noexcept { intToStringBinaryType<DynStringContainer, i16>(output, number); };
+	template<class DynStringContainer>
+		requires(IsConvertDynStringContainer<DynStringContainer>)
+	constexpr void intToStringBinary(DynStringContainer& output, const i32 number) noexcept { intToStringBinaryType<DynStringContainer, i32>(output, number); };
+	template<class DynStringContainer>
+		requires(IsConvertDynStringContainer<DynStringContainer>)
+	constexpr void intToStringBinary(DynStringContainer& output, const i64 number) noexcept { intToStringBinaryType<DynStringContainer, i64>(output, number); };
+	template<class DynStringContainer>
+		requires(IsConvertDynStringContainer<DynStringContainer>)
+	constexpr void intToStringBinary(DynStringContainer& output, const ui8 number) noexcept { intToStringBinaryType<DynStringContainer, ui8>(output, number); };
+	template<class DynStringContainer>
+		requires(IsConvertDynStringContainer<DynStringContainer>)
+	constexpr void intToStringBinary(DynStringContainer& output, const ui16 number) noexcept { intToStringBinaryType<DynStringContainer, ui16>(output, number); };
+	template<class DynStringContainer>
+		requires(IsConvertDynStringContainer<DynStringContainer>)
+	constexpr void intToStringBinary(DynStringContainer& output, const ui32 number) noexcept { intToStringBinaryType<DynStringContainer, ui32>(output, number); };
+	template<class DynStringContainer>
+		requires(IsConvertDynStringContainer<DynStringContainer>)
+	constexpr void intToStringBinary(DynStringContainer& output, const ui64 number) noexcept { intToStringBinaryType<DynStringContainer, ui64>(output, number); };
+
+	template<class DynStringContainer>
+		requires(IsConvertDynStringContainer<DynStringContainer>)
+	constexpr void floatToString(DynStringContainer& output, const f32 number) noexcept { floatToStringType<f32>(DynStringContainer, output, number); };
+	template<class DynStringContainer>
+		requires(IsConvertDynStringContainer<DynStringContainer>)
+	constexpr void floatToString(DynStringContainer& output, const f64 number) noexcept { floatToStringType<DynStringContainer, f64>(output, number); };
 }

@@ -846,6 +846,9 @@ namespace natl {
 			addNullTerminater();
 			return self();
 		}
+		constexpr BaseString& append(const CharType* str, const size_type count) noexcept {
+			return append(BaseStringView<const CharType>(str, count));
+		}
 		constexpr BaseString& append(const BaseString& str, const size_type pos, const size_type count = 0xFFFFFFFFFFFFFFFF) noexcept {
 			const Size newCount = min<Size>(str.size() - pos, count);
 			const Size newSize = size() + newCount;
@@ -954,6 +957,10 @@ namespace natl {
 			setSize(newSize);
 			addNullTerminater();
 			return self();
+		}
+
+		constexpr BaseString& append(const char* str, const size_type count) noexcept requires(std::is_same_v<std::decay_t<CharType>, Utf32>) {
+			return append(BaseStringView<const char>(str, count));
 		}
 
 		template<class StringViewLike>
