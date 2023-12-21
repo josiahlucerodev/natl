@@ -16,7 +16,7 @@ namespace natl {
 	public:
 		constexpr inline std::size_t capacity() const noexcept { return BatchSize * batchs.size(); }
 		constexpr inline std::size_t size() const noexcept { return batchs.size() == 0 ? 0 : ((batchs.size() - 1) * BatchSize) + activeBatch->size(); }
-		constexpr inline static std::size_t batchSize() const noexcept { return BatchSize; }
+		constexpr inline static std::size_t batchSize() noexcept { return BatchSize; }
 		constexpr inline Type* newElement() noexcept {
 			if (needNewBatch()) {
 				newBatch();

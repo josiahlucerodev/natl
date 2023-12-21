@@ -151,6 +151,7 @@ namespace natl {
 			}
 			return self();
 		}
+	public:
 
 		//assignment 
 		constexpr DynArray& operator=(const DynArray& other) noexcept {

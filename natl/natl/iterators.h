@@ -11,10 +11,10 @@
 
 //interface 
 namespace natl {
-	template<class T>
+	template<class DataType>
 	class RandomAccessIterator {
 	public:
-		using iterator = RandomAccessIterator<T>;
+		using iterator = RandomAccessIterator<DataType>;
 		using difference_type = std::ptrdiff_t;
 		using value_type = T;
 		using reference = T&;
@@ -22,12 +22,12 @@ namespace natl {
 		using pointer = T*;
 		using const_pointer = const T*;
 		using iterator_category = std::random_access_iterator_tag;
-		using Sizeype = Size;
+		using size_type = Size;
 	private:
-		T* dataPtr;
+		DataType* dataPtr;
 	public:
 		constexpr RandomAccessIterator() : dataPtr(nullptr) {}
-		constexpr RandomAccessIterator(T* const dataPtr) noexcept : dataPtr(dataPtr) {}
+		constexpr RandomAccessIterator(DataType* const dataPtr) noexcept : dataPtr(dataPtr) {}
 		constexpr ~RandomAccessIterator() = default;
 	private:
 		constexpr iterator& getSelf() noexcept { return *this; }
@@ -60,8 +60,14 @@ namespace natl {
 		constexpr difference_type operator-(const iterator rhs) const noexcept { return getSelf().dataPtr - rhs.dataPtr; }
 	};
 
-	template<class T> 
-	using ReverseRandomAccessIterator = std::reverse_iterator<RandomAccessIterator<T>>;
+	template<class DataType>
+	using ConstRandomAccessIterator = std::reverse_iterator<RandomAccessIterator<const DataType>>;
+
+	template<class DataType>
+	using ReverseRandomAccessIterator = std::reverse_iterator<RandomAccessIterator<DataType>>;
+
+	template<class DataType>
+	using ReverseConstRandomAccessIterator = std::reverse_iterator<ConstRandomAccessIterator<DataType>>;
 
 	template<class Type>
 	concept HasIteratorType = requires {
