@@ -8,7 +8,9 @@
 #include "iterators.h"
 #include "allocator.h"
 #include "dynArray.h"
+#include "smallDynArray.h"
 #include "option.h"
+#include "dataMovement.h"
 
 //interface
 namespace natl {
@@ -96,14 +98,14 @@ namespace natl {
 		constexpr FlatHashMapEntry(FlatHashMapEntry&&)
 			requires(std::is_trivially_constructible_v<Key>&& std::is_trivially_constructible_v<DataType>) = default;
 		constexpr FlatHashMapEntry(FlatHashMapEntry&& src) {
-			key = std::move(src.key);
-			data = std::move(src.data);
+			key = move(src.key);
+			data = move(src.data);
 			used = src.used;
 		}
 
 		constexpr FlatHashMapEntry& operator=(FlatHashMapEntry&& src) noexcept {
-			key = std::move(src.key);
-			data = std::move(src.data);
+			key = move(src.key);
+			data = move(src.data);
 			used = src.used;
 			return *this;
 		}
@@ -121,11 +123,13 @@ namespace natl {
 		constexpr bool isUsed() const { return used; }
 	};
 
-	template<class Key, class DataType,
+	template<
+		class DynamicArrayType,
+		class Key, class DataType,
 		class Hash = Hash<Key>,
 		class Compare = FlatMapHashCompare<Key>,
 		class Alloc = DefaultAllocator<FlatHashMapEntry<Key, DataType>>>
-	class FlatHashMap {
+	class FlatHashMapCustomDynArray {
 		using Entry = FlatHashMapEntry<Key, DataType>;
 	public:
 		using key_type = Key;
@@ -148,19 +152,19 @@ namespace natl {
 		static constexpr f64 load_factor = 0.7;
 	private:
 		size_type inSize;
-		DynArray<Entry, Alloc> table;
+		DynamicArrayType table;
 	public:
-		constexpr FlatHashMap() : inSize(0), table() {}
-		constexpr FlatHashMap(const FlatHashMap& src) : inSize{}, table() {
+		constexpr FlatHashMapCustomDynArray() : inSize(0), table() {}
+		constexpr FlatHashMapCustomDynArray(const FlatHashMapCustomDynArray& src) : inSize{}, table() {
 			inSize = src.inSize;
 			table = src.table;
 		}
-		constexpr FlatHashMap(FlatHashMap&& src) : inSize{}, table() {
+		constexpr FlatHashMapCustomDynArray(FlatHashMapCustomDynArray&& src) : inSize{}, table() {
 			inSize = src.inSize;
-			table = std::move(src.table);
+			table = move(src.table);
 		}
 
-		constexpr ~FlatHashMap() = default;
+		constexpr ~FlatHashMapCustomDynArray() = default;
 
 		constexpr size_type size() const noexcept { return inSize; }
 		constexpr size_type count() const noexcept { return inSize; }
@@ -310,14 +314,19 @@ namespace natl {
 			return find(key).hasValue();
 		}
 		constexpr void resizeAndRehash() {
-			if (inSize >= static_cast<Size>(static_cast<f64>(capacity()) * load_factor)) {
+			 if (inSize >= static_cast<Size>(static_cast<f64>(capacity()) * load_factor)) {
+				if (inSize < static_cast<Size>(static_cast<f64>(table.capacity()) * load_factor)) {
+					table.resize(table.capacity());
+					return;
+				}
+
 				resizeAndRehash((capacity() + 10) * 2);
 			}
 		}
 		constexpr void resizeAndRehash(const size_type newCapacity) {
 			if (newCapacity <= capacity()) { return; }
 
-			DynArray<Entry, Alloc> newTable(newCapacity);
+			DynamicArrayType newTable(newCapacity);
 
 			for (Entry& entry : table) {
 				if (entry.isUsed()) {
@@ -342,20 +351,33 @@ namespace natl {
 			resizeAndRehash(newCapacity);
 		}
 
-		constexpr FlatHashMap& operator=(FlatHashMap& src) {
+		constexpr FlatHashMapCustomDynArray& operator=(FlatHashMapCustomDynArray& src) {
 			table = src.table;
 			inSize = src.inSize;
 
 			return *this;
 		}
 
-		constexpr FlatHashMap& operator=(FlatHashMap&& src) {
-			table = std::move(src.table);
+		constexpr FlatHashMapCustomDynArray& operator=(FlatHashMapCustomDynArray&& src) {
+			table = move(src.table);
 			inSize = src.inSize;
 
 			return *this;
 		}
 	};
+
+	template<class Key, class DataType,
+		class Hash = Hash<Key>,
+		class Compare = FlatMapHashCompare<Key>,
+		class Alloc = DefaultAllocator<FlatHashMapEntry<Key, DataType>>>
+	using FlatHashMap = FlatHashMapCustomDynArray<DynArray<FlatHashMapEntry<Key, DataType>, Alloc>, Key, DataType, Hash, Compare, Alloc>;
+
+	template<class Key, class DataType,
+		Size bufferSize,
+		class Hash = Hash<Key>,
+		class Compare = FlatMapHashCompare<Key>,
+		class Alloc = DefaultAllocator<FlatHashMapEntry<Key, DataType>>>
+	using SmallFlatHashMap = FlatHashMapCustomDynArray<SmallDynArray<FlatHashMapEntry<Key, DataType>, bufferSize>, Key, DataType, Hash, Compare, Alloc>;
 }
 
 //additional includes for end use

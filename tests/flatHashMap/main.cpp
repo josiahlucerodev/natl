@@ -40,6 +40,13 @@ constexpr natl::Size testFlatHashMap() {
 		map.insert(natl::String(1, char(static_cast<natl::Size>(character) + index)), index);
 	}
 
+	natl::SmallFlatHashMap<natl::Size, natl::Size, 8> smallMap{};
+	smallMap.insert(1, 1);
+	smallMap.insert(2, 2);
+	smallMap.insert(3, 3);
+	smallMap.insert(4, 4);
+	smallMap.insert(5, 5);
+	smallMap.insert(6, 6);
 	//map.insert("2", 2);
 	//map.insert("3", 3);
 	//map.insert("3", compileTimeTest());
@@ -53,6 +60,11 @@ int main() {
 	[[maybe_unused]] constexpr natl::Size number = compileTimeTest();
 	[[maybe_unused]] constexpr natl::Size number2 = testFlatHashMap();
 	//constexpr int test = natl::String().();
-	[[maybe_unused]] 
-	constexpr natl::Size number3 = testStringMap();
+	[[maybe_unused]] constexpr natl::Size number3 = testStringMap();
+	[[maybe_unused]] natl::SmallFlatHashMap<natl::Size, natl::Size, 8> map{};
+	map.insert(1, 1);
+	map.insert(2, 2);
+	map.insert(3, 3);
+	map.insert(4, 4);
+	[[maybe_unused]] natl::Size number4 = map.find(1).value()->data;
 }

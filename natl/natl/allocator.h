@@ -113,11 +113,15 @@ namespace natl {
 		TrackerAllocator operator=(const TrackerAllocator&) {}
 		TrackerAllocator operator=(TrackerAllocator&&) {}
 
-		[[nodiscard]] static pointer allocate(const Size number) noexcept {
-			pointer dataPtr = std::allocator<DataType>().allocate(static_cast<std::size_t>(number));
-			trackerAllocatorData.allocs++;
-			trackerAllocatorData.allocPtrs.push_back(dataPtr);
-			return dataPtr;
+		[[nodiscard]] constexpr static pointer allocate(const Size number) noexcept {
+			if (std::is_constant_evaluated()) {
+				return Allocator<DataType>::allocate(number);
+			} else {
+				pointer dataPtr = Allocator<DataType>::allocate(static_cast<std::size_t>(number));
+				trackerAllocatorData.allocs++;
+				trackerAllocatorData.allocPtrs.push_back(dataPtr);
+				return dataPtr;
+			}
 		}
 
 		static bool havePtr(const pointer ptr) noexcept {
@@ -131,7 +135,13 @@ namespace natl {
 			return false;
 		}
 
-		static void deallocate(pointer ptr, const Size number) noexcept {
+		constexpr static void deallocate(pointer ptr, const Size number) noexcept {
+			if (std::is_constant_evaluated()) {
+				Allocator<DataType>::deallocate(ptr, number);
+				return;
+			}
+
+
 			bool found = false;
 			for (void* testPtr : trackerAllocatorData.allocPtrs) {
 				if (std::bit_cast<void*, const pointer>(ptr) == testPtr) {
@@ -148,12 +158,12 @@ namespace natl {
 			}
 
 
-			std::allocator<DataType>().deallocate(ptr, static_cast<std::size_t>(number));
+			Allocator<DataType>::deallocate(ptr, number);
 		}
 	};
 
 	template<class DataType>
 	using DefaultAllocator = 
-		Allocator<DataType>;
-		//TrackerAllocator<DataType>;
+		//Allocator<DataType>;
+		TrackerAllocator<DataType>;
 }

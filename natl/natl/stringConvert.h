@@ -68,7 +68,7 @@ namespace natl {
 		std::conditional_t<std::is_signed_v<Interger>, i64, ui64> value = 0;
 		ui64 mul = 1; ui32 pos = 0;
 
-		for (i64 i = length - 1; static_cast<i64>(i) > endIndex; i--) {
+		for (i64 i = static_cast<i64>(length) - 1; static_cast<i64>(i) > endIndex; i--) {
 			const char numberCharacter = string.c_str()[static_cast<Size>(i)];
 			if (numberCharacter == ',') {
 				continue;
@@ -431,7 +431,7 @@ namespace natl {
 			}
 		}
 
-		reverse<typename DynStringContainer::iterator>(output.end() - count, output.end());
+		reverse<typename DynStringContainer::iterator>(output.end() - static_cast<PtrDiff>(count), output.end());
 	}
 
 	template<typename Interger>
@@ -704,7 +704,7 @@ namespace natl {
 
 	template<class DynStringContainer>
 		requires(IsConvertDynStringContainer<DynStringContainer>)
-	constexpr void floatToString(DynStringContainer& output, const f32 number) noexcept { floatToStringType<f32>(DynStringContainer, output, number); };
+	constexpr void floatToString(DynStringContainer& output, const f32 number) noexcept { floatToStringType<DynStringContainer, f32>(output, number); };
 	template<class DynStringContainer>
 		requires(IsConvertDynStringContainer<DynStringContainer>)
 	constexpr void floatToString(DynStringContainer& output, const f64 number) noexcept { floatToStringType<DynStringContainer, f64>(output, number); };

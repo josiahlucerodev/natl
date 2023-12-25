@@ -2,6 +2,7 @@
 
 //own
 #include "basicTypes.h"
+#include "dataMovement.h"
 
 //interface 
 namespace natl {
@@ -19,8 +20,8 @@ namespace natl {
 		return StringLiteral<Number>(str);
 	}
 
-	template <StringLiteral name>
+	template <StringLiteral Name>
 	struct StringLiteralType {
-		static constexpr const char name[name.size()] = name.stringStorage;
+		static constexpr const char* name = &Name.stringStorage[0];
 	};
 }

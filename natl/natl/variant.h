@@ -61,7 +61,7 @@ namespace natl {
 
 #ifdef _MSC_VER
 #pragma warning(disable: 4624)
-#endif _MSC_VER
+#endif //_MSC_VER
 
 	template<class FirstDataType, class... RestDataTypes>
 	class VariantStorage<FirstDataType, RestDataTypes...> {
@@ -136,13 +136,11 @@ namespace natl {
 		static void uninitializedCopyInternalStorage(Byte* dst, const Byte* src) noexcept {
 			const natl::Byte* copySrcFirst = src;
 			const natl::Byte* copySrcLast = copySrcFirst + byteStorageSize;
-			natl::Byte* copyDst = dst;
 			uninitializedCopyNoOverlap<const natl::Byte*, natl::Byte*>(copySrcFirst, copySrcLast, dst);
 		}
 		static void copyInternalStorage(Byte* dst, const Byte* src) noexcept {
 			const natl::Byte* copySrcFirst = src;
 			const natl::Byte* copySrcLast = copySrcFirst + byteStorageSize;
-			natl::Byte* copyDst = dst;
 			copyNoOverlap<const natl::Byte*, natl::Byte*>(copySrcFirst, copySrcLast, dst);
 		}
 		using VariantCopyConstructFunction = void(*)(Variant&, const Variant&);
@@ -424,7 +422,6 @@ namespace natl {
 				[[maybe_unused]] DidNotFindVariantType variantData = assignTypeTemp;
 				return self();
 			}
-			return self();
 		}
 		template<StringLiteral name, typename DataType>
 		constexpr Variant& assign(const DataType& value) noexcept {

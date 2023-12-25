@@ -49,13 +49,13 @@ namespace natl {
 			outputString += name;
 			outputString += "\n";
 			outputString += " microseconds: ";
-			outputString += intToStringDecimal<i64>(microseconds);
+			outputString += intToStringDecimalType<i64>(microseconds);
 			outputString += "\n";
 			outputString += " milliseconds: ";
-			outputString += floatToString<f64>(miliseconds);
+			outputString += floatToStringType<f64>(miliseconds);
 			outputString += "\n";
 			outputString += " seconds: ";
-			outputString += floatToString<f64>(seconds);
+			outputString += floatToStringType<f64>(seconds);
 			outputString += "\n";
 			return outputString;
 		}
@@ -64,13 +64,13 @@ namespace natl {
 			outputString += name;
 			outputString += "\n";
 			outputString += " microseconds: ";
-			outputString += intToStringDecimal<i64>(microseconds);
+			outputString += intToStringDecimalType<i64>(microseconds);
 			outputString += "   ";
 			outputString += " milliseconds: ";
-			outputString += floatToString<f64>(miliseconds);
+			outputString += floatToStringType<f64>(miliseconds);
 			outputString += "   ";
 			outputString += " seconds: ";
-			outputString += floatToString<f64>(seconds);
+			outputString += floatToStringType<f64>(seconds);
 			outputString += "\n";
 			return outputString;
 		}

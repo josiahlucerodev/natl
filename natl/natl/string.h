@@ -17,7 +17,7 @@
 //interface 
 namespace natl {
 	template<class CharType>
-	class BaseStringBaseMembersRef {
+	struct BaseStringBaseMembersRef {
 		Size stringSizeAndSmallStringFlag;
 		CharType* stringPtr;
 		Size stringCapacity;
@@ -42,8 +42,9 @@ namespace natl {
 		using reverse_iterator = ReverseRandomAccessIterator<CharType>;
 		using const_reverse_iterator = ReverseRandomAccessIterator<const CharType>;
 
-		static constexpr size_type npos = size_type(-1);
+		using container_allocation_move_adapater = AllocationMoveAdapater<CharType, Alloc>;
 
+		static constexpr size_type npos = size_type(-1);
 		//movement info 
 		constexpr static bool triviallyRelocatable = true;
 		constexpr static bool triviallyDefaultConstructible = true;
@@ -114,6 +115,13 @@ namespace natl {
 		constexpr Size size() const noexcept { return stringSizeAndSmallStringFlag & 0x7FFFFFFFFFFFFFFFULL; }
 		constexpr size_type length() const noexcept { return size(); };
 		constexpr size_type max_size() const noexcept { return 0x7FFFFFFFFFFFFFFFULL; };
+
+		constexpr const CharType* data() const noexcept {
+			return isSmallString() ? smallStringLocation() : stringPtr;
+		}
+		constexpr CharType* data() noexcept {
+			return isSmallString() ? smallStringLocation() : stringPtr;
+		}
 	private:
 		constexpr void baseConstructorInit() noexcept {
 			stringSizeAndSmallStringFlag = 0;
@@ -156,31 +164,31 @@ namespace natl {
 			baseConstructorInit();
 			construct(str.data(), str.size());
 		}
+		constexpr BaseString(const container_allocation_move_adapater& allocationMoveAdapater) noexcept {
+			baseConstructorInit();
+			construct(allocationMoveAdapater);
+		}
 
 		constexpr BaseString(const char* str, const Size count) noexcept requires(std::is_same_v<std::decay_t<CharType>, Utf32>) {
 			baseConstructorInit();
-			//TODO
-			assign(str, count);
+			construct(str, count);
 		}
 
 		constexpr BaseString(const char* str) noexcept requires(std::is_same_v<std::decay_t<CharType>, Utf32>) {
 			baseConstructorInit();
-			//TODO
-			assign(str);
+			construct(str);
 		}
 
 		constexpr BaseString(const Size count, const char character) noexcept requires(std::is_same_v<std::decay_t<CharType>, Utf32>) {
 			baseConstructorInit();
-			//TODO
-			assign(character, count);
+			construct(character, count);
 		}
 
 		template<class StringViewLike>
 			requires(IsStringViewLike<StringViewLike, char>)
 		constexpr BaseString(const StringViewLike& str) noexcept requires(std::is_same_v<std::decay_t<CharType>, Utf32>) {
 			baseConstructorInit();
-			//TODO
-			assignStringViewLike<StringViewLike>(str);
+			construct<StringViewLike>(str);
 		}
 
 		//destructor
@@ -197,7 +205,7 @@ namespace natl {
 				stringSizeAndSmallStringFlag = 0;
 				stringCapacity = 0;
 				stringPtr = nullptr;
-			} else if (count < smallStringCapacity()) {
+			} else if (count + 1 < smallStringCapacity()) {
 				const CharType* srcDataPtrFirst = otherPtr;
 				const CharType* srcDataPtrLast = srcDataPtrFirst + count;
 				uninitializedCopyNoOverlap<const CharType*, CharType*>(srcDataPtrFirst, srcDataPtrLast, smallStringLocation());
@@ -206,9 +214,7 @@ namespace natl {
 
 				const Size newSize = count;
 				setSize(newSize);
-
-				stringCapacity = 0;
-				stringPtr = nullptr;
+				addNullTerminater();
 			} else {
 				const Size newSize = count;
 				reserve(newSize);
@@ -218,6 +224,7 @@ namespace natl {
 				uninitializedCopyNoOverlap<const CharType*, CharType*>(srcDataPtrFirst, srcDataPtrLast, data());
 
 				setSize(newSize);
+				addNullTerminater();
 			}
 
 			return self();
@@ -233,8 +240,7 @@ namespace natl {
 				uninitializedCopyNoOverlap<const CharType*, CharType*>(srcDataPtrFirst, srcDataPtrLast, smallStringLocation());
 
 				stringSizeAndSmallStringFlag = other.stringSizeAndSmallStringFlag;
-				stringCapacity = 0;
-				stringPtr = nullptr;
+				addNullTerminater();
 			} else {
 				stringSizeAndSmallStringFlag = other.stringSizeAndSmallStringFlag;
 				stringCapacity = other.stringCapacity;
@@ -262,6 +268,7 @@ namespace natl {
 			uninitializedFill<CharType*, CharType>(fillDstPtr, fillDstPtrLast, value);
 
 			setSize(count);
+			addNullTerminater();
 			return self();
 		}
 
@@ -279,8 +286,114 @@ namespace natl {
 				push_back(*first);
 			}
 			return self();
+		}		
+		constexpr BaseString& construct(const container_allocation_move_adapater& allocationMoveAdapater) noexcept {
+			if (allocationMoveAdapater.isEmpty()) {
+				stringSizeAndSmallStringFlag = 0;
+			} else if (allocationMoveAdapater.requiresCopy() || allocationMoveAdapater.size() < smallStringCapacity()) {
+				construct(allocationMoveAdapater.data(), allocationMoveAdapater.size());
+
+				if (allocationMoveAdapater.canDealloc()) {
+					allocationMoveAdapater.deallocate();
+				}
+			} else {
+				stringCapacity = allocationMoveAdapater.capacity();
+				stringPtr = allocationMoveAdapater.data();
+				setSize(allocationMoveAdapater.size());
+				setAsNotSmallString();
+			}
+			return self();
 		}
 
+		constexpr BaseString& construct(const char* str, const Size count) noexcept requires(std::is_same_v<std::decay_t<CharType>, Utf32>) {
+			const Size stringSize = count;
+			if (stringSize == 0) {
+				release();
+				stringSizeAndSmallStringFlag = 0;
+				return self();
+			}
+
+			const Size srcStringSize = stringSize;
+			const char* srcStringPtrFirst = str;
+			const char* srcStringPtrLast = srcStringPtrFirst + srcStringSize;
+
+			CharType* stringDst = nullptr;
+			if (srcStringSize + 1 < smallStringCapacity()) {
+				stringDst = smallStringLocation();
+			}
+			else {
+				reserve(srcStringSize);
+				stringDst = stringPtr;
+			}
+
+			for (; srcStringPtrFirst < srcStringPtrLast; srcStringPtrFirst++, stringDst++) {
+				*stringDst = static_cast<Utf32>(*srcStringPtrFirst);
+			}
+
+			setSize(srcStringSize);
+			addNullTerminater();
+			return self();
+		}
+
+		constexpr BaseString& construct(const char* str) noexcept requires(std::is_same_v<std::decay_t<CharType>, Utf32>) {
+			if (str == nullptr) {
+				stringSizeAndSmallStringFlag = 0;
+				return self();
+			}
+			return assign(str, cstringLength(str));
+		}
+
+		constexpr BaseString& construct(const char character, const Size count = 1) noexcept requires(std::is_same_v<std::decay_t<CharType>, Utf32>) {
+			if (count == 0) {
+				stringSizeAndSmallStringFlag = 0;
+				return self();
+			}
+
+			CharType* stringDst = nullptr;
+			if (count + 1 < smallStringCapacity()) {
+				stringDst = smallStringLocation();
+			} else {
+				reserve(count);
+				stringDst = stringPtr;
+			}
+
+			for (Size i = 0; i < count; i++, stringDst++) {
+				*stringDst = static_cast<Utf32>(character);
+			}
+
+			setSize(count);
+			addNullTerminater();
+			return self();
+		}
+
+		template<class StringViewLike>
+			requires(IsStringViewLike<StringViewLike, char>)
+		constexpr BaseString& construct(const StringViewLike& stringView) noexcept requires(std::is_same_v<std::decay_t<CharType>, Utf32>) {
+			if (stringView.size() == 0) {
+				stringSizeAndSmallStringFlag = 0;
+				return self();
+			}
+
+			const Size srcStringSize = stringView.size();
+			const char* srcStringPtrFirst = stringView.data();
+			const char* srcStringPtrLast = srcStringPtrLast + srcStringSize;
+
+			CharType* stringDst = nullptr;
+			if (srcStringSize + 1 < smallStringCapacity()) {
+				stringDst = smallStringLocation();
+			} else {
+				reserve(srcStringSize);
+				stringDst = stringPtr;
+			}
+
+			for (; srcStringPtrFirst < srcStringPtrLast; srcStringPtrFirst++, stringDst++) {
+				*stringDst = static_cast<Utf32>(*srcStringPtrFirst);
+			}
+
+			setSize(srcStringSize);
+			addNullTerminater();
+			return self();
+		}
 	public:
 
 		//assignment 
@@ -300,6 +413,9 @@ namespace natl {
 			requires(IsStringViewLike<StringViewLike, const CharType>)
 		constexpr BaseString& operator=(const StringViewLike& stringView) noexcept {
 			return assign<StringViewLike>(stringView);
+		}
+		constexpr BaseString& operator=(const container_allocation_move_adapater& allocationMoveAdapater) noexcept {
+			return assign(allocationMoveAdapater);
 		}
 
 		constexpr BaseString& operator=(const char* str) noexcept requires(std::is_same_v<std::decay_t<CharType>, Utf32>) {
@@ -437,6 +553,28 @@ namespace natl {
 			addNullTerminater();
 			return self();
 		}
+		constexpr BaseString& assign(const container_allocation_move_adapater& allocationMoveAdapater) noexcept {
+			if (allocationMoveAdapater.isEmpty()) {
+				release();
+				stringSizeAndSmallStringFlag = 0;
+				stringCapacity = 0;
+				stringPtr = nullptr;
+			} else if (allocationMoveAdapater.requiresCopy() || allocationMoveAdapater.size() < smallStringCapacity()) {
+				assign(allocationMoveAdapater.data(), allocationMoveAdapater.size());
+				if (allocationMoveAdapater.canDealloc()) {
+					allocationMoveAdapater.deallocate();
+				}
+			} else {
+				if (isNotSmallString()) {
+					release();
+				}
+				stringCapacity = allocationMoveAdapater.capacity();
+				stringPtr = allocationMoveAdapater.data();
+				setSize(allocationMoveAdapater.size());
+				setAsNotSmallString();
+			}
+			return self();
+		}
 
 		constexpr BaseString& assign(const char* str, const Size count) noexcept requires(std::is_same_v<std::decay_t<CharType>, Utf32>) {
 			const Size stringSize = count;
@@ -507,7 +645,7 @@ namespace natl {
 			if (stringView.size() == 0) {
 				release();
 				stringSizeAndSmallStringFlag = 0;
-				return;
+				return self();
 			}
 
 			const Size srcStringSize = stringView.size();
@@ -531,6 +669,21 @@ namespace natl {
 			return self();
 		}
 
+		[[nodiscard]] constexpr container_allocation_move_adapater getAlloctionMoveAdapater() noexcept {
+			const bool stringIsSmallBuffer = isSmallString();
+			AllocationMoveAdapaterRequireCopy requireCopy = stringIsSmallBuffer ? AllocationMoveAdapaterRequireCopy::v_true : AllocationMoveAdapaterRequireCopy::v_false;
+			AllocationMoveAdapaterCanDealloc canBeDealloc = stringIsSmallBuffer ? AllocationMoveAdapaterCanDealloc::v_false : AllocationMoveAdapaterCanDealloc::v_true;
+			container_allocation_move_adapater allocationMoveAdapater(data(), size(), capacity(), requireCopy, canBeDealloc);
+			if (stringIsSmallBuffer) {
+				stringSizeAndSmallStringFlag = 0;
+			} else {
+				stringPtr = nullptr;
+				stringSizeAndSmallStringFlag = 0;
+				stringCapacity = 0;
+			}
+			return allocationMoveAdapater;
+		}
+
 		//element access
 		constexpr reference at(const size_type index) noexcept { return data()[index]; };
 		constexpr const_reference at(const size_type index) const noexcept { return data()[index]; };
@@ -546,14 +699,6 @@ namespace natl {
 
 		constexpr reference back() noexcept { return at(backIndex()); }
 		constexpr const_reference back() const noexcept { return at(backIndex()); }
-
-
-		constexpr const CharType* data() const noexcept {
-			return isSmallString() ? smallStringLocation() : stringPtr;
-		}
-		constexpr CharType* data() noexcept {
-			return isSmallString() ? smallStringLocation() : stringPtr;
-		}
 
 		constexpr const CharType* c_str() const noexcept { return data(); }
 
@@ -624,7 +769,7 @@ namespace natl {
 
 		constexpr void reserve(Size newCapacity) noexcept {
 			newCapacity += 1;
-			if (newCapacity < capacity()) {
+			if (newCapacity <= capacity()) {
 				return;
 			} else if (newCapacity < smallStringCapacity()) {
 				setAsSmallString();

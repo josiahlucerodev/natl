@@ -7,6 +7,7 @@
 
 //own
 #include "container.h"
+#include "allocator.h"
 #include "basicTypes.h"
 
 //interface
@@ -357,7 +358,7 @@ namespace natl {
         }
 
         for (Size index = 0; index < count; index++, dataPtr++) {
-            std::construct_at<DataType>(&dataPtr[index]);
+            std::construct_at<DataType>(dataPtr);
         }
     }
 
@@ -382,19 +383,110 @@ namespace natl {
         defualtDeconstructAll<DataType>(dataPtr, 1);
     }
 
+    enum class AllocationMoveAdapaterRequireCopy : bool {
+        v_false = false,
+        v_true = true
+    };
+    enum class AllocationMoveAdapaterCanDealloc : bool {
+        v_false = false,
+        v_true = true
+    };
 
-    //template<class DataType, class... Args>
-    //constexpr void constructAt(DataType* const location, Args&&... args) noexcept {
-    //    std::construct_at<DataType, Args...>(location, args...);
-    //}
-    //
-    //template<class DataType>
-    //constexpr void constructAt(DataType* const location, const DataType& value) noexcept {
-    //    if (std::is_constant_evaluated()) {
-    //        DataType tempValue = value;
-    //        std::construct_at<DataType, DataType>(location, forward<DataType>(tempValue));
-    //    } else {
-    //        ::new (static_cast<void*>(location)) DataType(value);
-    //    }
-    //}
+
+    template<class DataType, class Alloc = DefaultAllocator<DataType>>
+        requires(IsAllocator<Alloc> && isNotConst<DataType>)
+    class AllocationMoveAdapater {
+    public:
+        using value_type = DataType;
+        using reference = DataType&;
+        using const_reference = const DataType&;
+        using pointer = DataType*;
+        using const_pointer = const DataType*;
+        using difference_type = std::ptrdiff_t;
+        using size_type = Size;
+
+        using iterator = RandomAccessIterator<DataType>;
+        using const_iterator = RandomAccessIterator<const DataType>;
+        using reverse_iterator = ReverseRandomAccessIterator<DataType>;
+        using const_reverse_iterator = ReverseRandomAccessIterator<const DataType>;
+
+        //movement info  
+        constexpr static bool triviallyRelocatable = true;
+        constexpr static bool triviallyDefaultConstructible = true;
+        constexpr static bool triviallyCompareable = true;
+        constexpr static bool triviallyDestructible = true;
+    private:
+        mutable DataType* arrayDataPtr;
+        Size arraySize;
+        Size arrayCapacity;
+        AllocationMoveAdapaterRequireCopy dataRequiresCopy;
+        AllocationMoveAdapaterCanDealloc dataPtrCanBeDealloc;
+    public:
+        //constructor
+        constexpr AllocationMoveAdapater() noexcept : arrayDataPtr(0), arraySize(0), arrayCapacity(0), 
+            dataRequiresCopy(AllocationMoveAdapaterRequireCopy::v_false), dataPtrCanBeDealloc(AllocationMoveAdapaterCanDealloc::v_false) {}
+        constexpr AllocationMoveAdapater(
+            DataType* dataPtr, const Size arraySize, const Size arrayCapacity,
+            const AllocationMoveAdapaterRequireCopy dataRequiresCopy, const AllocationMoveAdapaterCanDealloc dataPtrCanBeDealloc) noexcept :
+            arrayDataPtr(dataPtr), arraySize(arraySize), arrayCapacity(arrayCapacity), dataRequiresCopy(dataRequiresCopy), dataPtrCanBeDealloc(dataPtrCanBeDealloc) {}
+
+        //destructor
+        ~AllocationMoveAdapater() noexcept = default;
+
+        //util 
+        constexpr AllocationMoveAdapater& self() noexcept { return *this; }
+        constexpr const AllocationMoveAdapater& self() const noexcept { return *this; }
+
+        //capacity 
+        constexpr bool empty() const noexcept { return size() == 0; }
+        constexpr bool isEmpty() const noexcept { return empty(); }
+        constexpr bool isNotEmpty() const noexcept { return !empty(); }
+
+        constexpr Size size() const noexcept { return arraySize; }
+        constexpr Size capacity() const noexcept { return arrayCapacity; }
+
+        //flags 
+        constexpr bool requiresCopy() const noexcept {
+            return static_cast<bool>(dataRequiresCopy);
+        }
+        constexpr bool canDealloc() const noexcept {
+            return static_cast<bool>(dataPtrCanBeDealloc);
+        }
+
+        //element access 
+        constexpr pointer data() const noexcept { return arrayDataPtr; }
+
+        //iterators 
+        constexpr pointer beginPtr() const noexcept { return data(); }
+        constexpr pointer endPtr() const noexcept { return data() + size(); }
+
+        constexpr iterator begin() const noexcept { return iterator(beginPtr()); }
+        constexpr const_iterator cbegin() const noexcept { return const_iterator(beginPtr()); }
+        constexpr iterator end() const noexcept { return iterator(endPtr()); }
+        constexpr const_iterator cend() const noexcept { return const_iterator(endPtr()); }
+        constexpr reverse_iterator rbegin() const noexcept { return reverse_iterator(endPtr()); }
+        constexpr const_reverse_iterator crbegin() const noexcept { return const_reverse_iterator(endPtr()); }
+        constexpr reverse_iterator rend() const noexcept { return reverse_iterator(beginPtr()); }
+        constexpr const_reverse_iterator crend() const noexcept { return const_reverse_iterator(beginPtr()); }
+
+        //allocation 
+        constexpr void deallocate() const noexcept {
+            if (arrayDataPtr) {
+                destructAll();
+                Alloc::deallocate(arrayDataPtr, capacity());
+            }
+        }
+
+        //modifier
+        constexpr void destructAll() const noexcept {
+            if (!IsTriviallyDestructible<DataType>) {
+                if (!std::is_constant_evaluated()) {
+                    return;
+                }
+            }
+            if (isNotEmpty()) {
+                defualtDeconstructAll(arrayDataPtr, size());
+            }
+        }
+    };
 }

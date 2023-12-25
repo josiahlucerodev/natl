@@ -32,6 +32,7 @@ namespace natl {
 
 	struct SchemaElement {
 		String name;
+		SchemaType type;
 		union SchemaElementData {
 			const Schema* schema;
 			SchemaArrayInfo arrayInfo;
@@ -42,7 +43,6 @@ namespace natl {
 			constexpr SchemaElementData(const SchemaArrayInfo& arrayInfo) noexcept : arrayInfo(arrayInfo) {}
 			constexpr SchemaElementData(const SchemaDicInfo& dicInfo) noexcept : dicInfo(dicInfo) {}
 		} data;
-		SchemaType type;
 
 		constexpr SchemaElement() noexcept = default;
 		constexpr SchemaElement(const StringView& name, const SchemaType type) noexcept : name(name), type(type), data() {}
@@ -91,7 +91,7 @@ namespace natl {
 
 			NamedElement<"f32", f32>,
 			NamedElement<"f64", f64>,
-			NamedElement<"large", LargeSerlizationElement>,
+			NamedElement<"large", LargeSerlizationElement>
 		>;
 
 		StringView name;

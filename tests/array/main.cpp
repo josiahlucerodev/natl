@@ -2,7 +2,6 @@
 //natl
 #include <natl/array.h>
 
-
 constexpr int compileTimeTest() {
 	natl::Array<int, 4> array = {2, 3, 4, 5};
 	natl::Array<int, 4> array2 = {2, 3, 4, 5};
@@ -16,5 +15,5 @@ constexpr int compileTimeTest() {
 
 int main() {
 	constexpr int number = compileTimeTest();
-	[[maybe_unused]]natl::MDArray<int, number, 4> array;
+	[[maybe_unused]] natl::MDArray<int, number, 4> array;
 }
