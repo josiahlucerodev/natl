@@ -14,6 +14,11 @@ namespace natl {
     template<class Type>
     concept isConst = std::is_const_v<Type>;
 
+    template<class Type>
+    concept IsEmpty = std::is_empty_v<Type>;
+
+    template<class Type>
+    concept IsNotEmpty = !std::is_empty_v<Type>;
 
     template<class Type>
     using remove_cvref_t = std::remove_cv_t<std::remove_reference_t<Type>>;
@@ -114,4 +119,26 @@ namespace natl {
     template<class Src, class Dst>
     concept MemcpyCompareableSrcDst = (std::is_same_v<Src, Dst> && MemcpyCompareable<Src>);
 
+    struct SynthesizeThreeWay {
+        template <class T1, class T2>
+        constexpr auto operator()(const T1& lhs, const T2& rhs) const
+            requires(requires {
+                { lhs < rhs } -> std::convertible_to<bool>;
+                { rhs < lhs } -> std::convertible_to<bool>; }) {
+            if constexpr (std::three_way_comparable_with<T1, T2>) {
+                return lhs <=> rhs;
+            } else {
+                if (lhs < rhs) {
+                    return std::weak_ordering::less;
+                } else if (rhs < lhs) {
+                    return std::weak_ordering::greater;
+                } else {
+                    return std::weak_ordering::equivalent;
+                }
+            }
+        }
+    };
+
+    template <class T1, class T2 = T1>
+    using SynthesizeThreeWayResult = decltype(SynthesizeThreeWay{}(std::declval<T1&>(), std::declval<T2&>()));
 }

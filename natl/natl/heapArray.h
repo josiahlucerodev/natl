@@ -11,31 +11,37 @@ namespace natl {
 		requires(IsAllocator<Alloc>)
 	class HeapArray {
 	public:
-		using value_type = DataType;
-		using reference = DataType&;
-		using const_reference = const DataType&;
-		using pointer = DataType*;
-		using const_pointer = const DataType*;
-		using optional_pointer = Option<DataType*>;
-		using optional_const_pointer = Option<const DataType*>;
-		using difference_type = std::ptrdiff_t;
-		using size_type = Size;
+		using allocator_type = Alloc;
 
-		using iterator = RandomAccessIterator<DataType>;
-		using const_iterator = RandomAccessIterator<const DataType>;
-		using reverse_iterator = ReverseRandomAccessIterator<DataType>;
-		using const_reverse_iterator = ReverseRandomAccessIterator<const DataType>;
+		using value_type = typename Alloc::value_type;
+		using reference = typename Alloc::reference;
+		using const_reference = typename Alloc::const_reference;
+		using pointer = typename Alloc::pointer;
+		using const_pointer = typename Alloc::const_pointer;
+		using difference_type = typename Alloc::difference_type;
+		using size_type = typename Alloc::size_type;
 
-		using container_allocation_move_adapater = AllocationMoveAdapater<DataType, Alloc>;
+		using optional_pointer = Option<pointer>;
+		using optional_const_pointer = Option<const_pointer>;
+
+		using iterator = RandomAccessIteratorAlloc<value_type, Alloc>;
+		using const_iterator = ConstRandomAccessIteratorAlloc<value_type, Alloc>;
+		using reverse_iterator = ReverseRandomAccessIteratorAlloc<value_type, Alloc>;
+		using const_reverse_iterator = ReverseConstRandomAccessIteratorAlloc<value_type, Alloc>;
+
+		using container_allocation_move_adapater = AllocationMoveAdapater<value_type, Alloc>;
 
 		//movement info  
 		constexpr static bool triviallyRelocatable = true;
 		constexpr static bool triviallyDefaultConstructible = true;
 		constexpr static bool triviallyCompareable = true;
 		constexpr static bool triviallyDestructible = false;
+		constexpr static bool triviallyConstRefConstructedable = false;
+		constexpr static bool triviallyMoveConstructedable = false;
+
 	private:
-		DataType* arrayDataPtr;
-		Size arraySize;
+		pointer arrayDataPtr;
+		size_type arraySize;
 	public:
 		//constructor
 		constexpr HeapArray() : arrayDataPtr(nullptr), arraySize(0) {}
@@ -44,15 +50,15 @@ namespace natl {
 			other.arrayDataPtr = nullptr;
 			other.arraySize = 0;
 		}
-		constexpr HeapArray(const Size count) noexcept : arrayDataPtr(Alloc::allocate(count)), arraySize(count) {
+		constexpr HeapArray(const size_type count) noexcept : arrayDataPtr(Alloc::allocate(count)), arraySize(count) {
 			constructAll();
 		}
-		constexpr HeapArray(const Size count, const DataType& value) noexcept : arrayDataPtr(Alloc::allocate(count)), arraySize(count) {
-			DataType* fillDstPtrFirst = arrayDataPtr;
-			DataType* fillDstPtrLast = fillDstPtrFirst + count;
-			natl::uninitializedFill<DataType*, DataType>(fillDstPtrFirst, fillDstPtrLast, value);
+		constexpr HeapArray(const size_type count, const value_type& value) noexcept : arrayDataPtr(Alloc::allocate(count)), arraySize(count) {
+			pointer fillDstPtrFirst = arrayDataPtr;
+			pointer fillDstPtrLast = fillDstPtrFirst + count;
+			natl::uninitializedFill<pointer, value_type>(fillDstPtrFirst, fillDstPtrLast, value);
 		}
-		constexpr HeapArray(const DataType* srcPtr, const Size count) noexcept : arrayDataPtr(srcPtr), arraySize(count) {}
+		constexpr HeapArray(const_pointer srcPtr, const size_type count) noexcept : arrayDataPtr(srcPtr), arraySize(count) {}
 		constexpr HeapArray(const container_allocation_move_adapater& allocationMoveAdapater) {
 			if (allocationMoveAdapater.isEmpty()) {
 				arrayDataPtr = 0;
@@ -61,15 +67,15 @@ namespace natl {
 				arraySize = allocationMoveAdapater.capacity();
 				arrayDataPtr = Alloc::allocate(arraySize);
 
-				DataType* copyDstPtr = arrayDataPtr;
-				const DataType* copySrcPtrFirst = allocationMoveAdapater.data();
-				const DataType* copySrcPtrLast = copySrcPtrFirst + allocationMoveAdapater.size();
-				natl::uninitializedCopyNoOverlap<const DataType*, DataType*>(copySrcPtrFirst, copySrcPtrLast, copyDstPtr);
+				pointer copyDstPtr = arrayDataPtr;
+				const_pointer copySrcPtrFirst = allocationMoveAdapater.data();
+				const_pointer copySrcPtrLast = copySrcPtrFirst + allocationMoveAdapater.size();
+				natl::uninitializedCopyNoOverlap<const_pointer, pointer>(copySrcPtrFirst, copySrcPtrLast, copyDstPtr);
 
 				if (arraySize != allocationMoveAdapater.size()) {
-					const Size constructCount = arraySize - allocationMoveAdapater.size();
-					DataType* constructPtr = arrayDataPtr + allocationMoveAdapater.size();
-					natl::defualtConstructAll<DataType>(constructPtr, constructCount);
+					const size_type constructCount = arraySize - allocationMoveAdapater.size();
+					pointer constructPtr = arrayDataPtr + allocationMoveAdapater.size();
+					natl::defualtConstructAll<value_type>(constructPtr, constructCount);
 				}
 
 				if (allocationMoveAdapater.canDealloc()) {
@@ -79,9 +85,9 @@ namespace natl {
 				arraySize = allocationMoveAdapater.capacity();
 				arrayDataPtr = allocationMoveAdapater.data();
 
-				const Size constructCount = arraySize - allocationMoveAdapater.size();
-				DataType* constructPtr = arrayDataPtr + allocationMoveAdapater.size();
-				natl::defualtConstructAll<DataType>(constructPtr, constructCount);
+				const size_type constructCount = arraySize - allocationMoveAdapater.size();
+				pointer constructPtr = arrayDataPtr + allocationMoveAdapater.size();
+				natl::defualtConstructAll<value_type>(constructPtr, constructCount);
 			} else {
 				arraySize = allocationMoveAdapater.capacity();
 				arrayDataPtr = allocationMoveAdapater.data();
@@ -114,18 +120,18 @@ namespace natl {
 		}
 
 		//convert 
-		constexpr operator ArrayView<DataType>() noexcept {
-			return ArrayView<DataType>(data(), size());
+		constexpr operator ArrayView<value_type>() noexcept {
+			return ArrayView<value_type>(data(), size());
 		}
-		constexpr operator ArrayView<const DataType>() const noexcept {
-			return ArrayView<const DataType>(data(), size());
+		constexpr operator ArrayView<const value_type>() const noexcept {
+			return ArrayView<const value_type>(data(), size());
 		}
 
-		constexpr ArrayView<DataType> toArrayView() noexcept {
-			return ArrayView<DataType>(data(), size());
+		constexpr ArrayView<value_type> toArrayView() noexcept {
+			return ArrayView<value_type>(data(), size());
 		}
-		constexpr ArrayView<const DataType> toArrayView() const noexcept {
-			return ArrayView<const DataType>(data(), size());
+		constexpr ArrayView<const value_type> toArrayView() const noexcept {
+			return ArrayView<const value_type>(data(), size());
 		}
 
 		[[nodiscard]] constexpr container_allocation_move_adapater getAlloctionMoveAdapater() noexcept {
@@ -140,7 +146,7 @@ namespace natl {
 		constexpr bool isEmpty() const noexcept { return empty(); }
 		constexpr bool isNotEmpty() const noexcept { return !empty(); }
 
-		constexpr Size size() const noexcept { return arraySize; }
+		constexpr size_type size() const noexcept { return arraySize; }
 
 		//element access
 		constexpr reference at(const size_type index) noexcept { return data()[index]; };
@@ -158,8 +164,8 @@ namespace natl {
 		constexpr reference back() noexcept { return at(backIndex()); }
 		constexpr const_reference back() const noexcept { return at(backIndex()); }
 
-		constexpr DataType* data() noexcept { return arrayDataPtr; }
-		constexpr const DataType* data() const noexcept { return arrayDataPtr; }
+		constexpr pointer data() noexcept { return arrayDataPtr; }
+		constexpr const_pointer data() const noexcept { return arrayDataPtr; }
 
 		//iterators 
 		constexpr pointer beginPtr() noexcept { return data(); }
@@ -181,9 +187,9 @@ namespace natl {
 		constexpr const_reverse_iterator crend() const noexcept { return const_reverse_iterator(beginPtr()); }
 
 		//special element access
-		constexpr size_type clampIndex(const size_type index) const noexcept { return clamp<Size>(index, frontIndex(), backIndex()); }
+		constexpr size_type clampIndex(const size_type index) const noexcept { return clamp<size_type>(index, frontIndex(), backIndex()); }
 
-		constexpr reference atClamped(const size_type index) noexcept requires(isNotConst<DataType>) { return at(clampIndex(index)); }
+		constexpr reference atClamped(const size_type index) noexcept requires(isNotConst<value_type>) { return at(clampIndex(index)); }
 		constexpr const_pointer atClamped(const size_type index) const noexcept { return at(clampIndex(index)); }
 
 		constexpr optional_pointer optionalAt(const size_type index) noexcept {
@@ -210,28 +216,28 @@ namespace natl {
 				Alloc::deallocate(arrayDataPtr, size());
 			}
 		}
-		constexpr void allocate(const Size count) noexcept {
+		constexpr void allocate(const size_type count) noexcept {
 			deallocate();
 			arrayDataPtr = Alloc::allocate(count);
 			arraySize = count;
 			constructAll();
 		}
 
-		constexpr void allocate(const Size count, const DataType& value) noexcept {
+		constexpr void allocate(const size_type count, const value_type& value) noexcept {
 			deallocate();
 			arrayDataPtr = Alloc::allocate(count);
 			arraySize = count;
 			uninitializedFill(value);
 		}
-		constexpr void allocate(const DataType* srcPtr, const Size count) noexcept {
+		constexpr void allocate(const_pointer srcPtr, const size_type count) noexcept {
 			deallocate();
 			arrayDataPtr = Alloc::allocate(count);
 			arraySize = count;
 
-			DataType* copyDstPtr = arrayDataPtr;
-			const DataType* copySrcPtrFirst = srcPtr;
-			const DataType* copySrcPtrLast = copySrcPtrFirst + count;
-			natl::uninitializedCopyNoOverlap<const DataType*, DataType*>(copySrcPtrFirst, copySrcPtrLast, copyDstPtr);
+			pointer copyDstPtr = arrayDataPtr;
+			const_pointer copySrcPtrFirst = srcPtr;
+			const_pointer copySrcPtrLast = copySrcPtrFirst + count;
+			natl::uninitializedCopyNoOverlap<const_pointer, pointer>(copySrcPtrFirst, copySrcPtrLast, copyDstPtr);
 		}
 
 		//modifier 
@@ -242,7 +248,7 @@ namespace natl {
 			}
 		}
 		constexpr void destructAll() noexcept {
-			if (IsTriviallyDestructible<DataType>) {
+			if (IsTriviallyDestructible<value_type>) {
 				if (!std::is_constant_evaluated()) {
 					return;
 				}
@@ -253,10 +259,10 @@ namespace natl {
 			}
 		}
 	public:
-		constexpr void fill(const DataType& value = DataType()) noexcept {
-			DataType* fillDstFirst = data();
-			DataType* fillDstLast = fillDstFirst + size();
-			natl::fill<DataType*, DataType>(fillDstFirst, fillDstLast, value);
+		constexpr void fill(const value_type& value = value_type()) noexcept {
+			pointer fillDstFirst = data();
+			pointer fillDstLast = fillDstFirst + size();
+			natl::fill<pointer, value_type>(fillDstFirst, fillDstLast, value);
 		}
 	};
 }

@@ -21,6 +21,7 @@ natl/lexicographicalCompare.h
 natl/limits.h
 natl/natl.h
 natl/option.h
+natl/pair.h
 natl/partitioner.h
 natl/peramaterPackOperations.h
 natl/pointer.h

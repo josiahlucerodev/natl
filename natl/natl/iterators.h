@@ -8,6 +8,7 @@
 //own
 #include "typeTraits.h"
 #include "basicTypes.h"
+#include "allocator.h"
 
 //interface 
 namespace natl {
@@ -68,6 +69,68 @@ namespace natl {
 
 	template<class DataType>
 	using ReverseConstRandomAccessIterator = std::reverse_iterator<ConstRandomAccessIterator<DataType>>;
+
+	template<class DataType, class Alloc>
+	class RandomAccessIteratorAlloc {
+	public:
+		using iterator = RandomAccessIteratorAlloc<DataType, Alloc>;
+		using allocator_type = Alloc;
+
+		using value_type = typename Alloc::value_type;
+		using reference = typename Alloc::reference;
+		using const_reference = typename Alloc::const_reference;
+		using pointer = typename Alloc::pointer;
+		using const_pointer = typename Alloc::const_pointer;
+		using difference_type = typename Alloc::difference_type;
+		using size_type = typename Alloc::size_type;
+
+		using iterator_category = std::random_access_iterator_tag;
+	private:
+		pointer dataPtr;
+	public:
+		constexpr RandomAccessIteratorAlloc() : dataPtr(nullptr) {}
+		constexpr RandomAccessIteratorAlloc(pointer dataPtr) noexcept : dataPtr(dataPtr) {}
+		constexpr ~RandomAccessIteratorAlloc() = default;
+	private:
+		constexpr iterator& getSelf() noexcept { return *this; }
+		constexpr const iterator& getSelf() const noexcept { return *this; }
+	public:
+		constexpr reference operator*() noexcept requires(isNotConst<value_type>) { return *dataPtr; }
+		constexpr const_reference operator*() const noexcept { return *dataPtr; }
+		constexpr pointer operator->() noexcept requires(isNotConst<value_type>) { return dataPtr; }
+		constexpr const_pointer operator->() const noexcept { return dataPtr; }
+		constexpr reference operator[](const size_type pos) noexcept requires(isNotConst<value_type>) { return dataPtr[pos]; };
+		constexpr const_reference operator[](const size_type pos) const noexcept { return dataPtr[pos]; };
+
+		constexpr bool operator== (const iterator rhs) const noexcept { return dataPtr == rhs.dataPtr; }
+		constexpr bool operator!= (const iterator rhs) const noexcept { return dataPtr != rhs.dataPtr; }
+		constexpr bool operator<(const iterator rhs) const noexcept { return dataPtr < rhs.dataPtr; }
+		constexpr bool operator>(const iterator rhs) const noexcept { return dataPtr > rhs.dataPtr; }
+		constexpr bool operator<=(const iterator rhs) const noexcept { return dataPtr <= rhs.dataPtr; }
+		constexpr bool operator>=(const iterator rhs) const noexcept { return dataPtr >= rhs.dataPtr; }
+
+		constexpr iterator& operator++() noexcept { dataPtr++; return getSelf(); }
+		constexpr iterator operator++(int) noexcept { iterator tempIt = getSelf(); ++getSelf().dataPtr; return tempIt; }
+		constexpr iterator& operator--() noexcept { dataPtr--; return getSelf(); }
+		constexpr iterator operator--(int) noexcept { iterator tempIt = getSelf(); --getSelf().dataPtr; return tempIt; }
+
+		constexpr iterator& operator+=(const difference_type offset) noexcept { dataPtr += offset; return getSelf(); }
+		constexpr iterator operator+(const difference_type offset) const noexcept { return iterator(dataPtr + offset); }
+		constexpr friend iterator operator+(const difference_type offset, const iterator& rhs) noexcept { return iterator(rhs.dataPtr + offset); }
+		constexpr iterator& operator-=(const difference_type offset) noexcept { dataPtr -= offset; return getSelf(); }
+		constexpr iterator operator-(const difference_type offset) const noexcept { return iterator(dataPtr - offset); }
+		constexpr difference_type operator-(const iterator rhs) const noexcept { return getSelf().dataPtr - rhs.dataPtr; }
+	};
+
+	template<class DataType, class Alloc>
+	using ConstRandomAccessIteratorAlloc = std::reverse_iterator<RandomAccessIteratorAlloc<const DataType, Alloc>>;
+
+	template<class DataType, class Alloc>
+	using ReverseRandomAccessIteratorAlloc = std::reverse_iterator<RandomAccessIteratorAlloc<DataType, Alloc>>;
+
+	template<class DataType, class Alloc>
+	using ReverseConstRandomAccessIteratorAlloc = std::reverse_iterator<ConstRandomAccessIteratorAlloc<DataType, Alloc>>;
+
 
 	template<class Type>
 	concept HasIteratorType = requires {

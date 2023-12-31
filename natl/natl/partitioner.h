@@ -13,20 +13,43 @@
 
 //interface 
 namespace natl {
+	template<class Alloc>
+		requires(IsAllocator<Alloc>)
 	class DynamicBytePartitioner;
 
-	template<class Type>
+	template<class DataType, class Alloc>
 	class DynamicPartitioner {
+		requires(IsAllocator<Alloc>)
 	public:
-		using pointer = Type*;
-		using const_pointer = const Type*;
-		using size_type = Size;
-		using iterator = RandomAccessIterator<Type>;
-		using const_iterator = RandomAccessIterator<const Type>;
-		using reverse_iterator = ReverseRandomAccessIterator<Type>;
-		using const_reverse_iterator = ReverseRandomAccessIterator<const Type>;
+		using allocator_type = Alloc;
+
+		using value_type = typename Alloc::value_type;
+		using reference = typename Alloc::reference;
+		using const_reference = typename Alloc::const_reference;
+		using pointer = typename Alloc::pointer;
+		using const_pointer = typename Alloc::const_pointer;
+		using difference_type = typename Alloc::difference_type;
+		using size_type = typename Alloc::size_type;
+
+		using optional_pointer = Option<pointer>;
+		using optional_const_pointer = Option<const_pointer>;
+
+		using iterator = RandomAccessIteratorAlloc<value_type, Alloc>;
+		using const_iterator = ConstRandomAccessIteratorAlloc<value_type, Alloc>;
+		using reverse_iterator = ReverseRandomAccessIteratorAlloc<value_type, Alloc>;
+		using const_reverse_iterator = ReverseConstRandomAccessIteratorAlloc<value_type, Alloc>;
+
+		using container_allocation_move_adapater = AllocationMoveAdapater<value_type, Alloc>;
+
+		//movement info 
+		constexpr static bool triviallyRelocatable = true;
+		constexpr static bool triviallyDefaultConstructible = true;
+		constexpr static bool triviallyCompareable = false;
+		constexpr static bool triviallyDestructible = false;
+		constexpr static bool triviallyConstRefConstructedable = false;
+		constexpr static bool triviallyMoveConstructedable = false;
 	private:
-		DynArray<Type> data;
+		DynArray<value_type, Alloc> data;
 		size_type partitionIndex;
 	public:
 		DynamicPartitioner() : data(), partitionIndex(0) {}
@@ -39,12 +62,12 @@ namespace natl {
 		constexpr bool isNotEmpty() const noexcept { return partitionIndex != 0; };
 		constexpr void shrinkToFit() noexcept { data.shrink_to_fit(); }
 		constexpr void clear() noexcept { data.clear(); }
-		constexpr ArrayView<Type> newPartition(const size_type partiationSize) noexcept {
+		constexpr ArrayView<value_type> newPartition(const size_type partiationSize) noexcept {
 			if (capacity() < partitionIndex + partiationSize) {
-				return ArrayView<Type>(nullptr, 0);
+				return ArrayView<value_type>(nullptr, 0);
 			}
 
-			ArrayView<Type> partition(&data.at(partitionIndex), partiationSize);
+			ArrayView<value_type> partition(&data.at(partitionIndex), partiationSize);
 			partitionIndex += partiationSize;
 			return partition;
 		}
@@ -67,6 +90,7 @@ namespace natl {
 		constexpr const_reverse_iterator rend() const noexcept { return const_reverse_iterator(beginPtr()); }
 		constexpr const_reverse_iterator crend() const noexcept { return const_reverse_iterator(beginPtr()); }
 	public:
+		template<class Alloc>
 		friend class DynamicBytePartitioner;
 	};
 
@@ -77,56 +101,77 @@ namespace natl {
 		return offset;
 	}
 
-	class DynamicBytePartitioner : public DynamicPartitioner<std::uint8_t> {
-		using value_type = std::uint8_t;
-		using pointer = std::uint8_t*;
-		using const_pointer = const std::uint8_t*;
-		using size_type = std::size_t;
-		using iterator = RandomAccessIterator<std::uint8_t>;
-		using const_iterator = RandomAccessIterator<const std::uint8_t>;
-		using reverse_iterator = ReverseRandomAccessIterator<std::uint8_t>;
-		using const_reverse_iterator = ReverseRandomAccessIterator<const std::uint8_t>;
+	template<class Alloc>
+		requires(IsAllocator<Alloc>)
+	class DynamicBytePartitioner : public DynamicPartitioner<std::uint8_t, Alloc> {
+		using allocator_type = Alloc;
+
+		using value_type = typename Alloc::value_type;
+		using reference = typename Alloc::reference;
+		using const_reference = typename Alloc::const_reference;
+		using pointer = typename Alloc::pointer;
+		using const_pointer = typename Alloc::const_pointer;
+		using difference_type = typename Alloc::difference_type;
+		using size_type = typename Alloc::size_type;
+
+		using optional_pointer = Option<pointer>;
+		using optional_const_pointer = Option<const_pointer>;
+
+		using iterator = RandomAccessIteratorAlloc<value_type, Alloc>;
+		using const_iterator = ConstRandomAccessIteratorAlloc<value_type, Alloc>;
+		using reverse_iterator = ReverseRandomAccessIteratorAlloc<value_type, Alloc>;
+		using const_reverse_iterator = ReverseConstRandomAccessIteratorAlloc<value_type, Alloc>;
+
+		using container_allocation_move_adapater = AllocationMoveAdapater<value_type, Alloc>;
+
+		//movement info 
+		constexpr static bool triviallyRelocatable = true;
+		constexpr static bool triviallyDefaultConstructible = true;
+		constexpr static bool triviallyCompareable = false;
+		constexpr static bool triviallyDestructible = false;
+		constexpr static bool triviallyConstRefConstructedable = false;
+		constexpr static bool triviallyMoveConstructedable = false;
 	public:
 		DynamicBytePartitioner() : DynamicPartitioner<std::uint8_t>() {}
 	public:
-		template<class Type>
-		ArrayView<Type> newPartition(const size_type partiationSize) noexcept {
-			const size_type offset = alignmentOffset(data.data(), alignof(Type));
-			const size_type partiationByteSize = partiationSize * sizeof(Type) + offset;
+		template<class value_type>
+		ArrayView<value_type> newPartition(const size_type partiationSize) noexcept {
+			const size_type offset = alignmentOffset(data.data(), alignof(value_type));
+			const size_type partiationByteSize = partiationSize * sizeof(value_type) + offset;
 			if (capacity() < partiationByteSize) {
-				return ArrayView<Type>(nullptr, 0);
+				return ArrayView<value_type>(nullptr, 0);
 			}
 
 			DynamicPartitioner<std::uint8_t>& castSelf = *static_cast<DynamicPartitioner<std::uint8_t>*>(this);
 			ArrayView<std::uint8_t> bytePartition = castSelf.newPartition(partiationByteSize);
-			ArrayView<Type> partition(static_cast<pointer>(static_cast<void*>(bytePartition.at(offset))), partiationSize);
+			ArrayView<value_type> partition(static_cast<pointer>(static_cast<void*>(bytePartition.at(offset))), partiationSize);
 			return partition;
 		}
 	};
 
-	template<class Type>
+	template<class value_type>
 	class SubPartitioner {
 		using size_type = std::size_t;
 	private:
-		ArrayView<Type> partition;
+		ArrayView<value_type> partition;
 		size_type partitionIndex;
 	public:
 		constexpr SubPartitioner() : partition(), partitionIndex(0) {};
-		constexpr SubPartitioner(const ArrayView<Type>& partition) : partition(partition), partitionIndex(0) {}
+		constexpr SubPartitioner(const ArrayView<value_type>& partition) : partition(partition), partitionIndex(0) {}
 
 		constexpr size_type size() const noexcept { return partitionIndex + 1; }
 		constexpr size_type capacity() const noexcept { return partition.size(); }
 		constexpr bool isFull() const noexcept { return capacity() < size(); };
 		constexpr bool isEmpty() const noexcept { return partitionIndex == 0; };
 		constexpr bool isNotEmpty() const noexcept { return partitionIndex != 0; };
-		constexpr ArrayView<Type> getInternalPartition() const noexcept { return partition; };
+		constexpr ArrayView<value_type> getInternalPartition() const noexcept { return partition; };
 
-		constexpr ArrayView<Type> newPartition(const size_type partiationSize) noexcept {
+		constexpr ArrayView<value_type> newPartition(const size_type partiationSize) noexcept {
 			if (capacity() < partiationSize) {
-				return ArrayView<Type>(nullptr, 0);
+				return ArrayView<value_type>(nullptr, 0);
 			}
 
-			ArrayView<Type> outputPartition(partition.at(partitionIndex), partiationSize);
+			ArrayView<value_type> outputPartition(partition.at(partitionIndex), partiationSize);
 			partitionIndex += partiationSize;
 			return outputPartition;
 		}

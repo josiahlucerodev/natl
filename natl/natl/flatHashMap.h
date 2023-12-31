@@ -14,23 +14,26 @@
 
 //interface
 namespace natl {
-	template<class Entry>
+	template<class Entry, class Alloc>
 	class FlatHashMapIterator {
 	public:
-		using iterator = FlatHashMapIterator<Entry>;
-		using difference_type = std::ptrdiff_t;
-		using value_type = Entry;
-		using reference = Entry&;
-		using pointer = Entry*;
-		using iterator_category = std::random_access_iterator_tag;
-		using size_type = Size;
+		using iterator = FlatHashMapIterator<Entry, Alloc>;
+
+		using allocator_type = Alloc;
+		using value_type = typename Alloc::value_type;
+		using reference = typename Alloc::reference;
+		using const_reference = typename Alloc::const_reference;
+		using pointer = typename Alloc::pointer;
+		using const_pointer = typename Alloc::const_pointer;
+		using difference_type = typename Alloc::difference_type;
+		using size_type = typename Alloc::size_type;
 	private:
 		pointer dataPtr;
 		pointer beginPtr;
 		pointer endPtr;
 	public:
 		constexpr FlatHashMapIterator() : dataPtr(nullptr), beginPtr(nullptr), endPtr(nullptr) {};
-		constexpr FlatHashMapIterator(pointer const dataPtr, pointer const beginPtr, pointer const endPtr) noexcept
+		constexpr FlatHashMapIterator(pointer dataPtr, pointer beginPtr, pointer endPtr) noexcept
 			: dataPtr(dataPtr), beginPtr(beginPtr), endPtr(endPtr) {}
 	private:
 		constexpr iterator& getSelf() noexcept { return *this; }
@@ -134,22 +137,34 @@ namespace natl {
 	public:
 		using key_type = Key;
 		using map_type = DataType;
-		using value_type = Entry&;
-		using reference = Entry&;
-		using const_reference = const Entry&;
-		using pointer = Entry*;
-		using const_pointer = const Entry*;
-		using optional_pointer = Option<Entry*>;
-		using optional_const_pointer = Option<const Entry*>;
-		using difference_type = std::ptrdiff_t;
-		using size_type = Size;
 
-		using iterator = FlatHashMapIterator<Entry>;
-		using const_iterator = FlatHashMapIterator<const Entry>;
-		using reverse_iterator = std::reverse_iterator<FlatHashMapIterator<Entry>>;
-		using const_reverse_iterator = std::reverse_iterator<FlatHashMapIterator<const Entry>>;
+		using allocator_type = Alloc;
+
+		using value_type = typename Alloc::value_type;
+		using reference = typename Alloc::reference;
+		using const_reference = typename Alloc::const_reference;
+		using pointer = typename Alloc::pointer;
+		using const_pointer = typename Alloc::const_pointer;
+		using difference_type = typename Alloc::difference_type;
+		using size_type = typename Alloc::size_type;
+
+		using optional_pointer = Option<pointer>;
+		using optional_const_pointer = Option<const_pointer>;
+
+		using iterator = FlatHashMapIterator<value_type, Alloc>;
+		using const_iterator = FlatHashMapIterator<const value_type, Alloc>;
+		using reverse_iterator = std::reverse_iterator<FlatHashMapIterator<value_type, Alloc>>;
+		using const_reverse_iterator = std::reverse_iterator<FlatHashMapIterator<const value_type, Alloc>>;
 
 		static constexpr f64 load_factor = 0.7;
+
+		//movement info 
+		constexpr static bool triviallyRelocatable = true;
+		constexpr static bool triviallyDefaultConstructible = true;
+		constexpr static bool triviallyCompareable = false;
+		constexpr static bool triviallyDestructible = false;
+		constexpr static bool triviallyConstRefConstructedable = false;
+		constexpr static bool triviallyMoveConstructedable = false;
 	private:
 		size_type inSize;
 		DynamicArrayType table;
@@ -199,7 +214,7 @@ namespace natl {
 			resizeAndRehash();
 
 			pointer dataLocation = nullptr;
-			Size index = Hash::hash(key) % capacity();
+			size_type index = Hash::hash(key) % capacity();
 			while (table[index].isUsed()) {
 				if (table[index].key == key) {
 					dataLocation = &table[index];
@@ -221,7 +236,7 @@ namespace natl {
 			resizeAndRehash();
 
 			pointer dataLocation = nullptr;
-			Size index = Hash::hash(key) % capacity();
+			size_type index = Hash::hash(key) % capacity();
 			while (table[index].isUsed()) {
 				if (Compare::compare(table[index].key, key)) {
 					dataLocation = &table[index];
@@ -314,8 +329,8 @@ namespace natl {
 			return find(key).hasValue();
 		}
 		constexpr void resizeAndRehash() {
-			 if (inSize >= static_cast<Size>(static_cast<f64>(capacity()) * load_factor)) {
-				if (inSize < static_cast<Size>(static_cast<f64>(table.capacity()) * load_factor)) {
+			 if (inSize >= static_cast<size_type>(static_cast<f64>(capacity()) * load_factor)) {
+				if (inSize < static_cast<size_type>(static_cast<f64>(table.capacity()) * load_factor)) {
 					table.resize(table.capacity());
 					return;
 				}
@@ -330,7 +345,7 @@ namespace natl {
 
 			for (Entry& entry : table) {
 				if (entry.isUsed()) {
-					Size index = Hash::hash(entry.key) % newCapacity;
+					size_type index = Hash::hash(entry.key) % newCapacity;
 
 					while (newTable[index].isUsed()) {
 						index = (index + 1) % newCapacity;

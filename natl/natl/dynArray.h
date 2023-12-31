@@ -12,32 +12,37 @@ namespace natl {
 		requires(IsAllocator<Alloc>)
 	class DynArray {
 	public:
-		using value_type = DataType;
-		using reference = DataType&;
-		using const_reference = const DataType&;
-		using pointer = DataType*;
-		using const_pointer = const DataType*;
-		using optional_pointer = Option<DataType*>;
-		using optional_const_pointer = Option<const DataType*>;
-		using difference_type = std::ptrdiff_t;
-		using size_type = Size;
+		using allocator_type = Alloc;
 
-		using iterator = RandomAccessIterator<DataType>;
-		using const_iterator = RandomAccessIterator<const DataType>;
-		using reverse_iterator = ReverseRandomAccessIterator<DataType>;
-		using const_reverse_iterator = ReverseRandomAccessIterator<const DataType>;
+		using value_type = typename Alloc::value_type;
+		using reference = typename Alloc::reference;
+		using const_reference = typename Alloc::const_reference;
+		using pointer = typename Alloc::pointer;
+		using const_pointer = typename Alloc::const_pointer;
+		using difference_type = typename Alloc::difference_type;
+		using size_type = typename Alloc::size_type;
 
-		using container_allocation_move_adapater = AllocationMoveAdapater<DataType, Alloc>;
+		using optional_pointer = Option<pointer>;
+		using optional_const_pointer = Option<const_pointer>;
 
-		//movement info  
+		using iterator = RandomAccessIteratorAlloc<value_type, Alloc>;
+		using const_iterator = ConstRandomAccessIteratorAlloc<value_type, Alloc>;
+		using reverse_iterator = ReverseRandomAccessIteratorAlloc<value_type, Alloc>;
+		using const_reverse_iterator = ReverseConstRandomAccessIteratorAlloc<value_type, Alloc>;
+
+		using container_allocation_move_adapater = AllocationMoveAdapater<value_type, Alloc>;
+
+		//movement info 
 		constexpr static bool triviallyRelocatable = true;
 		constexpr static bool triviallyDefaultConstructible = true;
 		constexpr static bool triviallyCompareable = false;
 		constexpr static bool triviallyDestructible = false;
+		constexpr static bool triviallyConstRefConstructedable = false;
+		constexpr static bool triviallyMoveConstructedable = false;
 	private:
-		Size arraySize;
-		Size arrayCapacity;
-		DataType* arrayDataPtr;
+		size_type arraySize;
+		size_type arrayCapacity;
+		pointer arrayDataPtr;
 	private:
 		constexpr void baseConstructorInit() noexcept {
 			arraySize = 0;
@@ -49,7 +54,7 @@ namespace natl {
 		constexpr DynArray() noexcept {
 			baseConstructorInit();
 		}
-		constexpr DynArray(const DataType* srcPtr, const Size& count) noexcept {
+		constexpr DynArray(const_pointer srcPtr, const size_type& count) noexcept {
 			baseConstructorInit();
 			construct(srcPtr, count);
 		}
@@ -61,18 +66,18 @@ namespace natl {
 			baseConstructorInit();
 			construct(forward<DynArray>(other));
 		}
-		constexpr DynArray(const size_type count, const DataType& value = DataType()) noexcept {
+		constexpr DynArray(const size_type count, const value_type& value = value_type()) noexcept {
 			baseConstructorInit();
 			construct(count, value);
 		}
 		template<class Iter>
-			requires(IsIterPtr<Iter> && std::is_same_v<typename IterPtrTraits<Iter>::value_type, DataType>)
+			requires(IsIterPtr<Iter> && std::is_same_v<typename IterPtrTraits<Iter>::value_type, value_type>)
 		constexpr DynArray(Iter first, Iter last) noexcept {
 			baseConstructorInit();
 			construct<Iter>(first, last);
 		}
 		template<class ArrayViewLike>
-			requires(IsArrayViewLike<ArrayViewLike, const DataType>)
+			requires(IsArrayViewLike<ArrayViewLike, const value_type>)
 		constexpr DynArray(const ArrayViewLike& arrayViewLike) noexcept {
 			baseConstructorInit();
 			construct(arrayViewLike.data(), arrayViewLike.size());
@@ -81,7 +86,7 @@ namespace natl {
 			baseConstructorInit();
 			construct(allocationMoveAdapater);
 		}
-		constexpr DynArray(std::initializer_list<DataType> ilist) noexcept {
+		constexpr DynArray(std::initializer_list<value_type> ilist) noexcept {
 			baseConstructorInit();
 			construct(ilist.begin(), ilist.size());
 		}
@@ -97,7 +102,7 @@ namespace natl {
 
 		//construct
 	private:
-		constexpr DynArray& construct(const DataType* otherPtr, const Size& count) noexcept {
+		constexpr DynArray& construct(const_pointer otherPtr, const size_type& count) noexcept {
 			if (count == 0) {
 				arraySize = 0;
 				arrayCapacity = 0;
@@ -105,12 +110,12 @@ namespace natl {
 				return self();
 			}
 
-			const Size newSize = count;
-			reserve(newSize);
-			const DataType* srcDataPtrFirst = otherPtr;
-			const DataType* srcDataPtrLast = srcDataPtrFirst + count;
-			uninitializedCopyNoOverlap<const DataType*, DataType*>(srcDataPtrFirst, srcDataPtrLast, data());
-			setSize(newSize);
+			const size_type newsize_type = count;
+			reserve(newsize_type);
+			const_pointer srcDataPtrFirst = otherPtr;
+			const_pointer srcDataPtrLast = srcDataPtrFirst + count;
+			uninitializedCopyNoOverlap<const_pointer, pointer>(srcDataPtrFirst, srcDataPtrLast, data());
+			setsize_type(newsize_type);
 
 			return self();
 		}
@@ -125,7 +130,7 @@ namespace natl {
 
 			return self();
 		}
-		constexpr DynArray& construct(const size_type count, const DataType& value = DataType()) noexcept {
+		constexpr DynArray& construct(const size_type count, const value_type& value = value_type()) noexcept {
 			if (count == 0) { 
 				arraySize = 0;
 				arrayCapacity = 0;
@@ -135,19 +140,19 @@ namespace natl {
 
 			reserve(count);
 
-			DataType* fillDstPtr = data();
-			DataType* fillDstPtrLast = fillDstPtr + count;
-			uninitializedFill<DataType*, DataType>(fillDstPtr, fillDstPtrLast, value);
-			setSize(count);
+			pointer fillDstPtr = data();
+			pointer fillDstPtrLast = fillDstPtr + count;
+			uninitializedFill<pointer, value_type>(fillDstPtr, fillDstPtrLast, value);
+			setsize_type(count);
 			return self();
 		}
 
 		template<class Iter>
-			requires(IsIterPtr<Iter>&& std::is_same_v<typename IterPtrTraits<Iter>::value_type, DataType>)
+			requires(IsIterPtr<Iter>&& std::is_same_v<typename IterPtrTraits<Iter>::value_type, value_type>)
 		constexpr DynArray& construct(Iter first, Iter last) noexcept {
 			if constexpr (std::contiguous_iterator<Iter>) {
-				const Size count = iterDistance<Iter>(first, last);
-				const DataType* firstPtr = iteratorToAddress<Iter>(first);
+				const size_type count = iterDistance<Iter>(first, last);
+				const_pointer firstPtr = iteratorToAddress<Iter>(first);
 				return construct(firstPtr, count);
 			}
 
@@ -186,18 +191,18 @@ namespace natl {
 			return assign(forward<DynArray>(other));
 		}
 		template<class ArrayViewLike>
-			requires(IsArrayViewLike<ArrayViewLike, const DataType>)
+			requires(IsArrayViewLike<ArrayViewLike, const value_type>)
 		constexpr DynArray& operator=(const ArrayViewLike& arrayViewLike) noexcept {
 			return assign<ArrayViewLike>(arrayViewLike);
 		}
 		constexpr DynArray& operator=(const container_allocation_move_adapater& allocationMoveAdapater) noexcept {
 			return assign(allocationMoveAdapater);
 		}
-		constexpr DynArray& operator=(std::initializer_list<DataType> ilist) noexcept {
+		constexpr DynArray& operator=(std::initializer_list<value_type> ilist) noexcept {
 			return assign(ilist);
 		}
 
-		constexpr DynArray& assign(const DataType* otherPtr, const Size& count) noexcept {
+		constexpr DynArray& assign(const_pointer otherPtr, const size_type& count) noexcept {
 			if (count == 0) {
 				release();
 				arraySize = 0;
@@ -205,10 +210,10 @@ namespace natl {
 				return self();
 			}
 
-			const Size newSize = count;
-			reserve(newSize);
-			internalCopyNoOverlap(otherPtr, otherPtr + newSize, data());
-			setSize(newSize);
+			const size_type newsize_type = count;
+			reserve(newsize_type);
+			internalCopyNoOverlap(otherPtr, otherPtr + newsize_type, data());
+			setsize_type(newsize_type);
 
 			return self();
 		}
@@ -227,7 +232,7 @@ namespace natl {
 
 			return self();
 		}
-		constexpr DynArray& assign(const size_type count, const DataType& value = DataType()) noexcept {
+		constexpr DynArray& assign(const size_type count, const value_type& value = value_type()) noexcept {
 			release();
 			if (count == 0) { 
 				arraySize = 0;
@@ -236,32 +241,32 @@ namespace natl {
 			}
 			reserve(count);
 
-			if constexpr (IsTriviallyDestructible<DataType>) {
+			if constexpr (IsTriviallyDestructible<value_type>) {
 				internalFill(data(), data() + count, value);
 			} else {
 				if (count > size()) {
-					Size uninitializedFillAmount = count - size();
-					DataType* fillDstPtr = data() + size();
-					DataType* fillDstPtrLast = fillDstPtr + uninitializedFillAmount;
-					uninitializedFill<DataType*, DataType>(fillDstPtr, fillDstPtrLast, value);
+					size_type uninitializedFillAmount = count - size();
+					pointer fillDstPtr = data() + size();
+					pointer fillDstPtrLast = fillDstPtr + uninitializedFillAmount;
+					uninitializedFill<pointer, value_type>(fillDstPtr, fillDstPtrLast, value);
 				}
 
 				internalFill(data(), data() + size(), value);
 			}
-			setSize(count);
+			setsize_type(count);
 			return self();
 		}
 		template<class Iter> 
-			requires(IsIterPtr<Iter> && std::is_same_v<typename IterPtrTraits<Iter>::value_type, DataType>)
+			requires(IsIterPtr<Iter> && std::is_same_v<typename IterPtrTraits<Iter>::value_type, value_type>)
 		constexpr DynArray& assign(Iter first, Iter last) noexcept {
 			if constexpr (IsRandomAccessIterator<Iter>) {
-				const Size count = iterDistance<Iter>(first, last);
-				const DataType* firstPtr = iteratorToAddress<Iter>(first);
+				const size_type count = iterDistance<Iter>(first, last);
+				const_pointer firstPtr = iteratorToAddress<Iter>(first);
 				assign(firstPtr, count);
 			}
 
 			release();
-			Size index = 0;
+			size_type index = 0;
 			for (; first != last && index < size(); first++) {
 				at(index) = *first;
 			}
@@ -271,7 +276,7 @@ namespace natl {
 			}
 		}
 		template<class ArrayViewLike>
-			requires(IsArrayViewLike<ArrayViewLike, const DataType>)
+			requires(IsArrayViewLike<ArrayViewLike, const value_type>)
 		constexpr DynArray& assign(const ArrayViewLike& arrayViewLike) noexcept {
 			assign(arrayViewLike.data(), arrayViewLike.size());
 		}
@@ -294,13 +299,13 @@ namespace natl {
 			}
 			return self();
 		}
-		constexpr DynArray& assign(std::initializer_list<DataType> ilist) noexcept {
+		constexpr DynArray& assign(std::initializer_list<value_type> ilist) noexcept {
 			assign(ilist.begin(), ilist.size());
 		}
 
 
 		//strongly linked methods 
-		constexpr Size size() const noexcept { return arraySize; }
+		constexpr size_type size() const noexcept { return arraySize; }
 		constexpr size_type max_size() const noexcept { return 0xFFFFFFFFFFFFFFFFULL; };
 
 		[[nodiscard]] constexpr container_allocation_move_adapater getAlloctionMoveAdapater() noexcept {
@@ -314,55 +319,55 @@ namespace natl {
 
 		constexpr void resize(const size_type count) noexcept {
 			if (count < size()) {
-				if constexpr (!IsTriviallyDestructible<DataType>) {
-					defualtDeconstructAll<DataType>(data() + count, size() - count);
-					setSize(count);
+				if constexpr (!IsTriviallyDestructible<value_type>) {
+					defualtDeconstructAll<value_type>(data() + count, size() - count);
+					setsize_type(count);
 					return;
 				}
 				else {
 					if (std::is_constant_evaluated()) {
-						defualtDeconstructAll<DataType>(data() + count, size() - count);
+						defualtDeconstructAll<value_type>(data() + count, size() - count);
 					}
-					setSize(count);
+					setsize_type(count);
 				}
 			}
 			else if (count > size()) {
-				insert(cend(), count, DataType());
+				insert(cend(), count, value_type());
 			}
 		}
 
-		constexpr void resize(const size_type count, const DataType value) noexcept {
+		constexpr void resize(const size_type count, const value_type value) noexcept {
 			if (count < size()) {
-				if constexpr (!IsTriviallyDestructible<DataType> || std::is_constant_evaluated()) {
-					defualtDeconstructAll<DataType>(data() + count, size() - count);
+				if constexpr (!IsTriviallyDestructible<value_type> || std::is_constant_evaluated()) {
+					defualtDeconstructAll<value_type>(data() + count, size() - count);
 				}
-				setSize(count);
+				setsize_type(count);
 			}
 			else if (count > size()) {
 				insert(cend(), count, value);
 			}
 		}
 
-		constexpr void reserve(const Size newCapacity) noexcept {
+		constexpr void reserve(const size_type newCapacity) noexcept {
 			reserveExact(newCapacity * 2);
 		}
 
-		constexpr void reserveExact(const Size newCapacity) noexcept {
+		constexpr void reserveExact(const size_type newCapacity) noexcept {
 			if (newCapacity <= capacity()) { return; }
 
-			DataType* newDataPtr = Alloc::allocate(newCapacity);
+			pointer newDataPtr = Alloc::allocate(newCapacity);
 
 			if (data()) {
-				const DataType* srcDataPtrFirst = data();
-				const DataType* srcDataPtrLast = srcDataPtrFirst + size();
-				uninitializedCopyNoOverlap<const DataType*, DataType*>(srcDataPtrFirst, srcDataPtrLast, newDataPtr);
+				const_pointer srcDataPtrFirst = data();
+				const_pointer srcDataPtrLast = srcDataPtrFirst + size();
+				uninitializedCopyNoOverlap<const_pointer, pointer>(srcDataPtrFirst, srcDataPtrLast, newDataPtr);
 
-				if constexpr (!IsTriviallyRelocatable<DataType>) {
-					defualtDeconstructAll<DataType>(data(), size());
+				if constexpr (!IsTriviallyRelocatable<value_type>) {
+					defualtDeconstructAll<value_type>(data(), size());
 				}
 				else {
 					if (std::is_constant_evaluated()) {
-						defualtDeconstructAll<DataType>(data(), size());
+						defualtDeconstructAll<value_type>(data(), size());
 					}
 				}
 
@@ -373,19 +378,19 @@ namespace natl {
 			arrayCapacity = newCapacity;
 		}
 
-		constexpr Size capacity() const noexcept { return  arrayCapacity; };
+		constexpr size_type capacity() const noexcept { return  arrayCapacity; };
 
 		constexpr void shrink_to_fit() noexcept {
 			if (size() == capacity()) { return; }
 
-			const Size newCapacity = size();
-			DataType* newDataPtr = Alloc::allocate(newCapacity);
-			const DataType* srcDataPtrFirst = data();
-			const DataType* srcDataPtrLast = srcDataPtrFirst + size();
-			uninitializedCopyNoOverlap<const DataType*, DataType*>(srcDataPtrFirst, srcDataPtrLast, newDataPtr);
+			const size_type newCapacity = size();
+			pointer newDataPtr = Alloc::allocate(newCapacity);
+			const_pointer srcDataPtrFirst = data();
+			const_pointer srcDataPtrLast = srcDataPtrFirst + size();
+			uninitializedCopyNoOverlap<const_pointer, pointer>(srcDataPtrFirst, srcDataPtrLast, newDataPtr);
 
-			if (!IsTriviallyRelocatable<DataType> || std::is_constant_evaluated()) {
-				defualtDeconstructAll<DataType>(data(), size());
+			if (!IsTriviallyRelocatable<value_type> || std::is_constant_evaluated()) {
+				defualtDeconstructAll<value_type>(data(), size());
 			}
 
 			Alloc::deallocate(arrayDataPtr, capacity());
@@ -395,31 +400,31 @@ namespace natl {
 		}
 
 		constexpr void swap(DynArray& other) noexcept {
-			Size tempArraySize = arraySize;
-			Size tempArrayCapacity = arrayCapacity;
-			DataType* tempArrayDataPtr = arrayDataPtr;
+			size_type tempArraysize_type = arraySize;
+			size_type tempArrayCapacity = arrayCapacity;
+			pointer tempArrayDataPtr = arrayDataPtr;
 
 			arraySize = other.arraySize;
 			arrayCapacity = other.arrayCapacity;
 			arrayDataPtr = other.arrayDataPtr;
 
-			other.arraySize = tempArraySize;
+			other.arraySize = tempArraysize_type;
 			other.arrayCapacity = tempArrayCapacity;
 			other.arrayDataPtr = tempArrayDataPtr;
 		}
 
 		constexpr void clear() noexcept {
-			if (!IsTriviallyDestructible<DataType> || std::is_constant_evaluated()) {
-				defualtDeconstructAll<DataType>(data(), size());
+			if (!IsTriviallyDestructible<value_type> || std::is_constant_evaluated()) {
+				defualtDeconstructAll<value_type>(data(), size());
 			}
-			setSize(0);
+			setsize_type(0);
 		}
 
 	private:
 		constexpr void release() noexcept {
 			if (arrayDataPtr) {
-				if constexpr (!IsTriviallyDestructible<DataType>) {
-					defualtDeconstructAll<DataType>(data(), size());
+				if constexpr (!IsTriviallyDestructible<value_type>) {
+					defualtDeconstructAll<value_type>(data(), size());
 				}
 
 				Alloc::deallocate(arrayDataPtr, capacity());
@@ -427,7 +432,7 @@ namespace natl {
 			}
 		}
 
-		constexpr void setSize(const Size newSize) { arraySize = newSize; }
+		constexpr void setsize_type(const size_type newsize_type) { arraySize = newsize_type; }
 	public:
 
 		//element access
@@ -446,27 +451,27 @@ namespace natl {
 		constexpr reference back() noexcept { return at(backIndex()); }
 		constexpr const_reference back() const noexcept { return at(backIndex()); }
 	
-		constexpr DataType* data() noexcept { return arrayDataPtr; }
-		constexpr const DataType* data() const noexcept { return arrayDataPtr; }
+		constexpr pointer data() noexcept { return arrayDataPtr; }
+		constexpr const_pointer data() const noexcept { return arrayDataPtr; }
 
-		constexpr operator ArrayView<DataType>() noexcept {
-			return ArrayView<DataType>(data(), size());
+		constexpr operator ArrayView<value_type>() noexcept {
+			return ArrayView<value_type>(data(), size());
 		}
-		constexpr operator ArrayView<const DataType>() const noexcept {
-			return ArrayView<const DataType>(data(), size());
+		constexpr operator ArrayView<const value_type>() const noexcept {
+			return ArrayView<const value_type>(data(), size());
 		}
 
-		constexpr ArrayView<DataType> toArrayView() noexcept {
-			return ArrayView<DataType>(data(), size());
+		constexpr ArrayView<value_type> toArrayView() noexcept {
+			return ArrayView<value_type>(data(), size());
 		}
-		constexpr ArrayView<const DataType> toArrayView() const noexcept {
-			return ArrayView<const DataType>(data(), size());
+		constexpr ArrayView<const value_type> toArrayView() const noexcept {
+			return ArrayView<const value_type>(data(), size());
 		}
 
 		//special element access
-		constexpr size_type clampIndex(const size_type index) const noexcept { return clamp<Size>(index, frontIndex(), backIndex()); }
+		constexpr size_type clampIndex(const size_type index) const noexcept { return clamp<size_type>(index, frontIndex(), backIndex()); }
 
-		constexpr reference atClamped(const size_type index) noexcept requires(isNotConst<DataType>) { return at(clampIndex(index)); }
+		constexpr reference atClamped(const size_type index) noexcept requires(isNotConst<value_type>) { return at(clampIndex(index)); }
 		constexpr const_pointer atClamped(const size_type index) const noexcept { return at(clampIndex(index)); }
 
 		optional_pointer optionalAt(const size_type index) {
@@ -517,222 +522,222 @@ namespace natl {
 		constexpr iterator constIteratorToIterator(const_iterator pos) {
 			return iterator(data() + iterDistance<typename const_iterator::pointer>(&*cbegin(), &*pos));
 		}
-		constexpr Size shiftRelocateLeft(const Size index, const Size count) noexcept {
-			const Size relocateCount = size() - index;
+		constexpr size_type shiftRelocateLeft(const size_type index, const size_type count) noexcept {
+			const size_type relocateCount = size() - index;
 			if (relocateCount == 0) { return relocateCount; }
 
-			if constexpr (IsTriviallyRelocatable<DataType>) {
+			if constexpr (IsTriviallyRelocatable<value_type>) {
 				if (!std::is_constant_evaluated()) {
-					DataType* relocateDstPtr = data() + index + count;
-					const DataType* relocateSrcPtrFirst = data() + index;
-					const DataType* relocateSrcPtrLast = relocateSrcPtrFirst + relocateCount;
-					uninitializedCopy<const DataType*, DataType*>(relocateSrcPtrFirst, relocateSrcPtrLast, relocateDstPtr);
+					pointer relocateDstPtr = data() + index + count;
+					const_pointer relocateSrcPtrFirst = data() + index;
+					const_pointer relocateSrcPtrLast = relocateSrcPtrFirst + relocateCount;
+					uninitializedCopy<const_pointer, pointer>(relocateSrcPtrFirst, relocateSrcPtrLast, relocateDstPtr);
 					return relocateCount;
 				}
 			} 	
 
-			const Size uninitializedCount = count;
-			const Size normalCount = relocateCount - uninitializedCount;
+			const size_type uninitializedCount = count;
+			const size_type normalCount = relocateCount - uninitializedCount;
 
-			DataType* relocateUninitializedDstPtr = data() + backIndex();
-			const DataType* relocateUninitializedSrcPtrFirst = data() + index + normalCount;
-			const DataType* relocateUninitializedSrcPtrLast = relocateUninitializedSrcPtrFirst + uninitializedCount;
-			uninitializedCopy<const DataType*, DataType*>(relocateUninitializedSrcPtrFirst, relocateUninitializedSrcPtrLast, relocateUninitializedDstPtr);
+			pointer relocateUninitializedDstPtr = data() + backIndex();
+			const_pointer relocateUninitializedSrcPtrFirst = data() + index + normalCount;
+			const_pointer relocateUninitializedSrcPtrLast = relocateUninitializedSrcPtrFirst + uninitializedCount;
+			uninitializedCopy<const_pointer, pointer>(relocateUninitializedSrcPtrFirst, relocateUninitializedSrcPtrLast, relocateUninitializedDstPtr);
 
-			DataType* relocateNormalDstPtr = data() + index + count;
-			const DataType* relocateNormalSrcPtrFirst = data() + index;
-			const DataType* relocateNormalSrcPtrLast = relocateNormalSrcPtrFirst + normalCount;
-			copy<const DataType*, DataType*>(relocateNormalSrcPtrFirst, relocateNormalSrcPtrLast, relocateNormalDstPtr);
+			pointer relocateNormalDstPtr = data() + index + count;
+			const_pointer relocateNormalSrcPtrFirst = data() + index;
+			const_pointer relocateNormalSrcPtrLast = relocateNormalSrcPtrFirst + normalCount;
+			copy<const_pointer, pointer>(relocateNormalSrcPtrFirst, relocateNormalSrcPtrLast, relocateNormalDstPtr);
 			return relocateCount;
 		}
 	public:
 
-		constexpr iterator insert(const_iterator pos, const DataType& value) noexcept {
-			const Size index = iterDistance<typename const_iterator::pointer>(&*cbegin(), &*pos);
-			const Size newSize = size() + 1;
-			reserve(newSize);
+		constexpr iterator insert(const_iterator pos, const value_type& value) noexcept {
+			const size_type index = iterDistance<typename const_iterator::pointer>(&*cbegin(), &*pos);
+			const size_type newsize_type = size() + 1;
+			reserve(newsize_type);
 
 			shiftRelocateLeft(index, 1);
 			set(index, value);
 
-			setSize(newSize);
+			setsize_type(newsize_type);
 			return iterator(data() + index);
 
 		}
-		constexpr iterator insert(const_iterator pos, DataType&& value) noexcept {
-			const Size index = iterDistance<typename const_iterator::pointer>(&*cbegin(), &*pos);
-			const Size newSize = size() + 1;
-			reserve(newSize);
+		constexpr iterator insert(const_iterator pos, value_type&& value) noexcept {
+			const size_type index = iterDistance<typename const_iterator::pointer>(&*cbegin(), &*pos);
+			const size_type newsize_type = size() + 1;
+			reserve(newsize_type);
 
 			shiftRelocateLeft(index, 1);
 
-			set(index, forward<DataType>(value));
+			set(index, forward<value_type>(value));
 
-			setSize(newSize);
+			setsize_type(newsize_type);
 			return iterator(data() + index);
 		}
-		constexpr iterator insert(const_iterator pos, const DataType* srcPtr, const Size count) noexcept {
+		constexpr iterator insert(const_iterator pos, const_pointer srcPtr, const size_type count) noexcept {
 			if (count == 0) { return constIteratorToIterator(pos); }
-			const Size index = iterDistance<typename const_iterator::pointer>(&*cbegin(), &*pos);
-			const Size newSize = size() + count;
-			reserve(newSize);
+			const size_type index = iterDistance<typename const_iterator::pointer>(&*cbegin(), &*pos);
+			const size_type newsize_type = size() + count;
+			reserve(newsize_type);
 
-			const Size relocateCount = shiftRelocateLeft(index, count);
+			const size_type relocateCount = shiftRelocateLeft(index, count);
 
 			if (!std::is_constant_evaluated()) {
-				if constexpr (IsTriviallyDestructible<DataType>) {
-					DataType* insertDstPtr = data() + index;
-					const DataType* insertSrcPtrFirst = srcPtr;
-					const DataType* insertSrcPtrLast = insertSrcPtrFirst + count;
+				if constexpr (IsTriviallyDestructible<value_type>) {
+					pointer insertDstPtr = data() + index;
+					const_pointer insertSrcPtrFirst = srcPtr;
+					const_pointer insertSrcPtrLast = insertSrcPtrFirst + count;
 					internalCopyNoOverlap(insertSrcPtrFirst, insertSrcPtrLast, insertDstPtr);
 
-					setSize(newSize);
+					setsize_type(newsize_type);
 					return iterator(data() + index);
 				}
 			}
 
-			const Size regularCopyCount = relocateCount;
-			DataType* insertRegularDstPtr = data() + index;
-			const DataType* insertRegularSrcPtrFirst = srcPtr;
-			const DataType* insertRegularSrcPtrLast = insertRegularSrcPtrFirst + regularCopyCount;
-			natl::copyCountNoOverlap<const DataType*, DataType*>(insertRegularSrcPtrFirst, insertRegularSrcPtrLast, insertRegularDstPtr);
+			const size_type regularCopyCount = relocateCount;
+			pointer insertRegularDstPtr = data() + index;
+			const_pointer insertRegularSrcPtrFirst = srcPtr;
+			const_pointer insertRegularSrcPtrLast = insertRegularSrcPtrFirst + regularCopyCount;
+			natl::copyCountNoOverlap<const_pointer, pointer>(insertRegularSrcPtrFirst, insertRegularSrcPtrLast, insertRegularDstPtr);
 
-			const Size uninilizedCopyCount = count - relocateCount;
-			DataType* insertUninilizedDstPtr = data() + index + regularCopyCount;
-			const DataType* insertUninilizedSrcPtrFirst = insertRegularSrcPtrLast;
-			const DataType* insertUninilizedSrcPtrLast = insertUninilizedSrcPtrFirst + uninilizedCopyCount;
-			natl::uninitializedCopyNoOverlap<const DataType*, DataType*>(insertUninilizedSrcPtrFirst, insertUninilizedSrcPtrLast, insertUninilizedDstPtr);
+			const size_type uninilizedCopyCount = count - relocateCount;
+			pointer insertUninilizedDstPtr = data() + index + regularCopyCount;
+			const_pointer insertUninilizedSrcPtrFirst = insertRegularSrcPtrLast;
+			const_pointer insertUninilizedSrcPtrLast = insertUninilizedSrcPtrFirst + uninilizedCopyCount;
+			natl::uninitializedCopyNoOverlap<const_pointer, pointer>(insertUninilizedSrcPtrFirst, insertUninilizedSrcPtrLast, insertUninilizedDstPtr);
 
-			setSize(newSize);
+			setsize_type(newsize_type);
 			return iterator(data() + index);
 		}
-		constexpr iterator insert(const_iterator pos, const size_type count, const DataType& value) {
+		constexpr iterator insert(const_iterator pos, const size_type count, const value_type& value) {
 			if (count == 0) { return constIteratorToIterator(pos); }
-			const Size index = iterDistance<typename const_iterator::pointer>(&*cbegin(), &*pos);
-			const Size newSize = size() + count;
-			reserve(newSize);
+			const size_type index = iterDistance<typename const_iterator::pointer>(&*cbegin(), &*pos);
+			const size_type newsize_type = size() + count;
+			reserve(newsize_type);
 
-			const Size relocateCount = shiftRelocateLeft(index, count);
+			const size_type relocateCount = shiftRelocateLeft(index, count);
 
 			if (!std::is_constant_evaluated()) {
-				if constexpr (IsTriviallyDestructible<DataType>) {
-					DataType* fillDstPtrFirst = data() + index;
-					DataType* fillDstPtrLast = fillDstPtrFirst + count;
+				if constexpr (IsTriviallyDestructible<value_type>) {
+					pointer fillDstPtrFirst = data() + index;
+					pointer fillDstPtrLast = fillDstPtrFirst + count;
 					internalFill(fillDstPtrFirst, fillDstPtrLast, value);
 
-					setSize(newSize);
+					setsize_type(newsize_type);
 					return iterator(data() + index);
 				}
 			}
 
-			const Size regularFillCount = relocateCount;
-			DataType* fillRegularDstPtrFirst = data() + index;
-			DataType* fillRegularDstPtrLast = fillRegularDstPtrFirst + regularFillCount;
-			natl::fill<DataType*, DataType>(fillRegularDstPtrFirst, fillRegularDstPtrLast, value);
+			const size_type regularFillCount = relocateCount;
+			pointer fillRegularDstPtrFirst = data() + index;
+			pointer fillRegularDstPtrLast = fillRegularDstPtrFirst + regularFillCount;
+			natl::fill<pointer, value_type>(fillRegularDstPtrFirst, fillRegularDstPtrLast, value);
 
-			const Size uninilizedFillCount = count - relocateCount;
-			DataType* fillUninilizedDstPtrFirst = fillRegularDstPtrLast;
-			DataType* fillUninilizedDrcPtrLast = fillUninilizedDstPtrFirst + uninilizedFillCount;
-			natl::uninitializedFill<DataType*, DataType>(fillUninilizedDstPtrFirst, fillUninilizedDrcPtrLast, value);
+			const size_type uninilizedFillCount = count - relocateCount;
+			pointer fillUninilizedDstPtrFirst = fillRegularDstPtrLast;
+			pointer fillUninilizedDrcPtrLast = fillUninilizedDstPtrFirst + uninilizedFillCount;
+			natl::uninitializedFill<pointer, value_type>(fillUninilizedDstPtrFirst, fillUninilizedDrcPtrLast, value);
 
-			setSize(newSize);
+			setsize_type(newsize_type);
 			return iterator(data() + index);
 		}
 		template<class Iter>
-			requires(IsIterPtr<Iter>&& std::is_same_v<typename IterPtrTraits<Iter>::value_type, DataType>)
+			requires(IsIterPtr<Iter>&& std::is_same_v<typename IterPtrTraits<Iter>::value_type, value_type>)
 		constexpr iterator insert(const_iterator pos, Iter first, Iter last) {
 			if constexpr (IsRandomAccessIterator<Iter>) {
-				const Size count = iterDistance<Iter>(first, last);
-				const DataType* firstPtr = iteratorToAddress<Iter>(first);
+				const size_type count = iterDistance<Iter>(first, last);
+				const_pointer firstPtr = iteratorToAddress<Iter>(first);
 				insert(pos, firstPtr, count);
 			}
 
-			const Size index = iterDistance<typename const_iterator::pointer>(&*cbegin(), &*pos);
-			const Size count = iterDistance<Iter>(first, last);
-			const Size newSize = size() + count;
-			reserve(newSize);
+			const size_type index = iterDistance<typename const_iterator::pointer>(&*cbegin(), &*pos);
+			const size_type count = iterDistance<Iter>(first, last);
+			const size_type newsize_type = size() + count;
+			reserve(newsize_type);
 
-			const Size relocateCount = shiftRelocateLeft(index, count);
+			const size_type relocateCount = shiftRelocateLeft(index, count);
 
 			if (!std::is_constant_evaluated()) {
-				if constexpr (IsTriviallyDestructible<DataType>) {
-					DataType* insertDstPtr = data() + index;
+				if constexpr (IsTriviallyDestructible<value_type>) {
+					pointer insertDstPtr = data() + index;
 					internalCopyNoOverlap<Iter>(first, last, insertDstPtr);
 					
-					setSize(newSize);
+					setsize_type(newsize_type);
 					return iterator(data() + index);
 				}
 			}
 
 			Iter srcIter = first;
-			DataType* dstPtr = data() + index;
-			const Size regularCopyCount = relocateCount;
-			const Size uninilizedCopyCount = count - relocateCount;
-			for (Size i = 0; i < regularCopyCount; i++, dstPtr++, srcIter++) {
+			pointer dstPtr = data() + index;
+			const size_type regularCopyCount = relocateCount;
+			const size_type uninilizedCopyCount = count - relocateCount;
+			for (size_type i = 0; i < regularCopyCount; i++, dstPtr++, srcIter++) {
 				*dstPtr = *srcIter;
 			}
-			for (Size i = 0; i < uninilizedCopyCount; i++, dstPtr++, srcIter++) {
-				std::construct_at<DataType, DataType>(dstPtr, *srcIter);
+			for (size_type i = 0; i < uninilizedCopyCount; i++, dstPtr++, srcIter++) {
+				std::construct_at<value_type, value_type>(dstPtr, *srcIter);
 			}
 
-			setSize(newSize);
+			setsize_type(newsize_type);
 			return iterator(data() + index);
 		}
 		template<class ArrayViewLike>
-			requires(IsArrayViewLike<ArrayViewLike, const DataType>)
+			requires(IsArrayViewLike<ArrayViewLike, const value_type>)
 		constexpr iterator insert(const_iterator pos, const ArrayViewLike& arrayViewLike) noexcept {
 			return insert(pos, arrayViewLike.data(), arrayViewLike.size());
 		}
-		constexpr iterator insert(const_iterator pos, std::initializer_list<DataType> ilist) noexcept {
+		constexpr iterator insert(const_iterator pos, std::initializer_list<value_type> ilist) noexcept {
 			return insert(pos, ilist.begin(), ilist.size());
 		}
 
 		template<class... Args >
 		constexpr iterator emplace(const_iterator pos, Args&&... args) {
-			const Size index = iterDistance<typename const_iterator::pointer>(&*cbegin(), &*pos);
-			const Size newSize = size() + 1;
-			reserve(newSize);
+			const size_type index = iterDistance<typename const_iterator::pointer>(&*cbegin(), &*pos);
+			const size_type newsize_type = size() + 1;
+			reserve(newsize_type);
 
 			shiftRelocateLeft(index, 1);
 
-			std::construct_at<DataType, Args...>(&*pos, std::forward<Args>(args)...);
+			std::construct_at<value_type, Args...>(&*pos, std::forward<Args>(args)...);
 
-			setSize(newSize);
+			setsize_type(newsize_type);
 			return iterator(data() + index);
 		}
 
 		constexpr iterator erase(const_iterator pos) noexcept {
-			const Size newSize = size() - 1;
-			const Size index = iterDistance<typename const_iterator::pointer>(&*cbegin(), &*pos);
+			const size_type newsize_type = size() - 1;
+			const size_type index = iterDistance<typename const_iterator::pointer>(&*cbegin(), &*pos);
 			
 
-			DataType* relocateDstPtr = data() + index;
-			const DataType* relocateSrcPtrFirst = data() + index + 1;
-			const DataType* relocateSrcPtrLast = endPtr();
+			pointer relocateDstPtr = data() + index;
+			const_pointer relocateSrcPtrFirst = data() + index + 1;
+			const_pointer relocateSrcPtrLast = endPtr();
 			internalCopy(relocateSrcPtrFirst, relocateSrcPtrLast, relocateDstPtr);
 
-			if (!IsTriviallyDestructible<DataType> || std::is_constant_evaluated()) {
-				defualtDeconstruct<DataType>(at(backIndex()));
+			if (!IsTriviallyDestructible<value_type> || std::is_constant_evaluated()) {
+				defualtDeconstruct<value_type>(at(backIndex()));
 			}
 
-			setSize(newSize);
+			setsize_type(newsize_type);
 			return iterator(data() + index);
 		}
 		constexpr iterator erase(const_iterator first, const_iterator last) noexcept {
-			const Size index = iterDistance<typename const_iterator::pointer>(&*cbegin(), &*first);
-			const Size count = iterDistance<typename const_iterator::pointer>(&*first, &*last);
-			const Size newSize = size() - count;
+			const size_type index = iterDistance<typename const_iterator::pointer>(&*cbegin(), &*first);
+			const size_type count = iterDistance<typename const_iterator::pointer>(&*first, &*last);
+			const size_type newsize_type = size() - count;
 
-			DataType* relocateDstPtr = data() + index;
-			const DataType* relocateSrcPtrFirst = data() + index + count;
-			const DataType* relocateSrcPtrLast = endPtr();
+			pointer relocateDstPtr = data() + index;
+			const_pointer relocateSrcPtrFirst = data() + index + count;
+			const_pointer relocateSrcPtrLast = endPtr();
 			internalCopy(relocateSrcPtrFirst, relocateSrcPtrLast, relocateDstPtr);
 
-			if (!IsTriviallyDestructible<DataType> || std::is_constant_evaluated()) {
-				defualtDeconstructAll<DataType>(data() + newSize, count);
+			if (!IsTriviallyDestructible<value_type> || std::is_constant_evaluated()) {
+				defualtDeconstructAll<value_type>(data() + newsize_type, count);
 			}
 
-			setSize(newSize);
+			setsize_type(newsize_type);
 			return iterator(data() + index);
 		}
 
@@ -740,276 +745,276 @@ namespace natl {
 			return erase(begin() + index); 
 		}
 
-		constexpr reference push_back(const DataType& value) noexcept {
-			const Size index = size();
-			const Size newSize = index + 1;
-			reserve(newSize);
+		constexpr reference push_back(const value_type& value) noexcept {
+			const size_type index = size();
+			const size_type newsize_type = index + 1;
+			reserve(newsize_type);
 			return set(index, value);
 		}
-		constexpr reference push_back(DataType&& value) noexcept {
-			const Size index = size();
-			const Size newSize = index + 1;
-			reserve(newSize);
-			setSize(newSize);
-			return set(index, forward<DataType>(value));;
+		constexpr reference push_back(value_type&& value) noexcept {
+			const size_type index = size();
+			const size_type newsize_type = index + 1;
+			reserve(newsize_type);
+			setsize_type(newsize_type);
+			return set(index, forward<value_type>(value));;
 		}
 
 		template<class... Args >
 		constexpr reference emplace_back(Args&&... args) noexcept {
-			const Size index = size();
-			const Size newSize = index + 1;
-			reserve(newSize);
-			setSize(newSize);
+			const size_type index = size();
+			const size_type newsize_type = index + 1;
+			reserve(newsize_type);
+			setsize_type(newsize_type);
 			reference value = at(index);
-			std::construct_at<DataType, Args...>(value, std::forward<Args>(args)...);
+			std::construct_at<value_type, Args...>(value, std::forward<Args>(args)...);
 			return value;
 		}
 
-		constexpr DynArray& append(const DataType* srcPtr, const Size count) noexcept {
-			const Size index = size();
-			const Size newSize = index + 1;
-			reserve(newSize);
+		constexpr DynArray& append(const_pointer srcPtr, const size_type count) noexcept {
+			const size_type index = size();
+			const size_type newsize_type = index + 1;
+			reserve(newsize_type);
 
-			DataType* insertDstPtr = data() + index;
-			const DataType* insertSrcPtrFirst = srcPtr;
-			const DataType* insertSrcPtrLast = insertSrcPtrFirst + count;
+			pointer insertDstPtr = data() + index;
+			const_pointer insertSrcPtrFirst = srcPtr;
+			const_pointer insertSrcPtrLast = insertSrcPtrFirst + count;
 			internalCopyNoOverlap(insertSrcPtrFirst, insertSrcPtrLast, insertDstPtr);
 
-			setSize(newSize);
+			setsize_type(newsize_type);
 			return self();
 		}
 		template<class ArrayViewLike>
-			requires(IsArrayViewLike<ArrayViewLike, const DataType>)
+			requires(IsArrayViewLike<ArrayViewLike, const value_type>)
 		constexpr DynArray& append(const ArrayViewLike& arrayViewLike) noexcept {
 			return append(arrayViewLike.data(), arrayViewLike.size());
 		}
 		template<class ArrayViewLikeConvertible>
-			requires(std::is_convertible_v<ArrayViewLikeConvertible, ArrayView<const DataType>> && !IsArrayViewLike<ArrayViewLikeConvertible, DataType>)
+			requires(std::is_convertible_v<ArrayViewLikeConvertible, ArrayView<const value_type>> && !IsArrayViewLike<ArrayViewLikeConvertible, value_type>)
 		constexpr DynArray& append(const ArrayViewLikeConvertible& arrayViewLikeConvertible) noexcept {
-			return append<ArrayView<const DataType>>( static_cast<ArrayView<const DataType>>(arrayViewLikeConvertible) );
+			return append<ArrayView<const value_type>>( static_cast<ArrayView<const value_type>>(arrayViewLikeConvertible) );
 		}
-		constexpr DynArray& append(const std::initializer_list<DataType> ilist) noexcept {
+		constexpr DynArray& append(const std::initializer_list<value_type> ilist) noexcept {
 			return append(ilist.begin(), ilist.end());
 		}
 
 		constexpr DynArray& pop_back() noexcept {
-			if (!IsTriviallyDestructible<DataType> || std::is_constant_evaluated()) {
-				defualtDeconstruct<DataType>(at(backIndex()));
+			if (!IsTriviallyDestructible<value_type> || std::is_constant_evaluated()) {
+				defualtDeconstruct<value_type>(at(backIndex()));
 			}
-			setSize(size() - 1);
+			setsize_type(size() - 1);
 			return;
 		}
 
 	private:
-		constexpr reference set(const Size index, const DataType& value) noexcept {
+		constexpr reference set(const size_type index, const value_type& value) noexcept {
 			reference valueDst = at(index);
-			if (IsTriviallyDestructible<DataType>) {
+			if (IsTriviallyDestructible<value_type>) {
 				valueDst = value;
 			} else {
-				DataType tempValue = value;
-				std::construct_at<DataType, DataType>(&valueDst, forward<DataType>(tempValue));
+				value_type tempValue = value;
+				std::construct_at<value_type, value_type>(&valueDst, forward<value_type>(tempValue));
 			}
 			return valueDst;
 		}
-		constexpr reference set(const Size index, DataType&& value) noexcept {
+		constexpr reference set(const size_type index, value_type&& value) noexcept {
 			reference valueDst = at(index);
-			if (IsTriviallyDestructible<DataType>) {
+			if (IsTriviallyDestructible<value_type>) {
 				valueDst = value;
 			} else {
-				std::construct_at<DataType, DataType>(&valueDst, forward<DataType>(value));
+				std::construct_at<value_type, value_type>(&valueDst, forward<value_type>(value));
 			}
 			return valueDst;
 		}
 
-		constexpr void internalCopyNoOverlap(const DataType* srcPtr, const DataType* srcPtrLast, DataType* dstPtr) noexcept {
+		constexpr void internalCopyNoOverlap(const_pointer srcPtr, const_pointer srcPtrLast, pointer dstPtr) noexcept {
 			if (!std::is_constant_evaluated()) {
-				if constexpr (IsTriviallyDestructible<DataType>) {
-					uninitializedCopyNoOverlap<const DataType*, DataType*>(srcPtr, srcPtrLast, dstPtr);
+				if constexpr (IsTriviallyDestructible<value_type>) {
+					uninitializedCopyNoOverlap<const_pointer, pointer>(srcPtr, srcPtrLast, dstPtr);
 					return;
 				}
 			}
 
-			copyNoOverlap<const DataType*, DataType*>(srcPtr, srcPtrLast, dstPtr);
+			copyNoOverlap<const_pointer, pointer>(srcPtr, srcPtrLast, dstPtr);
 		}
 		template<class Iter>
-		constexpr void internalCopyNoOverlap(Iter first, Iter last, DataType* dstPtr) {
+		constexpr void internalCopyNoOverlap(Iter first, Iter last, pointer dstPtr) {
 			if (!std::is_constant_evaluated()) {
-				if constexpr (IsTriviallyDestructible<DataType>) {
-					uninitializedCopyNoOverlap<Iter, DataType*>(first, last, dstPtr);
+				if constexpr (IsTriviallyDestructible<value_type>) {
+					uninitializedCopyNoOverlap<Iter, pointer>(first, last, dstPtr);
 					return;
 				}
 			}
-			copyNoOverlap<Iter, DataType*>(first, last, dstPtr);
+			copyNoOverlap<Iter, pointer>(first, last, dstPtr);
 		}
 
-		constexpr void internalCopy(const DataType* srcPtr, const DataType* srcPtrLast, DataType* dstPtr) noexcept {
+		constexpr void internalCopy(const_pointer srcPtr, const_pointer srcPtrLast, pointer dstPtr) noexcept {
 			if (!std::is_constant_evaluated()) {
-				if constexpr (IsTriviallyDestructible<DataType>) {
-					uninitializedCopy<const DataType*, DataType*>(srcPtr, srcPtrLast, dstPtr);
+				if constexpr (IsTriviallyDestructible<value_type>) {
+					uninitializedCopy<const_pointer, pointer>(srcPtr, srcPtrLast, dstPtr);
 					return;
 				}
 			}
-			copy<const DataType*, DataType*>(srcPtr, srcPtrLast, dstPtr);
+			copy<const_pointer, pointer>(srcPtr, srcPtrLast, dstPtr);
 		}
 		template<class Iter>
-		constexpr void internalCopy(Iter first, Iter last, DataType* dstPtr) noexcept {
+		constexpr void internalCopy(Iter first, Iter last, pointer dstPtr) noexcept {
 			if (!std::is_constant_evaluated()) {
-				if constexpr (IsTriviallyDestructible<DataType>) {
-					uninitializedCopy<Iter, DataType*>(first, last, dstPtr);
+				if constexpr (IsTriviallyDestructible<value_type>) {
+					uninitializedCopy<Iter, pointer>(first, last, dstPtr);
 					return;
 				}
 			} 
-			copy<Iter, DataType*>(first, last, dstPtr);
+			copy<Iter, pointer>(first, last, dstPtr);
 		}
 
-		constexpr void internalFill(DataType* dstPtr, DataType* dstPtrLast, const DataType& value) noexcept {
+		constexpr void internalFill(pointer dstPtr, pointer dstPtrLast, const value_type& value) noexcept {
 			if (!std::is_constant_evaluated()) {
-				if constexpr (IsTriviallyDestructible<DataType>) {
-					uninitializedFill<DataType*, DataType>(dstPtr, dstPtrLast, value);
+				if constexpr (IsTriviallyDestructible<value_type>) {
+					uninitializedFill<pointer, value_type>(dstPtr, dstPtrLast, value);
 					return;
 				}
 			}
-			fill<DataType*, DataType>(dstPtr, dstPtrLast, value);
+			fill<pointer, value_type>(dstPtr, dstPtrLast, value);
 		}
 	public:
 		//compare operators 
 		friend constexpr bool operator==(const DynArray& lhs, const DynArray& rhs) noexcept {
 			return lhs.toArrayView() == rhs.toArrayView();
 		}
-		friend constexpr bool operator==(const DynArray& lhs, const DataType rhs) noexcept {
+		friend constexpr bool operator==(const DynArray& lhs, const value_type rhs) noexcept {
 			return lhs.toArrayView() == rhs;
 		}
 		template<class ArrayViewLike>
-			requires(IsArrayViewLike<ArrayViewLike, const DataType>)
+			requires(IsArrayViewLike<ArrayViewLike, const value_type>)
 		friend constexpr bool operator==(const DynArray& lhs, const ArrayViewLike& rhs) noexcept {
 			return lhs.toArrayView() == rhs;
 		}
 		template<class ArrayViewLike>
-			requires(std::is_convertible_v<ArrayViewLike, ArrayView<const DataType>> && !IsArrayViewLike<ArrayViewLike, const DataType>)
+			requires(std::is_convertible_v<ArrayViewLike, ArrayView<const value_type>> && !IsArrayViewLike<ArrayViewLike, const value_type>)
 		friend constexpr bool operator==(const DynArray& lhs, const ArrayViewLike& rhs) noexcept {
 			return lhs.toArrayView() == rhs;
 		}
-		friend constexpr bool operator==(const DynArray& lhs, std::initializer_list<DataType> rhs) noexcept {
+		friend constexpr bool operator==(const DynArray& lhs, std::initializer_list<value_type> rhs) noexcept {
 			return lhs.toArrayView() == rhs;
 		}
 
 		friend constexpr bool operator!=(const DynArray& lhs, const DynArray& rhs) noexcept {
 			return lhs.toArrayView() != rhs.toArrayView();
 		}
-		friend constexpr bool operator!=(const DynArray& lhs, const DataType rhs) noexcept {
+		friend constexpr bool operator!=(const DynArray& lhs, const value_type rhs) noexcept {
 			return lhs.toArrayView() != rhs;
 		}
 		template<class ArrayViewLike>
-			requires(IsArrayViewLike<ArrayViewLike, const DataType>)
+			requires(IsArrayViewLike<ArrayViewLike, const value_type>)
 		friend constexpr bool operator!=(const DynArray& lhs, const ArrayViewLike& rhs) noexcept {
 			return lhs.toArrayView() != rhs;
 		}
 		template<class ArrayViewLike>
-			requires(std::is_convertible_v<ArrayViewLike, ArrayView<const DataType>> && !IsArrayViewLike<ArrayViewLike, const DataType>)
+			requires(std::is_convertible_v<ArrayViewLike, ArrayView<const value_type>> && !IsArrayViewLike<ArrayViewLike, const value_type>)
 		friend constexpr bool operator!=(const DynArray& lhs, const ArrayViewLike& rhs) noexcept {
 			return lhs.toArrayView() != rhs;
 		}
-		friend constexpr bool operator!=(const DynArray& lhs, std::initializer_list<DataType> rhs) noexcept {
+		friend constexpr bool operator!=(const DynArray& lhs, std::initializer_list<value_type> rhs) noexcept {
 			return lhs.toArrayView() != rhs;
 		}
 
 		friend constexpr bool operator<(const DynArray& lhs, const DynArray& rhs) noexcept {
 			return lhs.toArrayView() < rhs.toArrayView();
 		}
-		friend constexpr bool operator<(const DynArray& lhs, const DataType rhs) noexcept {
+		friend constexpr bool operator<(const DynArray& lhs, const value_type rhs) noexcept {
 			return lhs.toArrayView() < rhs;
 		}
 		template<class ArrayViewLike>
-			requires(IsArrayViewLike<ArrayViewLike, const DataType>)
+			requires(IsArrayViewLike<ArrayViewLike, const value_type>)
 		friend constexpr bool operator<(const DynArray& lhs, const ArrayViewLike& rhs) noexcept {
 			return lhs.toArrayView() < rhs;
 		}
 		template<class ArrayViewLike>
-			requires(std::is_convertible_v<ArrayViewLike, ArrayView<const DataType>> && !IsArrayViewLike<ArrayViewLike, const DataType>)
+			requires(std::is_convertible_v<ArrayViewLike, ArrayView<const value_type>> && !IsArrayViewLike<ArrayViewLike, const value_type>)
 		friend constexpr bool operator<(const DynArray& lhs, const ArrayViewLike& rhs) noexcept {
 			return lhs.toArrayView() < rhs;
 		}
-		friend constexpr bool operator<(const DynArray& lhs, std::initializer_list<DataType> rhs) noexcept {
+		friend constexpr bool operator<(const DynArray& lhs, std::initializer_list<value_type> rhs) noexcept {
 			return lhs.toArrayView() < rhs;
 		}
 
 		friend constexpr bool operator<=(const DynArray& lhs, const DynArray& rhs) noexcept {
 			return lhs.toArrayView() <= rhs.toArrayView();
 		}
-		friend constexpr bool operator<=(const DynArray& lhs, const DataType rhs) noexcept {
+		friend constexpr bool operator<=(const DynArray& lhs, const value_type rhs) noexcept {
 			return lhs.toArrayView() <= rhs;
 		}
 		template<class ArrayViewLike>
-			requires(IsArrayViewLike<ArrayViewLike, const DataType>)
+			requires(IsArrayViewLike<ArrayViewLike, const value_type>)
 		friend constexpr bool operator<=(const DynArray& lhs, const ArrayViewLike& rhs) noexcept {
 			return lhs.toArrayView() <= rhs;
 		}
 		template<class ArrayViewLike>
-			requires(std::is_convertible_v<ArrayViewLike, ArrayView<const DataType>> && !IsArrayViewLike<ArrayViewLike, const DataType>)
+			requires(std::is_convertible_v<ArrayViewLike, ArrayView<const value_type>> && !IsArrayViewLike<ArrayViewLike, const value_type>)
 		friend constexpr bool operator<=(const DynArray& lhs, const ArrayViewLike& rhs) noexcept {
 			return lhs.toArrayView() <= rhs;
 		}
-		friend constexpr bool operator<=(const DynArray& lhs, std::initializer_list<DataType> rhs) noexcept {
+		friend constexpr bool operator<=(const DynArray& lhs, std::initializer_list<value_type> rhs) noexcept {
 			return lhs.toArrayView() <= rhs;
 		}
 
 		friend constexpr bool operator>(const DynArray& lhs, const DynArray& rhs) noexcept {
 			return lhs.toArrayView() > rhs.toArrayView();
 		}
-		friend constexpr bool operator>(const DynArray& lhs, const DataType rhs) noexcept {
+		friend constexpr bool operator>(const DynArray& lhs, const value_type rhs) noexcept {
 			return lhs.toArrayView() > rhs;
 		}
 		template<class ArrayViewLike>
-			requires(IsArrayViewLike<ArrayViewLike, const DataType>)
+			requires(IsArrayViewLike<ArrayViewLike, const value_type>)
 		friend constexpr bool operator>(const DynArray& lhs, const ArrayViewLike& rhs) noexcept {
 			return lhs.toArrayView() > rhs;
 		}
 		template<class ArrayViewLike>
-			requires(std::is_convertible_v<ArrayViewLike, ArrayView<const DataType>> && !IsArrayViewLike<ArrayViewLike, const DataType>)
+			requires(std::is_convertible_v<ArrayViewLike, ArrayView<const value_type>> && !IsArrayViewLike<ArrayViewLike, const value_type>)
 		friend constexpr bool operator>(const DynArray& lhs, const ArrayViewLike& rhs) noexcept {
 			return lhs.toArrayView() > rhs;
 		}
-		friend constexpr bool operator>(const DynArray& lhs, std::initializer_list<DataType> rhs) noexcept {
+		friend constexpr bool operator>(const DynArray& lhs, std::initializer_list<value_type> rhs) noexcept {
 			return lhs.toArrayView() > rhs;
 		}
 
 		friend constexpr bool operator>=(const DynArray& lhs, const DynArray& rhs) noexcept {
 			return lhs.toArrayView() >= rhs.toArrayView();
 		}
-		friend constexpr bool operator>=(const DynArray& lhs, const DataType rhs) noexcept {
+		friend constexpr bool operator>=(const DynArray& lhs, const value_type rhs) noexcept {
 			return lhs.toArrayView() >= rhs;
 		}
 		template<class ArrayViewLike>
-			requires(IsArrayViewLike<ArrayViewLike, const DataType>)
+			requires(IsArrayViewLike<ArrayViewLike, const value_type>)
 		friend constexpr bool operator>=(const DynArray& lhs, const ArrayViewLike& rhs) noexcept {
 			return lhs.toArrayView() >= rhs;
 		}
 		template<class ArrayViewLike>
-			requires(std::is_convertible_v<ArrayViewLike, ArrayView<const DataType>> && !IsArrayViewLike<ArrayViewLike, const DataType>)
+			requires(std::is_convertible_v<ArrayViewLike, ArrayView<const value_type>> && !IsArrayViewLike<ArrayViewLike, const value_type>)
 		friend constexpr bool operator>=(const DynArray& lhs, const ArrayViewLike& rhs) noexcept {
 			return lhs.toArrayView() >= rhs;
 		}
-		friend constexpr bool operator>=(const DynArray& lhs, std::initializer_list<DataType> rhs) noexcept {
+		friend constexpr bool operator>=(const DynArray& lhs, std::initializer_list<value_type> rhs) noexcept {
 			return lhs.toArrayView() >= rhs;
 		}
 
 		friend constexpr std::strong_ordering operator<=>(const DynArray& lhs, const DynArray& rhs) noexcept {
 			return lhs.toArrayView() <=> rhs.toArrayView();
 		}
-		friend constexpr std::strong_ordering operator<=>(const DynArray& lhs, const DataType rhs) noexcept {
+		friend constexpr std::strong_ordering operator<=>(const DynArray& lhs, const value_type rhs) noexcept {
 			return lhs.toArrayView() <=> rhs;
 		}
 		template<class ArrayViewLike>
-			requires(IsArrayViewLike<ArrayViewLike, const DataType>)
+			requires(IsArrayViewLike<ArrayViewLike, const value_type>)
 		friend constexpr std::strong_ordering operator<=>(const DynArray& lhs, const ArrayViewLike& rhs) noexcept {
 			return lhs.toArrayView() <=> rhs;
 		}
 		template<class ArrayViewLike>
-			requires(std::is_convertible_v<ArrayViewLike, ArrayView<const DataType>> && !IsArrayViewLike<ArrayViewLike, const DataType>)
+			requires(std::is_convertible_v<ArrayViewLike, ArrayView<const value_type>> && !IsArrayViewLike<ArrayViewLike, const value_type>)
 		friend constexpr std::strong_ordering operator<=>(const DynArray& lhs, const ArrayViewLike& rhs) noexcept {
 			return lhs.toArrayView() <=> rhs;
 		}
-		friend constexpr bool operator<=>(const DynArray& lhs, std::initializer_list<DataType> rhs) noexcept {
+		friend constexpr bool operator<=>(const DynArray& lhs, std::initializer_list<value_type> rhs) noexcept {
 			return lhs.toArrayView() <=> rhs;
 		}
 
@@ -1020,16 +1025,16 @@ namespace natl {
 		}
 
 		//hash
-		constexpr Size hash() const noexcept requires(Hashable<DataType>) {
-			Size seed = size();
-			const DataType srcDataPtr = beginPtr();
-			const DataType srcDataPtrEnd = endPtr();
+		constexpr size_type hash() const noexcept requires(Hashable<value_type>) {
+			size_type seed = size();
+			const value_type srcDataPtr = beginPtr();
+			const value_type srcDataPtrEnd = endPtr();
 			for (; srcDataPtr < srcDataPtrEnd; srcDataPtr++) {
-				seed ^= Hash<DataType>{}(*srcDataPtr) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+				seed ^= Hash<value_type>{}(*srcDataPtr) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
 			}
 			return seed;
 		}
-		constexpr static Size staticHash(const DynArray& dynArray) noexcept requires(Hashable<DataType>) {
+		constexpr static size_type staticHash(const DynArray& dynArray) noexcept requires(Hashable<value_type>) {
 			return dynArray.hash();
 		}
 	};

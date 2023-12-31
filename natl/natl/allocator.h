@@ -26,6 +26,28 @@ namespace natl {
 			{ Alloc::deallocate(std::declval<typename Alloc::pointer>(), std::declval<typename Alloc::size_type>()) };
 	};
 
+	template<class Alloc>
+	struct AllocatorTraits {
+		using allocator_type = Alloc;
+
+		using value_type = typename Alloc::value_type;
+		using reference = typename Alloc::reference;
+		using const_reference = typename Alloc::const_reference;
+		using pointer = typename Alloc::pointer;
+		using const_pointer = typename Alloc::const_pointer;
+		using difference_type = typename Alloc::difference_type;
+		using size_type = typename Alloc::size_type;
+
+		using void_pointer = typename Alloc::void_pointer;
+		using const_void_pointer = typename Alloc::const_void_pointer;
+
+		template <class Other>
+		using rebind_alloc = typename Alloc:: template rebind_alloc<Other>;
+
+		template <class Other>
+		using rebind_traits = AllocatorTraits<rebind_alloc<Other>>;
+	};
+
 
 	template<class DataType>
 	class Allocator {
@@ -37,6 +59,9 @@ namespace natl {
 		using const_pointer = const DataType*;
 		using difference_type = PtrDiff;
 		using size_type = Size;
+
+		template <class Other>
+		using rebind_alloc = Allocator<Other>;
 	public:
 		constexpr Allocator() = default;
 		constexpr Allocator(const Allocator&) = default;
@@ -101,6 +126,9 @@ namespace natl {
 		using const_pointer = const DataType*;
 		using difference_type = PtrDiff;
 		using size_type = Size;
+
+		template <class Other>
+		using rebind_alloc = TrackerAllocator<Other>;
 	public:
 		TrackerAllocator() = default;
 		TrackerAllocator(const TrackerAllocator&) = default;

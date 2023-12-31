@@ -33,8 +33,6 @@ namespace natl {
 		using reverse_iterator = ReverseRandomAccessIterator<DataType>;
 		using const_reverse_iterator = ReverseRandomAccessIterator<const DataType>;
 
-		using Alloc = DefaultAllocator<DataType>;
-
 		//movement info  
 		constexpr static bool triviallyRelocatable = IsTriviallyRelocatable<DataType>;
 		constexpr static bool triviallyDefaultConstructible = IsTriviallyDefaultConstructible<DataType>;
