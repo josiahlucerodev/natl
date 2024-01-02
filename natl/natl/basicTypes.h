@@ -24,8 +24,9 @@ namespace natl {
 	using Size = ui64;
 	using PtrDiff = std::ptrdiff_t;
 
-	using Utf32 = char32_t;
+	using Char = char;
 	using AssciCode = char;
+	using Utf32 = char32_t;
 
 	enum class Byte : ui8 {};
 

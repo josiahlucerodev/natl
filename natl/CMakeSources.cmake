@@ -3,6 +3,7 @@ natl/algorithm.h
 natl/allocator.h
 natl/array.h
 natl/arrayView.h
+natl/atomic.h
 natl/basicTypes.h
 natl/batchPool.h
 natl/bitArray.h

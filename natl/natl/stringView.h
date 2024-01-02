@@ -78,8 +78,8 @@ namespace natl {
 		}
 
 		//util
-		constexpr BaseStringView& self() { return *this; }
-		constexpr const BaseStringView& self() const { return *this; }
+		constexpr BaseStringView& self() noexcept { return *this; }
+		constexpr const BaseStringView& self() const noexcept { return *this; }
 
 		//iterators
 		constexpr const_pointer beginPtr() const noexcept { return dataPtr; }
