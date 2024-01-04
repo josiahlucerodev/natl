@@ -8,6 +8,11 @@
 
 //interface
 namespace natl {
+	template <typename Functor, typename ReturnType, typename... ArgTypes>
+	concept HasFunctionSignature = requires(Functor functor, ArgTypes... args) {
+		{ functor(args...) } -> std::same_as<ReturnType>;
+	};
+
 	namespace impl{
 		template<typename ReturnType, typename... ArgTypes>
 		struct CallableBase {
@@ -163,9 +168,18 @@ namespace natl {
 	public:
 		//constructor 
 		constexpr Function() noexcept : functionStorageType(impl::FunctionStorageType::functionPtr), functionPtr(nullptr) {}
-		constexpr Function(const Function& other) noexcept {}
+
+		template<Size OtherCap>
+		constexpr Function(const Function<ReturnType(ArgTypes...), OtherCap, Alloc>& other) noexcept {
+			assign<OtherCap>(other);
+		}
+		template<Size OtherCap>
+		constexpr Function(Function<ReturnType(ArgTypes...), OtherCap, Alloc>&& other) noexcept {
+			assign<OtherCap>(natl::forward<decltype(other)>(other));
+		}
 
 		template<class Functor>
+			requires(HasFunctionSignature<Functor, ReturnType, ArgTypes...>)
 		constexpr Function(Functor&& functor) noexcept {
 			assign<Functor>(move(functor));
 		}
@@ -207,6 +221,23 @@ namespace natl {
 		template<Size OtherCap>
 		constexpr Function& operator=(const Function<ReturnType(ArgTypes...), OtherCap, Alloc>& other) noexcept {
 			destruct();
+			return assign<OtherCap>(other);
+		}
+		template<Size OtherCap>
+		constexpr Function& operator=(Function<ReturnType(ArgTypes...), OtherCap, Alloc>&& other) noexcept {
+			destruct();
+			return assign<OtherCap>(natl::forward<decltype(other)>(other));
+		}
+		template<class Functor>
+			requires(HasFunctionSignature<Functor, ReturnType, ArgTypes...>)
+		constexpr Function& operator=(Functor&& functor) noexcept {
+			destruct();
+			return assign<Functor>(functor);
+		}
+
+	private:
+		template<Size OtherCap>
+		constexpr Function& assign(const Function<ReturnType(ArgTypes...), OtherCap, Alloc>& other) noexcept {
 			if (other.empty()) {
 				functionStorageType = impl::FunctionStorageType::functionPtr;
 				functionPtr = nullptr;
@@ -241,8 +272,7 @@ namespace natl {
 		}
 
 		template<Size OtherCap>
-		constexpr Function& operator=(Function<ReturnType(ArgTypes...), OtherCap, Alloc>&& other) noexcept {
-			destruct();
+		constexpr Function& assign(Function<ReturnType(ArgTypes...), OtherCap, Alloc>&& other) noexcept {
 			if (other.empty()) {
 				functionStorageType = impl::FunctionStorageType::functionPtr;
 				functionPtr = nullptr;
@@ -278,14 +308,9 @@ namespace natl {
 			}
 			return self();
 		}
-		template<class Functor>
-		constexpr Function& operator=(Functor&& functor) noexcept {
-			destruct();
-			assign<Functor>(functor);
-			return self();
-		}
 
 		template<class Functor>
+			requires(HasFunctionSignature<Functor, ReturnType, ArgTypes...>)
 		constexpr void assign(Functor&& functor) noexcept {
 			if constexpr (std::is_function_v<std::remove_pointer_t<Functor>>) {
 				functionPtr = static_cast<function_ptr_type>(functor);
@@ -312,10 +337,11 @@ namespace natl {
 				}
 			}
 		}
+	public:
 
 		constexpr bool empty() const noexcept {
 			if (functionStorageType == impl::FunctionStorageType::functionPtr) {
-				return functionPtr;
+				return !functionPtr;
 			} else {
 				return false;
 			}

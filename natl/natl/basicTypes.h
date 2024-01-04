@@ -30,6 +30,8 @@ namespace natl {
 
 	enum class Byte : ui8 {};
 
+	struct Dummy {};
+
 	static_assert(sizeof(i8) == 1, "natl: i8 should be 1 bytes");
 	static_assert(sizeof(i16) == 2, "natl: i16 should be 2 bytes");
 	static_assert(sizeof(i32) == 4, "natl: i32 should be 4 bytes");

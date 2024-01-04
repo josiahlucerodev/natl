@@ -141,4 +141,7 @@ namespace natl {
 
     template <class T1, class T2 = T1>
     using SynthesizeThreeWayResult = decltype(SynthesizeThreeWay{}(std::declval<T1&>(), std::declval<T2&>()));
+
+    template <typename From, typename To>
+    concept IsPolymorphicCastable = std::is_base_of_v<From, To> || std::is_convertible_v<From*, To*>;
 }
