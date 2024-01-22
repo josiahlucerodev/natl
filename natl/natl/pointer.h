@@ -239,12 +239,14 @@ namespace natl {
 			using control_block_polymorphic_ref_increment_function = void(*)(SharedPtrControlBlockSeperatePolymorphic*);
 			using control_block_polymorphic_weak_ref_increment_function = void(*)(SharedPtrControlBlockSeperatePolymorphic*);
 			using control_block_polymorphic_get_use_count_function = Size(*)(SharedPtrControlBlockSeperatePolymorphic*);
+			using control_block_polymorphic_increment_if_not_zero_function = bool(*)(SharedPtrControlBlockSeperatePolymorphic*);
 
 			constexpr virtual control_block_polymorphic_destroy_function getDestoryFunction() const noexcept = 0;
 			constexpr virtual control_block_polymorphic_destroy_function getWeakDestoryFunction() const noexcept = 0;
 			constexpr virtual control_block_polymorphic_ref_increment_function getRefIncrementFunction() const noexcept = 0;
 			constexpr virtual control_block_polymorphic_weak_ref_increment_function getWeakRefIncrementFunction() const noexcept = 0;
 			constexpr virtual control_block_polymorphic_get_use_count_function getUseCountFunction() const noexcept = 0;
+			constexpr virtual control_block_polymorphic_increment_if_not_zero_function getIncrementIfNotZeroFunction() const noexcept = 0;
 		};
 
 		template<class DataType>
@@ -253,6 +255,7 @@ namespace natl {
 			using control_block_polymorphic_ref_increment_function = typename SharedPtrControlBlockSeperatePolymorphic::control_block_polymorphic_ref_increment_function;
 			using control_block_polymorphic_weak_ref_increment_function = typename SharedPtrControlBlockSeperatePolymorphic::control_block_polymorphic_weak_ref_increment_function;
 			using control_block_polymorphic_get_use_count_function = typename SharedPtrControlBlockSeperatePolymorphic::control_block_polymorphic_get_use_count_function;
+			using control_block_polymorphic_increment_if_not_zero_function = typename SharedPtrControlBlockSeperatePolymorphic::control_block_polymorphic_increment_if_not_zero_function;
 			using control_block_deleter_function_type = Function<void(SharedPtrControlBlockSeperate*)>;
 
 			DataType* dataPtr;
@@ -282,9 +285,21 @@ namespace natl {
 					if (controlBlockSeperate->useCount.load() == 0) {
 						control_block_deleter_function_type controlBlockDeleter = natl::move(controlBlockSeperate->controlBlockDeleter);
 						controlBlockDeleter.invoke(controlBlockSeperate);
+						return;
 					}
 				}
 				controlBlockSeperate->weakCount--;
+			}
+			constexpr static inline bool incrementIfNotZero(SharedPtrControlBlockSeperate* controlBlockSeperate) {
+				Size previous = controlBlockSeperate->useCount.load();
+				for (;;) {
+					if (previous == 0) {
+						return false;
+					}
+					if (controlBlockSeperate->useCount.compare_exchange_weak(previous, previous + 1)) {
+						return true;
+					}
+				}
 			}
 
 			constexpr control_block_polymorphic_destroy_function getDestoryFunction() const noexcept override {
@@ -311,10 +326,16 @@ namespace natl {
 					controlBlockSeperate->weakCount++;
 				};
 			}
-			constexpr virtual control_block_polymorphic_get_use_count_function getUseCountFunction() const noexcept {
+			constexpr control_block_polymorphic_get_use_count_function getUseCountFunction() const noexcept {
 				return  [](SharedPtrControlBlockSeperatePolymorphic* controlBlockSeperatePolymorphicPtr) -> Size {
 					SharedPtrControlBlockSeperate* controlBlockSeperate = static_cast<SharedPtrControlBlockSeperate*>(controlBlockSeperatePolymorphicPtr);
 					return controlBlockSeperate->useCount.load();
+				};
+			}
+			constexpr control_block_polymorphic_increment_if_not_zero_function getIncrementIfNotZeroFunction() const noexcept {
+				return  [](SharedPtrControlBlockSeperatePolymorphic* controlBlockSeperatePolymorphicPtr) -> bool {
+					SharedPtrControlBlockSeperate* controlBlockSeperate = static_cast<SharedPtrControlBlockSeperate*>(controlBlockSeperatePolymorphicPtr);
+					return incrementIfNotZero(controlBlockSeperate);
 				};
 			}
 		};
@@ -324,11 +345,13 @@ namespace natl {
 			using control_block_polymorphic_ref_increment_function = void(*)(SharedPtrControlBlockFusedPolymorphic*);
 			using control_block_polymorphic_weak_ref_increment_function = void(*)(SharedPtrControlBlockFusedPolymorphic*);
 			using control_block_polymorphic_get_use_count_function = Size(*)(SharedPtrControlBlockFusedPolymorphic*);
+			using control_block_polymorphic_increment_if_not_zero_function = bool(*)(SharedPtrControlBlockFusedPolymorphic*);
 			constexpr virtual control_block_polymorphic_destroy_function getDestoryFunction() const noexcept = 0;
 			constexpr virtual control_block_polymorphic_destroy_function getWeakDestoryFunction() const noexcept = 0;
 			constexpr virtual control_block_polymorphic_ref_increment_function getRefIncrementFunction() const noexcept = 0;
 			constexpr virtual control_block_polymorphic_weak_ref_increment_function getWeakRefIncrementFunction() const noexcept = 0;
 			constexpr virtual control_block_polymorphic_get_use_count_function getUseCountFunction() const noexcept = 0;
+			constexpr virtual control_block_polymorphic_increment_if_not_zero_function getIncrementIfNotZeroFunction() const noexcept = 0;
 		};
 
 		template<class DataType>
@@ -337,6 +360,7 @@ namespace natl {
 			using control_block_polymorphic_ref_increment_function = typename SharedPtrControlBlockFusedPolymorphic::control_block_polymorphic_ref_increment_function;
 			using control_block_polymorphic_weak_ref_increment_function = typename SharedPtrControlBlockFusedPolymorphic::control_block_polymorphic_weak_ref_increment_function;
 			using control_block_polymorphic_get_use_count_function = typename SharedPtrControlBlockFusedPolymorphic::control_block_polymorphic_get_use_count_function;
+			using control_block_polymorphic_increment_if_not_zero_function = typename SharedPtrControlBlockFusedPolymorphic::control_block_polymorphic_increment_if_not_zero_function;
 			using control_block_deleter_function_type = Function<void(SharedPtrControlBlockFused*)>;
 
 			using pre_delete_function_type = Function<void(DataType*)>;
@@ -391,9 +415,21 @@ namespace natl {
 					if (controlBlockFused->useCount.load() == 0) {
 						control_block_deleter_function_type controlBlockDeleter = natl::move(controlBlockFused->controlBlockDeleter);
 						controlBlockDeleter.invoke(controlBlockFused);
+						return;
 					}
 				}
 				controlBlockFused->weakCount--;
+			}
+			constexpr static inline bool incrementIfNotZero(SharedPtrControlBlockFused* controlBlockFused) noexcept {
+				Size previous = controlBlockFused->useCount.load();
+				for (;;) {
+					if (previous == 0) {
+						return false;
+					}
+					if (controlBlockFused->useCount.compare_exchange_weak(previous, previous + 1)) {
+						return true;
+					}
+				}
 			}
 
 			constexpr control_block_polymorphic_destroy_function getDestoryFunction() const noexcept override {
@@ -424,6 +460,12 @@ namespace natl {
 				return (control_block_polymorphic_get_use_count_function) [](SharedPtrControlBlockFusedPolymorphic* controlBlockFusedPolymorphicPtr) -> Size {
 					SharedPtrControlBlockFused* controlBlockFused = static_cast<SharedPtrControlBlockFused*>(controlBlockFusedPolymorphicPtr);
 					return controlBlockFused->useCount.load();
+				};
+			}
+			constexpr control_block_polymorphic_increment_if_not_zero_function getIncrementIfNotZeroFunction() const noexcept {
+				return  [](SharedPtrControlBlockFusedPolymorphic* controlBlockFusedPolymorphicPtr) -> bool {
+					SharedPtrControlBlockFused* controlBlockFused = static_cast<SharedPtrControlBlockFused*>(controlBlockFusedPolymorphicPtr);
+					return incrementIfNotZero(controlBlockFused);
 				};
 			}
 		};
@@ -517,11 +559,11 @@ namespace natl {
 						break;
 					case impl::SharedPtrControlBlockState::seperatePolymorphic:
 						controlBlockSeperatePolymorphic = other.controlBlockSeperatePolymorphic;
-						controlBlockSeperatePolymorphic->getWeakRefIncrementFunction()();
+						controlBlockSeperatePolymorphic->getWeakRefIncrementFunction()(controlBlockSeperatePolymorphic);
 						break;
 					case impl::SharedPtrControlBlockState::fusedPolymorphic:
 						controlBlockFusedPolymorphic = other.controlBlockFusedPolymorphic;
-						controlBlockFusedPolymorphic->getWeakRefIncrementFunction()();
+						controlBlockFusedPolymorphic->getWeakRefIncrementFunction()(controlBlockFusedPolymorphic);
 						break;
 					default:
 						break;
@@ -662,10 +704,10 @@ namespace natl {
 				if (dataPtr) {
 					switch (controlBlockState) {
 					case impl::SharedPtrControlBlockState::seperate:
-						control_block_seperate::weakDestroy(controlBlockSeperate);
+						control_block_seperate::destoryWeak(controlBlockSeperate);
 						break;
 					case impl::SharedPtrControlBlockState::fused:
-						control_block_fused::weakDestory(controlBlockFused);
+						control_block_fused::destoryWeak(controlBlockFused);
 						break;
 					case impl::SharedPtrControlBlockState::seperatePolymorphic:
 						controlBlockSeperatePolymorphic->getWeakDestoryFunction()(controlBlockSeperatePolymorphic);
@@ -802,13 +844,19 @@ namespace natl {
 				return expired() ? SharedPtr() : SharedPtr(self());
 			}
 
+			constexpr bool empty() const noexcept { return dataPtr == nullptr; }
+			constexpr bool isEmpty() const noexcept { return empty(); }
+			constexpr bool isNotEmpty() const noexcept { return !empty(); }
+			explicit constexpr operator bool() const noexcept { return isNotEmpty(); }
+
+			friend SharedPtr;
 		}; 
 
 		using weak_type = WeakPtr<DataType>;
 
 
 	private:
-		template<class OtherType>
+		template<class OtherType, bool IncrementRefCount = true>
 		constexpr void constructCopy(const OtherType& other) noexcept {
 			if (other.dataPtr == nullptr) {
 				dataPtr = nullptr;
@@ -821,19 +869,27 @@ namespace natl {
 				switch (other.controlBlockState) {
 				case impl::SharedPtrControlBlockState::seperate:
 					controlBlockSeperate = other.controlBlockSeperate;
-					controlBlockSeperate->useCount++;
+					if constexpr (IncrementRefCount) {
+						controlBlockSeperate->useCount++;
+					}
 					break;
 				case impl::SharedPtrControlBlockState::fused:
 					controlBlockFused = other.controlBlockFused;
-					controlBlockFused->useCount++;
+					if constexpr (IncrementRefCount) {
+						controlBlockFused->useCount++;
+					}
 					break;
 				case impl::SharedPtrControlBlockState::seperatePolymorphic:
 					controlBlockSeperatePolymorphic = other.controlBlockSeperatePolymorphic;
-					controlBlockSeperatePolymorphic->getRefIncrementFunction()();
+					if constexpr (IncrementRefCount) {
+						controlBlockSeperatePolymorphic->getRefIncrementFunction()(controlBlockSeperatePolymorphic);
+					}
 					break;
 				case impl::SharedPtrControlBlockState::fusedPolymorphic:
 					controlBlockFusedPolymorphic = other.controlBlockFusedPolymorphic;
-					controlBlockFusedPolymorphic->getRefIncrementFunction()();
+					if constexpr (IncrementRefCount) {
+						controlBlockFusedPolymorphic->getRefIncrementFunction()(controlBlockFusedPolymorphic);
+					}
 					break;
 				default:
 					break;
@@ -870,7 +926,7 @@ namespace natl {
 
 			other.dataPtr = nullptr;
 		}
-		template<class OtherType>
+		template<class OtherType, bool IncrementRefCount = true>
 		constexpr void constructPolymorphicCopy(const OtherType& other) noexcept {
 			if (other.dataPtr == nullptr) {
 				dataPtr = nullptr;
@@ -884,22 +940,30 @@ namespace natl {
 				case impl::SharedPtrControlBlockState::seperate:
 					controlBlockState = impl::SharedPtrControlBlockState::seperatePolymorphic;
 					controlBlockSeperatePolymorphic = static_cast<control_block_seperate_polymorphic*>(other.controlBlockSeperate);
-					controlBlockSeperatePolymorphic->getRefIncrementFunction()();
+					if constexpr (IncrementRefCount) {
+						controlBlockSeperatePolymorphic->getRefIncrementFunction()();
+					}
 					break;
 				case impl::SharedPtrControlBlockState::fused:
 					controlBlockState = impl::SharedPtrControlBlockState::fusedPolymorphic;
 					controlBlockFusedPolymorphic = static_cast<control_block_fused_polymorphic*>(other.controlBlockFused);
-					controlBlockFusedPolymorphic->getRefIncrementFunction()();
+					if constexpr (IncrementRefCount) {
+						controlBlockFusedPolymorphic->getRefIncrementFunction()();
+					}
 					break;
 				case impl::SharedPtrControlBlockState::seperatePolymorphic:
 					controlBlockState = impl::SharedPtrControlBlockState::seperatePolymorphic;
 					controlBlockSeperatePolymorphic = other.controlBlockSeperatePolymorphic;
-					controlBlockSeperatePolymorphic->getRefIncrementFunction()();
+					if constexpr (IncrementRefCount) {
+						controlBlockSeperatePolymorphic->getRefIncrementFunction()();
+					}
 					break;
 				case impl::SharedPtrControlBlockState::fusedPolymorphic:
 					controlBlockState = impl::SharedPtrControlBlockState::fusedPolymorphic;
 					controlBlockFusedPolymorphic = other.controlBlockFusedPolymorphic;
-					controlBlockFusedPolymorphic->getRefIncrementFunction()();
+					if constexpr (IncrementRefCount) {
+						controlBlockFusedPolymorphic->getRefIncrementFunction()();
+					}
 					break;
 				default:
 					break;
@@ -941,7 +1005,7 @@ namespace natl {
 			other.dataPtr = nullptr;
 		}
 
-
+	public:
 		//constructor
 		constexpr SharedPtr() noexcept : dataPtr(nullptr), controlBlockState(impl::SharedPtrControlBlockState::seperate), controlBlockSeperate() {}
 		constexpr SharedPtr(std::nullptr_t) noexcept : dataPtr(nullptr), controlBlockState(impl::SharedPtrControlBlockState::seperate), controlBlockSeperate() {}
@@ -965,15 +1029,44 @@ namespace natl {
 		}
 
 		constexpr SharedPtr(const WeakPtr<DataType>& other) noexcept {
-			constructCopy<WeakPtr<DataType>>(other);
+			if (other.isNotEmpty() && incrementIfNotZero<WeakPtr<DataType>>(other)) {
+				constructCopy<WeakPtr<DataType>, false>(other);
+			} else {
+				dataPtr = nullptr;
+				controlBlockState = impl::SharedPtrControlBlockState::seperate;
+				controlBlockSeperate = nullptr;
+			}
 		}
 		template<class OtherDataType>
 			requires(IsPolymorphicCastable<OtherDataType, DataType>)
 		constexpr SharedPtr(const WeakPtr<OtherDataType>& other) noexcept {
-			constructCopy<WeakPtr<OtherDataType>>(other);
+			if (other.isNotEmpty() && incrementIfNotZero<WeakPtr<DataType>>(other)) {
+				constructPolymorphicCopy<WeakPtr<OtherDataType>, false>(other);
+			} else {
+				dataPtr = nullptr;
+				controlBlockState = impl::SharedPtrControlBlockState::seperate;
+				controlBlockSeperate = nullptr;
+			}
 		}
 
 	private:
+		template<class OtherType>
+		constexpr bool incrementIfNotZero(const OtherType& other) noexcept {
+			switch (controlBlockState) {
+			case impl::SharedPtrControlBlockState::seperate:
+				return control_block_seperate::incrementIfNotZero(other.controlBlockSeperate);
+			case impl::SharedPtrControlBlockState::fused:
+				return control_block_fused::incrementIfNotZero(other.controlBlockFused);
+			case impl::SharedPtrControlBlockState::seperatePolymorphic:
+				return other.controlBlockSeperatePolymorphic->getIncrementIfNotZeroFunction()(other.controlBlockSeperatePolymorphic);
+			case impl::SharedPtrControlBlockState::fusedPolymorphic:
+				return other.controlBlockFusedPolymorphic->getIncrementIfNotZeroFunction()(other.controlBlockFusedPolymorphic);
+			default:
+				return false;
+			}
+		}
+
+
 		template<class Alloc>
 			requires(IsAllocator<Alloc>)
 		constexpr void construct(DataType* ptr) noexcept {
@@ -1269,4 +1362,7 @@ namespace natl {
 		constexpr bool isNotEmpty() const noexcept { return !empty(); }
 		explicit constexpr operator bool() const noexcept { return isNotEmpty(); }
 	};
+
+	template<class DataType>
+	using WeakPtr = typename SharedPtr<DataType>::weak_type;
 }

@@ -23,6 +23,24 @@ namespace natl {
     template<class Type>
     using remove_cvref_t = std::remove_cv_t<std::remove_reference_t<Type>>;
 
+    template<class LhsType, class RhsType>
+    concept IsTheSame = std::is_same_v<LhsType, RhsType>;
+
+    template<class LhsType, class RhsType>
+    concept IsNotTheSame = !IsTheSame<LhsType, RhsType>;
+
+    template<class DataType>
+    concept IsItergerType = std::is_integral_v<DataType>;
+
+    template<class DataType>
+    concept IsNotItergerType = !std::is_integral_v<DataType>;
+
+    template<class DataType>
+    concept IsFloatingPointType = std::is_floating_point_v<DataType>;
+
+    template<class DataType>
+    concept IsNotFloatingPointType = !std::is_floating_point_v<DataType>;
+
     template<class Type>
     concept NonTrivialIsTriviallyRelocatable = requires {
         typename Type::natl_trivially_relocatable;

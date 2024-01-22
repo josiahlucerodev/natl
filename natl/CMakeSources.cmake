@@ -8,6 +8,7 @@ natl/basicTypes.h
 natl/batchPool.h
 natl/bitArray.h
 natl/commonHashs.h
+natl/compilerDependent.h
 natl/container.h
 natl/dataMovement.h
 natl/dynArray.h
@@ -36,6 +37,7 @@ natl/stringView.h
 natl/test.h
 natl/timer.h
 natl/typeTraits.h
+natl/units.h
 natl/variant.h
 natl/view.h
 )

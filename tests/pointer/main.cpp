@@ -2,6 +2,16 @@
 //natl
 #include <natl/pointer.h>
 
+constexpr natl::Size constexprTest() {
+	natl::WeakPtr<int> weakPtr{};
+	{
+		natl::SharedPtr<int> sharedPtr(natl::SharedPtrFusedConstruct{}, natl::DefaultAllocatorByte{}, 1);
+		weakPtr = sharedPtr;
+	}
+	natl::SharedPtr<int> sharedPtr2 = weakPtr.lock();
+	return 3;
+}
+
 int main() {
-	natl::SharedPtr<int> sharedPtr(natl::SharedPtrFusedConstruct{}, natl::DefaultAllocatorByte{}, 1);
+	[[maybe_unused]] constexpr natl::Size value = constexprTest();
 }
