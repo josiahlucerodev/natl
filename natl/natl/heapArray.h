@@ -75,7 +75,7 @@ namespace natl {
 				if (arraySize != allocationMoveAdapater.size()) {
 					const size_type constructCount = arraySize - allocationMoveAdapater.size();
 					pointer constructPtr = arrayDataPtr + allocationMoveAdapater.size();
-					natl::defualtConstructAll<value_type>(constructPtr, constructCount);
+					natl::defaultConstructAll<value_type>(constructPtr, constructCount);
 				}
 
 				if (allocationMoveAdapater.canDealloc()) {
@@ -87,7 +87,7 @@ namespace natl {
 
 				const size_type constructCount = arraySize - allocationMoveAdapater.size();
 				pointer constructPtr = arrayDataPtr + allocationMoveAdapater.size();
-				natl::defualtConstructAll<value_type>(constructPtr, constructCount);
+				natl::defaultConstructAll<value_type>(constructPtr, constructCount);
 			} else {
 				arraySize = allocationMoveAdapater.capacity();
 				arrayDataPtr = allocationMoveAdapater.data();
@@ -244,7 +244,7 @@ namespace natl {
 	private:
 		constexpr void constructAll() noexcept {
 			if (isNotEmpty()) {
-				defualtConstructAll(arrayDataPtr, size());
+				defaultConstructAll(arrayDataPtr, size());
 			}
 		}
 		constexpr void destructAll() noexcept {
@@ -255,7 +255,7 @@ namespace natl {
 			}
 
 			if (isNotEmpty()) {
-				defualtDeconstructAll(arrayDataPtr, size());
+				defaultDeconstructAll(arrayDataPtr, size());
 			}
 		}
 	public:

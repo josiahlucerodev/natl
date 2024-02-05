@@ -9,7 +9,7 @@
 #include "iterators.h"
 #include "container.h"
 #include "option.h"
-#include "limits.h"
+#include "Limits.h"
 #include "peramaterPackOperations.h"
 #include "dataMovement.h"
 #include "lexicographicalCompare.h"
@@ -149,13 +149,13 @@ namespace natl {
 			return ArrayView(data() + newCount, size() - newCount);
 		}
 
-		constexpr ArrayView subview(size_type offset, size_type count = limits<Size>::max()) noexcept requires(isNotConst<DataType>) {
+		constexpr ArrayView subview(size_type offset, size_type count = Limits<Size>::max()) noexcept requires(isNotConst<DataType>) {
 			offset = min<Size>(offset, size());
 			count = min<Size>(count, size() - offset);
 			return ArrayView(data() + offset, count);
 		}
 
-		constexpr ArrayView<const DataType> subview(size_type offset, size_type count = limits<Size>::max()) const noexcept {
+		constexpr ArrayView<const DataType> subview(size_type offset, size_type count = Limits<Size>::max()) const noexcept {
 			offset = min<Size>(offset, size());
 			count = min<Size>(count, size() - offset);
 			return ArrayView<const DataType>(data() + offset, count);

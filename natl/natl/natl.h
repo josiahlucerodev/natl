@@ -22,7 +22,7 @@
 #include "hash.h"
 #include "iterators.h"
 #include "lexicographicalCompare.h"
-#include "limits.h"
+#include "Limits.h"
 #include "option.h"
 #include "partitioner.h"
 #include "peramaterPackOperations.h"

@@ -1,11 +1,11 @@
 #pragma once 
 
 //std
-#include <limits>
+#include <Limits>
 
 //interface
 namespace natl {
 	//I just dont like the name 
 	template<typename BasicType>
-	using limits = std::numeric_limits<BasicType>;
+	using Limits = std::numeric_limits<BasicType>;
 }

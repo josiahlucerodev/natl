@@ -28,8 +28,48 @@ namespace natl {
 	using AssciCode = char;
 	using Utf32 = char32_t;
 
+	template<typename DataType, typename TypeToAlignTo>
+	class alignas(TypeToAlignTo) AlignToType {
+	private:
+		DataType internalValue;
+	public:
+		constexpr AlignToType() noexcept = default;
+		constexpr AlignToType(const DataType& value) noexcept : internalValue(value) {}
+		constexpr ~AlignToType() noexcept = default;
+		constexpr operator DataType& () noexcept { return internalValue; }
+		constexpr operator const DataType& () const noexcept { return internalValue; }
+		constexpr DataType* operator->() noexcept { return &internalValue; }
+		constexpr DataType& operator=(const DataType& value) noexcept { internalValue = value; return internalValue; }
+		constexpr DataType& value() noexcept { return internalValue; }
+		constexpr const DataType& value() const noexcept { return internalValue; }
+	};
+
+	template<typename DataType, Size Alignment>
+	class alignas(Alignment) AlignedType {
+	private:
+		DataType internalValue;
+	public:
+		constexpr AlignedType() noexcept = default;
+		constexpr AlignedType(const DataType& value) noexcept : internalValue(value) {}
+		constexpr ~AlignedType() noexcept = default;
+		constexpr operator DataType& () noexcept { return internalValue; }
+		constexpr operator const DataType& () const noexcept { return internalValue; }
+		constexpr DataType* operator->() noexcept { return &internalValue; }
+		constexpr DataType& operator=(const DataType& value) noexcept { internalValue = value; return internalValue; }
+		constexpr DataType& value() noexcept { return internalValue; }
+		constexpr const DataType& value() const noexcept { return internalValue; }
+	};
+
+
+
 	enum class Byte : ui8 {};
 
+	template<typename DataType>
+	using ByteAlignedToType = AlignToType<Byte, DataType>;
+
+	template<Size Alignment>
+	using AlignedByte = AlignedType<Byte, Alignment>;
+	
 	struct Dummy {};
 
 	static_assert(sizeof(i8) == 1, "natl: i8 should be 1 bytes");

@@ -3,7 +3,7 @@
 //own
 #include "basicTypes.h"
 #include "typeTraits.h"
-#include "limits.h"
+#include "Limits.h"
 
 //interface 
 namespace natl {
@@ -63,7 +63,7 @@ namespace natl {
 
     template <Size Index, class FindType, class... Types>
     struct ParameterPackFindIndexOfTypeImpl {
-        constexpr static Size value = limits<Size>::max();
+        constexpr static Size value = Limits<Size>::max();
     };
 
     template <Size Index, class FindType, class TestType, class... Types>
@@ -76,7 +76,7 @@ namespace natl {
         constexpr static Size value = ParameterPackFindIndexOfTypeImpl<0, FindType, Types...>::value;
     };
     struct IndexNotFound {
-        constexpr static Size value = limits<Size>::max();
+        constexpr static Size value = Limits<Size>::max();
     };
 
     constexpr bool findImplCompareStrings(const char a[], const char b[]) {
@@ -92,7 +92,7 @@ namespace natl {
 
     template <Size Index, class FindType, class... Types>
     struct ParameterPackStringLiteralFindImpl {
-        constexpr static Size value = limits<Size>::max();
+        constexpr static Size value = Limits<Size>::max();
     };
 
     template <Size Index, class FindType, class TestType, class... Types>
@@ -101,7 +101,7 @@ namespace natl {
     };
 
     struct ParameterPackIndexNotFound {
-        constexpr static Size value = limits<Size>::max();
+        constexpr static Size value = Limits<Size>::max();
     };
 
     template <class FindType, class... Types>
@@ -130,7 +130,7 @@ namespace natl {
             template<DataType, DataType> typename OpPredicate,
             typename... ArgTypes>
         struct ParameterPackOpFoldWithIndexImpl {
-            //constexpr static Size value = limits<Size>::max();
+            //constexpr static Size value = Limits<Size>::max();
         };
 
         template <typename DataType, Size Index,
@@ -180,7 +180,7 @@ namespace natl {
             template<DataType, DataType> typename OpPredicate,
             typename... ArgTypes>
         struct ParameterPackOpFoldWithIndexAndArgImpl {
-            constexpr static DataType value = limits<Size>::max();
+            constexpr static DataType value = Limits<Size>::max();
         };
 
         template <typename DataType, Size Index, typename ValuePredicateArg,

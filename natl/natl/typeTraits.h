@@ -33,13 +33,22 @@ namespace natl {
     concept IsItergerType = std::is_integral_v<DataType>;
 
     template<class DataType>
-    concept IsNotItergerType = !std::is_integral_v<DataType>;
+    concept IsSignedItergerType = IsItergerType<DataType> && std::is_signed_v<DataType>;
+
+    template<class DataType>
+    concept IsUnsignedItergerType = IsItergerType<DataType> && std::is_unsigned_v<DataType>;
+
+    template<class DataType>
+    concept IsNotItergerType = !IsItergerType<DataType>;
 
     template<class DataType>
     concept IsFloatingPointType = std::is_floating_point_v<DataType>;
 
     template<class DataType>
     concept IsNotFloatingPointType = !std::is_floating_point_v<DataType>;
+
+    template<class DataType>
+    concept IsNumericType = IsItergerType<DataType> || IsFloatingPointType<DataType>;
 
     template<class Type>
     concept NonTrivialIsTriviallyRelocatable = requires {

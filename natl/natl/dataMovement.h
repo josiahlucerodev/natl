@@ -347,7 +347,7 @@ namespace natl {
 
 
     template<class DataType>
-    constexpr void defualtConstructAll(DataType* dataPtr, const Size count) 
+    constexpr void defaultConstructAll(DataType* dataPtr, const Size count) 
         noexcept(std::is_nothrow_constructible_v<DataType>) {
 
         if (!std::is_constant_evaluated()) {
@@ -363,7 +363,7 @@ namespace natl {
     }
 
     template<class DataType>
-    constexpr void defualtDeconstructAll(DataType* dataPtr, const Size count) 
+    constexpr void defaultDeconstructAll(DataType* dataPtr, const Size count) 
         noexcept(std::is_nothrow_destructible_v<DataType>) {
         if (!std::is_constant_evaluated()) {
             if constexpr (IsTriviallyDestructible<DataType>) {
@@ -378,9 +378,23 @@ namespace natl {
     }
 
     template<class DataType>
-    constexpr void defualtDeconstruct(DataType* dataPtr)
+    constexpr void defaultDeconstruct(DataType* dataPtr)
         noexcept(std::is_nothrow_destructible_v<DataType>) {
-        defualtDeconstructAll<DataType>(dataPtr, 1);
+        defaultDeconstructAll<DataType>(dataPtr, 1);
+    }
+
+    template<typename DataType>
+    constexpr bool typeHasToBeDestructed() noexcept {
+        return std::is_constant_evaluated() || !IsTriviallyDestructible<DataType>;
+    }
+
+    template<typename DataType>
+    consteval Size typeBitSize() noexcept {
+        return sizeof(DataType) * Size(8);
+    }
+    template<typename DataType>
+    consteval Size typeByteSize() noexcept {
+        return sizeof(DataType) * Size(8);
     }
 
     enum class AllocationMoveAdapaterRequireCopy : bool {
@@ -431,7 +445,7 @@ namespace natl {
             arrayDataPtr(dataPtr), arraySize(arraySize), arrayCapacity(arrayCapacity), dataRequiresCopy(dataRequiresCopy), dataPtrCanBeDealloc(dataPtrCanBeDealloc) {}
 
         //destructor
-        ~AllocationMoveAdapater() noexcept = default;
+        constexpr ~AllocationMoveAdapater() noexcept = default;
 
         //util 
         constexpr AllocationMoveAdapater& self() noexcept { return *this; }
@@ -485,7 +499,7 @@ namespace natl {
                 }
             }
             if (isNotEmpty()) {
-                defualtDeconstructAll(arrayDataPtr, size());
+                defaultDeconstructAll(arrayDataPtr, size());
             }
         }
     };

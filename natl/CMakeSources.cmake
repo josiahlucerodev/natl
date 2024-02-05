@@ -7,6 +7,7 @@ natl/atomic.h
 natl/basicTypes.h
 natl/batchPool.h
 natl/bitArray.h
+natl/colony.h
 natl/commonHashs.h
 natl/compilerDependent.h
 natl/container.h
@@ -21,7 +22,10 @@ natl/heapArray.h
 natl/iterators.h
 natl/lexicographicalCompare.h
 natl/limits.h
+natl/math.h
+natl/memory.h
 natl/natl.h
+natl/numerics.h
 natl/option.h
 natl/pair.h
 natl/partitioner.h

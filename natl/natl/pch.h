@@ -5,7 +5,7 @@
 #include <fenv.h>
 #include <float.h>
 #include <inttypes.h>
-#include <limits.h>
+#include <Limits.h>
 #include <locale.h>
 #include <math.h>
 #include <setjmp.h>
@@ -60,7 +60,7 @@
 #include <iostream>	  
 #include <istream>	  
 #include <iterator>	  
-#include <limits>	  
+#include <Limits>	  
 #include <list>  
 #include <locale>	  
 #include <map>	  

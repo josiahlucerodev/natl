@@ -463,12 +463,12 @@ namespace natl {
 		constexpr void resize(const size_type count) noexcept {
 			if (count < size()) {
 				if constexpr (!IsTriviallyDestructible<value_type>) {
-					defualtDeconstructAll<value_type>(data() + count, size() - count);
+					defaultDeconstructAll<value_type>(data() + count, size() - count);
 					setSize(count);
 					return;
 				} else {
 					if (std::is_constant_evaluated()) {
-						defualtDeconstructAll<value_type>(data() + count, size() - count);
+						defaultDeconstructAll<value_type>(data() + count, size() - count);
 					}
 					setSize(count);
 				}
@@ -480,7 +480,7 @@ namespace natl {
 		constexpr void resize(const size_type count, const value_type value) noexcept {
 			if (count < size()) {
 				if constexpr (!IsTriviallyDestructible<value_type> || std::is_constant_evaluated()) {
-					defualtDeconstructAll<value_type>(data() + count, size() - count);
+					defaultDeconstructAll<value_type>(data() + count, size() - count);
 				}
 				setSize(count);
 			} else if (count > size()) {
@@ -508,10 +508,10 @@ namespace natl {
 				uninitializedCopyNoOverlap<const_pointer, pointer>(srcDataPtrFirst, srcDataPtrLast, newDataPtr);
 
 				if constexpr (!IsTriviallyRelocatable<value_type>) {
-					defualtDeconstructAll<value_type>(data(), size());
+					defaultDeconstructAll<value_type>(data(), size());
 				} else {
 					if (std::is_constant_evaluated()) {
-						defualtDeconstructAll<value_type>(data(), size());
+						defaultDeconstructAll<value_type>(data(), size());
 					}
 				}
 			}
@@ -560,7 +560,7 @@ namespace natl {
 			uninitializedCopyNoOverlap<const_pointer, pointer>(srcDataPtrFirst, srcDataPtrLast, newDataPtr);
 
 			if (!IsTriviallyRelocatable<value_type> || std::is_constant_evaluated()) {
-				defualtDeconstructAll<value_type>(data(), size());
+				defaultDeconstructAll<value_type>(data(), size());
 			}
 
 			Alloc::deallocate(arrayDataPtr, capacity());
@@ -576,7 +576,7 @@ namespace natl {
 
 		constexpr void clear() noexcept {
 			if (!IsTriviallyDestructible<value_type> || std::is_constant_evaluated()) {
-				defualtDeconstructAll<value_type>(data(), size());
+				defaultDeconstructAll<value_type>(data(), size());
 			}
 			setSize(0);
 		}
@@ -585,7 +585,7 @@ namespace natl {
 		constexpr void release() noexcept {
 			if (arrayDataPtr) {
 				if constexpr (!IsTriviallyDestructible<value_type>) {
-					defualtDeconstructAll<value_type>(data(), size());
+					defaultDeconstructAll<value_type>(data(), size());
 				}
 
 				Alloc::deallocate(arrayDataPtr, capacity());
@@ -873,7 +873,7 @@ namespace natl {
 			internalCopy(relocateSrcPtrFirst, relocateSrcPtrLast, relocateDstPtr);
 
 			if (!IsTriviallyDestructible<value_type> || std::is_constant_evaluated()) {
-				defualtDeconstruct<value_type>(at(backIndex()));
+				defaultDeconstruct<value_type>(at(backIndex()));
 			}
 
 			setSize(newSize);
@@ -890,7 +890,7 @@ namespace natl {
 			internalCopy(relocateSrcPtrFirst, relocateSrcPtrLast, relocateDstPtr);
 
 			if (!IsTriviallyDestructible<value_type> || std::is_constant_evaluated()) {
-				defualtDeconstructAll<value_type>(data() + newSize, count);
+				defaultDeconstructAll<value_type>(data() + newSize, count);
 			}
 
 			setSize(newSize);
@@ -955,7 +955,7 @@ namespace natl {
 
 		constexpr SmallDynArray& pop_back() noexcept {
 			if (!IsTriviallyDestructible<value_type> || std::is_constant_evaluated()) {
-				defualtDeconstruct<value_type>(at(backIndex()));
+				defaultDeconstruct<value_type>(at(backIndex()));
 			}
 			setSize(size() - 1);
 			return;

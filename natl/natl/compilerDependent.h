@@ -14,3 +14,12 @@
 #ifdef __EMSCRIPTEN__ 
 #define NATL_FORCE_INLINE __attribute__((always_inline)) 
 #endif
+
+//NATL_IN_DEBUG
+#ifdef _DEBUG
+#define NATL_IN_DEBUG
+#endif
+
+#ifdef NDEBUG
+#define NATL_IN_DEBUG
+#endif

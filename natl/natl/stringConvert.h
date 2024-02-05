@@ -25,7 +25,7 @@ namespace natl {
 		case StringNumericConvertError::invalid:
 			return "invalid";
 		case StringNumericConvertError::valueExceedsLimits:
-			return "value exceeds numeric limits";
+			return "value exceeds numeric Limits";
 		case StringNumericConvertError::none:
 			return "none";
 		default:
@@ -401,7 +401,7 @@ namespace natl {
 
 	template<class DynStringContainer, typename Interger>
 		requires(IsConvertDynStringContainer<DynStringContainer>)
-	constexpr void intToStringDecimalType(DynStringContainer& output, Interger number) noexcept {
+	constexpr void intToStringDecimalStringType(DynStringContainer& output, Interger number) noexcept {
 		if (number == 0) { 
 			output.push_back('0');
 			return;
@@ -437,7 +437,7 @@ namespace natl {
 	template<typename Interger>
 	constexpr String intToStringDecimalType(Interger number) noexcept {
 		String result{};
-		intToStringDecimalType<String, Interger>(result, number);
+		intToStringDecimalStringType<String, Interger>(result, number);
 		return result;
 	}
 
@@ -446,7 +446,7 @@ namespace natl {
 
 	template<class DynStringContainer, typename Interger>
 		requires(IsConvertDynStringContainer<DynStringContainer>)
-	constexpr void intToStringHexadecimalType(DynStringContainer& output, Interger number, const bool addPrefix) noexcept {
+	constexpr void intToStringHexadecimalStringType(DynStringContainer& output, Interger number, const bool addPrefix) noexcept {
 		if (number == 0) {
 			if (addPrefix) {
 				output.append("0x0", 3);
@@ -485,7 +485,7 @@ namespace natl {
 	template<typename Interger>
 	constexpr String intToStringHexadecimalType(Interger number, const bool addPrefix) noexcept {
 		String result{};
-		intToStringHexadecimalType<String, Interger>(result, number, addPrefix);
+		intToStringHexadecimalStringType<String, Interger>(result, number, addPrefix);
 		return result;
 	}
 
@@ -496,7 +496,7 @@ namespace natl {
 
 	template<class DynStringContainer, typename Interger>
 		requires(IsConvertDynStringContainer<DynStringContainer>)
-	constexpr void intToStringBinaryType(DynStringContainer& output, Interger n) noexcept {
+	constexpr void intToStringBinaryStringType(DynStringContainer& output, Interger n) noexcept {
 		if (n == 0) {
 			output.push_back('0');
 			return;
@@ -526,17 +526,17 @@ namespace natl {
 	template<typename Interger>
 	constexpr String intToStringBinaryType(Interger n) noexcept {
 		String result{};
-		intToStringBinaryType<String, Interger>(result, n);
+		intToStringBinaryStringType<String, Interger>(result, n);
 		return result;
 	}
 
 
 	template<class DynStringContainer, typename Float>
 		requires(IsConvertDynStringContainer<DynStringContainer>)
-	constexpr void floatToStringType(DynStringContainer& output, const Float number, const ui64 precision) noexcept {
+	constexpr void floatToStringStringType(DynStringContainer& output, const Float number, const ui64 precision) noexcept {
 		const i64 integerPart = static_cast<i64>(number);
 
-		intToStringDecimalType<DynStringContainer, i64>(output, integerPart);
+		intToStringDecimalStringType<DynStringContainer, i64>(output, integerPart);
 		output.push_back('.');
 
 		Float fractionalPart = number - static_cast<Float>(static_cast<int>(number));
@@ -551,13 +551,13 @@ namespace natl {
 	template<typename Float>
 	constexpr String floatToStringType(const Float number, const ui64 precision) noexcept {
 		String result{};
-		floatToStringType<String, Float>(result, number, precision);
+		floatToStringStringType<String, Float>(result, number, precision);
 		return result;
 	}
 
 	template<typename Float>
 	constexpr String floatToStringType(const Float number) noexcept {
-		return floatToStringType<Float>(number, limits<ui64>::max());
+		return floatToStringType<Float>(number, Limits<ui64>::max());
 	}
 	
 	constexpr i64 stringDecimalToInt(const ConstStringView& stringView) noexcept {

@@ -19,6 +19,7 @@ namespace natl {
 	template<class CharType, Size bufferSize, class Alloc = DefaultAllocator<CharType>>
 		requires(IsAllocator<Alloc>)
 	class BaseString {
+	public:
 		using allocator_type = Alloc;
 
 		using value_type = typename Alloc::value_type;
