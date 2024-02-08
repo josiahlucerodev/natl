@@ -16,9 +16,16 @@
 #include "stringView.h"
 #include "compilerDependent.h"
 
-
 //interface 
 namespace natl {
+    consteval bool natlInDebug() noexcept {
+#ifdef NATL_IN_DEBUG
+        return true;
+#else
+        return false;
+#endif
+    }
+
     NATL_FORCE_INLINE constexpr void constant_evaluated_error() noexcept { 
         if (std::is_constant_evaluated()) {
             int* ptr = nullptr;
