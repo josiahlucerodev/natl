@@ -66,6 +66,15 @@ namespace natl {
     template <class DataType>
     concept IsBasicType = std::is_integral_v<DataType> || std::is_floating_point_v<DataType> || std::is_pointer_v<DataType> || IsCharacterType<DataType> || std::same_as<DataType, Byte>;
 
+    template <typename DataType>
+    concept IsCopyConstructible = std::is_copy_constructible_v<std::decay_t<DataType>>;
+
+    template <typename DataType>
+    concept IsCopyAssignable = std::is_copy_assignable_v<std::decay_t<DataType>>;
+
+    template <typename DataType>
+    concept IsMoveConstructible = std::is_move_constructible_v<std::decay_t<DataType>>;
+
     template <class DataType>
     concept IsTriviallyCompareable = IsBasicType<DataType> ||
         requires() {
