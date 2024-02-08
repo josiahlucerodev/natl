@@ -500,16 +500,16 @@ namespace natl {
 
 		constexpr iterator begin() noexcept { return iterator(beginPtr()); }
 		constexpr const_iterator begin() const noexcept { return const_iterator(beginPtr()); }
-		constexpr const_iterator cbegin() const noexcept { return const_iterator(beginPtr()); }
+		constexpr const_iterator cbegin() const noexcept { return begin(); }
 		constexpr iterator end() noexcept { return iterator(endPtr()); }
 		constexpr const_iterator end() const noexcept { return const_iterator(endPtr()); }
-		constexpr const_iterator cend() const noexcept { return const_iterator(endPtr()); }
-		constexpr reverse_iterator rbegin() noexcept { return reverse_iterator(endPtr()); }
-		constexpr const_reverse_iterator rbegin() const noexcept { return const_reverse_iterator(endPtr()); }
-		constexpr const_reverse_iterator crbegin() const noexcept { return const_reverse_iterator(endPtr()); }
-		constexpr reverse_iterator rend() noexcept { return reverse_iterator(beginPtr()); }
-		constexpr const_reverse_iterator rend() const noexcept { return const_reverse_iterator(beginPtr()); }
-		constexpr const_reverse_iterator crend() const noexcept { return const_reverse_iterator(beginPtr()); }
+		constexpr const_iterator cend() const noexcept { return end(); }
+		constexpr reverse_iterator rbegin() noexcept { return reverse_iterator(end()); }
+		constexpr const_reverse_iterator rbegin() const noexcept { return const_reverse_iterator(end()); }
+		constexpr const_reverse_iterator crbegin() const noexcept { return rbegin(); }
+		constexpr reverse_iterator rend() noexcept { return reverse_iterator(--begin()); }
+		constexpr const_reverse_iterator rend() const noexcept { return const_reverse_iterator(--begin()); }
+		constexpr const_reverse_iterator crend() const noexcept { return rend(); }
 
 		//capacity 
 	public:

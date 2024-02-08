@@ -89,7 +89,8 @@ namespace natl {
 		pointer dataPtr;
 	public:
 		constexpr RandomAccessIteratorAlloc() : dataPtr(nullptr) {}
-		constexpr RandomAccessIteratorAlloc(pointer dataPtr) noexcept : dataPtr(dataPtr) {}
+		constexpr RandomAccessIteratorAlloc(pointer dataPtr) noexcept requires(isNotConst<value_type>) : dataPtr(dataPtr) {}
+		constexpr RandomAccessIteratorAlloc(const_pointer dataPtr) noexcept requires(isConst<value_type>) : dataPtr(dataPtr) {}
 		constexpr ~RandomAccessIteratorAlloc() = default;
 	private:
 		constexpr iterator& getSelf() noexcept { return *this; }
@@ -123,13 +124,13 @@ namespace natl {
 	};
 
 	template<class DataType, class Alloc>
-	using ConstRandomAccessIteratorAlloc = std::reverse_iterator<RandomAccessIteratorAlloc<const DataType, Alloc>>;
+	using ConstRandomAccessIteratorAlloc = RandomAccessIteratorAlloc<const DataType, typename Alloc::template rebind_alloc<const DataType>>;
 
 	template<class DataType, class Alloc>
 	using ReverseRandomAccessIteratorAlloc = std::reverse_iterator<RandomAccessIteratorAlloc<DataType, Alloc>>;
 
 	template<class DataType, class Alloc>
-	using ReverseConstRandomAccessIteratorAlloc = std::reverse_iterator<ConstRandomAccessIteratorAlloc<DataType, Alloc>>;
+	using ReverseConstRandomAccessIteratorAlloc = std::reverse_iterator<ConstRandomAccessIteratorAlloc<DataType, typename Alloc::template rebind_alloc<const DataType>>>;
 
 
 	template<class Type>

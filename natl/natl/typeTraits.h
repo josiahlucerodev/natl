@@ -50,12 +50,6 @@ namespace natl {
     template<class DataType>
     concept IsNumericType = IsItergerType<DataType> || IsFloatingPointType<DataType>;
 
-    template<class Type>
-    concept NonTrivialIsTriviallyRelocatable = requires {
-        typename Type::natl_trivially_relocatable;
-        Type::natl_trivially_relocatable == true;
-    };
-
     template <typename T>
     concept IsCharacterType =
         std::is_same_v<std::remove_cv_t<T>, AssciCode> ||
@@ -75,61 +69,60 @@ namespace natl {
     template <typename DataType>
     concept IsMoveConstructible = std::is_move_constructible_v<std::decay_t<DataType>>;
 
-    template <class DataType>
-    concept IsTriviallyCompareable = IsBasicType<DataType> ||
-        requires() {
-            { DataType::triviallyCompareable } -> std::convertible_to<bool>;
-            { DataType::triviallyCompareable == true };
-        };
+    namespace impl {
+#define NATL_TYPE_TRIAT_CUSTOM_TRIVIALLY_FUN(conceptName, memberName) \
+        template<class DataType> \
+        consteval bool customCheckIf##conceptName() noexcept { \
+            if constexpr (requires() { { DataType::##memberName } -> std::convertible_to<bool>; }) { \
+                return DataType::##memberName; \
+            } else { \
+                return false; \
+            } \
+        }
+
+        NATL_TYPE_TRIAT_CUSTOM_TRIVIALLY_FUN(IsTriviallyCompareable, triviallyCompareable);
+        NATL_TYPE_TRIAT_CUSTOM_TRIVIALLY_FUN(IsTriviallyRelocatable, triviallyRelocatable);
+        NATL_TYPE_TRIAT_CUSTOM_TRIVIALLY_FUN(IsTriviallyDefaultConstructible, triviallyDefaultConstructible);
+        NATL_TYPE_TRIAT_CUSTOM_TRIVIALLY_FUN(IsTriviallyDestructible, triviallyDestructible);
+        NATL_TYPE_TRIAT_CUSTOM_TRIVIALLY_FUN(IsTriviallyMoveConstructible, triviallyMoveConstructedable);
+        NATL_TYPE_TRIAT_CUSTOM_TRIVIALLY_FUN(IsTriviallyConstRefConstructible, triviallyConstRefConstructedable);
+        NATL_TYPE_TRIAT_CUSTOM_TRIVIALLY_FUN(IsTriviallyMoveAssignable, triviallyMoveAssignable);
+        NATL_TYPE_TRIAT_CUSTOM_TRIVIALLY_FUN(IsTriviallyConstRefAssignable, triviallyConstRefAssignable);
+
+    }
+#undef NATL_TYPE_TRIAT_CUSTOM_TRIVIALLY_FUN
 
     template <class DataType>
-    concept IsTriviallyRelocatable = (std::is_trivially_copyable_v<DataType> && std::is_trivially_destructible_v<DataType>) || IsBasicType<DataType> ||
-        requires() {
-            { DataType::triviallyRelocatable } -> std::convertible_to<bool>;
-            { DataType::triviallyRelocatable == true };
-    };
+    concept IsTriviallyCompareable = IsBasicType<DataType> || 
+        impl::customCheckIfIsTriviallyCompareable<DataType>();
 
     template <class DataType>
-    concept IsTriviallyDefaultConstructible = std::is_trivially_default_constructible_v<DataType> ||
-        requires() {
-            { DataType::triviallyDefaultConstructible } -> std::convertible_to<bool>;
-            { DataType::triviallyDefaultConstructible == true };
-    };
+    concept IsTriviallyRelocatable = (std::is_trivially_copyable_v<DataType> && std::is_trivially_destructible_v<DataType>) || 
+        IsBasicType<DataType> || impl::customCheckIfIsTriviallyRelocatable<DataType>();
 
     template <class DataType>
-    concept IsTriviallyDestructible = std::is_trivially_destructible_v<DataType> ||
-        requires() {
-            { DataType::triviallyDestructible } -> std::convertible_to<bool>;
-            { DataType::triviallyDestructible == true };
-    };
+    concept IsTriviallyDefaultConstructible = std::is_trivially_default_constructible_v<DataType> || 
+        impl::customCheckIfIsTriviallyDefaultConstructible<DataType>();
 
     template <class DataType>
-    concept IsTriviallyMoveConstructible = std::is_trivially_move_constructible_v<DataType> ||
-        requires() {
-            { DataType::triviallyMoveConstructedable } -> std::convertible_to<bool>;
-            { DataType::triviallyMoveConstructedable == true };
-    };
+    concept IsTriviallyDestructible = std::is_trivially_destructible_v<DataType> || 
+        impl::customCheckIfIsTriviallyDestructible<DataType>();
+
+    template <class DataType>
+    concept IsTriviallyMoveConstructible = std::is_trivially_move_constructible_v<DataType> || 
+        impl::customCheckIfIsTriviallyMoveConstructible<DataType>();
 
     template <class DataType>
     concept IsTriviallyConstRefConstructible = std::is_trivially_constructible_v<DataType, const DataType&> ||
-        requires() {
-            { DataType::triviallyConstRefConstructedable } -> std::convertible_to<bool>;
-            { DataType::triviallyConstRefConstructedable == true };
-    };
+        impl::customCheckIfIsTriviallyConstRefConstructible<DataType>();
 
     template <class DataType>
     concept IsTriviallyMoveAssignable = std::is_trivially_move_assignable_v<DataType> ||
-        requires() {
-            { DataType::triviallyMoveAssignable } -> std::convertible_to<bool>;
-            { DataType::triviallyMoveAssignable == true };
-    };
+        impl::customCheckIfIsTriviallyMoveAssignable<DataType>();
 
     template <class DataType>
     concept IsTriviallyConstRefAssignable = std::is_trivially_assignable_v<DataType, const DataType&> ||
-        requires() {
-            { DataType::triviallyConstRefAssignable } -> std::convertible_to<bool>;
-            { DataType::triviallyConstRefAssignable == true };
-    };
+        impl::customCheckIfIsTriviallyConstRefAssignable<DataType>();
 
     template <class Type>
     concept MemcopyConstructible = IsTriviallyDefaultConstructible<Type> && IsTriviallyRelocatable<Type>;
