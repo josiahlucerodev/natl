@@ -609,6 +609,9 @@ namespace natl {
 	constexpr String intToStringDecimal(const ui32 number) noexcept { return intToStringDecimalType<ui32>(number); };
 	constexpr String intToStringDecimal(const ui64 number) noexcept { return intToStringDecimalType<ui64>(number); };
 
+	constexpr String floatToStringDecimal(const f32 number) noexcept { return floatToStringType<f32>(number); };
+	constexpr String floatToStringDecimal(const f64 number) noexcept { return floatToStringType<f64>(number); };
+
 	template<class DynStringContainer>
 		requires(IsConvertDynStringContainer<DynStringContainer>)
 	constexpr void intToStringDecimal(DynStringContainer& output, const i8 number) noexcept { intToStringDecimalType<DynStringContainer, i8>(output, number); };

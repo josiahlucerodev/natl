@@ -13,13 +13,9 @@
 
 //interface 
 namespace natl {
-	template<class Alloc>
-		requires(IsAllocator<Alloc>)
-	class DynamicBytePartitioner;
-
 	template<class DataType, class Alloc>
-	class DynamicPartitioner {
 		requires(IsAllocator<Alloc>)
+	class DynamicPartitioner {
 	public:
 		using allocator_type = Alloc;
 
@@ -89,9 +85,6 @@ namespace natl {
 		constexpr reverse_iterator rend() noexcept { return reverse_iterator(beginPtr()); }
 		constexpr const_reverse_iterator rend() const noexcept { return const_reverse_iterator(beginPtr()); }
 		constexpr const_reverse_iterator crend() const noexcept { return const_reverse_iterator(beginPtr()); }
-	public:
-		template<class Alloc>
-		friend class DynamicBytePartitioner;
 	};
 
 
@@ -132,17 +125,17 @@ namespace natl {
 		constexpr static bool triviallyConstRefConstructedable = false;
 		constexpr static bool triviallyMoveConstructedable = false;
 	public:
-		DynamicBytePartitioner() : DynamicPartitioner<std::uint8_t>() {}
+		DynamicBytePartitioner() : DynamicPartitioner<std::uint8_t, Alloc>() {}
 	public:
 		template<class value_type>
 		ArrayView<value_type> newPartition(const size_type partiationSize) noexcept {
-			const size_type offset = alignmentOffset(data.data(), alignof(value_type));
+			const size_type offset = alignmentOffset(this->data.data(), alignof(value_type));
 			const size_type partiationByteSize = partiationSize * sizeof(value_type) + offset;
-			if (capacity() < partiationByteSize) {
+			if (this->capacity() < partiationByteSize) {
 				return ArrayView<value_type>(nullptr, 0);
 			}
 
-			DynamicPartitioner<std::uint8_t>& castSelf = *static_cast<DynamicPartitioner<std::uint8_t>*>(this);
+			DynamicPartitioner<std::uint8_t, Alloc>& castSelf = *static_cast<DynamicPartitioner<std::uint8_t, Alloc>*>(this);
 			ArrayView<std::uint8_t> bytePartition = castSelf.newPartition(partiationByteSize);
 			ArrayView<value_type> partition(static_cast<pointer>(static_cast<void*>(bytePartition.at(offset))), partiationSize);
 			return partition;
