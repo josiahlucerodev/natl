@@ -173,4 +173,21 @@ namespace natl {
 
     template <typename From, typename To>
     concept IsPolymorphicCastable = std::is_base_of_v<From, To> || std::is_convertible_v<From*, To*>;
+
+    namespace impl {
+        template<typename T, template<typename...> typename Primary>
+        struct IsSpecialization : std::false_type {};
+
+        template<template<typename...> typename Primary, typename... Args>
+        struct IsSpecialization<Primary<Args...>, Primary> : std::true_type {};
+
+        template<typename T, template<typename...> typename Primary>
+        inline constexpr bool IsSpecializationV = IsSpecialization<T, Primary>::value;
+    }
+
+    template<typename Test, template<typename...> class SpecializationType>
+    concept IsSpecialization = impl::IsSpecializationV<Test, SpecializationType>;
+
+    template<typename... ArgTypes>
+    concept IsSameByteSize = (sizeof(ArgTypes) == ...);
 }

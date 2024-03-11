@@ -152,10 +152,10 @@ namespace natl {
 		}
 		constexpr void static deallocate(pointer ptr, const Size number) noexcept {
 			if (!ptr) { return; }
-			std::allocator<DataType>().deallocate(ptr, static_cast<std::size_t>(number));
 			if constexpr (natl_enable_allocator_tracking) {
 				TrackerAllocator<DataType>::registerDeallocate(ptr);
 			}
+			std::allocator<DataType>().deallocate(ptr, static_cast<std::size_t>(number));
 		}
 	};
 

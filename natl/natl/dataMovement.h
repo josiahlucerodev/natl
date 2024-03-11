@@ -398,19 +398,21 @@ namespace natl {
     }
 
     enum class AllocationMoveAdapaterRequireCopy : bool {
-        v_false = false,
-        v_true = true
+        False = false,
+        True = true
     };
     enum class AllocationMoveAdapaterCanDealloc : bool {
-        v_false = false,
-        v_true = true
+        False = false,
+        True = true
     };
 
 
-    template<class DataType, class Alloc = DefaultAllocator<DataType>>
+    template<typename DataType, typename Alloc = DefaultAllocator<DataType>>
         requires(IsAllocator<Alloc> && isNotConst<DataType>)
     class AllocationMoveAdapater {
     public:
+        using allocator_type = Alloc;
+
         using value_type = DataType;
         using reference = DataType&;
         using const_reference = const DataType&;
@@ -429,6 +431,10 @@ namespace natl {
         constexpr static bool triviallyDefaultConstructible = true;
         constexpr static bool triviallyCompareable = true;
         constexpr static bool triviallyDestructible = true;
+
+        template<typename OtherDataType>
+        using rebind_allocation_move_adapater = AllocationMoveAdapater<OtherDataType, typename Alloc::template rebind_alloc<OtherDataType>>;
+
     private:
         mutable DataType* arrayDataPtr;
         Size arraySize;
@@ -437,19 +443,41 @@ namespace natl {
         AllocationMoveAdapaterCanDealloc dataPtrCanBeDealloc;
     public:
         //constructor
+        constexpr AllocationMoveAdapater(const AllocationMoveAdapater& other) noexcept = delete;
+        constexpr AllocationMoveAdapater(AllocationMoveAdapater&& other) noexcept {
+            arrayDataPtr = other.arrayDataPtr;
+            arraySize = other.arraySize;
+            arrayCapacity = other.arrayCapacity;
+            dataRequiresCopy = other.dataRequiresCopy;
+            dataPtrCanBeDealloc = other.dataPtrCanBeDealloc;
+            other.release();
+        }
         constexpr AllocationMoveAdapater() noexcept : arrayDataPtr(0), arraySize(0), arrayCapacity(0), 
-            dataRequiresCopy(AllocationMoveAdapaterRequireCopy::v_false), dataPtrCanBeDealloc(AllocationMoveAdapaterCanDealloc::v_false) {}
+            dataRequiresCopy(AllocationMoveAdapaterRequireCopy::False), dataPtrCanBeDealloc(AllocationMoveAdapaterCanDealloc::False) {}
         constexpr AllocationMoveAdapater(
             DataType* dataPtr, const Size arraySize, const Size arrayCapacity,
             const AllocationMoveAdapaterRequireCopy dataRequiresCopy, const AllocationMoveAdapaterCanDealloc dataPtrCanBeDealloc) noexcept :
             arrayDataPtr(dataPtr), arraySize(arraySize), arrayCapacity(arrayCapacity), dataRequiresCopy(dataRequiresCopy), dataPtrCanBeDealloc(dataPtrCanBeDealloc) {}
 
         //destructor
-        constexpr ~AllocationMoveAdapater() noexcept = default;
+        constexpr ~AllocationMoveAdapater() noexcept {
+            deallocate();
+        };
 
         //util 
         constexpr AllocationMoveAdapater& self() noexcept { return *this; }
         constexpr const AllocationMoveAdapater& self() const noexcept { return *this; }
+
+        //assignment 
+        constexpr AllocationMoveAdapater& operator=(const AllocationMoveAdapater& other) noexcept = delete;
+        constexpr AllocationMoveAdapater& operator=(AllocationMoveAdapater&& other) noexcept {
+            arrayDataPtr = other.arrayDataPtr;
+            arraySize = other.arraySize;
+            arrayCapacity = other.arrayCapacity;
+            dataRequiresCopy = other.dataRequiresCopy;
+            dataPtrCanBeDealloc = other.dataPtrCanBeDealloc;
+            other.release();
+        }
 
         //capacity 
         constexpr bool empty() const noexcept { return size() == 0; }
@@ -465,6 +493,13 @@ namespace natl {
         }
         constexpr bool canDealloc() const noexcept {
             return static_cast<bool>(dataPtrCanBeDealloc);
+        }
+
+        constexpr AllocationMoveAdapaterRequireCopy getRequiresCopyFlag() noexcept {
+            return dataRequiresCopy;
+        }
+        constexpr AllocationMoveAdapaterCanDealloc getCanDeallocFlag() noexcept {
+            return dataPtrCanBeDealloc;
         }
 
         //element access 
@@ -484,15 +519,16 @@ namespace natl {
         constexpr const_reverse_iterator crend() const noexcept { return const_reverse_iterator(beginPtr()); }
 
         //allocation 
-        constexpr void deallocate() const noexcept {
-            if (arrayDataPtr) {
+        constexpr void deallocate() noexcept {
+            if (canDealloc() && arrayDataPtr) {
                 destructAll();
                 Alloc::deallocate(arrayDataPtr, capacity());
+                release();
             }
         }
 
         //modifier
-        constexpr void destructAll() const noexcept {
+        constexpr void destructAll() noexcept {
             if (!IsTriviallyDestructible<DataType>) {
                 if (!std::is_constant_evaluated()) {
                     return;
@@ -502,5 +538,53 @@ namespace natl {
                 defaultDeconstructAll(arrayDataPtr, size());
             }
         }
+        constexpr void release() noexcept {
+            arrayDataPtr = nullptr;
+            arraySize = 0;
+            dataRequiresCopy = AllocationMoveAdapaterRequireCopy::False;
+            dataPtrCanBeDealloc = AllocationMoveAdapaterCanDealloc::False;
+        }
     };
+
+
+    template<typename ToDataType, typename FromAllocationMoveAdapaterType>
+        requires(
+            IsSpecialization<FromAllocationMoveAdapaterType, AllocationMoveAdapater> &&
+            IsSameByteSize<ToDataType, typename FromAllocationMoveAdapaterType::value_type>)
+        constexpr typename FromAllocationMoveAdapaterType::template rebind_allocation_move_adapater<ToDataType>
+        equivalentCastAllocationMoveAdapter(FromAllocationMoveAdapaterType&& allocationMoveAdapter) noexcept {
+
+        using ToAllocationMoveAdapterType = typename FromAllocationMoveAdapaterType::template rebind_allocation_move_adapater<ToDataType>;
+        using ToAlloc = ToAllocationMoveAdapterType::allocator_type;
+        using FromAlloc = FromAllocationMoveAdapaterType::allocator_type;
+        using FromDataType = FromAllocationMoveAdapaterType::value_type;
+
+        if constexpr (IsTheSame<ToAllocationMoveAdapterType, FromAllocationMoveAdapaterType>) {
+            return natl::move(allocationMoveAdapter);
+        } else if constexpr (std::is_constant_evaluated()) {
+            ToDataType* newDataPtr = ToAlloc::allocate(allocationMoveAdapter.capacity());
+            ToAllocationMoveAdapterType newAllocationMoveAdapter(
+                newDataPtr, allocationMoveAdapter.size(), allocationMoveAdapter.capacity(),
+                AllocationMoveAdapaterRequireCopy::False, AllocationMoveAdapaterCanDealloc::True);
+
+            FromDataType* copySrcPtr = allocationMoveAdapter.data();
+            FromDataType* copySrcPtrEnd = copySrcPtr + allocationMoveAdapter.size();
+            ToDataType* copyDstPtr = newDataPtr;
+
+            for (; copySrcPtr < copySrcPtrEnd; copySrcPtr++, copyDstPtr++) {
+                *copyDstPtr = std::bit_cast<ToDataType, FromDataType>(*copySrcPtr);
+            }
+
+            allocationMoveAdapter.release();
+            return natl::move(newAllocationMoveAdapter);
+        } else {
+            ToAllocationMoveAdapterType newAllocationMoveAdapter(
+                reinterpret_cast<ToDataType*>(allocationMoveAdapter.data(), allocationMoveAdapter.size(),
+                    allocationMoveAdapter.capacity(), allocationMoveAdapter.getRequiresCopyFlag(),
+                    allocationMoveAdapter.getCanDeallocFlag())
+            );
+            allocationMoveAdapter.release();
+            return natl::move(newAllocationMoveAdapter);
+        }
+    }
 }

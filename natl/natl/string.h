@@ -38,7 +38,7 @@ namespace natl {
 		using reverse_iterator = ReverseRandomAccessIteratorAlloc<value_type, Alloc>;
 		using const_reverse_iterator = ReverseConstRandomAccessIteratorAlloc<value_type, Alloc>;
 
-		using container_allocation_move_adapater = AllocationMoveAdapater<value_type, Alloc>;
+		using allocation_move_adapater = AllocationMoveAdapater<value_type, Alloc>;
 
 		//movement info 
 		constexpr static bool triviallyRelocatable = true;
@@ -161,9 +161,9 @@ namespace natl {
 			baseConstructorInit();
 			construct(str.data(), str.size());
 		}
-		constexpr BaseString(const container_allocation_move_adapater& allocationMoveAdapater) noexcept {
+		constexpr BaseString(allocation_move_adapater&& allocationMoveAdapater) noexcept {
 			baseConstructorInit();
-			construct(allocationMoveAdapater);
+			construct(natl::move(allocationMoveAdapater));
 		}
 
 		constexpr BaseString(const char* str, const size_type count) noexcept requires(std::is_same_v<std::decay_t<value_type>, Utf32>) {
@@ -284,7 +284,7 @@ namespace natl {
 			}
 			return self();
 		}		
-		constexpr BaseString& construct(const container_allocation_move_adapater& allocationMoveAdapater) noexcept {
+		constexpr BaseString& construct(allocation_move_adapater&& allocationMoveAdapater) noexcept {
 			if (allocationMoveAdapater.isEmpty()) {
 				stringSizeAndSmallStringFlag = 0;
 			} else if (allocationMoveAdapater.requiresCopy() || allocationMoveAdapater.size() < smallStringCapacity()) {
@@ -299,6 +299,7 @@ namespace natl {
 				setSize(allocationMoveAdapater.size());
 				setAsNotSmallString();
 			}
+			allocationMoveAdapater.release();
 			return self();
 		}
 
@@ -411,8 +412,8 @@ namespace natl {
 		constexpr BaseString& operator=(const StringViewLike& stringView) noexcept {
 			return assign<StringViewLike>(stringView);
 		}
-		constexpr BaseString& operator=(const container_allocation_move_adapater& allocationMoveAdapater) noexcept {
-			return assign(allocationMoveAdapater);
+		constexpr BaseString& operator=(allocation_move_adapater&& allocationMoveAdapater) noexcept {
+			return assign(natl::move(allocationMoveAdapater));
 		}
 
 		constexpr BaseString& operator=(const char* str) noexcept requires(std::is_same_v<std::decay_t<value_type>, Utf32>) {
@@ -550,7 +551,7 @@ namespace natl {
 			addNullTerminater();
 			return self();
 		}
-		constexpr BaseString& assign(const container_allocation_move_adapater& allocationMoveAdapater) noexcept {
+		constexpr BaseString& assign(allocation_move_adapater&& allocationMoveAdapater) noexcept {
 			if (allocationMoveAdapater.isEmpty()) {
 				release();
 				stringSizeAndSmallStringFlag = 0;
@@ -570,6 +571,7 @@ namespace natl {
 				setSize(allocationMoveAdapater.size());
 				setAsNotSmallString();
 			}
+			allocationMoveAdapater.release();
 			return self();
 		}
 
@@ -666,11 +668,11 @@ namespace natl {
 			return self();
 		}
 
-		[[nodiscard]] constexpr container_allocation_move_adapater getAlloctionMoveAdapater() noexcept {
+		[[nodiscard]] constexpr allocation_move_adapater getAlloctionMoveAdapater() noexcept {
 			const bool stringIsSmallBuffer = isSmallString();
 			AllocationMoveAdapaterRequireCopy requireCopy = stringIsSmallBuffer ? AllocationMoveAdapaterRequireCopy::v_true : AllocationMoveAdapaterRequireCopy::v_false;
 			AllocationMoveAdapaterCanDealloc canBeDealloc = stringIsSmallBuffer ? AllocationMoveAdapaterCanDealloc::v_false : AllocationMoveAdapaterCanDealloc::v_true;
-			container_allocation_move_adapater allocationMoveAdapater(data(), size(), capacity(), requireCopy, canBeDealloc);
+			allocation_move_adapater allocationMoveAdapater(data(), size(), capacity(), requireCopy, canBeDealloc);
 			if (stringIsSmallBuffer) {
 				stringSizeAndSmallStringFlag = 0;
 			} else {
@@ -678,7 +680,7 @@ namespace natl {
 				stringSizeAndSmallStringFlag = 0;
 				stringCapacity = 0;
 			}
-			return allocationMoveAdapater;
+			return natl::move(allocationMoveAdapater);
 		}
 
 		//element access

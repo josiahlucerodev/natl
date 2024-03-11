@@ -30,7 +30,7 @@ namespace natl {
 		using reverse_iterator = ReverseRandomAccessIteratorAlloc<value_type, Alloc>;
 		using const_reverse_iterator = ReverseConstRandomAccessIteratorAlloc<value_type, Alloc>;
 
-		using container_allocation_move_adapater = AllocationMoveAdapater<value_type, Alloc>;
+		using allocation_move_adapater = AllocationMoveAdapater<value_type, Alloc>;
 
 		//movement info 
 		constexpr static bool triviallyRelocatable = true;
@@ -82,9 +82,9 @@ namespace natl {
 			baseConstructorInit();
 			construct(arrayViewLike.data(), arrayViewLike.size());
 		}
-		constexpr DynArray(const container_allocation_move_adapater& allocationMoveAdapater) noexcept {
+		constexpr DynArray(allocation_move_adapater&& allocationMoveAdapater) noexcept {
 			baseConstructorInit();
-			construct(allocationMoveAdapater);
+			construct(natl::move(allocationMoveAdapater));
 		}
 		constexpr DynArray(std::initializer_list<value_type> ilist) noexcept {
 			baseConstructorInit();
@@ -163,7 +163,7 @@ namespace natl {
 			return self();
 		}
 
-		constexpr DynArray& construct(const container_allocation_move_adapater& allocationMoveAdapater) noexcept {
+		constexpr DynArray& construct(allocation_move_adapater&& allocationMoveAdapater) noexcept {
 			if (allocationMoveAdapater.isEmpty()) {
 				arraySize = 0;
 				arrayCapacity = 0;
@@ -178,6 +178,7 @@ namespace natl {
 				arrayCapacity = allocationMoveAdapater.capacity();
 				arrayDataPtr = allocationMoveAdapater.data();
 			}
+			allocationMoveAdapater.release();
 			return self();
 		}
 
@@ -195,8 +196,8 @@ namespace natl {
 		constexpr DynArray& operator=(const ArrayViewLike& arrayViewLike) noexcept {
 			return assign<ArrayViewLike>(arrayViewLike);
 		}
-		constexpr DynArray& operator=(const container_allocation_move_adapater& allocationMoveAdapater) noexcept {
-			return assign(allocationMoveAdapater);
+		constexpr DynArray& operator=(allocation_move_adapater&& allocationMoveAdapater) noexcept {
+			return assign(natl::move(allocationMoveAdapater));
 		}
 		constexpr DynArray& operator=(std::initializer_list<value_type> ilist) noexcept {
 			return assign(ilist);
@@ -280,7 +281,7 @@ namespace natl {
 		constexpr DynArray& assign(const ArrayViewLike& arrayViewLike) noexcept {
 			assign(arrayViewLike.data(), arrayViewLike.size());
 		}
-		constexpr DynArray& assign(const container_allocation_move_adapater& allocationMoveAdapater) noexcept {
+		constexpr DynArray& assign(allocation_move_adapater&& allocationMoveAdapater) noexcept {
 			if (allocationMoveAdapater.isEmpty()) {
 				release();
 				arraySize = 0;
@@ -297,6 +298,7 @@ namespace natl {
 				arrayCapacity = allocationMoveAdapater.capacity();
 				arrayDataPtr = allocationMoveAdapater.data();
 			}
+			allocationMoveAdapater.release();
 			return self();
 		}
 		constexpr DynArray& assign(std::initializer_list<value_type> ilist) noexcept {
@@ -308,12 +310,12 @@ namespace natl {
 		constexpr size_type size() const noexcept { return arraySize; }
 		constexpr size_type max_size() const noexcept { return 0xFFFFFFFFFFFFFFFFULL; };
 
-		[[nodiscard]] constexpr container_allocation_move_adapater getAlloctionMoveAdapater() noexcept {
-			container_allocation_move_adapater allocationMoveAdapater(data(), size(), capacity(), AllocationMoveAdapaterRequireCopy::v_false, AllocationMoveAdapaterCanDealloc::v_true);
+		[[nodiscard]] constexpr allocation_move_adapater getAlloctionMoveAdapater() noexcept {
+			allocation_move_adapater allocationMoveAdapater(data(), size(), capacity(), AllocationMoveAdapaterRequireCopy::False, AllocationMoveAdapaterCanDealloc::True);
 			arrayDataPtr = nullptr;
 			arraySize = 0;
 			arrayCapacity = 0;
-			return allocationMoveAdapater;
+			return natl::move(allocationMoveAdapater);
 		}
 
 
@@ -762,7 +764,7 @@ namespace natl {
 		template<class... Args >
 		constexpr reference emplace_back(Args&&... args) noexcept {
 			const size_type index = size();
-			const size_type newsize_type = index + 1;
+			const size_type newsize_type = index + sizeof...(Args);
 			reserve(newsize_type);
 			setsize_type(newsize_type);
 			reference value = at(index);
@@ -772,7 +774,7 @@ namespace natl {
 
 		constexpr DynArray& append(const_pointer srcPtr, const size_type count) noexcept {
 			const size_type index = size();
-			const size_type newsize_type = index + 1;
+			const size_type newsize_type = index + count;
 			reserve(newsize_type);
 
 			pointer insertDstPtr = data() + index;

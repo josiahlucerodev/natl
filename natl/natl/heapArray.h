@@ -29,7 +29,7 @@ namespace natl {
 		using reverse_iterator = ReverseRandomAccessIteratorAlloc<value_type, Alloc>;
 		using const_reverse_iterator = ReverseConstRandomAccessIteratorAlloc<value_type, Alloc>;
 
-		using container_allocation_move_adapater = AllocationMoveAdapater<value_type, Alloc>;
+		using allocation_move_adapater = AllocationMoveAdapater<value_type, Alloc>;
 
 		//movement info  
 		constexpr static bool triviallyRelocatable = true;
@@ -59,7 +59,7 @@ namespace natl {
 			natl::uninitializedFill<pointer, value_type>(fillDstPtrFirst, fillDstPtrLast, value);
 		}
 		constexpr HeapArray(const_pointer srcPtr, const size_type count) noexcept : arrayDataPtr(srcPtr), arraySize(count) {}
-		constexpr HeapArray(const container_allocation_move_adapater& allocationMoveAdapater) {
+		constexpr HeapArray(const allocation_move_adapater& allocationMoveAdapater) {
 			if (allocationMoveAdapater.isEmpty()) {
 				arrayDataPtr = 0;
 				arraySize = 0;
@@ -113,7 +113,7 @@ namespace natl {
 		}
 
 		//assignment
-		constexpr HeapArray& operator=(const container_allocation_move_adapater& allocationMoveAdapater) noexcept {
+		constexpr HeapArray& operator=(const allocation_move_adapater& allocationMoveAdapater) noexcept {
 			deallocate();
 			self() = HeapArray(allocationMoveAdapater);
 			return self();
@@ -134,8 +134,8 @@ namespace natl {
 			return ArrayView<const value_type>(data(), size());
 		}
 
-		[[nodiscard]] constexpr container_allocation_move_adapater getAlloctionMoveAdapater() noexcept {
-			container_allocation_move_adapater allocationMoveAdapater(data(), size(), size(), AllocationMoveAdapaterRequireCopy::v_false, AllocationMoveAdapaterCanDealloc::v_true);
+		[[nodiscard]] constexpr allocation_move_adapater getAlloctionMoveAdapater() noexcept {
+			allocation_move_adapater allocationMoveAdapater(data(), size(), size(), AllocationMoveAdapaterRequireCopy::v_false, AllocationMoveAdapaterCanDealloc::v_true);
 			arrayDataPtr = nullptr;
 			arraySize = 0;
 			return allocationMoveAdapater;

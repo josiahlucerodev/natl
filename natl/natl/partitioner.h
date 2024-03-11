@@ -35,7 +35,7 @@ namespace natl {
 		using reverse_iterator = ReverseRandomAccessIteratorAlloc<value_type, Alloc>;
 		using const_reverse_iterator = ReverseConstRandomAccessIteratorAlloc<value_type, Alloc>;
 
-		using container_allocation_move_adapater = AllocationMoveAdapater<value_type, Alloc>;
+		using allocation_move_adapater = AllocationMoveAdapater<value_type, Alloc>;
 
 		//movement info 
 		constexpr static bool triviallyRelocatable = true;
@@ -115,7 +115,7 @@ namespace natl {
 		using reverse_iterator = ReverseRandomAccessIteratorAlloc<value_type, Alloc>;
 		using const_reverse_iterator = ReverseConstRandomAccessIteratorAlloc<value_type, Alloc>;
 
-		using container_allocation_move_adapater = AllocationMoveAdapater<value_type, Alloc>;
+		using allocation_move_adapater = AllocationMoveAdapater<value_type, Alloc>;
 
 		//movement info 
 		constexpr static bool triviallyRelocatable = true;

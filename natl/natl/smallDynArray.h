@@ -31,7 +31,7 @@ namespace natl {
 		using reverse_iterator = ReverseRandomAccessIteratorAlloc<value_type, Alloc>;
 		using const_reverse_iterator = ReverseConstRandomAccessIteratorAlloc<value_type, Alloc>;
 
-		using container_allocation_move_adapater = AllocationMoveAdapater<value_type, Alloc>;
+		using allocation_move_adapater = AllocationMoveAdapater<value_type, Alloc>;
 
 		//movement info 
 		constexpr static bool triviallyRelocatable = true;
@@ -161,9 +161,9 @@ namespace natl {
 			baseConstructorInit();
 			construct(arrayViewLike.data(), arrayViewLike.size());
 		}
-		constexpr SmallDynArray(const container_allocation_move_adapater& allocationMoveAdapater) noexcept {
+		constexpr SmallDynArray(allocation_move_adapater&& allocationMoveAdapater) noexcept {
 			baseConstructorInit();
-			construct(allocationMoveAdapater);
+			construct(natl::move(allocationMoveAdapater));
 		}
 		constexpr SmallDynArray(std::initializer_list<value_type> ilist) noexcept {
 			baseConstructorInit();
@@ -272,7 +272,7 @@ namespace natl {
 			return self();
 		}
 
-		constexpr SmallDynArray& construct(const container_allocation_move_adapater& allocationMoveAdapater) noexcept {
+		constexpr SmallDynArray& construct(allocation_move_adapater&& allocationMoveAdapater) noexcept {
 			if (allocationMoveAdapater.isEmpty()) {
 				arraySizeAndSmallArrayFlag = 0;
 			} else if (allocationMoveAdapater.requiresCopy() || allocationMoveAdapater.size() < smallArrayCapacity()) {
@@ -286,6 +286,7 @@ namespace natl {
 				setSize(allocationMoveAdapater.size());
 				setAsNotSmallArray();
 			}
+			allocationMoveAdapater.release();
 			return self();
 		}
 
@@ -303,8 +304,8 @@ namespace natl {
 		constexpr SmallDynArray& operator=(const ArrayViewLike& arrayViewLike) noexcept {
 			return assign<ArrayViewLike>(arrayViewLike);
 		}
-		constexpr SmallDynArray& operator=(const container_allocation_move_adapater& allocationMoveAdapater) noexcept {
-			return assign(allocationMoveAdapater);
+		constexpr SmallDynArray& operator=(allocation_move_adapater&& allocationMoveAdapater) noexcept {
+			return assign(natl::move(allocationMoveAdapater));
 		}
 		constexpr SmallDynArray& operator=(std::initializer_list<value_type> ilist) noexcept {
 			return assign(ilist);
@@ -421,7 +422,7 @@ namespace natl {
 		constexpr SmallDynArray& assign(const ArrayViewLike& arrayViewLike) noexcept {
 			return assign(arrayViewLike.data(), arrayViewLike.size());
 		}
-		constexpr SmallDynArray& assign(const container_allocation_move_adapater& allocationMoveAdapater) noexcept {
+		constexpr SmallDynArray& assign(allocation_move_adapater&& allocationMoveAdapater) noexcept {
 			if (allocationMoveAdapater.isEmpty()) {
 				release();
 				arraySizeAndSmallArrayFlag = 0;
@@ -442,6 +443,7 @@ namespace natl {
 				setSize(allocationMoveAdapater.size());
 				setAsNotSmallArray();
 			}
+			allocationMoveAdapater.release();
 			return self();
 		}
 		constexpr SmallDynArray& assign(std::initializer_list<value_type> ilist) noexcept {
@@ -449,15 +451,15 @@ namespace natl {
 		}
 
 		//strongly linked methods 
-		[[nodiscard]] constexpr container_allocation_move_adapater getAlloctionMoveAdapater() noexcept {
+		[[nodiscard]] constexpr allocation_move_adapater getAlloctionMoveAdapater() noexcept {
 			const bool arrayIsSmallBuffer = isSmallArray();
 			AllocationMoveAdapaterRequireCopy requireCopy = arrayIsSmallBuffer ? AllocationMoveAdapaterRequireCopy::v_true : AllocationMoveAdapaterRequireCopy::v_false;
 			AllocationMoveAdapaterCanDealloc canBeDealloc = arrayIsSmallBuffer ? AllocationMoveAdapaterCanDealloc::v_false : AllocationMoveAdapaterCanDealloc::v_true;
-			container_allocation_move_adapater allocationMoveAdapater(data(), size(), capacity(), requireCopy, canBeDealloc);
+			allocation_move_adapater allocationMoveAdapater(data(), size(), capacity(), requireCopy, canBeDealloc);
 			arrayDataPtr = nullptr;
 			arraySizeAndSmallArrayFlag = 0;
 			arrayCapacity = 0;
-			return allocationMoveAdapater;
+			return natl::move(allocationMoveAdapater);
 		}
 
 		constexpr void resize(const size_type count) noexcept {
