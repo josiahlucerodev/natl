@@ -475,7 +475,7 @@ namespace natl {
 					setSize(count);
 				}
 			} else if (count > size()) {
-				insert(cend(), count, value_type());
+				insert(cend(), count - size(), value_type());
 			}
 		}
 
@@ -486,7 +486,7 @@ namespace natl {
 				}
 				setSize(count);
 			} else if (count > size()) {
-				insert(cend(), count, value);
+				insert(cend(), count - size(), value);
 			}
 		}
 
@@ -955,9 +955,9 @@ namespace natl {
 			return append(ilist.begin(), ilist.end());
 		}
 
-		constexpr SmallDynArray& pop_back() noexcept {
+		constexpr void pop_back() noexcept {
 			if (!IsTriviallyDestructible<value_type> || std::is_constant_evaluated()) {
-				defaultDeconstruct<value_type>(at(backIndex()));
+				defaultDeconstruct<value_type>(&at(backIndex()));
 			}
 			setSize(size() - 1);
 			return;

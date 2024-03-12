@@ -57,6 +57,7 @@ namespace natl {
 				if (!isFreeSlotsEmpty()) {
 					return;
 				}
+				freeSlots.reserve(pool.size() + BatchSize);
 
 				for (std::size_t i = 0; i < BatchSize; i++) {
 					freeSlots.push_back(pool.newElement());
@@ -74,15 +75,19 @@ namespace natl {
 		};
 	}
 
-	template<typename Type, Size BatchSize = 100>
-	using BatchPool = impl::BatchPoolBase<Type, DynArray<DynArray<Type>>, BatchSize>;
+	template<typename Type, Size BatchSize = 100, typename Alloc = DefaultAllocator<Type>>
+		requires(IsAllocator<Alloc>)
+	using BatchPool = impl::BatchPoolBase<Type, DynArray<DynArray<Type, Alloc>, typename Alloc::template rebind_alloc<DynArray<Type, Alloc>>>, BatchSize>;
 
-	template<typename Type, Size SmallBatchsNumber, Size BatchSize = 100>
-	using SmallBatchPool = impl::BatchPoolBase<Type, SmallDynArray<DynArray<Type>, SmallBatchsNumber>, BatchSize>;
+	template<typename Type, Size SmallBatchsNumber, Size BatchSize = 100, typename Alloc = DefaultAllocator<Type>>
+		requires(IsAllocator<Alloc>)
+	using SmallBatchPool = impl::BatchPoolBase<Type, SmallDynArray<DynArray<Type, Alloc>, SmallBatchsNumber, typename Alloc::template rebind_alloc<DynArray<Type, Alloc>>>, BatchSize>;
 
-	template<typename Type, Size BatchSize = 100>
-	using BatchHeap = impl::BatchHeapBase<Type, DynArray<DynArray<Type>>, BatchSize>;
+	template<typename Type, Size BatchSize = 100, typename Alloc = DefaultAllocator<Type>>
+		requires(IsAllocator<Alloc>)
+	using BatchHeap = impl::BatchHeapBase<Type, DynArray<DynArray<Type, Alloc>, typename Alloc::template rebind_alloc<DynArray<Type, Alloc>>>, BatchSize>;
 
-	template<typename Type, Size SmallBatchsNumber, Size BatchSize = 100>
-	using SmallBatchHeap = impl::BatchHeapBase<Type, SmallDynArray<DynArray<Type>, SmallBatchsNumber>, BatchSize>;
+	template<typename Type, Size SmallBatchsNumber, Size BatchSize = 100, typename Alloc = DefaultAllocator<Type>>
+		requires(IsAllocator<Alloc>)
+	using SmallBatchHeap = impl::BatchHeapBase<Type, SmallDynArray<DynArray<Type, Alloc>, SmallBatchsNumber, typename Alloc::template rebind_alloc<DynArray<Type, Alloc>>>, BatchSize>;
 }

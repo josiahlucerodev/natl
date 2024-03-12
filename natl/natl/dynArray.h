@@ -332,9 +332,8 @@ namespace natl {
 					}
 					setsize_type(count);
 				}
-			}
-			else if (count > size()) {
-				insert(cend(), count, value_type());
+			} else if (count > size()) {
+				insert(cend(), count - size(), value_type());
 			}
 		}
 
@@ -344,9 +343,8 @@ namespace natl {
 					defaultDeconstructAll<value_type>(data() + count, size() - count);
 				}
 				setsize_type(count);
-			}
-			else if (count > size()) {
-				insert(cend(), count, value);
+			} else if (count > size()) {
+				insert(cend(), count - size(), value);
 			}
 		}
 
@@ -799,9 +797,9 @@ namespace natl {
 			return append(ilist.begin(), ilist.end());
 		}
 
-		constexpr DynArray& pop_back() noexcept {
+		constexpr void pop_back() noexcept {
 			if (!IsTriviallyDestructible<value_type> || std::is_constant_evaluated()) {
-				defaultDeconstruct<value_type>(at(backIndex()));
+				defaultDeconstruct<value_type>(&at(backIndex()));
 			}
 			setsize_type(size() - 1);
 			return;
