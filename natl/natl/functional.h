@@ -1392,4 +1392,30 @@ namespace natl {
 		}
 
 	};
+	
+	template<class Type>
+	struct LessCompare { 
+		constexpr bool operator()(const Type& lhs, const Type& rhs) const noexcept { return lhs < rhs; }
+	};
+	template<class Type>
+	struct GreaterCompare {
+		constexpr bool operator()(const Type& lhs, const Type& rhs) const noexcept { return lhs > rhs; }
+	};
+	template<class Type>
+	struct LessEqualCompare {
+		constexpr bool operator()(const Type& lhs, const Type& rhs) const noexcept { return lhs <= rhs; }
+	};
+	template<class Type>
+	struct GreaterEqualCompare {
+		constexpr bool operator()(const Type& lhs, const Type& rhs) const noexcept { return lhs >= rhs; }
+	};
+	template<class Type>
+	struct EqualToCompare {
+		constexpr bool operator()(const Type& lhs, const Type& rhs) const noexcept { return lhs == rhs; }
+	};
+	template<class Type>
+	struct NotEqualToCompare {
+		constexpr bool operator()(const Type& lhs, const Type& rhs) const noexcept { return lhs != rhs; }
+	};
+
 }
