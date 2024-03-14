@@ -26,6 +26,9 @@
 #define NATL_IN_DEBUG
 #endif
 
+//own
+#include "utility.h"
+
 //interface 
 namespace natl {
     consteval bool natlInDebug() noexcept {
@@ -37,7 +40,7 @@ namespace natl {
     }
 
     NATL_FORCE_INLINE constexpr void constantEvaluatedError() noexcept {
-        if (std::is_constant_evaluated()) {
+        if (isConstantEvaluated()) {
             int* ptr = nullptr;
             *ptr = 0;
         }
@@ -45,7 +48,7 @@ namespace natl {
 
     NATL_FORCE_INLINE constexpr void natlDebugBreak() noexcept {
 #ifdef NATL_IN_DEBUG
-        if (std::is_constant_evaluated()) {
+        if (isConstantEvaluated()) {
             constantEvaluatedError();
         } else {
 #ifdef _MSC_VER

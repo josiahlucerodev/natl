@@ -250,7 +250,7 @@ namespace natl {
 		}
 		constexpr void destructAll() noexcept {
 			if (IsTriviallyDestructible<value_type>) {
-				if (!std::is_constant_evaluated()) {
+				if (!isConstantEvaluated()) {
 					return;
 				}
 			}

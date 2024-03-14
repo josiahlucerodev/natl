@@ -289,7 +289,7 @@ namespace natl {
 
 	private:
 		constexpr void destructColonyBlockMemory(colony_block* colonyBlock) noexcept {
-			if (std::is_constant_evaluated()) {
+			if (isConstantEvaluated()) {
 				using colony_block_allocator_type = Alloc::template rebind_alloc<colony_block>;
 				using skipfield_allocator_type = Alloc::template rebind_alloc<SkipFieldType>;
 
@@ -339,7 +339,7 @@ namespace natl {
 
 		constexpr colony_block* createColonyBlock(const Size newColonyBlockCapacity) noexcept {
 			colony_block* newColonyBlock;
-			if (std::is_constant_evaluated()) {
+			if (isConstantEvaluated()) {
 				using colony_block_allocator_type = Alloc::template rebind_alloc<colony_block>;
 				using skipfield_allocator_type = Alloc::template rebind_alloc<SkipFieldType>;
 

@@ -19,7 +19,7 @@
 //interface
 namespace natl {
     [[noreturn]] NATL_FORCE_INLINE constexpr void natlTerminate() noexcept {
-        if (std::is_constant_evaluated()) {
+        if (isConstantEvaluated()) {
             constantEvaluatedError();
         } else {
 #ifdef NATL_IN_DEBUG
@@ -29,7 +29,7 @@ namespace natl {
         }
     }
     constexpr void fatalError(const StringView message) noexcept {
-        if (std::is_constant_evaluated()) {
+        if (isConstantEvaluated()) {
             natlTerminate();
         } else {
             std::cout << message.c_str();

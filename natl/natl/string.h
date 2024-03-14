@@ -86,21 +86,21 @@ namespace natl {
 			return !isSmallString();
 		}
 		constexpr static size_type smallStringCapacity() noexcept {
-			if (std::is_constant_evaluated() || !enableSmallString) {
+			if (isConstantEvaluated() || !enableSmallString) {
 				return bufferSize;
 			} else {
 				return bufferSize + ((sizeof(stringPtr) + sizeof(stringCapacity)) / sizeof(value_type));
 			}
 		}
 		constexpr const_pointer smallStringLocation() const noexcept {
-			if (std::is_constant_evaluated()) {
+			if (isConstantEvaluated()) {
 				return smallStringStorage;
 			} else {
 				return reinterpret_cast<const_pointer>(reinterpret_cast<const ui8*>(this) + sizeof(stringSizeAndSmallStringFlag));
 			}
 		}
 		constexpr pointer smallStringLocation() noexcept {
-			if (std::is_constant_evaluated()) {
+			if (isConstantEvaluated()) {
 				return smallStringStorage;
 			} else {
 				return reinterpret_cast<pointer>(reinterpret_cast<ui8*>(this) + sizeof(stringSizeAndSmallStringFlag));
@@ -124,7 +124,7 @@ namespace natl {
 			stringSizeAndSmallStringFlag = 0;
 			stringPtr = 0;
 			stringCapacity = 0;
-			if (std::is_constant_evaluated()) {
+			if (isConstantEvaluated()) {
 				uninitializedFill<pointer, value_type>(smallStringStorage, smallStringStorage + bufferSize, value_type(0));
 			}
 		}
@@ -1797,7 +1797,7 @@ namespace natl {
 
 		//set
 		constexpr void setEnd(value_type value) noexcept {
-			if (std::is_constant_evaluated()) {
+			if (isConstantEvaluated()) {
 				std::construct_at<value_type, value_type>(endPtr(), forward<value_type>(value));
 			} else {
 				*end() = value;

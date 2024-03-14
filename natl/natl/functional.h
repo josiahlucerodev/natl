@@ -214,7 +214,7 @@ namespace natl {
 				}
 					break;
 				case impl::FunctionStorageType::constexprCallable:
-					if (std::is_constant_evaluated()) {
+					if (isConstantEvaluated()) {
 						delete constexprFunctionStorage.constexprCallable;
 						delete constexprFunctionStorage.polymorphicFunctorStorageBase;
 						std::destroy_at<base_constexpr_function_storage>(&constexprFunctionStorage);
@@ -274,7 +274,7 @@ namespace natl {
 						heapCallable = other.heapCallable->copyCallable(nullptr);
 						break;
 					case impl::FunctionStorageType::constexprCallable:
-						if (std::is_constant_evaluated()) {
+						if (isConstantEvaluated()) {
 							std::construct_at<base_constexpr_function_storage>(
 								&constexprFunctionStorage,
 								other.constexprFunctionStorage.constexprCallable->copyCallableFunctorStorage(other.constexprFunctionStorage.polymorphicFunctorStorageBase),
@@ -309,7 +309,7 @@ namespace natl {
 						heapCallable = other.heapCallable;
 						break;
 					case impl::FunctionStorageType::constexprCallable:
-						if (std::is_constant_evaluated()) {
+						if (isConstantEvaluated()) {
 							std::construct_at<base_constexpr_function_storage>(
 								&constexprFunctionStorage,
 								other.constexprFunctionStorage.polymorphicFunctorStorageBase,
@@ -334,7 +334,7 @@ namespace natl {
 				}
 
 				using FunctorCallableType = impl::Callable<Alloc, Functor, ReturnType, ArgTypes...>;
-				if (std::is_constant_evaluated()) {
+				if (isConstantEvaluated()) {
 					functionStorageType = impl::FunctionStorageType::constexprCallable;
 					std::construct_at<base_constexpr_function_storage>(
 						&constexprFunctionStorage,
@@ -382,7 +382,7 @@ namespace natl {
 				case impl::FunctionStorageType::heapCallable:
 					return heapCallable->invoke(forward<ArgTypes>(args)...);
 				case impl::FunctionStorageType::constexprCallable:
-					if (std::is_constant_evaluated()) {
+					if (isConstantEvaluated()) {
 						return constexprFunctionStorage.constexprCallable->invoke(constexprFunctionStorage.polymorphicFunctorStorageBase, forward<ArgTypes>(args)...);
 					}
 				}
@@ -972,7 +972,7 @@ namespace natl {
 
 			//destructor
 			constexpr void destruct() noexcept {
-				if (std::is_constant_evaluated()) {
+				if (isConstantEvaluated()) {
 					if (functionRefStorageType == FunctionRefStorageType::constexprCallableRef) {
 						delete constexprFunctionRefStorage.constexpreCallableRef;
 						delete constexprFunctionRefStorage.polymorphicFunctorRefStorageBase;
@@ -1024,7 +1024,7 @@ namespace natl {
 					copyNoOverlap<const Byte*, Byte*>(&other.callableRefStorage, &other.callableRefStorage + smallBufferSize, callableRefStorage);
 					break;
 				case FunctionRefStorageType::constexprCallableRef:
-					if (std::is_constant_evaluated()) {
+					if (isConstantEvaluated()) {
 						constexprFunctionRefStorage = constexprFunctionRefStorage;
 					}
 					break;
@@ -1032,7 +1032,7 @@ namespace natl {
 					callable = callable;
 					break;
 				case FunctionRefStorageType::constexprCallable:
-					if (std::is_constant_evaluated()) {
+					if (isConstantEvaluated()) {
 						constexprFunctionStorage = constexprFunctionStorage;
 					}
 					break;
@@ -1053,7 +1053,7 @@ namespace natl {
 						callableRefStorage);
 					break;
 				case FunctionRefStorageType::constexprCallableRef:
-					if (std::is_constant_evaluated()) {
+					if (isConstantEvaluated()) {
 						constexprFunctionRefStorage = constexprFunctionRefStorage;
 					}
 					break;
@@ -1061,7 +1061,7 @@ namespace natl {
 					callable = callable;
 					break;
 				case FunctionRefStorageType::constexprCallable:
-					if (std::is_constant_evaluated()) {
+					if (isConstantEvaluated()) {
 						constexprFunctionStorage = constexprFunctionStorage;
 					}
 					break;
@@ -1082,7 +1082,7 @@ namespace natl {
 					return self();
 				}
 
-				if (std::is_constant_evaluated()) {
+				if (isConstantEvaluated()) {
 					functionRefStorageType = FunctionRefStorageType::constexprCallableRef;
 					std::construct_at<base_constexpr_function_ref_storage>(
 						&constexprFunctionRefStorage,
@@ -1112,7 +1112,7 @@ namespace natl {
 					callable = other.heapCallable;
 					break;
 				case FunctionStorageType::constexprCallable:
-					if (std::is_constant_evaluated()) {
+					if (isConstantEvaluated()) {
 						functionRefStorageType = FunctionRefStorageType::constexprCallable;
 						constexprFunctionStorage = other.constexprFunctionStorage;
 					}
@@ -1147,7 +1147,7 @@ namespace natl {
 				case FunctionRefStorageType::callableRef:
 					return reinterpret_cast<const callable_ref_base*>(callableRefStorage)->invoke(forward<ArgTypes>(args)...);
 				case FunctionRefStorageType::constexprCallableRef:
-					if (std::is_constant_evaluated()) {
+					if (isConstantEvaluated()) {
 						constexprFunctionRefStorage.constexpreCallableRef->invoke(constexprFunctionRefStorage.polymorphicFunctorRefStorageBase, forward<ArgTypes>(args)...);
 					}
 					break;
@@ -1155,7 +1155,7 @@ namespace natl {
 					callable->invoke(forward<ArgTypes>(args)...);
 					break;
 				case FunctionRefStorageType::constexprCallable:
-					if (std::is_constant_evaluated()) {
+					if (isConstantEvaluated()) {
 						return constexprFunctionStorage.constexprCallable->invoke(constexprFunctionStorage.polymorphicFunctorStorageBase, forward<ArgTypes>(args)...);
 					}
 					break;

@@ -72,13 +72,13 @@ namespace natl {
 		~TrackerAllocator() = default;
 
 		constexpr static void registerAllocate(const pointer ptr) noexcept {
-			if (std::is_constant_evaluated()) {
+			if (isConstantEvaluated()) {
 				return;
 			}
 			trackerAllocatorData.registerAllocate(std::bit_cast<void*, const pointer>(ptr));
 		}
 		constexpr static void registerDeallocate(const pointer ptr) noexcept {
-			if (std::is_constant_evaluated()) {
+			if (isConstantEvaluated()) {
 				return;
 			}
 			trackerAllocatorData.registerDeallocate(std::bit_cast<void*, const pointer>(ptr));

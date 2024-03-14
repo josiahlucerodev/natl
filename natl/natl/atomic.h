@@ -6,6 +6,7 @@
 
 //own
 #include "basicTypes.h"
+#include "utility.h"
 
 //interface 
 namespace natl {
@@ -67,14 +68,14 @@ namespace natl {
 			//constructor 
 			constexpr AtomicBase(const AtomicBase&) noexcept = delete;
 			constexpr AtomicBase() noexcept {
-				if (std::is_constant_evaluated()) {
+				if (isConstantEvaluated()) {
 					std::construct_at<value_type>(&value);
 				} else {
 					std::construct_at<atomic_value_type>(&atomicValue);
 				}
 			}
 			constexpr AtomicBase(value_type desired) noexcept {
-				if (std::is_constant_evaluated()) {
+				if (isConstantEvaluated()) {
 					std::construct_at<value_type>(&value, desired);
 				} else {
 					std::construct_at<atomic_value_type>(&atomicValue, desired);
@@ -82,7 +83,7 @@ namespace natl {
 			}
 			//destructor 
 			constexpr ~AtomicBase() noexcept {
-				if (std::is_constant_evaluated()) {
+				if (isConstantEvaluated()) {
 					std::destroy_at<value_type>(&value);
 				} else {
 					std::destroy_at<atomic_value_type>(&atomicValue);
@@ -104,14 +105,14 @@ namespace natl {
 			constexpr AtomicBase& operator=(const AtomicBase&) volatile = delete;
 
 			constexpr bool is_lock_free() const noexcept {
-				if (std::is_constant_evaluated()) {
+				if (isConstantEvaluated()) {
 					return false;
 				} else {
 					return atomicValue.is_lock_free();
 				}
 			}
 			constexpr bool is_lock_free() const volatile  noexcept {
-				if (std::is_constant_evaluated()) {
+				if (isConstantEvaluated()) {
 					return false;
 				} else {
 					return atomicValue.is_lock_free();
@@ -119,14 +120,14 @@ namespace natl {
 			}
 
 			constexpr void store(value_type desired, MemoryOrder order = memory_order_seq_cst) noexcept {
-				if (std::is_constant_evaluated()) {
+				if (isConstantEvaluated()) {
 					value = desired;
 				} else {
 					atomicValue.store(desired, convertToStdMemoryOrder(order));
 				}
 			}
 			constexpr void store(value_type desired, MemoryOrder order = memory_order_seq_cst) volatile noexcept {
-				if (std::is_constant_evaluated()) {
+				if (isConstantEvaluated()) {
 					value = desired;
 				} else {
 					atomicValue.store(desired, convertToStdMemoryOrder(order));
@@ -134,14 +135,14 @@ namespace natl {
 			}
 
 			constexpr value_type load(MemoryOrder order = memory_order_seq_cst) const noexcept {
-				if (std::is_constant_evaluated()) {
+				if (isConstantEvaluated()) {
 					return value;
 				} else {
 					return atomicValue.load(convertToStdMemoryOrder(order));
 				}
 			}
 			constexpr value_type load(MemoryOrder order = memory_order_seq_cst) const volatile noexcept {
-				if (std::is_constant_evaluated()) {
+				if (isConstantEvaluated()) {
 					return value;
 				} else {
 					return atomicValue.load(convertToStdMemoryOrder(order));
@@ -149,7 +150,7 @@ namespace natl {
 			}
 
 			constexpr value_type exchange(value_type desired, MemoryOrder order = memory_order_seq_cst) noexcept {
-				if (std::is_constant_evaluated()) {
+				if (isConstantEvaluated()) {
 					value_type original = value;
 					value = desired;
 					return original;
@@ -158,7 +159,7 @@ namespace natl {
 				}
 			}
 			constexpr value_type exchange(value_type desired, MemoryOrder order = memory_order_seq_cst) volatile noexcept {
-				if (std::is_constant_evaluated()) {
+				if (isConstantEvaluated()) {
 					value_type original = value;
 					value = desired;
 					return original;
@@ -167,7 +168,7 @@ namespace natl {
 				}
 			}
 			constexpr bool compare_exchange_weak(value_type& expected, value_type desired, MemoryOrder success, MemoryOrder failure) noexcept {
-				if (std::is_constant_evaluated()) {
+				if (isConstantEvaluated()) {
 					if (value == expected) {
 						value = desired;
 						return true;
@@ -180,7 +181,7 @@ namespace natl {
 				}
 			}
 			constexpr bool compare_exchange_weak(value_type& expected, value_type desired, MemoryOrder success, MemoryOrder failure) volatile noexcept {
-				if (std::is_constant_evaluated()) {
+				if (isConstantEvaluated()) {
 					if (value == expected) {
 						value = desired;
 						return true;
@@ -193,7 +194,7 @@ namespace natl {
 				}
 			}
 			constexpr bool compare_exchange_weak(value_type& expected, value_type desired, MemoryOrder order = memory_order_seq_cst) noexcept {
-				if (std::is_constant_evaluated()) {
+				if (isConstantEvaluated()) {
 					if (value == expected) {
 						value = desired;
 						return true;
@@ -206,7 +207,7 @@ namespace natl {
 				}
 			}
 			constexpr bool compare_exchange_weak(value_type& expected, value_type desired, MemoryOrder order = memory_order_seq_cst) volatile noexcept {
-				if (std::is_constant_evaluated()) {
+				if (isConstantEvaluated()) {
 					if (value == expected) {
 						value = desired;
 						return true;
@@ -220,7 +221,7 @@ namespace natl {
 			}
 
 			constexpr bool compare_exchange_strong(value_type& expected, value_type desired, MemoryOrder success, MemoryOrder failure) noexcept {
-				if (std::is_constant_evaluated()) {
+				if (isConstantEvaluated()) {
 					if (value == expected) {
 						value = desired;
 						return true;
@@ -233,7 +234,7 @@ namespace natl {
 				}
 			}
 			constexpr bool compare_exchange_strong(value_type& expected, value_type desired, MemoryOrder success, MemoryOrder failure) volatile noexcept {
-				if (std::is_constant_evaluated()) {
+				if (isConstantEvaluated()) {
 					if (value == expected) {
 						value = desired;
 						return true;
@@ -246,7 +247,7 @@ namespace natl {
 				}
 			}
 			constexpr bool compare_exchange_strong(value_type& expected, value_type desired, MemoryOrder order = memory_order_seq_cst) noexcept {
-				if (std::is_constant_evaluated()) {
+				if (isConstantEvaluated()) {
 					if (value == expected) {
 						value = desired;
 						return true;
@@ -259,7 +260,7 @@ namespace natl {
 				}
 			}
 			constexpr bool compare_exchange_strong(value_type& expected, value_type desired, MemoryOrder order = memory_order_seq_cst) volatile noexcept {
-				if (std::is_constant_evaluated()) {
+				if (isConstantEvaluated()) {
 					if (value == expected) {
 						value = desired;
 						return true;
@@ -308,7 +309,7 @@ namespace natl {
 		constexpr const Atomic& self() const noexcept { return *this; }
 
 		constexpr value_type fetch_add(value_type arg, MemoryOrder order = memory_order_seq_cst) noexcept {
-			if (std::is_constant_evaluated()) {
+			if (isConstantEvaluated()) {
 				value_type original = this->value;
 				this->value += arg;
 				return original;
@@ -317,7 +318,7 @@ namespace natl {
 			}
 		}
 		constexpr value_type fetch_add(value_type arg, MemoryOrder order = memory_order_seq_cst) volatile noexcept {
-			if (std::is_constant_evaluated()) {
+			if (isConstantEvaluated()) {
 				value_type original = this->value;
 				this->value += arg;
 				return original;
@@ -326,7 +327,7 @@ namespace natl {
 			}
 		}
 		constexpr value_type fetch_sub(value_type arg, MemoryOrder order = memory_order_seq_cst) noexcept {
-			if (std::is_constant_evaluated()) {
+			if (isConstantEvaluated()) {
 				value_type original = this->value;
 				this->value -= arg;
 				return original;
@@ -335,7 +336,7 @@ namespace natl {
 			}
 		}
 		constexpr value_type fetch_sub(value_type arg, MemoryOrder order = memory_order_seq_cst) volatile noexcept {
-			if (std::is_constant_evaluated()) {
+			if (isConstantEvaluated()) {
 				value_type original = this->value;
 				this->value -= arg;
 				return original;
@@ -344,7 +345,7 @@ namespace natl {
 			}
 		}
 		constexpr value_type fetch_and(value_type arg, MemoryOrder order = memory_order_seq_cst) noexcept {
-			if (std::is_constant_evaluated()) {
+			if (isConstantEvaluated()) {
 				value_type original = this->value;
 				this->value &= arg;
 				return original;
@@ -353,7 +354,7 @@ namespace natl {
 			}
 		}
 		constexpr value_type fetch_and(value_type arg, MemoryOrder order = memory_order_seq_cst) volatile noexcept {
-			if (std::is_constant_evaluated()) {
+			if (isConstantEvaluated()) {
 				value_type original = this->value;
 				this->value &= arg;
 				return original;
@@ -362,7 +363,7 @@ namespace natl {
 			}
 		}
 		constexpr value_type fetch_or(value_type arg, MemoryOrder order = memory_order_seq_cst) noexcept {
-			if (std::is_constant_evaluated()) {
+			if (isConstantEvaluated()) {
 				value_type original = this->value;
 				this->value |= arg;
 				return original;
@@ -371,7 +372,7 @@ namespace natl {
 			}
 		}
 		constexpr value_type fetch_or(value_type arg, MemoryOrder order = memory_order_seq_cst) volatile noexcept {
-			if (std::is_constant_evaluated()) {
+			if (isConstantEvaluated()) {
 				value_type original = this->value;
 				this->value |= arg;
 				return original;
@@ -380,7 +381,7 @@ namespace natl {
 			}
 		}
 		constexpr value_type fetch_xor(value_type arg, MemoryOrder order = memory_order_seq_cst) noexcept {
-			if (std::is_constant_evaluated()) {
+			if (isConstantEvaluated()) {
 				value_type original = this->value;
 				this->value ^= arg;
 				return original;
@@ -389,7 +390,7 @@ namespace natl {
 			}
 		}
 		constexpr value_type fetch_xor(value_type arg, MemoryOrder order = memory_order_seq_cst) volatile noexcept {
-			if (std::is_constant_evaluated()) {
+			if (isConstantEvaluated()) {
 				value_type original = this->value;
 				this->value ^= arg;
 				return original;
@@ -484,7 +485,7 @@ namespace natl {
 		constexpr const Atomic& self() const noexcept { return *this; }
 
 		constexpr value_type fetch_add(value_type arg, MemoryOrder order = memory_order_seq_cst) noexcept {
-			if (std::is_constant_evaluated()) {
+			if (isConstantEvaluated()) {
 				value_type original = this->value;
 				this->value += arg;
 				return original;
@@ -493,7 +494,7 @@ namespace natl {
 			}
 		}
 		constexpr value_type fetch_add(value_type arg, MemoryOrder order = memory_order_seq_cst) volatile noexcept {
-			if (std::is_constant_evaluated()) {
+			if (isConstantEvaluated()) {
 				value_type original = this->value;
 				this->value += arg;
 				return original;
@@ -502,7 +503,7 @@ namespace natl {
 			}
 		}
 		constexpr value_type fetch_sub(value_type arg, MemoryOrder order = memory_order_seq_cst) noexcept {
-			if (std::is_constant_evaluated()) {
+			if (isConstantEvaluated()) {
 				value_type original = this->value;
 				this->value -= arg;
 				return original;
@@ -511,7 +512,7 @@ namespace natl {
 			}
 		}
 		constexpr value_type fetch_sub(value_type arg, MemoryOrder order = memory_order_seq_cst) volatile noexcept {
-			if (std::is_constant_evaluated()) {
+			if (isConstantEvaluated()) {
 				value_type original = this->value;
 				this->value -= arg;
 				return original;
@@ -560,7 +561,7 @@ namespace natl {
 		constexpr const Atomic& self() const noexcept { return *this; }
 
 		constexpr value_type* fetch_add(PtrDiff arg, MemoryOrder order = memory_order_seq_cst) noexcept {
-			if (std::is_constant_evaluated()) {
+			if (isConstantEvaluated()) {
 				value_type* original = this->value;
 				this->value += arg;
 				return original;
@@ -569,7 +570,7 @@ namespace natl {
 			}
 		}
 		constexpr value_type* fetch_add(PtrDiff arg, MemoryOrder order = memory_order_seq_cst) volatile noexcept {
-			if (std::is_constant_evaluated()) {
+			if (isConstantEvaluated()) {
 				value_type* original = this->value;
 				this->value += arg;
 				return original;
@@ -579,7 +580,7 @@ namespace natl {
 			}
 		}
 		constexpr value_type* fetch_sub(PtrDiff arg, MemoryOrder order = memory_order_seq_cst) noexcept {
-			if (std::is_constant_evaluated()) {
+			if (isConstantEvaluated()) {
 				value_type* original = this->value;
 				this->value -= arg;
 				return original;
@@ -588,7 +589,7 @@ namespace natl {
 			}
 		}
 		constexpr value_type* fetch_sub(PtrDiff arg, MemoryOrder order = memory_order_seq_cst) volatile noexcept {
-			if (std::is_constant_evaluated()) {
+			if (isConstantEvaluated()) {
 				value_type* original = this->value;
 				this->value -= arg;
 				return original;

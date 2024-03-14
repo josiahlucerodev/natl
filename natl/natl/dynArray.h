@@ -327,7 +327,7 @@ namespace natl {
 					return;
 				}
 				else {
-					if (std::is_constant_evaluated()) {
+					if (isConstantEvaluated()) {
 						defaultDeconstructAll<value_type>(data() + count, size() - count);
 					}
 					setsize_type(count);
@@ -339,7 +339,7 @@ namespace natl {
 
 		constexpr void resize(const size_type count, const value_type value) noexcept {
 			if (count < size()) {
-				if constexpr (!IsTriviallyDestructible<value_type> || std::is_constant_evaluated()) {
+				if constexpr (!IsTriviallyDestructible<value_type> || isConstantEvaluated()) {
 					defaultDeconstructAll<value_type>(data() + count, size() - count);
 				}
 				setsize_type(count);
@@ -372,7 +372,7 @@ namespace natl {
 					defaultDeconstructAll<value_type>(data(), size());
 				}
 				else {
-					if (std::is_constant_evaluated()) {
+					if (isConstantEvaluated()) {
 						defaultDeconstructAll<value_type>(data(), size());
 					}
 				}
@@ -395,7 +395,7 @@ namespace natl {
 			const_pointer srcDataPtrLast = srcDataPtrFirst + size();
 			uninitializedCopyNoOverlap<const_pointer, pointer>(srcDataPtrFirst, srcDataPtrLast, newDataPtr);
 
-			if (!IsTriviallyRelocatable<value_type> || std::is_constant_evaluated()) {
+			if (!IsTriviallyRelocatable<value_type> || isConstantEvaluated()) {
 				defaultDeconstructAll<value_type>(data(), size());
 			}
 
@@ -420,7 +420,7 @@ namespace natl {
 		}
 
 		constexpr void clear() noexcept {
-			if (!IsTriviallyDestructible<value_type> || std::is_constant_evaluated()) {
+			if (!IsTriviallyDestructible<value_type> || isConstantEvaluated()) {
 				defaultDeconstructAll<value_type>(data(), size());
 			}
 			setsize_type(0);
@@ -533,7 +533,7 @@ namespace natl {
 			if (relocateCount == 0) { return relocateCount; }
 
 			if constexpr (IsTriviallyRelocatable<value_type>) {
-				if (!std::is_constant_evaluated()) {
+				if (!isConstantEvaluated()) {
 					pointer relocateDstPtr = data() + index + count;
 					const_pointer relocateSrcPtrFirst = data() + index;
 					const_pointer relocateSrcPtrLast = relocateSrcPtrFirst + relocateCount;
@@ -590,7 +590,7 @@ namespace natl {
 
 			const size_type relocateCount = shiftRelocateLeft(index, count);
 
-			if (!std::is_constant_evaluated()) {
+			if (!isConstantEvaluated()) {
 				if constexpr (IsTriviallyDestructible<value_type>) {
 					pointer insertDstPtr = data() + index;
 					const_pointer insertSrcPtrFirst = srcPtr;
@@ -625,7 +625,7 @@ namespace natl {
 
 			const size_type relocateCount = shiftRelocateLeft(index, count);
 
-			if (!std::is_constant_evaluated()) {
+			if (!isConstantEvaluated()) {
 				if constexpr (IsTriviallyDestructible<value_type>) {
 					pointer fillDstPtrFirst = data() + index;
 					pointer fillDstPtrLast = fillDstPtrFirst + count;
@@ -665,7 +665,7 @@ namespace natl {
 
 			const size_type relocateCount = shiftRelocateLeft(index, count);
 
-			if (!std::is_constant_evaluated()) {
+			if (!isConstantEvaluated()) {
 				if constexpr (IsTriviallyDestructible<value_type>) {
 					pointer insertDstPtr = data() + index;
 					internalCopyNoOverlap<Iter>(first, last, insertDstPtr);
@@ -722,7 +722,7 @@ namespace natl {
 			const_pointer relocateSrcPtrLast = endPtr();
 			internalCopy(relocateSrcPtrFirst, relocateSrcPtrLast, relocateDstPtr);
 
-			if (!IsTriviallyDestructible<value_type> || std::is_constant_evaluated()) {
+			if (!IsTriviallyDestructible<value_type> || isConstantEvaluated()) {
 				defaultDeconstruct<value_type>(at(backIndex()));
 			}
 
@@ -739,7 +739,7 @@ namespace natl {
 			const_pointer relocateSrcPtrLast = endPtr();
 			internalCopy(relocateSrcPtrFirst, relocateSrcPtrLast, relocateDstPtr);
 
-			if (!IsTriviallyDestructible<value_type> || std::is_constant_evaluated()) {
+			if (!IsTriviallyDestructible<value_type> || isConstantEvaluated()) {
 				defaultDeconstructAll<value_type>(data() + newsize_type, count);
 			}
 
@@ -804,7 +804,7 @@ namespace natl {
 		}
 
 		constexpr void pop_back() noexcept {
-			if (!IsTriviallyDestructible<value_type> || std::is_constant_evaluated()) {
+			if (!IsTriviallyDestructible<value_type> || isConstantEvaluated()) {
 				defaultDeconstruct<value_type>(&at(backIndex()));
 			}
 			setsize_type(size() - 1);
@@ -833,7 +833,7 @@ namespace natl {
 		}
 
 		constexpr void internalCopyNoOverlap(const_pointer srcPtr, const_pointer srcPtrLast, pointer dstPtr) noexcept {
-			if (!std::is_constant_evaluated()) {
+			if (!isConstantEvaluated()) {
 				if constexpr (IsTriviallyDestructible<value_type>) {
 					uninitializedCopyNoOverlap<const_pointer, pointer>(srcPtr, srcPtrLast, dstPtr);
 					return;
@@ -844,7 +844,7 @@ namespace natl {
 		}
 		template<class Iter>
 		constexpr void internalCopyNoOverlap(Iter first, Iter last, pointer dstPtr) {
-			if (!std::is_constant_evaluated()) {
+			if (!isConstantEvaluated()) {
 				if constexpr (IsTriviallyDestructible<value_type>) {
 					uninitializedCopyNoOverlap<Iter, pointer>(first, last, dstPtr);
 					return;
@@ -854,7 +854,7 @@ namespace natl {
 		}
 
 		constexpr void internalCopy(const_pointer srcPtr, const_pointer srcPtrLast, pointer dstPtr) noexcept {
-			if (!std::is_constant_evaluated()) {
+			if (!isConstantEvaluated()) {
 				if constexpr (IsTriviallyDestructible<value_type>) {
 					uninitializedCopy<const_pointer, pointer>(srcPtr, srcPtrLast, dstPtr);
 					return;
@@ -864,7 +864,7 @@ namespace natl {
 		}
 		template<class Iter>
 		constexpr void internalCopy(Iter first, Iter last, pointer dstPtr) noexcept {
-			if (!std::is_constant_evaluated()) {
+			if (!isConstantEvaluated()) {
 				if constexpr (IsTriviallyDestructible<value_type>) {
 					uninitializedCopy<Iter, pointer>(first, last, dstPtr);
 					return;
@@ -874,7 +874,7 @@ namespace natl {
 		}
 
 		constexpr void internalFill(pointer dstPtr, pointer dstPtrLast, const value_type& value) noexcept {
-			if (!std::is_constant_evaluated()) {
+			if (!isConstantEvaluated()) {
 				if constexpr (IsTriviallyDestructible<value_type>) {
 					uninitializedFill<pointer, value_type>(dstPtr, dstPtrLast, value);
 					return;

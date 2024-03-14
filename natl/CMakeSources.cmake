@@ -31,6 +31,7 @@ natl/pair.h
 natl/partitioner.h
 natl/peramaterPackOperations.h
 natl/pointer.h
+natl/priorityQueue.h
 natl/repeat.h
 natl/serialization.h
 natl/smallDynArray.h
@@ -42,6 +43,7 @@ natl/test.h
 natl/timer.h
 natl/typeTraits.h
 natl/units.h
+natl/utility.h
 natl/variant.h
 natl/view.h
 )
@@ -55,7 +57,7 @@ foreach(target_header IN LISTS HEADER_FILES)
 		PRIVATE
 			$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/${target_header}>
 			$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/natl/${target_header}>
-	 "natl/heapArray.h")
+	)
 endforeach()
 
 foreach(target_source IN LISTS SOURCE_FILES)

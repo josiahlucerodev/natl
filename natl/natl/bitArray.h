@@ -93,7 +93,7 @@ namespace natl {
 		constexpr static Size byteSize() noexcept { return byteCount; }
 
 		constexpr BitArrayBitStorageType& set() noexcept {
-			if (std::is_constant_evaluated()) {
+			if (isConstantEvaluated()) {
 				for (Size i = 0; i < wordCount; i++) {
 					bitsArray[i] = ~(BitStorageType)(0);
 				}
@@ -177,7 +177,7 @@ namespace natl {
 		}
 
 		constexpr bool operator==(const BitArrayBitStorageType& rhs) const noexcept {
-			if (std::is_constant_evaluated()) {
+			if (isConstantEvaluated()) {
 				for (Size i = 0; i < wordCount; i++) {
 					if (bitsArray[i] != rhs.bitsArray[i]) {
 						return false;

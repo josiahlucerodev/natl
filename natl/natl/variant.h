@@ -150,7 +150,7 @@ namespace natl {
 			return [](Variant& variant, const Variant& other) {
 				using ElementType = typename ParameterPackNthElement<Index, Elements...>::type::value_type;
 
-				if (!std::is_constant_evaluated()) {
+				if (!isConstantEvaluated()) {
 					if constexpr (IsTriviallyConstRefConstructible<ElementType>) {
 						uninitializedCopyInternalStorage(variant.byteStorage, other.byteStorage);
 						return;
@@ -171,7 +171,7 @@ namespace natl {
 			return [](Variant& variant, Variant&& other) {
 				using ElementType = typename ParameterPackNthElement<Index, Elements...>::type::value_type;
 
-				if (!std::is_constant_evaluated()) {
+				if (!isConstantEvaluated()) {
 					if constexpr (IsTriviallyMoveConstructible<ElementType>) {
 						uninitializedCopyInternalStorage(variant.byteStorage, other.byteStorage);
 						return;
@@ -191,7 +191,7 @@ namespace natl {
 			VariantCopyConstructFunction copyFunctions[numberOfVariants] = { getCopyConstructFunction<ParameterPackFindIndexOfType<Elements, Elements...>::value>()... };
 			VariantCopyConstructFunction& copyFunction = copyFunctions[other.getIndex() - 1];
 
-			if (std::is_constant_evaluated()) {
+			if (isConstantEvaluated()) {
 				copyFunction(self(), other);
 			}
 			else {
@@ -210,7 +210,7 @@ namespace natl {
 			VariantMoveConstructFunction moveFunctions[numberOfVariants] = { getMoveConstructFunction<ParameterPackFindIndexOfType<Elements, Elements...>::value>()... };
 			VariantMoveConstructFunction& moveFunction = moveFunctions[other.getIndex() - 1];
 
-			if (std::is_constant_evaluated()) {
+			if (isConstantEvaluated()) {
 				moveFunction(self(), forward<Variant>(other));
 			} else {
 				if constexpr (!triviallyMoveConstructedable) {
@@ -254,7 +254,7 @@ namespace natl {
 			return [](Variant& variant) {
 				using ElementType = typename ParameterPackNthElement<Index, Elements...>::type::value_type;
 
-				if (!std::is_constant_evaluated()) {
+				if (!isConstantEvaluated()) {
 					if constexpr (IsTriviallyDestructible<ElementType>) {
 						return;
 					}
@@ -271,7 +271,7 @@ namespace natl {
 			}
 		}
 		constexpr void destoryValue() noexcept {
-			if (std::is_constant_evaluated()) {
+			if (isConstantEvaluated()) {
 				actuallyDestoryValue();
 			} else {
 				if (!triviallyDestructible) {
@@ -303,7 +303,7 @@ namespace natl {
 			return [](Variant& variant, const Variant& other) {
 				using ElementType = typename ParameterPackNthElement<Index, Elements...>::type::value_type;
 
-				if (!std::is_constant_evaluated()) {
+				if (!isConstantEvaluated()) {
 					if constexpr (IsTriviallyConstRefAssignable<ElementType>) {
 						copyInternalStorage(variant.byteStorage, other.byteStorage);
 						return;
@@ -320,7 +320,7 @@ namespace natl {
 			return [](Variant& variant, Variant&& other) {
 				using ElementType = typename ParameterPackNthElement<Index, Elements...>::type::value_type;
 
-				if (!std::is_constant_evaluated()) {
+				if (!isConstantEvaluated()) {
 					if constexpr (IsTriviallyMoveAssignable<ElementType>) {
 						copyInternalStorage(variant.byteStorage, other.byteStorage);
 						return;
@@ -340,7 +340,7 @@ namespace natl {
 				VariantCopyFunction copyFunctions[numberOfVariants] = { getCopyFunction<ParameterPackFindIndexOfType<Elements, Elements...>::value>()... };
 				VariantCopyFunction& copyFunction = copyFunctions[other.getIndex() - 1];
 
-				if (std::is_constant_evaluated()) {
+				if (isConstantEvaluated()) {
 					copyFunction(self(), other);
 				} else {
 					if constexpr (!triviallyConstRefConstructedable) {
@@ -365,7 +365,7 @@ namespace natl {
 				VariantMoveFunction moveFunctions[numberOfVariants] = { getMoveFunction<ParameterPackFindIndexOfType<Elements, Elements...>::value>()... };
 				VariantMoveFunction& moveFunction = moveFunctions[other.getIndex() - 1];
 
-				if (std::is_constant_evaluated()) {
+				if (isConstantEvaluated()) {
 					moveFunction(self(), forward<Variant>(other));
 				} else {
 					if constexpr (!triviallyMoveConstructedable) {
@@ -389,14 +389,14 @@ namespace natl {
 
 				if constexpr (std::is_constructible_v<VariantTypeAtIndex, DataType>) {
 					if (variantIndex == index) {
-						if (std::is_constant_evaluated()) {
+						if (isConstantEvaluated()) {
 							recursiveStorage.template getRef<index, VariantTypeAtIndex>() = forward<DataType>(value);
 						} else {
 							*reinterpret_cast<DataType*>(byteStorage) = forward<DataType>(value);
 						}
 					} else {
 						destoryValue();
-						if (std::is_constant_evaluated()) {
+						if (isConstantEvaluated()) {
 							std::construct_at<VariantTypeAtIndex, VariantTypeAtIndex>(
 								&recursiveStorage.template getRef<index, VariantTypeAtIndex>(),
 								forward<DataType>(value)
@@ -431,14 +431,14 @@ namespace natl {
 
 				if constexpr (std::is_constructible_v<VariantTypeAtIndex, DataType>) {
 					if (variantIndex == index) {
-						if (std::is_constant_evaluated()) {
+						if (isConstantEvaluated()) {
 							recursiveStorage.template getRef<index, VariantTypeAtIndex>() = forward<DataType>(value);
 						} else {
 							*reinterpret_cast<DataType*>(byteStorage) = forward<DataType>(value);
 						}
 					} else {
 						destoryValue();
-						if (std::is_constant_evaluated()) {
+						if (isConstantEvaluated()) {
 							std::construct_at<VariantTypeAtIndex, VariantTypeAtIndex>(
 								&recursiveStorage.template getRef<index, VariantTypeAtIndex>(),
 								forward<DataType>(value)
@@ -489,7 +489,7 @@ namespace natl {
 				testValidIndex<index>();
 
 				using VariantTypeAtIndex = typename ParameterPackNthElement<index, Elements...>::type::value_type;
-				if (std::is_constant_evaluated()) {
+				if (isConstantEvaluated()) {
 					return recursiveStorage.template getRef<index, VariantTypeAtIndex>();
 				} else {
 					return *reinterpret_cast<VariantTypeAtIndex*>(byteStorage);
@@ -506,7 +506,7 @@ namespace natl {
 				testValidIndex<index>();
 
 				using VariantTypeAtIndex = typename ParameterPackNthElement<index, Elements...>::type::value_type;
-				if (std::is_constant_evaluated()) {
+				if (isConstantEvaluated()) {
 					return recursiveStorage.template getRef<index, VariantTypeAtIndex>();
 				} else {
 					return *reinterpret_cast<const VariantTypeAtIndex*>(byteStorage);

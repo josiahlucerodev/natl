@@ -25,7 +25,7 @@ namespace natl {
 		if constexpr (IsUnsignedItergerType<NumericType>) {
 			return value;
 		} else {
-			if (std::is_constant_evaluated()) {
+			if (isConstantEvaluated()) {
 				return (value < NumericType(0)) ? -value : value;
 			} else {
 				if constexpr (IsFloatingPointType<NumericType>) {
