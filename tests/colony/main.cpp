@@ -4,7 +4,7 @@
 #include <natl/repeat.h>
 
 int main() {
-	natl::Colony<int> colony(natl::ColonyLimits(30, 300));
+	natl::Colony<natl::Size> colony(natl::ColonyLimits(30, 300));
 
 	for (natl::Size index : natl::Repeat(100)) {
 		colony.insert(index);
@@ -26,6 +26,6 @@ int main() {
 
 	colony.erase(colony.getIteratorAtIndex(4).value());
 
-	natl::Colony<int> colony2 = colony;
+	natl::Colony<natl::Size> colony2 = colony;
 	colony2.reshape(natl::ColonyLimits(30, 50), 2);
 }

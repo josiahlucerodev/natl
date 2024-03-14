@@ -188,7 +188,7 @@ namespace natl {
 				arraySizeAndSmallArrayFlag = 0;
 				arrayCapacity = 0;
 				arrayDataPtr = nullptr;
-			} else if (count < smallArrayCapacity()) {
+			} else if (count <= smallArrayCapacity()) {
 				const_pointer srcDataPtrFirst = otherPtr;
 				const_pointer srcDataPtrLast = srcDataPtrFirst + count;
 				uninitializedCopyNoOverlap<const_pointer, pointer>(srcDataPtrFirst, srcDataPtrLast, smallArrayLocation());
@@ -202,7 +202,7 @@ namespace natl {
 				arrayDataPtr = nullptr;
 			} else {
 				const size_type newSize = count;
-				reserve(newSize);
+				factorReserve(newSize);
 
 				const_pointer srcDataPtrFirst = otherPtr;
 				const_pointer srcDataPtrLast = srcDataPtrFirst + count;
@@ -246,7 +246,7 @@ namespace natl {
 				return self();
 			}
 
-			reserve(count);
+			factorReserve(count);
 
 			pointer fillDstPtr = data();
 			pointer fillDstPtrLast = fillDstPtr + count;
@@ -265,7 +265,7 @@ namespace natl {
 				return construct(firstPtr, count);
 			}
 
-			reserve(10);
+			factorReserve(10);
 			for (; first != last; first++) {
 				push_back(*first);
 			}
@@ -275,7 +275,7 @@ namespace natl {
 		constexpr SmallDynArray& construct(allocation_move_adapater&& allocationMoveAdapater) noexcept {
 			if (allocationMoveAdapater.isEmpty()) {
 				arraySizeAndSmallArrayFlag = 0;
-			} else if (allocationMoveAdapater.requiresCopy() || allocationMoveAdapater.size() < smallArrayCapacity()) {
+			} else if (allocationMoveAdapater.requiresCopy() || allocationMoveAdapater.size() <= smallArrayCapacity()) {
 				construct(allocationMoveAdapater.data(), allocationMoveAdapater.size());
 				if (allocationMoveAdapater.canDealloc()) {
 					allocationMoveAdapater.deallocate();
@@ -318,7 +318,7 @@ namespace natl {
 				arraySizeAndSmallArrayFlag = 0;
 				arrayCapacity = 0;
 				arrayDataPtr = nullptr;
-			} else if(count < smallArrayCapacity()) {
+			} else if(count <= smallArrayCapacity()) {
 				const_pointer srcDataPtrFirst = otherPtr;
 				const_pointer srcDataPtrLast = srcDataPtrFirst + count;
 				internalCopyNoOverlap(srcDataPtrFirst, srcDataPtrLast, smallArrayLocation());
@@ -332,7 +332,7 @@ namespace natl {
 				arrayDataPtr = nullptr;
 			} else {
 				const size_type newSize = count;
-				reserve(newSize);
+				factorReserve(newSize);
 
 				const_pointer srcDataPtrFirst = otherPtr;
 				const_pointer srcDataPtrLast = srcDataPtrFirst + count;
@@ -384,7 +384,7 @@ namespace natl {
 				return self(); 
 			} 
 
-			reserve(count);
+			factorReserve(count);
 
 			if constexpr (IsTriviallyDestructible<value_type>) {
 				internalFill(data(), data() + count, value);
@@ -428,7 +428,7 @@ namespace natl {
 				arraySizeAndSmallArrayFlag = 0;
 				arrayCapacity = 0;
 				arrayDataPtr = nullptr;
-			} else if (allocationMoveAdapater.requiresCopy() || allocationMoveAdapater.size() < smallArrayCapacity()) {
+			} else if (allocationMoveAdapater.requiresCopy() || allocationMoveAdapater.size() <= smallArrayCapacity()) {
 				assign(allocationMoveAdapater.data(), allocationMoveAdapater.size());
 				if (allocationMoveAdapater.canDealloc()) {
 					allocationMoveAdapater.deallocate();
@@ -453,8 +453,8 @@ namespace natl {
 		//strongly linked methods 
 		[[nodiscard]] constexpr allocation_move_adapater getAlloctionMoveAdapater() noexcept {
 			const bool arrayIsSmallBuffer = isSmallArray();
-			AllocationMoveAdapaterRequireCopy requireCopy = arrayIsSmallBuffer ? AllocationMoveAdapaterRequireCopy::v_true : AllocationMoveAdapaterRequireCopy::v_false;
-			AllocationMoveAdapaterCanDealloc canBeDealloc = arrayIsSmallBuffer ? AllocationMoveAdapaterCanDealloc::v_false : AllocationMoveAdapaterCanDealloc::v_true;
+			AllocationMoveAdapaterRequireCopy requireCopy = arrayIsSmallBuffer ? AllocationMoveAdapaterRequireCopy::True : AllocationMoveAdapaterRequireCopy::False;
+			AllocationMoveAdapaterCanDealloc canBeDealloc = arrayIsSmallBuffer ? AllocationMoveAdapaterCanDealloc::False : AllocationMoveAdapaterCanDealloc::True;
 			allocation_move_adapater allocationMoveAdapater(data(), size(), capacity(), requireCopy, canBeDealloc);
 			arrayDataPtr = nullptr;
 			arraySizeAndSmallArrayFlag = 0;
@@ -489,17 +489,29 @@ namespace natl {
 				insert(cend(), count - size(), value);
 			}
 		}
-
-		constexpr void reserve(size_type newCapacity) noexcept {
+	private:
+		constexpr bool reserveTest(const size_type newCapacity) noexcept {
 			if (newCapacity <= capacity()) {
-				return;
-			} else if (newCapacity < smallArrayCapacity()) {
+				return true;
+			} else if (newCapacity <= smallArrayCapacity()) {
 				setAsSmallArray();
-				return;
+				return true;
 			}
+			return false;
+		}
+	public:
+		constexpr void factorReserve(const size_type newCapacity) noexcept {
+			if (reserveTest(newCapacity)) { return; }
+			reserveExact(newCapacity * 2);
+		}
 
-			newCapacity *= 2;
+		constexpr void reserve(const size_type newCapacity) noexcept {
+			if (reserveTest(newCapacity)) { return; }
+			reserveExact(newCapacity);
+		}
 
+		constexpr void reserveExact(size_type newCapacity) noexcept {
+			if (reserveTest(newCapacity)) { return; }
 			if (newCapacity < capacity()) { return; }
 
 			pointer newDataPtr = Alloc::allocate(newCapacity);
@@ -529,7 +541,7 @@ namespace natl {
 		constexpr void shrink_to_fit() noexcept {
 			const size_type newCapacity = size();
 			const bool sameSize = newCapacity == capacity();
-			const bool canBeSmallArray = newCapacity < smallArrayCapacity();
+			const bool canBeSmallArray = newCapacity <= smallArrayCapacity();
 
 			if (isSmallArray()) {
 				return;
@@ -713,7 +725,7 @@ namespace natl {
 		constexpr iterator insert(const_iterator pos, const value_type& value) noexcept {
 			const size_type index = iterDistance<typename const_iterator::pointer>(&*cbegin(), &*pos);
 			const size_type newSize = size() + 1;
-			reserve(newSize);
+			factorReserve(newSize);
 
 			shiftRelocateLeft(index, 1);
 			set(index, value);
@@ -725,7 +737,7 @@ namespace natl {
 		constexpr iterator insert(const_iterator pos, value_type&& value) noexcept {
 			const size_type index = iterDistance<typename const_iterator::pointer>(&*cbegin(), &*pos);
 			const size_type newSize = size() + 1;
-			reserve(newSize);
+			factorReserve(newSize);
 
 			shiftRelocateLeft(index, 1);
 
@@ -738,7 +750,7 @@ namespace natl {
 			if (count == 0) { return constIteratorToIterator(pos); }
 			const size_type index = iterDistance<typename const_iterator::pointer>(&*cbegin(), &*pos);
 			const size_type newSize = size() + count;
-			reserve(newSize);
+			factorReserve(newSize);
 
 			const size_type relocateCount = shiftRelocateLeft(index, count);
 
@@ -773,7 +785,7 @@ namespace natl {
 			if (count == 0) { return constIteratorToIterator(pos); }
 			const size_type index = iterDistance<typename const_iterator::pointer>(&*cbegin(), &*pos);
 			const size_type newSize = size() + count;
-			reserve(newSize);
+			factorReserve(newSize);
 
 			const size_type relocateCount = shiftRelocateLeft(index, count);
 
@@ -813,7 +825,7 @@ namespace natl {
 			const size_type index = iterDistance<typename const_iterator::pointer>(&*cbegin(), &*pos);
 			const size_type count = iterDistance<Iter>(first, last);
 			const size_type newSize = size() + count;
-			reserve(newSize);
+			factorReserve(newSize);
 
 			const size_type relocateCount = shiftRelocateLeft(index, count);
 
@@ -854,7 +866,7 @@ namespace natl {
 		constexpr iterator emplace(const_iterator pos, Args&&... args) {
 			const size_type index = iterDistance<typename const_iterator::pointer>(&*cbegin(), &*pos);
 			const size_type newSize = size() + 1;
-			reserve(newSize);
+			factorReserve(newSize);
 
 			shiftRelocateLeft(index, 1);
 
@@ -906,13 +918,13 @@ namespace natl {
 		constexpr reference push_back(const value_type& value) noexcept {
 			const size_type index = size();
 			const size_type newSize = index + 1;
-			reserve(newSize);
+			factorReserve(newSize);
 			return set(index, value);
 		}
 		constexpr reference push_back(value_type&& value) noexcept {
 			const size_type index = size();
 			const size_type newSize = index + 1;
-			reserve(newSize);
+			factorReserve(newSize);
 			setSize(newSize);
 			return set(index, forward<value_type>(value));;
 		}
@@ -921,7 +933,7 @@ namespace natl {
 		constexpr reference emplace_back(Args&&... args) noexcept {
 			const size_type index = size();
 			const size_type newSize = index + 1;
-			reserve(newSize);
+			factorReserve(newSize);
 			setSize(newSize);
 			reference value = at(index);
 			std::construct_at<value_type, Args...>(value, std::forward<Args>(args)...);
@@ -931,7 +943,7 @@ namespace natl {
 		constexpr SmallDynArray& append(const_pointer srcPtr, const size_type count) noexcept {
 			const size_type index = size();
 			const size_type newSize = index + 1;
-			reserve(newSize);
+			factorReserve(newSize);
 
 			pointer insertDstPtr = data() + index;
 			const_pointer insertSrcPtrFirst = srcPtr;

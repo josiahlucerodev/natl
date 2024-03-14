@@ -59,7 +59,7 @@ namespace natl {
 			natl::uninitializedFill<pointer, value_type>(fillDstPtrFirst, fillDstPtrLast, value);
 		}
 		constexpr HeapArray(const_pointer srcPtr, const size_type count) noexcept : arrayDataPtr(srcPtr), arraySize(count) {}
-		constexpr HeapArray(const allocation_move_adapater& allocationMoveAdapater) {
+		constexpr HeapArray(allocation_move_adapater&& allocationMoveAdapater) {
 			if (allocationMoveAdapater.isEmpty()) {
 				arrayDataPtr = 0;
 				arraySize = 0;
@@ -92,6 +92,7 @@ namespace natl {
 				arraySize = allocationMoveAdapater.capacity();
 				arrayDataPtr = allocationMoveAdapater.data();
 			}
+			allocationMoveAdapater.release();
 		}
 
 		//destructor
@@ -113,9 +114,9 @@ namespace natl {
 		}
 
 		//assignment
-		constexpr HeapArray& operator=(const allocation_move_adapater& allocationMoveAdapater) noexcept {
+		constexpr HeapArray& operator=(allocation_move_adapater&& allocationMoveAdapater) noexcept {
 			deallocate();
-			self() = HeapArray(allocationMoveAdapater);
+			self() = natl::move(HeapArray(natl::move(allocationMoveAdapater)));
 			return self();
 		}
 
@@ -135,10 +136,10 @@ namespace natl {
 		}
 
 		[[nodiscard]] constexpr allocation_move_adapater getAlloctionMoveAdapater() noexcept {
-			allocation_move_adapater allocationMoveAdapater(data(), size(), size(), AllocationMoveAdapaterRequireCopy::v_false, AllocationMoveAdapaterCanDealloc::v_true);
+			allocation_move_adapater allocationMoveAdapater(data(), size(), size(), AllocationMoveAdapaterRequireCopy::False, AllocationMoveAdapaterCanDealloc::True);
 			arrayDataPtr = nullptr;
 			arraySize = 0;
-			return allocationMoveAdapater;
+			return natl::move(allocationMoveAdapater);
 		}
 
 		//capacity 

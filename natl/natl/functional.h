@@ -923,7 +923,7 @@ namespace natl {
 		};
 
 		template<class Signature>
-		class FunctionRefBase {};
+		struct FunctionRefBase {};
 
 		template<typename ReturnType, typename... ArgTypes>
 		class FunctionRefBase<ReturnType(ArgTypes...)> final {
@@ -1394,27 +1394,27 @@ namespace natl {
 	};
 	
 	template<class Type>
-	struct LessCompare { 
+	struct CompareLess { 
 		constexpr bool operator()(const Type& lhs, const Type& rhs) const noexcept { return lhs < rhs; }
 	};
 	template<class Type>
-	struct GreaterCompare {
+	struct CompareGreater {
 		constexpr bool operator()(const Type& lhs, const Type& rhs) const noexcept { return lhs > rhs; }
 	};
 	template<class Type>
-	struct LessEqualCompare {
+	struct CompareLessEqual {
 		constexpr bool operator()(const Type& lhs, const Type& rhs) const noexcept { return lhs <= rhs; }
 	};
 	template<class Type>
-	struct GreaterEqualCompare {
+	struct CompareGreaterEqual {
 		constexpr bool operator()(const Type& lhs, const Type& rhs) const noexcept { return lhs >= rhs; }
 	};
 	template<class Type>
-	struct EqualToCompare {
+	struct CompareEqualTo {
 		constexpr bool operator()(const Type& lhs, const Type& rhs) const noexcept { return lhs == rhs; }
 	};
 	template<class Type>
-	struct NotEqualToCompare {
+	struct CompareNotEqualTo {
 		constexpr bool operator()(const Type& lhs, const Type& rhs) const noexcept { return lhs != rhs; }
 	};
 

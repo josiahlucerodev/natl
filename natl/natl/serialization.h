@@ -1,6 +1,7 @@
 #pragma once 
 
 //own
+#include "compilerDependent.h"
 #include "stringLiteral.h"
 #include "string.h"
 #include "batchPool.h"

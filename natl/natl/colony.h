@@ -118,7 +118,7 @@ namespace natl {
 				skipFieldPos += 1;
 				skipFieldIndex += 1;
 
-				if (skipFieldIndex >= colonyBlock->colonyBlockCapacity) {
+				if (skipFieldIndex >= static_cast<i64>(colonyBlock->colonyBlockCapacity)) {
 					if (colonyBlock->nextColonyBlock) {
 						colonyBlock = colonyBlock->nextColonyBlock;
 						skipFieldIndex = 0;

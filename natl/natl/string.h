@@ -202,7 +202,7 @@ namespace natl {
 				stringSizeAndSmallStringFlag = 0;
 				stringCapacity = 0;
 				stringPtr = nullptr;
-			} else if (count + 1 < smallStringCapacity()) {
+			} else if (count + 1 <= smallStringCapacity()) {
 				const_pointer srcDataPtrFirst = otherPtr;
 				const_pointer srcDataPtrLast = srcDataPtrFirst + count;
 				uninitializedCopyNoOverlap<const_pointer, pointer>(srcDataPtrFirst, srcDataPtrLast, smallStringLocation());
@@ -214,7 +214,7 @@ namespace natl {
 				addNullTerminater();
 			} else {
 				const size_type newSize = count;
-				reserve(newSize);
+				factorReserve(newSize);
 
 				const_pointer srcDataPtrFirst = otherPtr;
 				const_pointer srcDataPtrLast = srcDataPtrFirst + count;
@@ -258,7 +258,7 @@ namespace natl {
 				return self();
 			}
 
-			reserve(count);
+			factorReserve(count);
 
 			pointer fillDstPtr = data();
 			pointer fillDstPtrLast = fillDstPtr + count;
@@ -278,7 +278,7 @@ namespace natl {
 				return construct(firstPtr, count);
 			}
 
-			reserve(10);
+			factorReserve(10);
 			for (; first != last; first++) {
 				push_back(*first);
 			}
@@ -287,7 +287,7 @@ namespace natl {
 		constexpr BaseString& construct(allocation_move_adapater&& allocationMoveAdapater) noexcept {
 			if (allocationMoveAdapater.isEmpty()) {
 				stringSizeAndSmallStringFlag = 0;
-			} else if (allocationMoveAdapater.requiresCopy() || allocationMoveAdapater.size() < smallStringCapacity()) {
+			} else if (allocationMoveAdapater.requiresCopy() || allocationMoveAdapater.size() <= smallStringCapacity()) {
 				construct(allocationMoveAdapater.data(), allocationMoveAdapater.size());
 
 				if (allocationMoveAdapater.canDealloc()) {
@@ -316,11 +316,11 @@ namespace natl {
 			const char* srcStringPtrLast = srcStringPtrFirst + srcStringSize;
 
 			pointer stringDst = nullptr;
-			if (srcStringSize + 1 < smallStringCapacity()) {
+			if (srcStringSize + 1 <= smallStringCapacity()) {
 				stringDst = smallStringLocation();
 			}
 			else {
-				reserve(srcStringSize);
+				factorReserve(srcStringSize);
 				stringDst = stringPtr;
 			}
 
@@ -348,10 +348,10 @@ namespace natl {
 			}
 
 			pointer stringDst = nullptr;
-			if (count + 1 < smallStringCapacity()) {
+			if (count + 1 <= smallStringCapacity()) {
 				stringDst = smallStringLocation();
 			} else {
-				reserve(count);
+				factorReserve(count);
 				stringDst = stringPtr;
 			}
 
@@ -377,10 +377,10 @@ namespace natl {
 			const char* srcStringPtrLast = srcStringPtrLast + srcStringSize;
 
 			pointer stringDst = nullptr;
-			if (srcStringSize + 1 < smallStringCapacity()) {
+			if (srcStringSize + 1 <= smallStringCapacity()) {
 				stringDst = smallStringLocation();
 			} else {
-				reserve(srcStringSize);
+				factorReserve(srcStringSize);
 				stringDst = stringPtr;
 			}
 
@@ -437,7 +437,7 @@ namespace natl {
 				stringCapacity = 0;
 			} else {
 				const size_type newSize = str.size();
-				reserve(newSize);
+				factorReserve(newSize);
 				uninitializedCopyNoOverlap<const_pointer, pointer>(str.data(), str.data() + newSize, data());
 				setSize(newSize);
 				addNullTerminater();
@@ -482,10 +482,10 @@ namespace natl {
 			const_pointer srcStringPtrFirst = str;
 			const_pointer srcStringPtrLast = srcStringPtrFirst + srcStringSize;
 
-			if (srcStringSize + 1 < smallStringCapacity()) {
+			if (srcStringSize + 1 <= smallStringCapacity()) {
 				uninitializedCopyNoOverlap<const_pointer, pointer>(srcStringPtrFirst, srcStringPtrLast, smallStringLocation());
 			} else {
-				reserve(srcStringSize);
+				factorReserve(srcStringSize);
 				uninitializedCopyNoOverlap<const_pointer, pointer>(srcStringPtrFirst, srcStringPtrLast, stringPtr);
 			}
 
@@ -511,12 +511,12 @@ namespace natl {
 				return self();
 			}
 
-			if (count + 1 < smallStringCapacity()) {
+			if (count + 1 <= smallStringCapacity()) {
 				pointer srcStringPtrFirst = smallStringLocation();
 				pointer srcStringPtrLast = srcStringPtrFirst + count;
 				uninitializedFill<pointer, value_type>(srcStringPtrFirst, srcStringPtrLast, forward<value_type>(character));
 			} else {
-				reserve(count);
+				factorReserve(count);
 				pointer srcStringPtrFirst = stringPtr;
 				pointer srcStringPtrLast = srcStringPtrFirst + count;
 				uninitializedFill<pointer, value_type>(srcStringPtrFirst, srcStringPtrLast, forward<value_type>(character));
@@ -540,10 +540,10 @@ namespace natl {
 			const_pointer srcStringPtrFirst = stringView.data();
 			const_pointer srcStringPtrLast = srcStringPtrFirst + srcStringSize;
 
-			if (srcStringSize + 1 < smallStringCapacity()) {
+			if (srcStringSize + 1 <= smallStringCapacity()) {
 				uninitializedCopyNoOverlap<const_pointer, pointer>(srcStringPtrFirst, srcStringPtrLast, smallStringLocation());
 			} else {
-				reserve(srcStringSize);
+				factorReserve(srcStringSize);
 				uninitializedCopyNoOverlap<const_pointer, pointer>(srcStringPtrFirst, srcStringPtrLast, stringPtr);
 			}
 
@@ -557,7 +557,7 @@ namespace natl {
 				stringSizeAndSmallStringFlag = 0;
 				stringCapacity = 0;
 				stringPtr = nullptr;
-			} else if (allocationMoveAdapater.requiresCopy() || allocationMoveAdapater.size() < smallStringCapacity()) {
+			} else if (allocationMoveAdapater.requiresCopy() || allocationMoveAdapater.size() <= smallStringCapacity()) {
 				assign(allocationMoveAdapater.data(), allocationMoveAdapater.size());
 				if (allocationMoveAdapater.canDealloc()) {
 					allocationMoveAdapater.deallocate();
@@ -588,11 +588,11 @@ namespace natl {
 			const char* srcStringPtrLast = srcStringPtrFirst + srcStringSize;
 
 			pointer stringDst = nullptr;
-			if (srcStringSize + 1 < smallStringCapacity()) {
+			if (srcStringSize + 1 <= smallStringCapacity()) {
 				stringDst = smallStringLocation();
 			}
 			else {
-				reserve(srcStringSize);
+				factorReserve(srcStringSize);
 				stringDst = stringPtr;
 			}
 
@@ -622,10 +622,10 @@ namespace natl {
 			}
 
 			pointer stringDst = nullptr;
-			if (count + 1 < smallStringCapacity()) {
+			if (count + 1 <= smallStringCapacity()) {
 				stringDst = smallStringLocation();
 			} else {
-				reserve(count);
+				factorReserve(count);
 				stringDst = stringPtr;
 			}
 
@@ -652,10 +652,10 @@ namespace natl {
 			const char* srcStringPtrLast = srcStringPtrLast + srcStringSize;
 
 			pointer stringDst = nullptr;
-			if (srcStringSize + 1 < smallStringCapacity()) {
+			if (srcStringSize + 1 <= smallStringCapacity()) {
 				stringDst = smallStringLocation();
 			} else {
-				reserve(srcStringSize);
+				factorReserve(srcStringSize);
 				stringDst = stringPtr;
 			}
 
@@ -670,8 +670,8 @@ namespace natl {
 
 		[[nodiscard]] constexpr allocation_move_adapater getAlloctionMoveAdapater() noexcept {
 			const bool stringIsSmallBuffer = isSmallString();
-			AllocationMoveAdapaterRequireCopy requireCopy = stringIsSmallBuffer ? AllocationMoveAdapaterRequireCopy::v_true : AllocationMoveAdapaterRequireCopy::v_false;
-			AllocationMoveAdapaterCanDealloc canBeDealloc = stringIsSmallBuffer ? AllocationMoveAdapaterCanDealloc::v_false : AllocationMoveAdapaterCanDealloc::v_true;
+			AllocationMoveAdapaterRequireCopy requireCopy = stringIsSmallBuffer ? AllocationMoveAdapaterRequireCopy::True : AllocationMoveAdapaterRequireCopy::False;
+			AllocationMoveAdapaterCanDealloc canBeDealloc = stringIsSmallBuffer ? AllocationMoveAdapaterCanDealloc::False : AllocationMoveAdapaterCanDealloc::True;
 			allocation_move_adapater allocationMoveAdapater(data(), size(), capacity(), requireCopy, canBeDealloc);
 			if (stringIsSmallBuffer) {
 				stringSizeAndSmallStringFlag = 0;
@@ -766,16 +766,32 @@ namespace natl {
 		constexpr bool isEmpty() const noexcept { return empty(); }
 		constexpr bool isNotEmpty() const noexcept { return !empty(); }
 
-		constexpr void reserve(size_type newCapacity) noexcept {
+	private:
+		constexpr bool reserveTest(size_type newCapacity) noexcept {
 			newCapacity += 1;
 			if (newCapacity <= capacity()) {
-				return;
-			} else if (newCapacity < smallStringCapacity()) {
+				//Error if by default small string 
+				return true;
+			} else if (newCapacity <= smallStringCapacity()) {
 				setAsSmallString();
-				return;
+				return true;
 			}
+			return false;
+		}
+	public:
+		constexpr void factorReserve(const size_type newCapacity) noexcept {
+			if (reserveTest(newCapacity)) { return; }
+			reserveExact(newCapacity * 2);
+		}
 
-			newCapacity *= 2;
+		constexpr void reserve(const size_type newCapacity) noexcept {
+			if (reserveTest(newCapacity)) { return; }
+			reserveExact(newCapacity);
+		}
+
+		constexpr void reserveExact(size_type newCapacity) noexcept {
+			if (reserveTest(newCapacity)) { return; }
+			newCapacity += 1;
 
 			pointer newStringPtr = Alloc::allocate(newCapacity);
 
@@ -795,7 +811,7 @@ namespace natl {
 		constexpr void shrink_to_fit() {
 			const size_type newCapacity = size() + 1;
 			const bool sameSize = newCapacity == capacity();
-			const bool canBeSmallString = newCapacity < smallStringCapacity();
+			const bool canBeSmallString = newCapacity <= smallStringCapacity();
 			if (isSmallString()) {
 				return;
 			} else if (isNotSmallString() && canBeSmallString) {
@@ -823,7 +839,7 @@ namespace natl {
 				return;
 			}
 
-			if (newCapacity < smallStringCapacity() || newCapacity == capacity()) {
+			if (newCapacity <= smallStringCapacity() || newCapacity == capacity()) {
 				return;
 			}
 
@@ -851,7 +867,7 @@ namespace natl {
 		constexpr BaseString& insert(const size_type index, const ConstBaseStringView& sv) noexcept {
 			if (sv.empty()) { return self(); }
 			const size_type newSize = size() + sv.size();
-			reserve(newSize);
+			factorReserve(newSize);
 
 			const size_type relocateCount = size() - index;
 			pointer relocateDstPtr = data() + index + sv.size();
@@ -871,7 +887,7 @@ namespace natl {
 
 		constexpr BaseString& insert(const size_type index, const size_type count, const value_type character) noexcept {
 			const size_type newSize = size() + count;
-			reserve(newSize);
+			factorReserve(newSize);
 
 			const size_type relocateCount = size() - index;
 			pointer relocateDstPtr = data() + index + count;
@@ -955,7 +971,7 @@ namespace natl {
 
 		constexpr void push_back(const value_type character) noexcept {
 			const size_type newSize = size() + 1;
-			reserve(newSize);
+			factorReserve(newSize);
 			setEnd(character);
 			setSize(newSize);
 			addNullTerminater();
@@ -967,7 +983,7 @@ namespace natl {
 
 		constexpr BaseString& append(size_type count, const value_type character) noexcept {
 			const size_type newSize = size() + count;
-			reserve(newSize);
+			factorReserve(newSize);
 
 			pointer srcStringPtrFirst = endPtr();
 			pointer srcStringPtrLast = srcStringPtrFirst + count;
@@ -979,7 +995,7 @@ namespace natl {
 		}
 		constexpr BaseString& append(const BaseString& str) noexcept {
 			const size_type newSize = size() + str.size();
-			reserve(newSize);
+			factorReserve(newSize);
 
 			pointer dstStringPtr = endPtr();
 			const_pointer srcStringPtrFirst = str.beginPtr();
@@ -1011,7 +1027,7 @@ namespace natl {
 		constexpr BaseString& append(const_pointer str) noexcept {
 			const size_type count = cstringLength(str);
 			const size_type newSize = size() + count;
-			reserve(newSize);
+			factorReserve(newSize);
 
 			pointer dstStringPtr = endPtr();
 			const_pointer srcStringPtrFirst = str;
@@ -1026,7 +1042,7 @@ namespace natl {
 		template<class InputIt>
 		constexpr BaseString& append(InputIt first, InputIt last) noexcept {
 			const size_type newSize = size() + iterDistance<InputIt>(first, last);
-			reserve(newSize);
+			factorReserve(newSize);
 
 			pointer dstStringPtr = endPtr();
 			uninitializedCopyNoOverlap<InputIt, pointer>(first, last, dstStringPtr);
@@ -1041,7 +1057,7 @@ namespace natl {
 		constexpr BaseString& append(const StringViewLike& stringView) noexcept {
 			const size_type count = stringView.size();
 			const size_type newSize = size() + count;
-			reserve(newSize);
+			factorReserve(newSize);
 
 			pointer dstStringPtr = endPtr();
 			const_pointer srcStringPtrFirst = stringView.data();
@@ -1058,7 +1074,7 @@ namespace natl {
 		constexpr BaseString& append(const StringViewLike& stringView, size_type pos, size_type count = 0xFFFFFFFFFFFFFFFF) noexcept {
 			const size_type newCount = min<size_type>(stringView.size() - pos, count);
 			const size_type newSize = size() + newCount;
-			reserve(newSize);
+			factorReserve(newSize);
 
 			pointer dstStringPtr = endPtr();
 			const_pointer srcStringPtrFirst = stringView.data() + pos;
@@ -1073,7 +1089,7 @@ namespace natl {
 		constexpr BaseString& append(const char* str) noexcept requires(std::is_same_v<std::decay_t<value_type>, Utf32>) {
 			const size_type count = cstringLength(str);
 			const size_type newSize = size() + count;
-			reserve(newSize);
+			factorReserve(newSize);
 
 			pointer dstStringPtr = endPtr();
 			const char* srcStringPtrFirst = str;
@@ -1090,7 +1106,7 @@ namespace natl {
 
 		constexpr BaseString& append(const size_type count, const char character) noexcept requires(std::is_same_v<std::decay_t<value_type>, Utf32>) {
 			const size_type newSize = size() + count;
-			reserve(newSize);
+			factorReserve(newSize);
 
 			pointer dstStringPtr = endPtr();
 			const_pointer dstStringPtrLast = dstStringPtr + count;
@@ -1112,7 +1128,7 @@ namespace natl {
 		constexpr BaseString& append(const StringViewLike& stringView) noexcept requires(std::is_same_v<std::decay_t<value_type>, Utf32>) {
 			const size_type count = stringView.size();
 			const size_type newSize = size() + count;
-			reserve(newSize);
+			factorReserve(newSize);
 
 			pointer dstStringPtr = endPtr();
 			const char* srcStringPtrFirst = stringView.data();
@@ -1168,7 +1184,7 @@ namespace natl {
 
 			if (endingSize > 0) {
 				const size_type newSize = index + srcCount + endingSize;
-				reserve(newSize);
+				factorReserve(newSize);
 
 				pointer dstShiftStringPtr = data() + index + srcCount;
 				const_pointer srcShiftStringPtrFirst = data() + index + replaceSize;
@@ -1203,7 +1219,7 @@ namespace natl {
 
 			if (endingSize > 0) {
 				const size_type newSize = index + srcCount + endingSize;
-				reserve(newSize);
+				factorReserve(newSize);
 
 				pointer dstShiftStringPtr = data() + index + srcCount;
 				const_pointer srcShiftStringPtrFirst = data() + index + replaceSize;
@@ -1308,7 +1324,7 @@ namespace natl {
 				setSize(count);
 				addNullTerminater();
 			} else if (count > size()) {
-				reserve(count);
+				factorReserve(count);
 
 				pointer srcStringPtrFirst = endPtr();
 				pointer srcStringPtrLast = srcStringPtrFirst + count;
@@ -1461,7 +1477,7 @@ namespace natl {
 		//cat operators
 		friend constexpr BaseString operator+(const BaseString& lhs, const BaseString& rhs) noexcept {
 			BaseString temp;
-			temp.reserve(lhs.size() + rhs.size());
+			temp.factorReserve(lhs.size() + rhs.size());
 			temp.append(lhs.toStringView());
 			temp.append(rhs);
 			return temp;
@@ -1470,14 +1486,14 @@ namespace natl {
 			BaseStringView<value_type> rhsSringView = BaseStringView<value_type>(rhs);
 
 			BaseString temp;
-			temp.reserve(lhs.size() + rhsSringView.size());
+			temp.factorReserve(lhs.size() + rhsSringView.size());
 			temp.append(lhs.toStringView());
 			temp.append(rhsSringView);
 			return temp;
 		}
 		friend constexpr BaseString operator+(const BaseString& lhs, const value_type rhs) noexcept {
 			BaseString temp;
-			temp.reserve(lhs.size() + 1);
+			temp.factorReserve(lhs.size() + 1);
 			temp.append(lhs.toStringView());
 			temp.append(rhs);
 			return temp;
@@ -1486,7 +1502,7 @@ namespace natl {
 			requires(IsStringViewLike<StringViewLike, const value_type>)
 		friend constexpr BaseString operator+(const BaseString& lhs, const StringViewLike& rhs) noexcept {
 			BaseString temp;
-			temp.reserve(lhs.size() + rhs.size());
+			temp.factorReserve(lhs.size() + rhs.size());
 			temp.append(lhs.toStringView());
 			temp.append<StringViewLike>(rhs);
 			return temp;
@@ -1497,7 +1513,7 @@ namespace natl {
 			BaseStringView<value_type> rhsSringView = static_cast<BaseStringView<value_type>>(rhs);
 
 			BaseString temp;
-			temp.reserve(lhs.size() + rhsSringView.size());
+			temp.factorReserve(lhs.size() + rhsSringView.size());
 			temp.append(lhs.toStringView());
 			temp.append(rhsSringView);
 			return temp;
@@ -1506,14 +1522,14 @@ namespace natl {
 			BaseStringView<const char> rhsSringView = BaseStringView<const char>(rhs);
 
 			BaseString temp;
-			temp.reserve(lhs.size() + rhsSringView.size());
+			temp.factorReserve(lhs.size() + rhsSringView.size());
 			temp.append(lhs.toStringView());
 			temp.append(rhsSringView);
 			return temp;
 		}
 		friend constexpr BaseString operator+(const BaseString& lhs, const char rhs) noexcept requires(std::is_same_v<std::decay_t<value_type>, Utf32>) {
 			BaseString temp;
-			temp.reserve(lhs.size() + 1);
+			temp.factorReserve(lhs.size() + 1);
 			temp.append(lhs.toStringView());
 			temp.append(rhs);
 			return temp;
@@ -1522,7 +1538,7 @@ namespace natl {
 			requires(IsStringViewLike<StringViewLike, char>)
 		friend constexpr BaseString operator+(const BaseString& lhs, const StringViewLike& rhs) noexcept requires(std::is_same_v<std::decay_t<value_type>, Utf32>) {
 			BaseString temp;
-			temp.reserve(lhs.size() + rhs.size());
+			temp.factorReserve(lhs.size() + rhs.size());
 			temp.append(lhs.toStringView());
 			temp.append<StringViewLike>(rhs);
 			return temp;

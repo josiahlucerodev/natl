@@ -8,6 +8,7 @@
 
 //own
 #include "basicTypes.h"
+#include "compilerDependent.h"
 
 //interface
 namespace natl {
@@ -40,6 +41,9 @@ namespace natl {
 			typename std::unordered_map<void*, void*>::iterator findIter = allocMap.find(ptr);
 			if (findIter == allocMap.end()) {
 				std::cout << "natl: TrackerAllocator error: ptr " << ptr << " was not allocated from TrackerAllocator\n";
+				if constexpr (natlInDebug()) {
+					natlDebugBreak();
+				}
 			} else {
 				allocMap.erase(ptr);
 			}

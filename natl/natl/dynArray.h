@@ -111,7 +111,7 @@ namespace natl {
 			}
 
 			const size_type newsize_type = count;
-			reserve(newsize_type);
+			factorReserve(newsize_type);
 			const_pointer srcDataPtrFirst = otherPtr;
 			const_pointer srcDataPtrLast = srcDataPtrFirst + count;
 			uninitializedCopyNoOverlap<const_pointer, pointer>(srcDataPtrFirst, srcDataPtrLast, data());
@@ -138,7 +138,7 @@ namespace natl {
 				return self(); 
 			}
 
-			reserve(count);
+			factorReserve(count);
 
 			pointer fillDstPtr = data();
 			pointer fillDstPtrLast = fillDstPtr + count;
@@ -156,7 +156,7 @@ namespace natl {
 				return construct(firstPtr, count);
 			}
 
-			reserve(10);
+			factorReserve(10);
 			for (; first != last; first++) {
 				push_back(*first);
 			}
@@ -212,7 +212,7 @@ namespace natl {
 			}
 
 			const size_type newsize_type = count;
-			reserve(newsize_type);
+			factorReserve(newsize_type);
 			internalCopyNoOverlap(otherPtr, otherPtr + newsize_type, data());
 			setsize_type(newsize_type);
 
@@ -240,7 +240,7 @@ namespace natl {
 				arrayCapacity = 0;
 				return self(); 
 			}
-			reserve(count);
+			factorReserve(count);
 
 			if constexpr (IsTriviallyDestructible<value_type>) {
 				internalFill(data(), data() + count, value);
@@ -348,8 +348,14 @@ namespace natl {
 			}
 		}
 
-		constexpr void reserve(const size_type newCapacity) noexcept {
+		constexpr void factorReserve(const size_type newCapacity) noexcept {
+			if (newCapacity <= capacity()) { return; }
 			reserveExact(newCapacity * 2);
+		}
+
+		constexpr void reserve(const size_type newCapacity) noexcept {
+			if (newCapacity <= capacity()) { return; }
+			reserveExact(newCapacity);
 		}
 
 		constexpr void reserveExact(const size_type newCapacity) noexcept {
@@ -555,7 +561,7 @@ namespace natl {
 		constexpr iterator insert(const_iterator pos, const value_type& value) noexcept {
 			const size_type index = iterDistance<typename const_iterator::pointer>(&*cbegin(), &*pos);
 			const size_type newsize_type = size() + 1;
-			reserve(newsize_type);
+			factorReserve(newsize_type);
 
 			shiftRelocateLeft(index, 1);
 			set(index, value);
@@ -567,7 +573,7 @@ namespace natl {
 		constexpr iterator insert(const_iterator pos, value_type&& value) noexcept {
 			const size_type index = iterDistance<typename const_iterator::pointer>(&*cbegin(), &*pos);
 			const size_type newsize_type = size() + 1;
-			reserve(newsize_type);
+			factorReserve(newsize_type);
 
 			shiftRelocateLeft(index, 1);
 
@@ -580,7 +586,7 @@ namespace natl {
 			if (count == 0) { return constIteratorToIterator(pos); }
 			const size_type index = iterDistance<typename const_iterator::pointer>(&*cbegin(), &*pos);
 			const size_type newsize_type = size() + count;
-			reserve(newsize_type);
+			factorReserve(newsize_type);
 
 			const size_type relocateCount = shiftRelocateLeft(index, count);
 
@@ -615,7 +621,7 @@ namespace natl {
 			if (count == 0) { return constIteratorToIterator(pos); }
 			const size_type index = iterDistance<typename const_iterator::pointer>(&*cbegin(), &*pos);
 			const size_type newsize_type = size() + count;
-			reserve(newsize_type);
+			factorReserve(newsize_type);
 
 			const size_type relocateCount = shiftRelocateLeft(index, count);
 
@@ -655,7 +661,7 @@ namespace natl {
 			const size_type index = iterDistance<typename const_iterator::pointer>(&*cbegin(), &*pos);
 			const size_type count = iterDistance<Iter>(first, last);
 			const size_type newsize_type = size() + count;
-			reserve(newsize_type);
+			factorReserve(newsize_type);
 
 			const size_type relocateCount = shiftRelocateLeft(index, count);
 
@@ -696,7 +702,7 @@ namespace natl {
 		constexpr iterator emplace(const_iterator pos, Args&&... args) {
 			const size_type index = iterDistance<typename const_iterator::pointer>(&*cbegin(), &*pos);
 			const size_type newsize_type = size() + 1;
-			reserve(newsize_type);
+			factorReserve(newsize_type);
 
 			shiftRelocateLeft(index, 1);
 
@@ -748,13 +754,13 @@ namespace natl {
 		constexpr reference push_back(const value_type& value) noexcept {
 			const size_type index = size();
 			const size_type newsize_type = index + 1;
-			reserve(newsize_type);
+			factorReserve(newsize_type);
 			return set(index, value);
 		}
 		constexpr reference push_back(value_type&& value) noexcept {
 			const size_type index = size();
 			const size_type newsize_type = index + 1;
-			reserve(newsize_type);
+			factorReserve(newsize_type);
 			setsize_type(newsize_type);
 			return set(index, forward<value_type>(value));;
 		}
@@ -763,7 +769,7 @@ namespace natl {
 		constexpr reference emplace_back(Args&&... args) noexcept {
 			const size_type index = size();
 			const size_type newsize_type = index + sizeof...(Args);
-			reserve(newsize_type);
+			factorReserve(newsize_type);
 			setsize_type(newsize_type);
 			reference value = at(index);
 			std::construct_at<value_type, Args...>(value, std::forward<Args>(args)...);
@@ -773,7 +779,7 @@ namespace natl {
 		constexpr DynArray& append(const_pointer srcPtr, const size_type count) noexcept {
 			const size_type index = size();
 			const size_type newsize_type = index + count;
-			reserve(newsize_type);
+			factorReserve(newsize_type);
 
 			pointer insertDstPtr = data() + index;
 			const_pointer insertSrcPtrFirst = srcPtr;

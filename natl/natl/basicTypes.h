@@ -22,6 +22,7 @@ namespace natl {
 	using f64 = double;
 
 	using Size = ui64;
+	using SignedSize = i64;
 	using PtrDiff = std::ptrdiff_t;
 
 	using Char = char;

@@ -312,6 +312,10 @@ namespace natl {
 		}
 	}
 
-
+	template<typename Iter>
+		requires(IsIterator<Iter>)
+	constexpr IterPtrTraits<Iter>::reference iterValue(Iter iter) noexcept {
+		return *iter;
+	}
 
 }
