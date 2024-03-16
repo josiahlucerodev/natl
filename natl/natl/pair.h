@@ -15,7 +15,7 @@ namespace natl {
 		constexpr static bool triviallyCompareable = IsTriviallyCompareable<DataTypeFirst> && IsTriviallyCompareable<DataTypeSecond>;
 		constexpr static bool triviallyDestructible = IsTriviallyDestructible<DataTypeFirst> && IsTriviallyDestructible<DataTypeSecond>;
 		constexpr static bool triviallyConstRefConstructedable = IsTriviallyConstRefConstructible<DataTypeFirst> && IsTriviallyConstRefConstructible<DataTypeSecond>;
-		constexpr static bool triviallyMoveConstructedable = IsTriviallyMoveConstructible<DataTypeFirst> && IsTriviallyMoveConstructible<DataTypeSecond>;;
+		constexpr static bool triviallyMoveConstructedable = IsTriviallyMoveConstructible<DataTypeFirst> && IsTriviallyMoveConstructible<DataTypeSecond>;
 	public:
 		DataTypeFirst first;
 		DataTypeFirst second;
@@ -100,7 +100,7 @@ namespace natl {
 		constexpr static bool triviallyCompareable = IsTriviallyCompareable<DataTypeFirst> && IsTriviallyCompareable<DataTypeSecond>;
 		constexpr static bool triviallyDestructible = IsTriviallyDestructible<DataTypeFirst> && IsTriviallyDestructible<DataTypeSecond>;
 		constexpr static bool triviallyConstRefConstructedable = IsTriviallyConstRefConstructible<DataTypeFirst> && IsTriviallyConstRefConstructible<DataTypeSecond>;
-		constexpr static bool triviallyMoveConstructedable = IsTriviallyMoveConstructible<DataTypeFirst> && IsTriviallyMoveConstructible<DataTypeSecond>;;
+		constexpr static bool triviallyMoveConstructedable = IsTriviallyMoveConstructible<DataTypeFirst> && IsTriviallyMoveConstructible<DataTypeSecond>;
 	public:
 		[[no_unique_address]] DataTypeFirst first;
 		[[no_unique_address]] DataTypeFirst second;

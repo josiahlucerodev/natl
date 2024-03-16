@@ -13,14 +13,14 @@ consteval void constructionTest() {
 
 int main() {
 	//constructionTest();
-	natl::DynArray<natl::TestTypeStdOut> dynArray(4);
+	[[maybe_unused]] natl::DynArray<natl::TestTypeStdOut> dynArray(4);
 	dynArray.resize(5);
 
-	natl::SmallDynArray<int, 8> smallDynArray(3);
+	[[maybe_unused]] natl::SmallDynArray<int, 8> smallDynArray(3);
 
-	constexpr bool test = natl::IsTriviallyDestructible<natl::DynArray<int>>;
+	[[maybe_unused]] constexpr bool test = natl::IsTriviallyDestructible<natl::DynArray<int>>;
 
-	natl::BatchPool<int> batchPool;
+	[[maybe_unused]]  natl::BatchPool<int> batchPool;
 	batchPool.newElement();
 	batchPool.newElement();
 	batchPool.newElement();

@@ -69,7 +69,7 @@ namespace natl {
 			return natl::unexpected(AlignPtrError::invalidAlignment); 
 		}
 
-		natl::Size misalignment = std::bit_cast<natl::Size>(ptr) % alignment;
+		natl::Size misalignment = static_cast<natl::Size>(std::bit_cast<UIntPtrSized>(ptr)) % alignment;
 		natl::Size adjustment = (misalignment == natl::Size(0)) ? natl::Size(0) : (alignment - misalignment);
 
 		if (space < size + adjustment) {
@@ -115,8 +115,12 @@ namespace natl {
 			switch (alignPtrExpect.error()) {
 			case AlignPtrError::invalidAlignment:
 				fatalError("natl: alignPtr error - invalid alignment");
+				unreachable();
 			case AlignPtrError::outOfSpace:
 				fatalError("natl: alignPtr error - out of space");
+				unreachable();
+			default:
+				unreachable();
 			}
 		}
 	}

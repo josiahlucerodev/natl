@@ -3,7 +3,7 @@
 //own
 #include "compilerDependent.h"
 #include "basicTypes.h"
-#include "datamovement.h"
+#include "dataMovement.h"
 #include "error.h"
 
 //interface

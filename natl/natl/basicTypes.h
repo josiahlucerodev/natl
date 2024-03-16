@@ -3,6 +3,7 @@
 //std
 #include <cstdint>
 #include <cstddef>
+#include <type_traits>
 
 //interface 
 namespace natl {
@@ -17,9 +18,10 @@ namespace natl {
 	using ui32 = std::uint32_t;
 	using ui64 = std::uint64_t;
 
-
 	using f32 = float;
 	using f64 = double;
+
+	using UIntPtrSized = std::conditional_t<sizeof(void*) == 4, ui32, ui64>;
 
 	using Size = ui64;
 	using SignedSize = i64;

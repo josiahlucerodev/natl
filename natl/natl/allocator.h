@@ -25,7 +25,7 @@ namespace natl {
 		~TrackerAllocatorData() noexcept {
 			if (!allocMap.empty()) {
 				std::cout << "natl: TrackerAllocatorData error: alloc and decall mismatch - allocs: " << allocs << " deallocs: " << deallocs << " \n";
-				for (const std::pair<void*, void*>& allocPair : allocMap) {
+				for (const std::pair<void *const, void*>& allocPair : allocMap) {
 					std::cout << "natl: TrackerAllocatorData error: ptr: " << allocPair.first << " was not deallocated\n";
 				}
 			} else {

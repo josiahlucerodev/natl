@@ -2,7 +2,7 @@
 
 //own
 #include "allocator.h"
-#include "Limits.h"
+#include "limits.h"
 #include "algorithm.h"
 #include "dataMovement.h"
 #include "memory.h"
@@ -202,11 +202,11 @@ namespace natl {
 		constexpr Colony() noexcept : 
 			colonySize(0), colonyCapacity(0), 
 			headColonyBlock(nullptr), tailColonyBlock(nullptr), 
-			internalColonyLimits(ColonyLimits(0, 0)), internalGrowthFactor(0), index(0) {}
+			internalGrowthFactor(0), internalColonyLimits(ColonyLimits(0, 0)), index(0) {}
 		constexpr Colony(const ColonyLimits internalColonyLimits) noexcept : 
 			colonySize(0), colonyCapacity(0), 
 			headColonyBlock(0), tailColonyBlock(nullptr),
-			internalColonyLimits(internalColonyLimits), internalGrowthFactor(0), index(0) {}
+			internalGrowthFactor(0), internalColonyLimits(internalColonyLimits), index(0) {}
 
 		constexpr Colony(const Colony& other) noexcept {
 			colonySize = other.colonySize;
@@ -338,7 +338,7 @@ namespace natl {
 		}
 
 		constexpr colony_block* createColonyBlock(const Size newColonyBlockCapacity) noexcept {
-			colony_block* newColonyBlock;
+			colony_block* newColonyBlock = nullptr;
 			if (isConstantEvaluated()) {
 				using colony_block_allocator_type = Alloc::template rebind_alloc<colony_block>;
 				using skipfield_allocator_type = Alloc::template rebind_alloc<SkipFieldType>;
@@ -428,7 +428,10 @@ namespace natl {
 		constexpr iterator end() noexcept {
 			if (tailColonyBlock) {
 				Size colonyBlockCapacity = tailColonyBlock->colonyBlockCapacity;
-				return iterator(tailColonyBlock, colonyBlockCapacity, tailColonyBlock->skipField + colonyBlockCapacity);
+				return iterator(
+					tailColonyBlock, 
+					static_cast<difference_type>(colonyBlockCapacity), 
+					tailColonyBlock->skipField + colonyBlockCapacity);
 			} else {
 				return iterator(nullptr, 0, nullptr);
 			}
@@ -436,7 +439,10 @@ namespace natl {
 		constexpr const_iterator end() const noexcept {
 			if (tailColonyBlock) {
 				Size colonyBlockCapacity = tailColonyBlock->colonyBlockCapacity;
-				return const_iterator(tailColonyBlock, colonyBlockCapacity, tailColonyBlock->skipField + colonyBlockCapacity);
+				return const_iterator(
+					tailColonyBlock, 
+					static_cast<difference_type>(colonyBlockCapacity),
+					tailColonyBlock->skipField + colonyBlockCapacity);
 			} else {
 				return const_iterator(nullptr, 0, nullptr);
 			}
@@ -458,16 +464,22 @@ namespace natl {
 		}
 		constexpr reverse_iterator rend() noexcept {
 			if (tailColonyBlock) {
-				Size index = tailColonyBlock->colonyBlockCapacity - 1;
-				return iterator(tailColonyBlock, index, tailColonyBlock->skipField + index);
+				Size skipFiledIndex = tailColonyBlock->colonyBlockCapacity - 1;
+				return iterator(
+					tailColonyBlock, 
+					static_cast<difference_type>(skipFiledIndex),
+					tailColonyBlock->skipField + skipFiledIndex);
 			} else {
 				return iterator(nullptr, 0, nullptr);
 			}
 		}
 		constexpr const_reverse_iterator rend() const noexcept {
 			if (tailColonyBlock) {
-				Size index = tailColonyBlock->colonyBlockCapacity - 1;
-				return const_reverse_iterator(tailColonyBlock, index, tailColonyBlock->skipField + index);
+				Size skipFiledIndex = tailColonyBlock->colonyBlockCapacity - 1;
+				return const_reverse_iterator(
+					tailColonyBlock, 
+					static_cast<difference_type>(skipFiledIndex), 
+					tailColonyBlock->skipField + skipFiledIndex);
 			} else {
 				return const_reverse_iterator(nullptr, 0, nullptr);
 			}
@@ -574,7 +586,9 @@ namespace natl {
 				colonyBlock->emptySkipFieldStartPos = skipFieldPos + 1;
 			}
 
-			return iterator(colonyBlock, skipFieldIndex, skipFieldPos);
+			return iterator(colonyBlock, 
+				static_cast<difference_type>(skipFieldIndex),
+				skipFieldPos);
 		}
 		constexpr iterator insertGetIter() {
 			reserve(colonySize + 1); 
@@ -619,7 +633,7 @@ namespace natl {
 #endif
 			iterator nextElementIter = getNextElement(iter);
 			SkipFieldType* emptySkipFieldPos = iter.skipFieldPos;
-			Size emptySkipFieldIndex = iter.skipFieldIndex;
+			Size emptySkipFieldIndex = static_cast<Size>(iter.skipFieldIndex);
 
 			colony_block* colonyBlock = iter.colonyBlock;
 			colonyBlock->colonyBlockSize -= 1;
@@ -663,8 +677,7 @@ namespace natl {
 				natl::defaultDeconstruct<DataType>(previous.getAddress());
 			}
 
-			Size count = 0;
-			for (iter; iter < endIter; ++iter) {
+			for (; iter < endIter; ++iter) {
 				if (typeHasToBeDestructed<DataType>()) {
 					natl::defaultDeconstruct<DataType>(iter.getAddress());
 				}
@@ -699,34 +712,37 @@ namespace natl {
 
 		//colony operations 
 	public:
-		constexpr Option<iterator> getIteratorAtIndex(const size_type index) noexcept {
-			if (index >= colonyCapacity) {
+		constexpr Option<iterator> getIteratorAtIndex(const size_type atIndex) noexcept {
+			if (atIndex >= colonyCapacity) {
 				return OptionEmpty();
 			}
 
 			size_type relativeIndex = 0;
 			colony_block* currentColonyBlock = headColonyBlock;
-			while (index + 1 > relativeIndex + currentColonyBlock->colonyBlockCapacity) {
+			while (atIndex + 1 > relativeIndex + currentColonyBlock->colonyBlockCapacity) {
 				relativeIndex += currentColonyBlock->colonyBlockCapacity;
 				currentColonyBlock = currentColonyBlock->nextColonyBlock;
 			}
 
-			const size_type newIndex = index - relativeIndex;
-			return iterator(currentColonyBlock, newIndex, currentColonyBlock->skipField + newIndex);
+			const size_type newIndex = atIndex - relativeIndex;
+			return iterator(
+				currentColonyBlock, 
+				static_cast<difference_type>(newIndex),
+				currentColonyBlock->skipField + newIndex);
 		}
-		constexpr Option<iterator> getIteratorAtIndex(const size_type index) const noexcept {
-			if (index >= colonyCapacity) {
+		constexpr Option<iterator> getIteratorAtIndex(const size_type atIndex) const noexcept {
+			if (atIndex >= colonyCapacity) {
 				return OptionEmpty();
 			}
 
 			size_type relativeIndex = 0;
 			colony_block* currentColonyBlock = headColonyBlock;
-			while (index > relativeIndex + currentColonyBlock->colonyBlockCapacity) {
+			while (atIndex > relativeIndex + currentColonyBlock->colonyBlockCapacity) {
 				relativeIndex += currentColonyBlock->colonyBlockCapacity;
 				currentColonyBlock = currentColonyBlock->nextColonyBlock;
 			}
 
-			const size_type newIndex = index - relativeIndex;
+			const size_type newIndex = atIndex - relativeIndex;
 			return const_iterator(currentColonyBlock, newIndex, currentColonyBlock->skipField + newIndex);
 		}
 
@@ -736,8 +752,8 @@ namespace natl {
 				SkipFieldType* skipField = currentColonyBlock;
 
 				if (skipField <= p && p < skipField + currentColonyBlock->colonyBlockCapacity) {
-					Size index = std::bit_cast<Size>(p - skipField);
-					return iterator(currentColonyBlock, currentColonyBlock, skipField + index);
+					Size skipFiledIndex = std::bit_cast<Size>(p - skipField);
+					return iterator(currentColonyBlock, currentColonyBlock, skipField + skipFiledIndex);
 				}
 
 				currentColonyBlock = currentColonyBlock->nextColonyBlock;
@@ -751,8 +767,8 @@ namespace natl {
 				SkipFieldType* skipField = currentColonyBlock;
 
 				if (skipField <= p && p < skipField + currentColonyBlock->colonyBlockCapacity) {
-					Size index = std::bit_cast<Size>(p - skipField);
-					return const_iterator(currentColonyBlock, currentColonyBlock, skipField + index);
+					Size skipFiledIndex = std::bit_cast<Size>(p - skipField);
+					return const_iterator(currentColonyBlock, currentColonyBlock, skipField + skipFiledIndex);
 				}
 
 				currentColonyBlock = currentColonyBlock->nextColonyBlock;

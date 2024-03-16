@@ -1,30 +1,49 @@
 #pragma once
 
 //NATL_FORCE_INLINE
-#ifdef _MSC_VER
-#define NATL_FORCE_INLINE __forceinline
-#endif
-
-#ifdef __GNUC__
-#define NATL_FORCE_INLINE [[gnu::always_inline]]
-#endif
-
-#ifdef __clang__
-#define NATL_FORCE_INLINE [[clang::always_inline]] 
-#endif
-
 #ifdef __EMSCRIPTEN__ 
 #define NATL_FORCE_INLINE __attribute__((always_inline)) 
-#endif
+#endif //  __EMSCRIPTEN__
+
+
+#ifndef NATL_FORCE_INLINE
+#ifdef __clang__
+#define NATL_FORCE_INLINE [[clang::always_inline]] 
+#endif //__clang__
+#endif // !NATL_FORCE_INLINE
+
+#ifndef NATL_FORCE_INLINE
+#ifdef __GNUC__
+#define NATL_FORCE_INLINE [[gnu::always_inline]]
+#endif //__GNUC__
+#endif // !NATL_FORCE_INLINE
+
+#ifndef NATL_FORCE_INLINE
+#ifdef _MSC_VER
+#define NATL_FORCE_INLINE __forceinline
+#endif // _MSC_VER
+#endif // !NATL_FORCE_INLINE
+
 
 //NATL_IN_DEBUG
 #ifdef _DEBUG
 #define NATL_IN_DEBUG
-#endif
+#endif //  _DEBUG
 
+#ifndef NATL_IN_DEBUG
 #ifdef NDEBUG
 #define NATL_IN_DEBUG
-#endif
+#endif // NDEBUG
+#endif // !NATL_IN_DEBUG
+
+
+#ifndef NATL_IN_DEBUG
+#ifdef _LIBCPP___DEBUG
+#define NATL_IN_DEBUG
+#include <emscripten.h>
+#endif // _LIBCPP___DEBUG
+#endif // !NATL_IN_DEBUG
+
 
 //own
 #include "utility.h"
@@ -51,21 +70,36 @@ namespace natl {
         if (isConstantEvaluated()) {
             constantEvaluatedError();
         } else {
-#ifdef _MSC_VER
-            __debugbreak();
-#endif
 
-#ifdef __GNUC__
-            __builtin_trap();
-#endif
-
-#ifdef __clang__
-            __builtin_debugtrap();
-#endif
 
 #ifdef __EMSCRIPTEN__ 
-            EM_ASM({ debugger; });
-#endif
+            emscripten_debugger();
+#define NATL_DEBUG_BREAK_DEFINE
+#endif //  __EMSCRIPTEN__
+
+#ifndef NATL_DEBUG_BREAK_DEFINE
+#ifdef __clang__
+            __builtin_debugtrap();
+#define NATL_DEBUG_BREAK_DEFINE
+#endif //  __clang__
+#endif // !NATL_DEBUG_BREAK_DEFINE
+
+#ifndef NATL_DEBUG_BREAK_DEFINE
+#ifdef __GNUC__
+            __builtin_trap();
+#define NATL_DEBUG_BREAK_DEFINE
+#endif //  __GNUC__
+#endif // !NATL_DEBUG_BREAK_DEFINE
+
+#ifndef NATL_DEBUG_BREAK_DEFINE
+#ifdef _MSC_VER
+            __debugbreak();
+#define NATL_DEBUG_BREAK_DEFINE
+#endif //  _MSC_VER
+#endif // !NATL_DEBUG_BREAK_DEFINE
+
+#undef NATL_DEBUG_BREAK_DEFINE
+
         }
 #endif
     }
@@ -74,16 +108,35 @@ namespace natl {
         if constexpr (natlInDebug()) {
             natlDebugBreak();
         }
+
+
+#ifdef __EMSCRIPTEN__
+        __builtin_unreachable();
+#define NATL_UNREACHABLE_DEFINE
+#endif //  __EMSCRIPTEN__
+
+#ifndef NATL_UNREACHABLE_DEFINE
+#ifdef __clang__
+        __builtin_unreachable();
+#define NATL_UNREACHABLE_DEFINE
+#endif //  __clang__
+#endif //  !NATL_UNREACHABLE_DEFINE
+
+#ifndef NATL_UNREACHABLE_DEFINE
+#ifdef __GNUC__
+        __builtin_unreachable();
+#define NATL_UNREACHABLE_DEFINE
+#endif // __GNUC__
+#endif //  !NATL_UNREACHABLE_DEFINE
+
+
+#ifndef NATL_UNREACHABLE_DEFINE
 #ifdef _MSC_VER
 		__assume(false);
-#endif
+#define NATL_UNREACHABLE_DEFINE
+#endif // _MSC_VER
+#endif //  !NATL_UNREACHABLE_DEFINE
 
-#ifdef __GNUC__
-		__builtin_unreachable();
-#endif
-
-#ifdef __clang__
-		__builtin_unreachable();
-#endif
+#undef NATL_UNREACHABLE_DEFINE
 	}
 }

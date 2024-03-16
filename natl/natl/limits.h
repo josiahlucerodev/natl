@@ -1,7 +1,7 @@
 #pragma once 
 
 //std
-#include <Limits>
+#include <limits>
 
 //interface
 namespace natl {

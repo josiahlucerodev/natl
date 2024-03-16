@@ -29,9 +29,13 @@ void f() {
 int main() {
     [[maybe_unused]] constexpr natl::Size testValue = constexprTest();
     {
-        std::vector<std::jthread> pool;
+        std::vector<std::thread> pool;
         for (natl::Size n = 0; n < natl::Size(10); ++n)
             pool.emplace_back(f);
+
+        for (std::thread& thread : pool) {
+            thread.join();
+        }
     }
     std::cout << "The atomic counter is " << acnt << '\n' << "The non-atomic counter is " << cnt << '\n';
 }

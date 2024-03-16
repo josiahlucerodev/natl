@@ -60,7 +60,7 @@
 #include <iostream>	  
 #include <istream>	  
 #include <iterator>	  
-#include <Limits>	  
+#include <limits>	  
 #include <list>  
 #include <locale>	  
 #include <map>	  

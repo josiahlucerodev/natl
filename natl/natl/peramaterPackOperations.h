@@ -3,7 +3,7 @@
 //own
 #include "basicTypes.h"
 #include "typeTraits.h"
-#include "Limits.h"
+#include "limits.h"
 
 //interface 
 namespace natl {
@@ -48,7 +48,7 @@ namespace natl {
     struct ParameterPackNthElement {};
     template<Size Index>
     struct ParameterPackNthElement<Index> {
-        static_assert("natl: ParameterPackNthElement could not find element because the index is out of range");
+        // static_assert(false, "natl: ParameterPackNthElement could not find element because the index is out of range");
     };
 
     template <class NthType, class... Types>
@@ -142,7 +142,7 @@ namespace natl {
             constexpr static DataType value =
                 OpPredicate<
                 ValuePredicate<ArgType, Index>::value,
-                ParameterPackOpFoldWithIndexImpl<DataType, Index + 1, ValuePredicate, OpPredicate, RemainingArgTypes...>
+                ParameterPackOpFoldWithIndexImpl<DataType, Index + 1, ValuePredicate, OpPredicate, RemainingArgTypes...>::value
                 >::value;
         };
 
@@ -171,7 +171,7 @@ namespace natl {
             template<typename, Size> typename ValuePredicate,
             template<DataType, DataType> typename OpPredicate>
         struct ParameterPackOpFoldWithIndexImpl<DataType, Index, ValuePredicate, OpPredicate> {
-            static_assert("natl: ParameterPackOpFoldWithIndex - no ArgTypes passed");
+            // static_assert(false, "natl: ParameterPackOpFoldWithIndex - no ArgTypes passed");
         };
 
         //ParameterPackOpFoldWithIndexAndArgImpl
@@ -192,7 +192,7 @@ namespace natl {
             constexpr static DataType value =
                 OpPredicate<
                 ValuePredicate<ArgType, Index, ValuePredicateArg>::value,
-                ParameterPackOpFoldWithIndexAndArgImpl<DataType, Index + 1, ValuePredicateArg, ValuePredicate, OpPredicate, RemainingArgTypes...>
+                ParameterPackOpFoldWithIndexAndArgImpl<DataType, Index + 1, ValuePredicateArg, ValuePredicate, OpPredicate, RemainingArgTypes...>::value
                 >::value;
         };
 
@@ -221,7 +221,7 @@ namespace natl {
             template<typename, Size, typename  ValuePredicateArgType> typename ValuePredicate,
             template<DataType, DataType> typename OpPredicate>
         struct ParameterPackOpFoldWithIndexAndArgImpl<DataType, Index, ValuePredicateArg, ValuePredicate, OpPredicate> {
-            static_assert("natl: ParameterPackOpFoldWithIndexAndArg - no ArgTypes passed");
+            // static_assert(false, "natl: ParameterPackOpFoldWithIndexAndArg - no ArgTypes passed");
         };
     }
 
@@ -261,7 +261,7 @@ namespace natl {
         //CreateTypeWithTypePackImpl
         template<template<typename... Elements> typename CreateType, typename... Types>
         struct CreateTypeWithTypePackImpl {
-            static_assert("natl: CreateTypeWithTypePackImpl second arg was not a natl::TypePack");
+            // static_assert(false, "natl: CreateTypeWithTypePackImpl second arg was not a natl::TypePack");
         };
 
         template<template<typename... Elements> typename CreateType, typename... TypePackElements>
@@ -289,7 +289,7 @@ namespace natl {
 
         template<template<typename> typename PredicateType, typename... Types>
         struct TypePackRemoveElementsIfTypePackArgImpl {
-            static_assert("natl: CreateTypeWithTypePackImpl second arg was not a natl::TypePack");
+            // static_assert(false, "natl: CreateTypeWithTypePackImpl second arg was not a natl::TypePack");
         };
 
         template<template<typename> typename PredicateType, typename... TypePackElements>

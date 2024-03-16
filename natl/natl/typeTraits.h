@@ -73,21 +73,21 @@ namespace natl {
 #define NATL_TYPE_TRIAT_CUSTOM_TRIVIALLY_FUN(conceptName, memberName) \
         template<class DataType> \
         consteval bool customCheckIf##conceptName() noexcept { \
-            if constexpr (requires() { { DataType::##memberName } -> std::convertible_to<bool>; }) { \
-                return DataType::##memberName; \
+            if constexpr (requires() { { DataType::trivially##memberName } -> std::convertible_to<bool>; }) { \
+                return DataType::trivially##memberName; \
             } else { \
                 return false; \
             } \
         }
 
-        NATL_TYPE_TRIAT_CUSTOM_TRIVIALLY_FUN(IsTriviallyCompareable, triviallyCompareable);
-        NATL_TYPE_TRIAT_CUSTOM_TRIVIALLY_FUN(IsTriviallyRelocatable, triviallyRelocatable);
-        NATL_TYPE_TRIAT_CUSTOM_TRIVIALLY_FUN(IsTriviallyDefaultConstructible, triviallyDefaultConstructible);
-        NATL_TYPE_TRIAT_CUSTOM_TRIVIALLY_FUN(IsTriviallyDestructible, triviallyDestructible);
-        NATL_TYPE_TRIAT_CUSTOM_TRIVIALLY_FUN(IsTriviallyMoveConstructible, triviallyMoveConstructedable);
-        NATL_TYPE_TRIAT_CUSTOM_TRIVIALLY_FUN(IsTriviallyConstRefConstructible, triviallyConstRefConstructedable);
-        NATL_TYPE_TRIAT_CUSTOM_TRIVIALLY_FUN(IsTriviallyMoveAssignable, triviallyMoveAssignable);
-        NATL_TYPE_TRIAT_CUSTOM_TRIVIALLY_FUN(IsTriviallyConstRefAssignable, triviallyConstRefAssignable);
+        NATL_TYPE_TRIAT_CUSTOM_TRIVIALLY_FUN(IsTriviallyCompareable, Compareable);
+        NATL_TYPE_TRIAT_CUSTOM_TRIVIALLY_FUN(IsTriviallyRelocatable, Relocatable);
+        NATL_TYPE_TRIAT_CUSTOM_TRIVIALLY_FUN(IsTriviallyDefaultConstructible, DefaultConstructible);
+        NATL_TYPE_TRIAT_CUSTOM_TRIVIALLY_FUN(IsTriviallyDestructible, Destructible);
+        NATL_TYPE_TRIAT_CUSTOM_TRIVIALLY_FUN(IsTriviallyMoveConstructible, MoveConstructedable);
+        NATL_TYPE_TRIAT_CUSTOM_TRIVIALLY_FUN(IsTriviallyConstRefConstructible, ConstRefConstructedable);
+        NATL_TYPE_TRIAT_CUSTOM_TRIVIALLY_FUN(IsTriviallyMoveAssignable, MoveAssignable);
+        NATL_TYPE_TRIAT_CUSTOM_TRIVIALLY_FUN(IsTriviallyConstRefAssignable, ConstRefAssignable);
 
     }
 #undef NATL_TYPE_TRIAT_CUSTOM_TRIVIALLY_FUN

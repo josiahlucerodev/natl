@@ -20,7 +20,7 @@ namespace natl {
             for (i64 i = 0; i64(i) < static_cast<i64>(unitAbsFn<i64>(exponent)); ++i) {
                 result *= base;
             }
-            return (exponent < DataType(0)) ? DataType(1) / result : result;
+            return (static_cast<DataType>(exponent) < DataType(0)) ? DataType(1) / result : result;
         }
     }
 
@@ -267,7 +267,7 @@ namespace natl {
 
             constexpr static DataType getConvertFactorFunc() noexcept {
                 if constexpr (std::is_same_v<UnitType, TransformToType>) {
-                    return TypeValue<DataType(1)>;
+                    return TypeValue<DataType(1)>();
                 } else {
                     return StrongUnitConversionFactor<typename UnitType::unit_tag, typename TransformToType::unit_tag, DataType, DataType>::value;
                 }

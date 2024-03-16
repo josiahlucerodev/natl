@@ -381,10 +381,14 @@ namespace natl {
 					return reinterpret_cast<const callable_base*>(smallCallableStorage)->invoke(forward<ArgTypes>(args)...);
 				case impl::FunctionStorageType::heapCallable:
 					return heapCallable->invoke(forward<ArgTypes>(args)...);
-				case impl::FunctionStorageType::constexprCallable:
+				case impl::FunctionStorageType::constexprCallable: 
 					if (isConstantEvaluated()) {
 						return constexprFunctionStorage.constexprCallable->invoke(constexprFunctionStorage.polymorphicFunctorStorageBase, forward<ArgTypes>(args)...);
+					} else {
+						unreachable();
 					}
+				default:
+					unreachable();
 				}
 			}
 

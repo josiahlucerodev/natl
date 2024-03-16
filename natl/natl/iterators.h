@@ -161,6 +161,7 @@ namespace natl {
 	struct IterPtrTraits {
 		using value_type = std::conditional_t<std::is_pointer_v<std::decay_t<Iter>>, std::remove_pointer_t<std::decay_t<Iter>>, typename std::iterator_traits<Iter>::value_type>;
 		using reference = std::conditional_t<std::is_pointer_v<std::decay_t<Iter>>, std::remove_pointer_t<std::decay_t<Iter>>&, typename std::iterator_traits<Iter>::reference>;
+		using difference_type = std::conditional_t<std::is_pointer_v<std::decay_t<Iter>>, PtrDiff, typename std::iterator_traits<Iter>::difference_type>;
 	};
 
 	template <class SrcIter, class DstIter>

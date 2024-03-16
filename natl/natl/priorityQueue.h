@@ -19,24 +19,25 @@ namespace natl {
 			return (2 * index + 1);
 		}
 
-		const Size heapRightChildIndex(const Size index) noexcept {
+		constexpr Size heapRightChildIndex(const Size index) noexcept {
 			return (2 * index + 2);
 		}
 
 		template <typename RandomIter, typename Compare>
-		void heapify(RandomIter first, const Size size, const Size index, Compare compare = Compare()) noexcept {
+		constexpr void heapify(RandomIter first, const Size size, const Size index, Compare compare = Compare()) noexcept {
 			if (size <= 1) { return; }
 			const Size leftIndex = heapLeftChildIndex(index);
 			const Size rightIndex = heapRightChildIndex(index);
 			Size smallest = index;
-			if (leftIndex < size && compare(iterValue<RandomIter>(first + leftIndex), iterValue<RandomIter>(first + index))) {
+			using difference_type = typename IterPtrTraits<RandomIter>::difference_type;
+			if (leftIndex < size && compare(iterValue<RandomIter>(first + static_cast<difference_type>(leftIndex)), iterValue<RandomIter>(first + static_cast<difference_type>(index)))) {
 				smallest = leftIndex;
 			}
-			if (rightIndex < size && compare(iterValue<RandomIter>(first + rightIndex), iterValue<RandomIter>(first + smallest))) {
+			if (rightIndex < size && compare(iterValue<RandomIter>(first + static_cast<difference_type>(rightIndex)), iterValue<RandomIter>(first + static_cast<difference_type>(smallest)))) {
 				smallest = rightIndex;
 			}
 			if (smallest != index) {
-				iterSwap<RandomIter>(first + index, first + smallest);
+				iterSwap<RandomIter>(first + static_cast<difference_type>(index), first + static_cast<difference_type>(smallest));
 				heapify<RandomIter, Compare>(first, size, smallest, compare);
 			}
 		}
@@ -47,20 +48,21 @@ namespace natl {
 	constexpr void makeHeap(RandomIter first, RandomIter last, Compare compare = Compare()) noexcept{
 		const Size size = iterDistance<RandomIter>(first, last);
 		const Size startIndex = (size / 2) - 1;
-		for (SignedSize index = static_cast<SignedSize>(startIndex); index >= 0; index--) {
-			impl::heapify<RandomIter, Compare>(first, size, index, compare);
+		for (SignedSize index = static_cast<SignedSize>(startIndex); index >= SignedSize(0); index--) {
+			impl::heapify<RandomIter, Compare>(first, size, static_cast<Size>(index), compare);
 		}
 	}
 
 	template<typename RandomIter, typename Compare>
 	constexpr void pushHeap(RandomIter first, RandomIter last, Compare compare) noexcept {
+		using difference_type = typename IterPtrTraits<RandomIter>::difference_type;
 		const Size size = iterDistance<RandomIter>(first, last);
 		if (size <= 1) { return; }
 		Size current = size - 1;
 		while (current > 0) {
 			const Size parent = impl::heapParentIndex(current);
-			if (compare(iterValue<RandomIter>(first + current), iterValue<RandomIter>(first + parent))) {
-				iterSwap<RandomIter>(first + parent, first + current);
+			if (compare(iterValue<RandomIter>(first + static_cast<difference_type>(current)), iterValue<RandomIter>(first + static_cast<difference_type>(parent)))) {
+				iterSwap<RandomIter>(first + static_cast<difference_type>(parent), first + static_cast<difference_type>(current));
 				current = parent;
 			} else {
 				break;
@@ -79,9 +81,13 @@ namespace natl {
 
 	template<class RandomIter, class Compare>
 	constexpr bool isHeap(RandomIter first, RandomIter last, Compare compare) noexcept {
+		using difference_type = typename IterPtrTraits<RandomIter>::difference_type;
 		Size size = iterDistance<RandomIter>(first, last);
 		for (Size index = 1; index < size; index++) {
-			if (compare(iterValue<RandomIter>(first + index), iterValue<RandomIter>(first + ((index - 1) / 2)))) {
+			if (compare(
+				iterValue<RandomIter>(first + static_cast<difference_type>(index)), 
+				iterValue<RandomIter>(first + static_cast<difference_type>((index - 1) / 2))
+				)) {
 				return false;
 			}
 		}
@@ -96,7 +102,6 @@ namespace natl {
 		using value_compare = Compare;
 		using value_type = container_type::value_type;
 		using size_type	= container_type::size_type;
-		using reference	= container_type::reference;
 		using reference	= container_type::reference;
 		using const_reference = container_type::const_reference;
 		

@@ -556,7 +556,7 @@ namespace natl {
 
         using ToAllocationMoveAdapterType = typename FromAllocationMoveAdapaterType::template rebind_allocation_move_adapater<ToDataType>;
         using ToAlloc = ToAllocationMoveAdapterType::allocator_type;
-        using FromAlloc = FromAllocationMoveAdapaterType::allocator_type;
+        //using FromAlloc = FromAllocationMoveAdapaterType::allocator_type;
         using FromDataType = FromAllocationMoveAdapaterType::value_type;
 
         if constexpr (IsTheSame<ToAllocationMoveAdapterType, FromAllocationMoveAdapaterType>) {
@@ -575,6 +575,7 @@ namespace natl {
                 *copyDstPtr = std::bit_cast<ToDataType, FromDataType>(*copySrcPtr);
             }
 
+            allocationMoveAdapter.deallocate();
             allocationMoveAdapter.release();
             return natl::move(newAllocationMoveAdapter);
         } else {

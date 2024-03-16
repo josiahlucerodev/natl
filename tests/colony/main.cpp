@@ -6,7 +6,7 @@
 int main() {
 	natl::Colony<natl::Size> colony(natl::ColonyLimits(30, 300));
 
-	for (natl::Size index : natl::Repeat(100)) {
+	for ([[maybe_unused]] natl::Size index : natl::Repeat(100)) {
 		colony.insert(index);
 	}
 
@@ -14,12 +14,12 @@ int main() {
 	colony.shrink();
 
 	decltype(colony)::iterator iter = colony.getIteratorAtIndex(1).value();
-	for (natl::Size index : natl::Repeat(3)) {
+	for ([[maybe_unused]] natl::Size index : natl::Repeat(3)) {
 		colony.erase(iter);
 		iter++;
 	}
 	iter = colony.getIteratorAtIndex(5).value();
-	for (natl::Size index : natl::Repeat(2)) {
+	for ([[maybe_unused]] natl::Size index : natl::Repeat(2)) {
 		colony.erase(iter);
 		iter++;
 	}

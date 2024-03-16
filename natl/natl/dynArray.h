@@ -420,7 +420,7 @@ namespace natl {
 		}
 
 		constexpr void clear() noexcept {
-			if (!IsTriviallyDestructible<value_type> || isConstantEvaluated()) {
+			if (typeHasToBeDestructed<value_type>()) {
 				defaultDeconstructAll<value_type>(data(), size());
 			}
 			setsize_type(0);

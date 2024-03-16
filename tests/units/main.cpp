@@ -10,11 +10,11 @@ constexpr natl::Meter compileTimeTest() {
 }
 
 int main() {
-	constexpr natl::Meter testValue = compileTimeTest();
+	[[maybe_unused]] constexpr natl::Meter testValue = compileTimeTest();
 	natl::Meter meter(3);
 	natl::Meter meter2(6);
 	meter = meter + meter2;
 
 	natl::MeterValue<natl::f32> meters(10);
-	natl::KilometerValue<natl::f32> Kilometer = meters.convertTo<natl::KilometerUnit<1>>();
+	[[maybe_unused]] natl::KilometerValue<natl::f32> Kilometer = meters.convertTo<natl::KilometerUnit<1>>();
 }
