@@ -9,55 +9,204 @@
 
 //interface
 namespace natl {
-    template<class Type>
+    template<typename Type>
     concept isNotConst = !std::is_const_v<Type>; 
-    template<class Type>
+    template<typename Type>
     concept isConst = std::is_const_v<Type>;
 
-    template<class Type>
+    template<typename Type>
     concept IsEmpty = std::is_empty_v<Type>;
 
-    template<class Type>
+    template<typename Type>
     concept IsNotEmpty = !std::is_empty_v<Type>;
 
-    template<class Type>
+    template<typename Type>
     using remove_cvref_t = std::remove_cv_t<std::remove_reference_t<Type>>;
 
-    template<class LhsType, class RhsType>
+    template<typename LhsType, typename RhsType>
     concept IsTheSame = std::is_same_v<LhsType, RhsType>;
 
-    template<class LhsType, class RhsType>
+    template<typename LhsType, typename RhsType>
     concept IsNotTheSame = !IsTheSame<LhsType, RhsType>;
 
-    template<class DataType>
+    template<typename DataType>
     concept IsItergerType = std::is_integral_v<DataType>;
 
-    template<class DataType>
+    template<typename DataType>
     concept IsSignedItergerType = IsItergerType<DataType> && std::is_signed_v<DataType>;
 
-    template<class DataType>
+    template<typename DataType>
     concept IsUnsignedItergerType = IsItergerType<DataType> && std::is_unsigned_v<DataType>;
 
-    template<class DataType>
+    template<typename DataType>
     concept IsNotItergerType = !IsItergerType<DataType>;
 
-    template<class DataType>
+    template<typename DataType>
     concept IsFloatingPointType = std::is_floating_point_v<DataType>;
 
-    template<class DataType>
+    template<typename DataType>
     concept IsNotFloatingPointType = !std::is_floating_point_v<DataType>;
 
-    template<class DataType>
+    template<typename DataType>
     concept IsNumericType = IsItergerType<DataType> || IsFloatingPointType<DataType>;
 
-    template <typename T>
-    concept IsCharacterType =
-        std::is_same_v<std::remove_cv_t<T>, AssciCode> ||
-        std::is_same_v<std::remove_cv_t<T>, char8_t> ||
-        std::is_same_v<std::remove_cv_t<T>, char16_t> ||
-        std::is_same_v<std::remove_cv_t<T>, Utf32>;
 
-    template <class DataType>
+    template<typename DataType, DataType v>
+    struct IntegralConstant {
+        constexpr static DataType value = v;
+        using value_type = DataType;
+        using type = IntegralConstant;
+        constexpr operator value_type() const noexcept { return value; }
+        constexpr value_type operator()() const noexcept { return value; } 
+    };
+
+    template<bool boolValue>
+    using BoolConstant = IntegralConstant<bool, boolValue>;
+
+    using TrueType = BoolConstant<true>;
+    using FalseType	= BoolConstant<false>;
+
+    template<typename DataType> struct RemoveCVType { using type = DataType; };
+    template<typename DataType> struct RemoveCVType<const DataType> { using type = DataType; };
+    template<typename DataType> struct RemoveCVType<volatile DataType> { using type = DataType; };
+    template<typename DataType> struct RemoveCVType<const volatile DataType> { using type = DataType; };
+
+    template<typename DataType> struct RemoveConstType { using type = DataType; };
+    template<typename DataType> struct RemoveConstType<const DataType> { using type = DataType; };
+
+    template<typename DataType> struct RemoveVolatileType { using type = DataType; };
+    template<typename DataType> struct RemoveVolatileType<volatile DataType> { using type = DataType; };
+
+    template<typename DataType> struct RemoveReferenceType { using type = DataType; };
+    template<typename DataType> struct RemoveReferenceType<DataType&> { using type = DataType; };
+    template<typename DataType> struct RemoveReferenceType<DataType&&> { using type = DataType; };
+
+
+    template<bool B, typename DataType, typename F>
+    struct ConditionalType { using type = DataType; };
+    template<typename DataType, typename F>
+    struct ConditionalType<false, DataType, F> { using type = F; };
+
+
+    template<typename DataType>
+    struct TypeIdentityType { using type = DataType; };
+
+    template<typename DataType>
+    using RemoveCV = typename RemoveCVType<DataType>::type;
+    template<typename DataType>
+    using RemoveConst = typename RemoveConstType<DataType>::type;
+    template<typename DataType>
+    using RemoveVolatile = typename RemoveVolatileType<DataType>::type;
+
+    template<typename DataType>
+    using RemoveReference = typename RemoveReferenceType<DataType>::type;
+
+    template<bool B, typename DataType, typename F>
+    using Conditional = typename ConditionalType<B, DataType, F>::type;
+
+    template<typename DataType, typename U> struct IsSameType : FalseType {};
+    template<typename DataType> struct IsSameType<DataType, DataType> : TrueType {};
+    template<typename DataType, typename U> constexpr inline bool IsSame = IsSameType<DataType, U>::value;
+
+    template<typename DataType, typename U> struct IsNotSameType : TrueType {};
+    template<typename DataType> struct IsNotSameType<DataType, DataType> : FalseType {};
+    template<typename DataType, typename U> constexpr inline bool IsNotSame = IsNotSameType<DataType, U>::value;
+
+    template<typename DataType>
+    struct IsVoidType : IsSameType<void, RemoveCV<DataType>> {};
+    template<typename DataType>
+    constexpr inline bool IsVoid = IsVoidType<DataType>::value;
+
+    template<typename DataType>
+    using TypeIdentity = typename TypeIdentityType<DataType>::type;
+
+    namespace impl {
+        template<typename DataType> auto tryAddPointer(int) -> TypeIdentity<RemoveReference<DataType>*>;
+        template<typename DataType> auto tryAddPointer(...) -> TypeIdentity<DataType>;
+    }
+
+    template<typename DataType> struct AddPointerType : decltype(impl::tryAddPointer<DataType>(0)) {};
+    template<typename DataType> using AddPointer = typename AddPointerType<DataType>::type;
+
+    namespace impl {
+        template<typename DataType> auto tryAddLValueReference(int) -> TypeIdentity<DataType&>;
+        template<typename DataType> auto tryAddLValueReference(...) -> TypeIdentity<DataType>;
+        template<typename DataType> auto tryAddRValueReference(int) -> TypeIdentity<DataType&&>;
+        template<typename DataType> auto tryAddRValueReference(...) -> TypeIdentity<DataType>;
+    } 
+    template<typename DataType> struct AddLValueReferenceType : decltype(impl::tryAddLValueReference<DataType>(0)) {};
+    template<typename DataType> struct AddRValueReferenceType : decltype(impl::tryAddRValueReference<DataType>(0)) {};
+
+    template<typename DataType>
+    using AddLValueReference = typename AddLValueReferenceType<DataType>::type;
+    template<typename DataType>
+    using AddRValueReference = typename AddRValueReferenceType<DataType>::type;
+
+    template<typename DataType> struct IsRValueReferenceType : FalseType {};
+    template<typename DataType> struct IsRValueReferenceType<DataType&&> : TrueType {};
+    template<typename DataType> constexpr inline bool IsRValueReference = IsRValueReferenceType<DataType>::value;
+
+    template<typename DataType> struct IsLValueReferenceType : FalseType {};
+    template<typename DataType> struct IsLValueReferenceType<DataType&> : TrueType {};
+    template<typename DataType> constexpr inline bool IsLValueReference = IsLValueReferenceType<DataType>::value;
+
+    template<typename DataType> struct IsReferenceType : FalseType {};
+    template<typename DataType> struct IsReferenceType<DataType&> : TrueType {};
+    template<typename DataType> struct IsReferenceType<DataType&&> : TrueType {};
+    template<typename DataType> constexpr inline bool IsReference = IsReferenceType<TrueType>::value;
+
+    template<typename DataType>
+    AddRValueReference<DataType> declval() noexcept {
+        //static_assert(false, "natl: declval not allowed in an evaluated context");
+    }
+
+    template<typename...> struct ConjunctionType : std::true_type {};
+    template<typename B1> struct ConjunctionType<B1> : B1 {};
+    template<typename B1, typename... Bn> struct ConjunctionType<B1, Bn...> : ConditionalType<bool(B1::value), ConjunctionType<Bn...>, B1> {};
+    template<typename... B> inline constexpr bool Conjunction = ConjunctionType<B...>::value;
+
+    namespace impl {
+        template<typename DataType>
+        auto testReturnable(int) -> decltype(void(static_cast<DataType(*)()>(nullptr)), TrueType{});
+        template<typename> auto testReturnable(...) -> std::false_type;
+        template<typename From, typename To> auto testImplicitlyConvertible(int) -> decltype(void(declval<void(&)(To)>()(declval<From>())), TrueType{});
+        template<typename, typename> auto testImplicitlyConvertible(...) -> FalseType;
+
+    }
+
+    template<typename From, typename To>
+    struct IsConvertibleType : BoolConstant<
+        (decltype(impl::testReturnable<To>(0))::value && decltype(impl::testImplicitlyConvertible<From, To>(0))::value) ||
+        (IsVoid<From> && IsVoid<To>)
+    >{};
+
+    template<typename From, typename To>
+    struct IsNoThrowConvertibleType : ConjunctionType<IsVoidType<From>, IsVoidType<To>> {};
+    template<typename From, typename To>
+        requires (
+            requires {
+                static_cast<To(*)()>(nullptr);
+                { declval<void(&)(To) noexcept>()(declval<From>()) } noexcept;
+            }
+        )
+    struct IsNoThrowConvertibleType<From, To> : TrueType {};
+
+    template<typename From, typename To>
+    constexpr inline bool IsConvertible = IsConvertibleType<From, To>::value;
+    template<typename From, typename To>
+    constexpr inline bool IsNothrowConvertible = IsNoThrowConvertibleType<From, To>::value;
+
+    template<typename From, typename To>
+    concept ConvertibleTo = IsConvertible<From, To> && requires { static_cast<To>(std::declval<From>()); };
+
+    template <typename DataType>
+    concept IsCharacterType =
+        std::is_same_v<std::remove_cv_t<DataType>, AssciCode> ||
+        std::is_same_v<std::remove_cv_t<DataType>, char8_t> ||
+        std::is_same_v<std::remove_cv_t<DataType>, char16_t> ||
+        std::is_same_v<std::remove_cv_t<DataType>, Utf32>;
+
+    template <typename DataType>
     concept IsBasicType = std::is_integral_v<DataType> || std::is_floating_point_v<DataType> || std::is_pointer_v<DataType> || IsCharacterType<DataType> || std::same_as<DataType, Byte>;
 
     template <typename DataType>
@@ -71,7 +220,7 @@ namespace natl {
 
     namespace impl {
 #define NATL_TYPE_TRIAT_CUSTOM_TRIVIALLY_FUN(conceptName, memberName) \
-        template<class DataType> \
+        template<typename DataType> \
         consteval bool customCheckIf##conceptName() noexcept { \
             if constexpr (requires() { { DataType::trivially##memberName } -> std::convertible_to<bool>; }) { \
                 return DataType::trivially##memberName; \
@@ -92,42 +241,42 @@ namespace natl {
     }
 #undef NATL_TYPE_TRIAT_CUSTOM_TRIVIALLY_FUN
 
-    template <class DataType>
+    template <typename DataType>
     concept IsTriviallyCompareable = IsBasicType<DataType> || 
         impl::customCheckIfIsTriviallyCompareable<DataType>();
 
-    template <class DataType>
+    template <typename DataType>
     concept IsTriviallyRelocatable = (std::is_trivially_copyable_v<DataType> && std::is_trivially_destructible_v<DataType>) || 
         IsBasicType<DataType> || impl::customCheckIfIsTriviallyRelocatable<DataType>();
 
-    template <class DataType>
+    template <typename DataType>
     concept IsTriviallyDefaultConstructible = std::is_trivially_default_constructible_v<DataType> || 
         impl::customCheckIfIsTriviallyDefaultConstructible<DataType>();
 
-    template <class DataType>
+    template <typename DataType>
     concept IsTriviallyDestructible = std::is_trivially_destructible_v<DataType> || 
         impl::customCheckIfIsTriviallyDestructible<DataType>();
 
-    template <class DataType>
+    template <typename DataType>
     concept IsTriviallyMoveConstructible = std::is_trivially_move_constructible_v<DataType> || 
         impl::customCheckIfIsTriviallyMoveConstructible<DataType>();
 
-    template <class DataType>
+    template <typename DataType>
     concept IsTriviallyConstRefConstructible = std::is_trivially_constructible_v<DataType, const DataType&> ||
         impl::customCheckIfIsTriviallyConstRefConstructible<DataType>();
 
-    template <class DataType>
+    template <typename DataType>
     concept IsTriviallyMoveAssignable = std::is_trivially_move_assignable_v<DataType> ||
         impl::customCheckIfIsTriviallyMoveAssignable<DataType>();
 
-    template <class DataType>
+    template <typename DataType>
     concept IsTriviallyConstRefAssignable = std::is_trivially_assignable_v<DataType, const DataType&> ||
         impl::customCheckIfIsTriviallyConstRefAssignable<DataType>();
 
-    template <class Type>
+    template <typename Type>
     concept MemcopyConstructible = IsTriviallyDefaultConstructible<Type> && IsTriviallyRelocatable<Type>;
 
-    template <class Src, class Dst, class SrcRef>
+    template <typename Src, typename Dst, typename SrcRef>
     concept MemcopyConstructibleSrcDst =
         !std::is_same_v<Src, void> &&
         !std::is_same_v<Dst, void> &&
@@ -137,19 +286,19 @@ namespace natl {
                 (sizeof(Src) == sizeof(Dst) && std::is_trivially_constructible_v<Dst, SrcRef>)
             );
 
-    template<class Src, class Dst, class SrcRef, class DstRef>
+    template<typename Src, typename Dst, typename SrcRef, typename DstRef>
     concept MemcopyAssignableSrcDst =
         (std::is_same_v<Src, Dst> && MemcopyConstructible<Src>) ||
         (sizeof(Src) == sizeof(Dst) && std::is_trivially_assignable_v<DstRef, SrcRef>);
 
-    template <class Type>
+    template <typename Type>
     concept MemcpyCompareable = IsTriviallyCompareable<Type>;
 
-    template<class Src, class Dst>
+    template<typename Src, typename Dst>
     concept MemcpyCompareableSrcDst = (std::is_same_v<Src, Dst> && MemcpyCompareable<Src>);
 
     struct SynthesizeThreeWay {
-        template <class T1, class T2>
+        template <typename T1, typename T2>
         constexpr auto operator()(const T1& lhs, const T2& rhs) const
             requires(requires {
                 { lhs < rhs } -> std::convertible_to<bool>;
@@ -168,24 +317,24 @@ namespace natl {
         }
     };
 
-    template <class T1, class T2 = T1>
+    template <typename T1, typename T2 = T1>
     using SynthesizeThreeWayResult = decltype(SynthesizeThreeWay{}(std::declval<T1&>(), std::declval<T2&>()));
 
     template <typename From, typename To>
     concept IsPolymorphicCastable = std::is_base_of_v<From, To> || std::is_convertible_v<From*, To*>;
 
     namespace impl {
-        template<typename T, template<typename...> typename Primary>
+        template<typename DataType, template<typename...> typename Primary>
         struct IsSpecialization : std::false_type {};
 
         template<template<typename...> typename Primary, typename... Args>
         struct IsSpecialization<Primary<Args...>, Primary> : std::true_type {};
 
-        template<typename T, template<typename...> typename Primary>
-        inline constexpr bool IsSpecializationV = IsSpecialization<T, Primary>::value;
+        template<typename DataType, template<typename...> typename Primary>
+        inline constexpr bool IsSpecializationV = IsSpecialization<DataType, Primary>::value;
     }
 
-    template<typename Test, template<typename...> class SpecializationType>
+    template<typename Test, template<typename...> typename SpecializationType>
     concept IsSpecialization = impl::IsSpecializationV<Test, SpecializationType>;
 
     template<typename... ArgTypes>
