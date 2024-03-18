@@ -1732,34 +1732,34 @@ namespace natl {
 			return lhs.toStringView() >= rhs;
 		}
 
-		friend constexpr std::strong_ordering operator<=>(const BaseString& lhs, const BaseString& rhs) noexcept {
+		friend constexpr StrongOrdering operator<=>(const BaseString& lhs, const BaseString& rhs) noexcept {
 			return lhs.toStringView() <=> rhs.toStringView();
 		}
-		friend constexpr std::strong_ordering operator<=>(const BaseString& lhs, const_pointer rhs) noexcept {
+		friend constexpr StrongOrdering operator<=>(const BaseString& lhs, const_pointer rhs) noexcept {
 			return lhs.toStringView() <=> rhs;
 		}
-		friend constexpr std::strong_ordering operator<=>(const BaseString& lhs, const value_type rhs) noexcept {
+		friend constexpr StrongOrdering operator<=>(const BaseString& lhs, const value_type rhs) noexcept {
 			return lhs.toStringView() <=> rhs;
 		}
 		template<class StringLike>
 			requires(IsStringViewLike<StringLike, value_type>)
-		friend constexpr std::strong_ordering operator<=>(const BaseString& lhs, const StringLike& rhs) noexcept {
+		friend constexpr StrongOrdering operator<=>(const BaseString& lhs, const StringLike& rhs) noexcept {
 			return lhs.toStringView() <=> rhs;
 		}
 		template<class StringLike>
 			requires(std::is_convertible_v<StringLike, BaseStringView<value_type>> && !IsStringViewLike<StringLike, value_type>)
-		friend constexpr std::strong_ordering operator<=>(const BaseString& lhs, const StringLike& rhs) noexcept {
+		friend constexpr StrongOrdering operator<=>(const BaseString& lhs, const StringLike& rhs) noexcept {
 			return lhs.toStringView() <=> rhs;
 		}
-		friend constexpr std::strong_ordering operator<=>(const BaseString& lhs, const char* rhs) noexcept requires(std::is_same_v<std::decay_t<value_type>, Utf32>) {
+		friend constexpr StrongOrdering operator<=>(const BaseString& lhs, const char* rhs) noexcept requires(std::is_same_v<std::decay_t<value_type>, Utf32>) {
 			return lhs.toStringView() <=> rhs;
 		}
-		friend constexpr std::strong_ordering operator<=>(const BaseString& lhs, const char rhs) noexcept requires(std::is_same_v<std::decay_t<value_type>, Utf32>) {
+		friend constexpr StrongOrdering operator<=>(const BaseString& lhs, const char rhs) noexcept requires(std::is_same_v<std::decay_t<value_type>, Utf32>) {
 			return lhs.toStringView() <=> rhs;
 		}
 		template<class StringLike>
 			requires(IsStringViewLike<StringLike, char>)
-		friend constexpr std::strong_ordering operator<=>(const BaseString& lhs, const StringLike& rhs) noexcept requires(std::is_same_v<std::decay_t<value_type>, Utf32>) {
+		friend constexpr StrongOrdering operator<=>(const BaseString& lhs, const StringLike& rhs) noexcept requires(std::is_same_v<std::decay_t<value_type>, Utf32>) {
 			return lhs.toStringView() <=> rhs;
 		}
 

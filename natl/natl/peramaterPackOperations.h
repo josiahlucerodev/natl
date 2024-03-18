@@ -244,6 +244,7 @@ namespace natl {
         using add_new_elements_back = TypePack<Elements..., NewElements...>;
         template<typename... NewElements>
         using add_new_elements_front = TypePack<NewElements..., Elements...>;
+        constexpr static Size size = sizeof...(Elements);
     };
 
     template<auto Value>
@@ -440,5 +441,35 @@ namespace natl {
         template<DataType, DataType> typename OpPredicate,
         typename TypePack>
     constexpr static DataType TypePackOpFoldWithIndexAndArgValue = impl::TypePackOpFoldWithIndexAndArgImpl<DataType, ValuePredicateArg, ValuePredicate, OpPredicate, TypePack >::value;
+
+
+    template <typename DataType, DataType... Ints>
+    struct IntegerSequence {
+        using type = IntegerSequence;
+        using value_type = DataType;
+        static constexpr Size size() noexcept { return sizeof...(Ints); }
+    };
+
+    namespace impl {
+        template <typename DataType, Size Number, DataType... Seq>
+        struct MakeIntegerSequenceType;
+
+        template <typename DataType, DataType... Seq>
+        struct MakeIntegerSequenceType<DataType, 0, Seq...> {
+            using type = IntegerSequence<DataType, Seq...>;
+        };
+
+        template <typename DataType, Size Number, DataType... Seq>
+        struct MakeIntegerSequenceType : MakeIntegerSequenceType<DataType, Number - 1, Number - 1, Seq...> {};
+    }
+
+    template <typename DataType, DataType Number>
+    using MakeIntegerSequence = typename impl::MakeIntegerSequenceType<DataType, Number>::type;
+    template<Size Number>
+    using MakeIndexSequence = MakeIntegerSequence<Size, Number>;
+    template<class... DataTypeTypes>
+    using MakeIndexSequenceFor = MakeIndexSequence<sizeof...(DataTypeTypes)>;
+    template<Size... Ints>
+    using IndexSequence = IntegerSequence<Size, Ints...>;
 
 }

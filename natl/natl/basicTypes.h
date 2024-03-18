@@ -24,6 +24,7 @@ namespace natl {
 	using UIntPtrSized = std::conditional_t<sizeof(void*) == 4, ui32, ui64>;
 
 	using Size = ui64;
+	using SSize = i64;
 	using SignedSize = i64;
 	using PtrDiff = std::ptrdiff_t;
 
@@ -63,8 +64,6 @@ namespace natl {
 		constexpr const DataType& value() const noexcept { return internalValue; }
 	};
 
-
-
 	enum class Byte : ui8 {};
 
 	template<typename DataType>
@@ -74,6 +73,12 @@ namespace natl {
 	using AlignedByte = AlignedType<Byte, Alignment>;
 	
 	struct Dummy {};
+
+	struct IgnoreType {
+		template <typename AnyType>
+		constexpr void operator=(AnyType&&) const noexcept {}
+	};
+	constexpr inline IgnoreType ignore;
 
 	static_assert(sizeof(i8) == 1, "natl: i8 should be 1 bytes");
 	static_assert(sizeof(i16) == 2, "natl: i16 should be 2 bytes");
@@ -103,3 +108,23 @@ namespace natl {
 	template<Size ByteSize> using IntOfByteSize_t = typename IntOfByteSize<ByteSize>::type;
 	template<Size ByteSize> using UIntOfByteSize_t = typename UIntOfByteSize<ByteSize>::type;
 }
+
+constexpr natl::i8 operator""_natl_i8(unsigned long long value) noexcept { return static_cast<natl::i8>(value); }
+constexpr natl::i16 operator""_natl_i16(unsigned long long value) noexcept { return static_cast<natl::i16>(value); }
+constexpr natl::i32 operator""_natl_i32(unsigned long long value) noexcept { return static_cast<natl::i32>(value); }
+constexpr natl::i64 operator""_natl_i64(unsigned long long value) noexcept { return static_cast<natl::i64>(value); }
+
+constexpr natl::ui8 operator""_natl_ui8(unsigned long long value) noexcept { return static_cast<natl::ui8>(value); }
+constexpr natl::ui16 operator""_natl_ui16(unsigned long long value) noexcept { return static_cast<natl::ui16>(value); }
+constexpr natl::ui32 operator""_natl_ui32(unsigned long long value) noexcept { return static_cast<natl::ui32>(value); }
+constexpr natl::ui64 operator""_natl_ui64(unsigned long long value) noexcept { return static_cast<natl::ui64>(value); }
+
+constexpr natl::f32 operator ""_natl_f32(long double value) noexcept { return static_cast<natl::f32>(value); }
+constexpr natl::f64 operator ""_natl_f64(long double value) noexcept { return static_cast<natl::f64>(value); }
+
+constexpr natl::Size operator ""_natl_size(unsigned long long value) noexcept { return static_cast<natl::Size>(value); }
+constexpr natl::SSize operator ""_natl_ssize(unsigned long long value) noexcept { return static_cast<natl::SSize>(value); }
+
+constexpr natl::Char operator ""_natl_char(char value) noexcept { return value; }
+constexpr natl::AssciCode operator ""_natl_assci_char(char value) noexcept { return value; }
+constexpr natl::Utf32 operator ""_natl_utf32_char(char32_t value) noexcept { return value; }

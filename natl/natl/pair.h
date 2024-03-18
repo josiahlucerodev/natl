@@ -3,6 +3,7 @@
 //own
 #include "typeTraits.h"
 #include "dataMovement.h"
+#include "compare.h"
 
 //interface
 namespace natl {
@@ -77,12 +78,12 @@ namespace natl {
 		return !(lhs < rhs);
 	}
 	template< class T1, class T2, class U1, class U2 >
-	constexpr std::common_comparison_category_t<SynthesizeThreeWayResult<T1, U1>, SynthesizeThreeWayResult<T2, U2>> 
+	constexpr std::common_comparison_category_t<CompareThreeWayResultType<T1, U1>, CompareThreeWayResultType<T2, U2>>
 		operator<=>(const Pair<T1, T2>& lhs, const Pair<U1, U2>& rhs) noexcept {
-		if (auto result = SynthesizeThreeWay{}(lhs.first, rhs.first); result != 0) {
+		if (auto result = CompareThreeWay{}(lhs.first, rhs.first); result != 0) {
 			return result;
 		} else {
-			return SynthesizeThreeWay{}(lhs.second, rhs.second);
+			return CompareThreeWay{}(lhs.second, rhs.second);
 		}
 	}
 
@@ -162,13 +163,12 @@ namespace natl {
 		return !(lhs < rhs);
 	}
 	template< class T1, class T2, class U1, class U2 >
-	constexpr std::common_comparison_category_t<SynthesizeThreeWayResult<T1, U1>, SynthesizeThreeWayResult<T2, U2>>
+	constexpr CommonComparisonCategory<CompareThreeWayResult<T1, U1>, CompareThreeWayResult<T2, U2>>
 		operator<=>(const CompressedPair<T1, T2>& lhs, const CompressedPair<U1, U2>& rhs) noexcept {
-		if (auto result = SynthesizeThreeWay{}(lhs.first, rhs.first); result != 0) {
+		if (auto result = CompareThreeWay{}(lhs.first, rhs.first); result != 0) {
 			return result;
-		}
-		else {
-			return SynthesizeThreeWay{}(lhs.second, rhs.second);
+		} else {
+			return CompareThreeWay{}(lhs.second, rhs.second);
 		}
 	}
 

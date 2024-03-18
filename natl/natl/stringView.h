@@ -9,6 +9,7 @@
 #include "algorithm.h"
 #include "dataMovement.h"
 #include "commonHashs.h"
+#include "compare.h"
 
 //interface
 namespace natl {
@@ -521,13 +522,13 @@ namespace natl {
 
 		template<class LhsCharType, class RhsCharType>
 			requires(std::is_convertible_v<LhsCharType, RhsCharType>)
-		constexpr static std::strong_ordering compareSpaceship(const BaseStringView<const LhsCharType>& lhs, const BaseStringView<const RhsCharType>& rhs) noexcept {
+		constexpr static StrongOrdering compareSpaceship(const BaseStringView<const LhsCharType>& lhs, const BaseStringView<const RhsCharType>& rhs) noexcept {
 			const Size commonSize = min<Size>(lhs.size(), rhs.size());
 			const LhsCharType* lhsPtr = lhs.data();
 			const LhsCharType* lhsEndPtr = lhsPtr + commonSize;
 			const RhsCharType* rhsPtr = rhs.data();
 			for (; lhsPtr < lhsEndPtr; ++lhsPtr, ++rhsPtr) {
-				std::strong_ordering cmpResult = (*lhsPtr <=> static_cast<LhsCharType>(*rhsPtr));
+				StrongOrdering cmpResult = (*lhsPtr <=> static_cast<LhsCharType>(*rhsPtr));
 				if (cmpResult != 0) { return cmpResult; }
 			}
 			return lhs.size() <=> rhs.size();
@@ -535,12 +536,12 @@ namespace natl {
 
 		template<class LhsCharType, class RhsCharType>
 			requires(std::is_convertible_v<LhsCharType, RhsCharType>)
-		constexpr static std::strong_ordering compareSpaceship(const BaseStringView<LhsCharType>& lhs, const RhsCharType* rhs) noexcept {
+		constexpr static StrongOrdering compareSpaceship(const BaseStringView<LhsCharType>& lhs, const RhsCharType* rhs) noexcept {
 			const LhsCharType* lhsPtr = lhs.data();
 			const LhsCharType* lhsEndPtr = lhsPtr + lhs.size();
 			const RhsCharType* rhsPtr = rhs;
 			for (; lhsPtr < lhsEndPtr && *rhsPtr != RhsCharType(0); ++lhsPtr, ++rhsPtr) {
-				std::strong_ordering cmpResult = (*lhsPtr <=> static_cast<LhsCharType>(*rhsPtr));
+				StrongOrdering cmpResult = (*lhsPtr <=> static_cast<LhsCharType>(*rhsPtr));
 				if (cmpResult != 0) { return cmpResult; }
 			}
 			const bool lhsAtEnd = lhsPtr == lhsEndPtr;
@@ -809,40 +810,40 @@ namespace natl {
 			return lhs >= BaseStringView<const char>(rhs.begin(), rhs.size());
 		}
 
-		friend constexpr std::strong_ordering operator<=>(const BaseStringView& lhs, const BaseStringView& rhs) noexcept {
+		friend constexpr StrongOrdering operator<=>(const BaseStringView& lhs, const BaseStringView& rhs) noexcept {
 			return compareSpaceship<CharType, CharType>(lhs, rhs);
 		}
-		friend constexpr std::strong_ordering operator<=>(const BaseStringView& lhs, const BaseStringView<const CharType>& rhs) noexcept requires(isNotConst<CharType>) {
+		friend constexpr StrongOrdering operator<=>(const BaseStringView& lhs, const BaseStringView<const CharType>& rhs) noexcept requires(isNotConst<CharType>) {
 			return compareSpaceship<CharType, CharType>(lhs, rhs);
 		}
-		friend constexpr std::strong_ordering operator<=>(const BaseStringView& lhs, const CharType* rhs) noexcept {
+		friend constexpr StrongOrdering operator<=>(const BaseStringView& lhs, const CharType* rhs) noexcept {
 			return compareSpaceship<CharType, CharType>(lhs, rhs);
 		}
-		friend constexpr std::strong_ordering operator<=>(const BaseStringView& lhs, const CharType rhs) noexcept {
+		friend constexpr StrongOrdering operator<=>(const BaseStringView& lhs, const CharType rhs) noexcept {
 			return compareSpaceship<CharType, CharType>(lhs, BaseStringView(&rhs, 1));
 		}
 		template<class StringLike>
 			requires(IsStringViewLike<StringLike, CharType>)
-		friend constexpr std::strong_ordering operator<=>(const BaseStringView& lhs, const StringLike& rhs) noexcept {
+		friend constexpr StrongOrdering operator<=>(const BaseStringView& lhs, const StringLike& rhs) noexcept {
 			return compareSpaceship<CharType, CharType>(lhs, BaseStringView(rhs.data(), rhs.size()));
 		}
 		template<class StringLike>
 			requires(std::is_convertible_v<StringLike, BaseStringView<CharType>> && !IsStringViewLike<StringLike, CharType>)
-		friend constexpr std::strong_ordering operator<=>(const BaseStringView& lhs, const StringLike& rhs) noexcept {
+		friend constexpr StrongOrdering operator<=>(const BaseStringView& lhs, const StringLike& rhs) noexcept {
 			return compareSpaceship<CharType, CharType>(lhs, static_cast<BaseStringView<CharType>>(rhs));
 		}
-		friend constexpr std::strong_ordering operator<=>(const BaseStringView& lhs, const BaseStringView<const char>& rhs) noexcept requires(std::is_same_v<std::decay_t<CharType>, Utf32>) {
+		friend constexpr StrongOrdering operator<=>(const BaseStringView& lhs, const BaseStringView<const char>& rhs) noexcept requires(std::is_same_v<std::decay_t<CharType>, Utf32>) {
 			return compareSpaceship<CharType, char>(lhs, rhs);
 		}
-		friend constexpr std::strong_ordering operator<=>(const BaseStringView& lhs, const char* rhs) noexcept requires(std::is_same_v<std::decay_t<CharType>, Utf32>) {
+		friend constexpr StrongOrdering operator<=>(const BaseStringView& lhs, const char* rhs) noexcept requires(std::is_same_v<std::decay_t<CharType>, Utf32>) {
 			return compareSpaceship<CharType, char>(lhs, rhs);
 		}
-		friend constexpr std::strong_ordering operator<=>(const BaseStringView& lhs, const char rhs) noexcept requires(std::is_same_v<std::decay_t<CharType>, Utf32>) {
+		friend constexpr StrongOrdering operator<=>(const BaseStringView& lhs, const char rhs) noexcept requires(std::is_same_v<std::decay_t<CharType>, Utf32>) {
 			return compareSpaceship<CharType, char>(lhs, BaseStringView<const char>(&rhs, 1));
 		}
 		template<class StringLike>
 			requires(IsStringViewLike<StringLike, char>)
-		friend constexpr std::strong_ordering operator<=>(const BaseStringView& lhs, const StringLike& rhs) noexcept requires(std::is_same_v<std::decay_t<CharType>, Utf32>) {
+		friend constexpr StrongOrdering operator<=>(const BaseStringView& lhs, const StringLike& rhs) noexcept requires(std::is_same_v<std::decay_t<CharType>, Utf32>) {
 			return compareSpaceship<CharType, char>(lhs, BaseStringView<const char>(rhs.data(), rhs.size()));
 		}
 		friend constexpr bool operator<=>(const BaseStringView& lhs, std::initializer_list<CharType> rhs) noexcept {

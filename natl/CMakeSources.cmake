@@ -9,14 +9,17 @@ natl/batchPool.h
 natl/bitArray.h
 natl/colony.h
 natl/commonHashs.h
+natl/compare.h
 natl/compilerDependent.h
 natl/container.h
+natl/coroutines.h
 natl/dataMovement.h
 natl/dynArray.h
 natl/error.h
 natl/expect.h
 natl/flatHashMap.h
 natl/functional.h
+natl/generator.h
 natl/hash.h
 natl/heapArray.h
 natl/iterators.h
@@ -41,6 +44,7 @@ natl/stringLiteral.h
 natl/stringView.h
 natl/test.h
 natl/timer.h
+natl/tuple.h
 natl/typeTraits.h
 natl/units.h
 natl/utility.h

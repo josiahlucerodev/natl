@@ -5,6 +5,7 @@
 #include "typeTraits.h"
 #include "iterators.h"
 #include "algorithm.h"
+#include "compare.h"
 
 //interface 
 namespace natl {
@@ -70,10 +71,10 @@ namespace natl {
 
 	template<class LhsIter, class RhsIter>
 		requires(IsIterPtr<LhsIter>&& IsIterPtr<RhsIter>&& std::is_convertible_v<typename IterPtrTraits<LhsIter>::value_type, typename IterPtrTraits<RhsIter>::value_type>)
-	constexpr std::strong_ordering lexicographicalCompareSpaceship(LhsIter lhsIter, const Size lhsSize, RhsIter rhsIter, const Size rhsSize) noexcept {
+	constexpr StrongOrdering lexicographicalCompareSpaceship(LhsIter lhsIter, const Size lhsSize, RhsIter rhsIter, const Size rhsSize) noexcept {
 		const Size commonSize = min<Size>(lhsSize, rhsSize);
 		for (Size i = 0; i < commonSize; ++lhsIter, ++rhsIter) {
-			std::strong_ordering cmpResult = (*lhsIter <=> static_cast<typename IterPtrTraits<LhsIter>::value_type>(*rhsIter));
+			StrongOrdering cmpResult = (*lhsIter <=> static_cast<typename IterPtrTraits<LhsIter>::value_type>(*rhsIter));
 			if (cmpResult != 0) { return cmpResult; }
 		}
 		return lhsSize <=> rhsSize;

@@ -1170,20 +1170,20 @@ namespace natl {
 			return lhs.toArrayView() >= rhs;
 		}
 
-		friend constexpr std::strong_ordering operator<=>(const SmallDynArray& lhs, const SmallDynArray& rhs) noexcept {
+		friend constexpr StrongOrdering operator<=>(const SmallDynArray& lhs, const SmallDynArray& rhs) noexcept {
 			return lhs.toArrayView() <=> rhs.toArrayView();
 		}
-		friend constexpr std::strong_ordering operator<=>(const SmallDynArray& lhs, const value_type rhs) noexcept {
+		friend constexpr StrongOrdering operator<=>(const SmallDynArray& lhs, const value_type rhs) noexcept {
 			return lhs.toArrayView() <=> rhs;
 		}
 		template<class ArrayViewLike>
 			requires(IsArrayViewLike<ArrayViewLike, const value_type>)
-		friend constexpr std::strong_ordering operator<=>(const SmallDynArray& lhs, const ArrayViewLike& rhs) noexcept {
+		friend constexpr StrongOrdering operator<=>(const SmallDynArray& lhs, const ArrayViewLike& rhs) noexcept {
 			return lhs.toArrayView() <=> rhs;
 		}
 		template<class ArrayViewLike>
 			requires(std::is_convertible_v<ArrayViewLike, ArrayView<const value_type>> && !IsArrayViewLike<ArrayViewLike, const value_type>)
-		friend constexpr std::strong_ordering operator<=>(const SmallDynArray& lhs, const ArrayViewLike& rhs) noexcept {
+		friend constexpr StrongOrdering operator<=>(const SmallDynArray& lhs, const ArrayViewLike& rhs) noexcept {
 			return lhs.toArrayView() <=> rhs;
 		}
 		friend constexpr bool operator<=>(const SmallDynArray& lhs, std::initializer_list<value_type> rhs) noexcept {

@@ -13,6 +13,7 @@
 #include "peramaterPackOperations.h"
 #include "dataMovement.h"
 #include "lexicographicalCompare.h"
+#include "compare.h"
 
 //interface
 namespace natl {
@@ -340,23 +341,23 @@ namespace natl {
 			return lhs >= ArrayView<const DataType>(rhs.begin(), rhs.size());
 		}
 
-		friend constexpr std::strong_ordering operator<=>(const ArrayView& lhs, const ArrayView& rhs) noexcept {
+		friend constexpr StrongOrdering operator<=>(const ArrayView& lhs, const ArrayView& rhs) noexcept {
 			return lexicographicalCompareSpaceship<const DataType*, const DataType*>(lhs.data(), lhs.size(), rhs.data(), rhs.size());
 		}
-		friend constexpr std::strong_ordering operator<=>(const ArrayView& lhs, const ArrayView<const DataType>& rhs) noexcept requires(isNotConst<DataType>) {
+		friend constexpr StrongOrdering operator<=>(const ArrayView& lhs, const ArrayView<const DataType>& rhs) noexcept requires(isNotConst<DataType>) {
 			return lexicographicalCompareSpaceship<const DataType*, const DataType*>(lhs.data(), lhs.size(), rhs.data(), rhs.size());
 		}
-		friend constexpr std::strong_ordering operator<=>(const ArrayView& lhs, const DataType rhs) noexcept {
+		friend constexpr StrongOrdering operator<=>(const ArrayView& lhs, const DataType rhs) noexcept {
 			return lhs <=> ArrayView<const DataType>(&rhs, 1);
 		}
 		template<class ArrayViewLike>
 			requires(IsArrayViewLike<ArrayViewLike, const DataType>)
-		friend constexpr std::strong_ordering operator<=>(const ArrayView& lhs, const ArrayViewLike& rhs) noexcept {
+		friend constexpr StrongOrdering operator<=>(const ArrayView& lhs, const ArrayViewLike& rhs) noexcept {
 			return lhs <=> ArrayView<const DataType>(rhs.data(), rhs.size());
 		}
 		template<class ArrayViewLike>
 			requires(std::is_convertible_v<ArrayViewLike, ArrayView<const DataType>> && !IsArrayViewLike<ArrayViewLike, const DataType>)
-		friend constexpr std::strong_ordering operator<=>(const ArrayView& lhs, const ArrayViewLike& rhs) noexcept {
+		friend constexpr StrongOrdering operator<=>(const ArrayView& lhs, const ArrayViewLike& rhs) noexcept {
 			return lhs <=> static_cast<const ArrayView<DataType>>(rhs);
 		}
 		friend constexpr bool operator<=>(const ArrayView& lhs, std::initializer_list<DataType> rhs) noexcept {

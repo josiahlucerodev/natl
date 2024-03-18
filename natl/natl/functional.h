@@ -1396,7 +1396,31 @@ namespace natl {
 		}
 
 	};
+
+	namespace impl {
+		template<typename Functor, typename... ArgTypes>
+		auto tryInvoke(Functor&& functor, ArgTypes&&... args) -> decltype(natl::forward<Functor>(functor)(natl::forward<ArgTypes>(args)...)) {}
+	}
+
+	template<typename...> struct InvokeResultType;
+	template<typename Functor, typename... ArgTypes>
+	struct InvokeResultType<Functor(ArgTypes...)> {
+		using type = decltype(impl::tryInvoke(declval<Functor>(), declval<ArgTypes>()...));
+	};
+	template<typename Functor> using InvokeResult = typename InvokeResultType<Functor>::type;
+
+	template<typename Functor, typename... ArgTypes>
+	struct InvokeResultWithArgsType {
+		using type = decltype(impl::tryInvoke(declval<Functor>(), declval<ArgTypes>()...));
+	};
+	template<typename Functor, typename... ArgTypes> using InvokeResultWithArgs = typename InvokeResultWithArgsType<Functor, ArgTypes...>::type;
 	
+	template<class Functor, typename... ArgTypes>
+	constexpr InvokeResultWithArgs<Functor, ArgTypes...> invokeFunction(Functor&& functor, ArgTypes&&... args) noexcept {
+		return natl::forward<Functor>(functor)(natl::forward<ArgTypes>(args)...);
+	}
+
+
 	template<class Type>
 	struct CompareLess { 
 		constexpr bool operator()(const Type& lhs, const Type& rhs) const noexcept { return lhs < rhs; }

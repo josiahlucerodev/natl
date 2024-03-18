@@ -140,3 +140,6 @@ namespace natl {
 #undef NATL_UNREACHABLE_DEFINE
 	}
 }
+
+
+#define NATL_TEXT(a) #a
