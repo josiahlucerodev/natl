@@ -19,6 +19,7 @@ natl/error.h
 natl/expect.h
 natl/flatHashMap.h
 natl/functional.h
+natl/functionCache.h
 natl/generator.h
 natl/hash.h
 natl/heapArray.h

@@ -497,6 +497,8 @@ namespace natl {
 		constexpr bool isEmpty() const noexcept { return functionBase.isEmpty(); }
 		constexpr bool isNotEmpty() const noexcept { return functionBase.isNotEmpty(); }
 		explicit constexpr operator bool() const noexcept { return bool(functionBase); }
+		constexpr function_base& getFunctionBase() noexcept { return functionBase; }
+		constexpr const function_base& getFunctionBase() const noexcept { return functionBase; }
 
 		//calling
 		constexpr ReturnType invoke(ArgTypes... args) noexcept {
@@ -581,6 +583,8 @@ namespace natl {
 		constexpr bool isEmpty() const noexcept { return functionBase.isEmpty(); }
 		constexpr bool isNotEmpty() const noexcept { return functionBase.isNotEmpty(); }
 		explicit constexpr operator bool() const noexcept { return bool(functionBase); }
+		constexpr function_base& getFunctionBase() noexcept { return functionBase; }
+		constexpr const function_base& getFunctionBase() const noexcept { return functionBase; }
 
 		//calling
 		constexpr ReturnType invoke(ArgTypes... args) const noexcept {
@@ -719,6 +723,8 @@ namespace natl {
 		constexpr bool isEmpty() const noexcept { return functionBase.isEmpty(); }
 		constexpr bool isNotEmpty() const noexcept { return functionBase.isNotEmpty(); }
 		explicit constexpr operator bool() const noexcept { return bool(functionBase); }
+		constexpr function_base& getFunctionBase() noexcept { return functionBase; }
+		constexpr const function_base& getFunctionBase() const noexcept { return functionBase; }
 
 		//calling
 		constexpr ReturnType invoke(ArgTypes... args) noexcept {
@@ -831,6 +837,8 @@ namespace natl {
 		constexpr bool isEmpty() const noexcept { return functionBase.isEmpty(); }
 		constexpr bool isNotEmpty() const noexcept { return functionBase.isNotEmpty(); }
 		explicit constexpr operator bool() const noexcept { return bool(functionBase); }
+		constexpr function_base& getFunctionBase() noexcept { return functionBase; }
+		constexpr const function_base& getFunctionBase() const noexcept { return functionBase; }
 
 		//calling
 		constexpr ReturnType invoke(ArgTypes... args) const noexcept {

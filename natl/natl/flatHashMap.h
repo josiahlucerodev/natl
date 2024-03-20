@@ -137,6 +137,7 @@ namespace natl {
 	public:
 		using key_type = Key;
 		using map_type = DataType;
+		using entry_type = Entry;
 
 		using allocator_type = Alloc;
 
@@ -169,17 +170,17 @@ namespace natl {
 		size_type inSize;
 		DynamicArrayType table;
 	public:
-		constexpr FlatHashMapCustomDynArray() : inSize(0), table() {}
-		constexpr FlatHashMapCustomDynArray(const FlatHashMapCustomDynArray& src) : inSize{}, table() {
+		constexpr FlatHashMapCustomDynArray() noexcept : inSize(0), table() {}
+		constexpr FlatHashMapCustomDynArray(const FlatHashMapCustomDynArray& src) noexcept : inSize{}, table() {
 			inSize = src.inSize;
 			table = src.table;
 		}
-		constexpr FlatHashMapCustomDynArray(FlatHashMapCustomDynArray&& src) : inSize{}, table() {
+		constexpr FlatHashMapCustomDynArray(FlatHashMapCustomDynArray&& src) noexcept : inSize{}, table() {
 			inSize = src.inSize;
 			table = move(src.table);
 		}
 
-		constexpr ~FlatHashMapCustomDynArray() = default;
+		constexpr ~FlatHashMapCustomDynArray() noexcept = default;
 
 		constexpr size_type size() const noexcept { return inSize; }
 		constexpr size_type count() const noexcept { return inSize; }
@@ -210,7 +211,7 @@ namespace natl {
 		constexpr const_reverse_iterator crend() const noexcept { return const_reverse_iterator(beginPtr(), beginPtr(), endPtr()); }
 
 	public:
-		constexpr iterator insert(const Key& key, const DataType& data) {
+		constexpr iterator insert(const Key& key, const DataType& data) noexcept {
 			resizeAndRehash();
 
 			pointer dataLocation = nullptr;
@@ -232,7 +233,7 @@ namespace natl {
 			return iterator(dataLocation, beginPtr(), endPtr());
 		};
 
-		constexpr iterator insert(Key&& key, DataType&& data) {
+		constexpr iterator insert(Key&& key, DataType&& data) noexcept {
 			resizeAndRehash();
 
 			pointer dataLocation = nullptr;
@@ -257,7 +258,8 @@ namespace natl {
 			return iterator(dataLocation, beginPtr(), endPtr());
 		};
 
-		constexpr iterator findIterator(const Key& key) {
+		constexpr iterator findIterator(const Key& key) noexcept {
+			if (size() == 0) { return end(); }
 			size_type index = Hash::hash(key) % capacity();
 			size_type originalIndex = index;
 
@@ -274,7 +276,8 @@ namespace natl {
 			return end();
 		}
 
-		constexpr const_iterator findIterator(const Key& key) const {
+		constexpr const_iterator findIterator(const Key& key) const noexcept {
+			if (size() == 0) { return end(); }
 			size_type index = Hash::hash(key) % capacity();
 			size_type originalIndex = index;
 
@@ -291,7 +294,8 @@ namespace natl {
 			return end();
 		}
 
-		constexpr optional_pointer find(const Key& key) {
+		constexpr optional_pointer find(const Key& key) noexcept {
+			if (size() == 0) { return optional_pointer(natl::OptionEmpty()); }
 			size_type index = Hash::hash(key) % capacity();
 			size_type originalIndex = index;
 
@@ -308,7 +312,8 @@ namespace natl {
 			return optional_pointer(natl::OptionEmpty()); 
 		}
 
-		constexpr optional_const_pointer find(const Key& key) const {
+		constexpr optional_const_pointer find(const Key& key) const noexcept {
+			if (size() == 0) { return optional_pointer(natl::OptionEmpty()); }
 			size_type index = Hash::hash(key) % capacity();
 			size_type originalIndex = index;
 
@@ -325,10 +330,10 @@ namespace natl {
 			return optional_const_pointer();
 		}
 
-		bool contains(const Key& key) const {
+		bool contains(const Key& key) const noexcept {
 			return find(key).hasValue();
 		}
-		constexpr void resizeAndRehash() {
+		constexpr void resizeAndRehash() noexcept {
 			 if (inSize >= static_cast<size_type>(static_cast<f64>(capacity()) * load_factor)) {
 				if (inSize < static_cast<size_type>(static_cast<f64>(table.capacity()) * load_factor)) {
 					table.resize(table.capacity());
@@ -338,7 +343,7 @@ namespace natl {
 				resizeAndRehash((capacity() + 10) * 2);
 			}
 		}
-		constexpr void resizeAndRehash(const size_type newCapacity) {
+		constexpr void resizeAndRehash(const size_type newCapacity) noexcept {
 			if (newCapacity <= capacity()) { return; }
 
 			DynamicArrayType newTable(newCapacity);
@@ -357,23 +362,23 @@ namespace natl {
 			table = move(newTable);
 		}
 
-		constexpr void clear() {
+		constexpr void clear() noexcept {
 			table.clear();
 			inSize = 0;
 		}
 
-		constexpr void reserve(const size_type& newCapacity) {
+		constexpr void reserve(const size_type& newCapacity) noexcept {
 			resizeAndRehash(newCapacity);
 		}
 
-		constexpr FlatHashMapCustomDynArray& operator=(FlatHashMapCustomDynArray& src) {
+		constexpr FlatHashMapCustomDynArray& operator=(FlatHashMapCustomDynArray& src) noexcept {
 			table = src.table;
 			inSize = src.inSize;
 
 			return *this;
 		}
 
-		constexpr FlatHashMapCustomDynArray& operator=(FlatHashMapCustomDynArray&& src) {
+		constexpr FlatHashMapCustomDynArray& operator=(FlatHashMapCustomDynArray&& src) noexcept {
 			table = move(src.table);
 			inSize = src.inSize;
 
