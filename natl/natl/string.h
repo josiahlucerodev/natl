@@ -63,23 +63,26 @@ namespace natl {
 	private:
 		constexpr void setAsSmallString() noexcept { 
 			if constexpr (enableSmallString) {
-				stringSizeAndSmallStringFlag = setNthBitToZero(stringSizeAndSmallStringFlag, 63); 
+				stringSizeAndSmallStringFlag = setNthBitToZero(stringSizeAndSmallStringFlag, TypeBitSize<size_type> - 1);
 			}
 		}
 		constexpr void setAsNotSmallString() noexcept { 
 			if constexpr(enableSmallString) {
-				stringSizeAndSmallStringFlag = setNthBitToOne(stringSizeAndSmallStringFlag, 63);
+				stringSizeAndSmallStringFlag = setNthBitToOne(stringSizeAndSmallStringFlag, TypeBitSize<size_type> - 1);
 			}
 		}
+		constexpr static size_type getMask() noexcept {
+			return setNthBitToZero(~size_type(0), TypeBitSize<size_type> - 1);
+		}
 		constexpr void setSize(const size_type newSize) noexcept {
-			stringSizeAndSmallStringFlag = (stringSizeAndSmallStringFlag & ~0x7FFFFFFFFFFFFFFFULL) | newSize;
+			stringSizeAndSmallStringFlag = (stringSizeAndSmallStringFlag & ~getMask()) | newSize;
 		}
 	public:
 		constexpr bool isSmallString() const noexcept { 
 			if (!enableSmallString) {
 				return false;
 			} else {
-				return !(stringSizeAndSmallStringFlag & ~0x7FFFFFFFFFFFFFFFULL);
+				return !(stringSizeAndSmallStringFlag & ~getMask());
 			}
 		}
 		constexpr bool isNotSmallString() const noexcept { 
@@ -109,9 +112,9 @@ namespace natl {
 
 		constexpr size_type capacity() const noexcept { return isSmallString() ? smallStringCapacity() : stringCapacity; };
 
-		constexpr size_type size() const noexcept { return stringSizeAndSmallStringFlag & 0x7FFFFFFFFFFFFFFFULL; }
+		constexpr size_type size() const noexcept { return stringSizeAndSmallStringFlag & getMask(); }
 		constexpr size_type length() const noexcept { return size(); };
-		constexpr size_type max_size() const noexcept { return 0x7FFFFFFFFFFFFFFFULL; };
+		constexpr size_type max_size() const noexcept { return getMask(); };
 
 		constexpr const_pointer data() const noexcept {
 			return isSmallString() ? smallStringLocation() : stringPtr;

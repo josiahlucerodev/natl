@@ -48,7 +48,7 @@ namespace natl {
 	constexpr void makeHeap(RandomIter first, RandomIter last, Compare compare = Compare()) noexcept{
 		const Size size = iterDistance<RandomIter>(first, last);
 		const Size startIndex = (size / 2) - 1;
-		for (SignedSize index = static_cast<SignedSize>(startIndex); index >= SignedSize(0); index--) {
+		for (SSize index = static_cast<SSize>(startIndex); index >= SSize(0); index--) {
 			impl::heapify<RandomIter, Compare>(first, size, static_cast<Size>(index), compare);
 		}
 	}

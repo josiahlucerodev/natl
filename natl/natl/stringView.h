@@ -43,7 +43,7 @@ namespace natl {
 		using const_pointer = const value_type*;
 		using optional_pointer = Option<value_type*>;
 		using optional_const_pointer = Option<const value_type*>;
-		using difference_value_type = std::ptrdiff_t;
+		using difference_value_type = PtrDiff;
 		using size_type = Size;
 
 		using iterator = RandomAccessIterator<value_type>;
@@ -119,7 +119,7 @@ namespace natl {
 		//capacity 
 		constexpr size_type size() const noexcept { return stringLength; }
 		constexpr size_type length() const noexcept { return stringLength; }
-		constexpr size_type max_size() const noexcept { return 0xFFFFFFFFFFFFFFFF; };
+		constexpr size_type max_size() const noexcept { return ~size_type(1); };
 		constexpr bool empty() const noexcept { return !dataPtr || stringLength == 0; }
 		constexpr bool isEmpty() const noexcept { return empty(); }
 		constexpr bool isNotEmpty() const noexcept { return !empty(); }

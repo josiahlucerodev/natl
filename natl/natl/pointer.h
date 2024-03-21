@@ -216,7 +216,7 @@ namespace natl {
 
 		//special
 		constexpr Size hash() const noexcept {
-			return static_cast<Size>(std::bit_cast<UIntOfByteSize_t<sizeof(pointer)>, pointer>(dataPtr));
+			return std::bit_cast<Size, pointer>(dataPtr);
 		}
 	};
 

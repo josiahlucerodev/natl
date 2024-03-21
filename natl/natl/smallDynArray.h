@@ -63,23 +63,26 @@ namespace natl {
 
 		constexpr void setAsSmallArray() noexcept {
 			if (enableSmallArray) {
-				arraySizeAndSmallArrayFlag = setNthBitToZero(arraySizeAndSmallArrayFlag, 63);
+				arraySizeAndSmallArrayFlag = setNthBitToZero(arraySizeAndSmallArrayFlag, TypeBitSize<size_type> -1);
 			}
 		}
 		constexpr void setAsNotSmallArray() noexcept {
 			if (enableSmallArray) {
-				arraySizeAndSmallArrayFlag = setNthBitToOne(arraySizeAndSmallArrayFlag, 63);
+				arraySizeAndSmallArrayFlag = setNthBitToOne(arraySizeAndSmallArrayFlag, TypeBitSize<size_type> -1);
 			}
 		}
+		constexpr static size_type getMask() noexcept {
+			return setNthBitToZero(~size_type(0), TypeBitSize<size_type> -1);
+		}
 		constexpr void setSize(const size_type newSize) {
-			arraySizeAndSmallArrayFlag = (arraySizeAndSmallArrayFlag & ~0x7FFFFFFFFFFFFFFFULL) | newSize;
+			arraySizeAndSmallArrayFlag = (arraySizeAndSmallArrayFlag & ~getMask()) | newSize;
 		}
 	public:
 		constexpr bool isSmallArray() const noexcept {
 			if (!enableSmallArray) {
 				return false;
 			} else {
-				return !(arraySizeAndSmallArrayFlag & ~0x7FFFFFFFFFFFFFFFULL);
+				return !(arraySizeAndSmallArrayFlag & ~getMask());
 			}
 		}
 		constexpr bool isNotSmallArray() const noexcept {
@@ -109,8 +112,8 @@ namespace natl {
 		}
 
 		constexpr size_type capacity() const noexcept { return  isSmallArray() ? smallArrayCapacity() : arrayCapacity; };
-		constexpr size_type size() const noexcept { return arraySizeAndSmallArrayFlag & 0x7FFFFFFFFFFFFFFFULL; }
-		constexpr size_type max_size() const noexcept { return 0x7FFFFFFFFFFFFFFFULL; };
+		constexpr size_type size() const noexcept { return arraySizeAndSmallArrayFlag & getMask(); }
+		constexpr size_type max_size() const noexcept { return getMask(); };
 
 		constexpr const_pointer data() const noexcept {
 			return isSmallArray() ? smallArrayLocation() : arrayDataPtr;

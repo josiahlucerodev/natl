@@ -459,7 +459,7 @@ namespace natl {
 		const char hexDigits[] = "0123456789ABCDEF";
 
 		ui64 temp = static_cast<ui64>(number);
-		ui64 numberOfDigits = 0;
+		Size numberOfDigits = 0;
 		while (temp != 0) {
 			temp >>= 4;
 			numberOfDigits++;

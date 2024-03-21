@@ -6,8 +6,8 @@
 //interface 
 namespace natl {
 	//fnv1a
-	constexpr Size fnv1aOffsetBasis = 14695981039346656037ULL;
-	constexpr Size fnv1aPrime = 1099511628211ULL;
+	constexpr inline Size fnv1aOffsetBasis = Size(14695981039346656037ULL);
+	constexpr inline Size fnv1aPrime = Size(1099511628211ULL);
 	constexpr Size fnv1aHashCstr(const AssciCode* strPtr, Size hash = fnv1aOffsetBasis) noexcept {
 		while (*strPtr != '\0') {
 			hash ^= static_cast<Size>(*strPtr++);

@@ -388,14 +388,11 @@ namespace natl {
         return isConstantEvaluated() || !IsTriviallyDestructible<DataType>;
     }
 
+
     template<typename DataType>
-    consteval Size typeBitSize() noexcept {
-        return sizeof(DataType) * Size(8);
-    }
+    constexpr static Size TypeBitSize = sizeof(DataType) * Size(8);
     template<typename DataType>
-    consteval Size typeByteSize() noexcept {
-        return sizeof(DataType) * Size(8);
-    }
+    constexpr static Size TypeByteSize = sizeof(DataType);
 
     enum class AllocationMoveAdapaterRequireCopy : bool {
         False = false,

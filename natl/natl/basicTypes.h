@@ -23,9 +23,7 @@ namespace natl {
 
 	using UIntPtrSized = std::conditional_t<sizeof(void*) == 4, ui32, ui64>;
 
-	using Size = ui64;
-	using SSize = i64;
-	using SignedSize = i64;
+	using Size = std::size_t;
 	using PtrDiff = std::ptrdiff_t;
 
 	using Char = char;
@@ -93,20 +91,22 @@ namespace natl {
 	static_assert(sizeof(f32) == 4, "natl: f32 should be 4 bytes");
 	static_assert(sizeof(f64) == 8, "natl: f64 should be 8 bytes");
 
-	template<Size ByteSize> struct IntOfByteSize;
-	template<> struct IntOfByteSize<sizeof(i8)> { using type = i8; };
-	template<> struct IntOfByteSize<sizeof(i16)> { using type = i16; };
-	template<> struct IntOfByteSize<sizeof(i32)> { using type = i32; };
-	template<> struct IntOfByteSize<sizeof(i64)> { using type = i64; };
+	template<Size ByteSize> struct IntOfByteSizeType;
+	template<> struct IntOfByteSizeType<sizeof(i8)> { using type = i8; };
+	template<> struct IntOfByteSizeType<sizeof(i16)> { using type = i16; };
+	template<> struct IntOfByteSizeType<sizeof(i32)> { using type = i32; };
+	template<> struct IntOfByteSizeType<sizeof(i64)> { using type = i64; };
 
-	template<Size ByteSize> struct UIntOfByteSize;
-	template<> struct UIntOfByteSize<sizeof(ui8)> { using type = ui8; };
-	template<> struct UIntOfByteSize<sizeof(ui16)> { using type = ui16; };
-	template<> struct UIntOfByteSize<sizeof(ui32)> { using type = ui32; };
-	template<> struct UIntOfByteSize<sizeof(ui64)> { using type = ui64; };
+	template<Size ByteSize> struct UIntOfByteSizeType;
+	template<> struct UIntOfByteSizeType<sizeof(ui8)> { using type = ui8; };
+	template<> struct UIntOfByteSizeType<sizeof(ui16)> { using type = ui16; };
+	template<> struct UIntOfByteSizeType<sizeof(ui32)> { using type = ui32; };
+	template<> struct UIntOfByteSizeType<sizeof(ui64)> { using type = ui64; };
 
-	template<Size ByteSize> using IntOfByteSize_t = typename IntOfByteSize<ByteSize>::type;
-	template<Size ByteSize> using UIntOfByteSize_t = typename UIntOfByteSize<ByteSize>::type;
+	template<Size ByteSize> using IntOfByteSize = typename IntOfByteSizeType<ByteSize>::type;
+	template<Size ByteSize> using UIntOfByteSize = typename UIntOfByteSizeType<ByteSize>::type;
+
+	using SSize = IntOfByteSize<sizeof(Size)>;
 }
 
 constexpr natl::i8 operator""_natl_i8(unsigned long long value) noexcept { return static_cast<natl::i8>(value); }
