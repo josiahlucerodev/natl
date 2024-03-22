@@ -5,6 +5,7 @@
 #include <string_view>
 
 //own
+#include "bits.h"
 #include "basicTypes.h"
 #include "allocator.h"
 #include "iterators.h"
@@ -13,9 +14,18 @@
 #include "container.h"
 #include "stringView.h"
 #include "arrayView.h"
+#include "limits.h"
 
 //interface 
 namespace natl {
+	template<class CharType>
+	struct BaseStringBaseMembersRef {
+	public:
+		Size stringSizeAndSmallStringFlag;
+		CharType* stringPtr;
+		Size stringCapacity;
+	};
+
 	template<class CharType, Size bufferSize, class Alloc = DefaultAllocator<CharType>>
 		requires(IsAllocator<Alloc>)
 	class BaseString {
@@ -49,10 +59,32 @@ namespace natl {
 		constexpr static bool triviallyMoveConstructedable = false;
 
 		constexpr static bool enableSmallString = true;
+	private:
+		constexpr static bool enableIncreasedSmallBufferSize = sizeof(BaseStringBaseMembersRef<CharType>) + bufferSize <= 64;
+		constexpr static Size increasedSmallBufferForCharSize = sizeof(size_type) - sizeof(ui8);
+		constexpr static Size standardSmallBufferSize = sizeof(size_type) - sizeof(ui8);
+		constexpr static Size increasedSizeToSmallBuffer = (enableIncreasedSmallBufferSize && sizeof(CharType) == 1) ? increasedSmallBufferForCharSize : 0;
+	public:
+		constexpr static Size smallBufferSize = ((sizeof(CharType*) + sizeof(size_type) + bufferSize) / sizeof(CharType)) + increasedSizeToSmallBuffer;
 
 		static const size_type npos = size_type(-1);
 
 		using ConstBaseStringView = BaseStringView<const value_type>;
+
+
+		/*
+		in increased small buffer state
+			if is samllString()
+				stringSizeAndSmallStringFlag format is 
+				1 bit small string flag | 7 bits size storage | (sizeof(size_type) * 8) - 8 bits additional small buffer storage 
+			else  
+				stringSizeAndSmallStringFlag format is
+				1 bit small string flag | (sizeof(size_type) * 8) - 1 bits is size storage 
+				
+		not in increased small buffer state 
+			stringSizeAndSmallStringFlag format is
+			1 bit small string flag | (sizeof(size_type) * 8) - 1 bits is size storage 
+		*/
 	private:
 		size_type stringSizeAndSmallStringFlag; 
 		pointer stringPtr;
@@ -63,23 +95,30 @@ namespace natl {
 	private:
 		constexpr void setAsSmallString() noexcept { 
 			if constexpr (enableSmallString) {
-				stringSizeAndSmallStringFlag = setNthBitToZero(stringSizeAndSmallStringFlag, TypeBitSize<size_type> - 1);
+				stringSizeAndSmallStringFlag = setNthBitToZero<size_type>(stringSizeAndSmallStringFlag, TypeBitSize<size_type> - 1);
 			}
 		}
 		constexpr void setAsNotSmallString() noexcept { 
 			if constexpr(enableSmallString) {
-				stringSizeAndSmallStringFlag = setNthBitToOne(stringSizeAndSmallStringFlag, TypeBitSize<size_type> - 1);
+				stringSizeAndSmallStringFlag = setNthBitToOne<size_type>(stringSizeAndSmallStringFlag, TypeBitSize<size_type> - 1);
 			}
 		}
 		constexpr static size_type getMask() noexcept {
-			return setNthBitToZero(~size_type(0), TypeBitSize<size_type> - 1);
+			return setNthBitToZero<size_type>(~size_type(0), TypeBitSize<size_type> - 1);
 		}
 		constexpr void setSize(const size_type newSize) noexcept {
-			stringSizeAndSmallStringFlag = (stringSizeAndSmallStringFlag & ~getMask()) | newSize;
+			if constexpr (enableIncreasedSmallBufferSize && TypeByteSize<CharType> == 1) {
+				constexpr size_type increasedBufferMask = ~static_cast<size_type>(0xff);
+				constexpr size_type standardMaskInverted = ~getMask();
+				const size_type mask = isSmallString() ? increasedBufferMask : standardMaskInverted;
+				stringSizeAndSmallStringFlag = (stringSizeAndSmallStringFlag & mask) | newSize;
+			} else {
+				stringSizeAndSmallStringFlag = (stringSizeAndSmallStringFlag & ~getMask()) | newSize;
+			}
 		}
 	public:
 		constexpr bool isSmallString() const noexcept { 
-			if (!enableSmallString) {
+			if constexpr (!enableSmallString) {
 				return false;
 			} else {
 				return !(stringSizeAndSmallStringFlag & ~getMask());
@@ -92,27 +131,48 @@ namespace natl {
 			if (isConstantEvaluated() || !enableSmallString) {
 				return bufferSize;
 			} else {
-				return bufferSize + ((sizeof(stringPtr) + sizeof(stringCapacity)) / sizeof(value_type));
+				if constexpr (enableIncreasedSmallBufferSize && TypeByteSize<CharType> == 1) {
+					return bufferSize + sizeof(stringPtr) + sizeof(stringCapacity) + (sizeof(Size) - sizeof(ui8));
+				} else {
+					return bufferSize + ((sizeof(stringPtr) + sizeof(stringCapacity)) / sizeof(value_type));
+				}
 			}
 		}
 		constexpr const_pointer smallStringLocation() const noexcept {
 			if (isConstantEvaluated()) {
 				return smallStringStorage;
 			} else {
-				return reinterpret_cast<const_pointer>(reinterpret_cast<const ui8*>(this) + sizeof(stringSizeAndSmallStringFlag));
+				if constexpr (enableIncreasedSmallBufferSize && TypeByteSize<CharType> == 1) {
+					return reinterpret_cast<const_pointer>(reinterpret_cast<const ui8*>(this) + sizeof(CharType));
+				} else {
+					return reinterpret_cast<const_pointer>(reinterpret_cast<const ui8*>(this) + sizeof(stringSizeAndSmallStringFlag));
+				}
 			}
 		}
 		constexpr pointer smallStringLocation() noexcept {
 			if (isConstantEvaluated()) {
 				return smallStringStorage;
 			} else {
-				return reinterpret_cast<pointer>(reinterpret_cast<ui8*>(this) + sizeof(stringSizeAndSmallStringFlag));
+				if constexpr (enableIncreasedSmallBufferSize && TypeByteSize<CharType> == 1) {
+					return reinterpret_cast<pointer>(reinterpret_cast<ui8*>(this) + sizeof(CharType));
+				} else {
+					return reinterpret_cast<pointer>(reinterpret_cast<ui8*>(this) + sizeof(stringSizeAndSmallStringFlag));
+				}
 			}
 		}
 
 		constexpr size_type capacity() const noexcept { return isSmallString() ? smallStringCapacity() : stringCapacity; };
 
-		constexpr size_type size() const noexcept { return stringSizeAndSmallStringFlag & getMask(); }
+		constexpr size_type size() const noexcept {
+			if constexpr (enableIncreasedSmallBufferSize && TypeByteSize<CharType> == 1) {
+				constexpr size_type increasedBufferMask = static_cast<size_type>(0xff);
+				constexpr size_type standardMask = getMask();
+				const size_type mask = isSmallString() ? increasedBufferMask : standardMask;
+				return stringSizeAndSmallStringFlag & mask;
+			} else {
+				return stringSizeAndSmallStringFlag & getMask(); 
+			}
+		}
 		constexpr size_type length() const noexcept { return size(); };
 		constexpr size_type max_size() const noexcept { return getMask(); };
 
@@ -297,10 +357,10 @@ namespace natl {
 					allocationMoveAdapater.deallocate();
 				}
 			} else {
+				setAsNotSmallString();
+				setSize(allocationMoveAdapater.size());
 				stringCapacity = allocationMoveAdapater.capacity();
 				stringPtr = allocationMoveAdapater.data();
-				setSize(allocationMoveAdapater.size());
-				setAsNotSmallString();
 			}
 			allocationMoveAdapater.release();
 			return self();
@@ -569,10 +629,10 @@ namespace natl {
 				if (isNotSmallString()) {
 					release();
 				}
+				setAsNotSmallString();
+				setSize(allocationMoveAdapater.size());
 				stringCapacity = allocationMoveAdapater.capacity();
 				stringPtr = allocationMoveAdapater.data();
-				setSize(allocationMoveAdapater.size());
-				setAsNotSmallString();
 			}
 			allocationMoveAdapater.release();
 			return self();
@@ -753,17 +813,6 @@ namespace natl {
 				stringPtr = nullptr;
 			}
 		}
-		constexpr static size_type setNthBitToZero(const size_type num, const size_type n) noexcept {
-			const size_type mask = ~(size_type(1) << n);
-			const size_type result = num & mask;
-			return result;
-		}
-		constexpr static size_type setNthBitToOne(const size_type num, const size_type n) {
-			const size_type mask = size_type(1) << n;
-			const size_type result = num | mask;
-			return result;
-		}
-
 	public:
 		constexpr bool empty() const noexcept { return size() == 0; }
 		constexpr bool isEmpty() const noexcept { return empty(); }
@@ -808,7 +857,31 @@ namespace natl {
 
 			stringPtr = newStringPtr;
 			stringCapacity = newCapacity;
-			setAsNotSmallString();
+
+			if constexpr (enableIncreasedSmallBufferSize && sizeof(CharType) == 1) {
+				/*
+				for increased small buffer size, setAsNotSmallString() no longer maintains size 
+				in stringSizeAndSmallStringFlag as there is a difference in format to increase size 
+				 
+				in increased small buffer state
+					if is samllString()
+						stringSizeAndSmallStringFlag format is 
+						1 bit small string flag | 7 bits size storage | (sizeof(size_type) * 8) - 8 bits additional small buffer storage 
+					else  
+						stringSizeAndSmallStringFlag format is
+						1 bit small string flag | (sizeof(size_type) * 8) - 1 bits is size storage 
+				
+				not in increased small buffer state 
+					stringSizeAndSmallStringFlag format is
+						1 bit small string flag | (sizeof(size_type) * 8) - 1 bits is size storage 
+				*/
+
+				const size_type oldSize = size();
+				setAsNotSmallString();
+				setSize(oldSize);
+			} else {
+				setAsNotSmallString();
+			}
 		}
 
 		constexpr void shrink_to_fit() {
@@ -1806,14 +1879,6 @@ namespace natl {
 				*end() = value;
 			}
 		}
-	};
-
-	template<class DataType>
-	struct BaseStringBaseMembersRef {
-	public:
-		Size stringSizeAndSmallStringFlag;
-		DataType* stringPtr;
-		Size stringCapacity;
 	};
 
 	template<class DataType, Size byteSize, class Alloc = DefaultAllocator<DataType>>

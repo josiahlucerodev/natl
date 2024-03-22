@@ -240,5 +240,4 @@ int main() {
     natl::runTest(StringTest<natl::Utf32String128>::test, "natl::Utf32String128"); 
     natl::runTest(StringTest<natl::Utf32String256>::test, "natl::Utf32String256"); 
     natl::runTest(StringTest<natl::Utf32String512>::test, "natl::Utf32String512"); 
-
 }
