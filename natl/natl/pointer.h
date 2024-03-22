@@ -65,8 +65,6 @@ namespace natl {
 		}
 	};
 
-	//
-
 	template<class DataType, class Alloc = DefaultAllocator<DataType>, class Deleter = DefaultDeleter<DataType, Alloc>>
 		requires(IsAllocator<Alloc> && IsDeleter<Deleter, DataType>)
 	class UniquePtr {
@@ -447,16 +445,31 @@ namespace natl {
 			}
 		};
 
-		struct SharedPtrControlBlockSeperateDataPolymorphicConstexpr {};
+		struct SharedPtrControlBlockSeperatePolymorphicConstexpr {
+			using control_block_polymorphic_destroy_function = bool(*)(SharedPtrControlBlockSeperatePolymorphicConstexpr*);
+			using control_block_polymorphic_increment_function = void(*)(SharedPtrControlBlockSeperatePolymorphicConstexpr*);
+			using control_block_polymorphic_get_count_function = Size(*)(SharedPtrControlBlockSeperatePolymorphicConstexpr*);
+			using control_block_polymorphic_increment_if_not_zero_function = bool(*)(SharedPtrControlBlockSeperatePolymorphicConstexpr*);
+
+			[[nodiscard]] constexpr virtual control_block_polymorphic_destroy_function getDestroyFunction() const noexcept = 0;
+			[[nodiscard]] constexpr virtual control_block_polymorphic_destroy_function getWeakDestoryFunction() const noexcept = 0;
+			constexpr virtual control_block_polymorphic_increment_function getRefIncrementFunction() const noexcept = 0;
+			constexpr virtual control_block_polymorphic_increment_function getWeakRefIncrementFunction() const noexcept = 0;
+			constexpr virtual control_block_polymorphic_get_count_function getUseCountFunction() const noexcept = 0;
+			constexpr virtual control_block_polymorphic_increment_if_not_zero_function getIncrementIfNotZeroFunction() const noexcept = 0;
+		};
 		
 		template<class DataType> 
-		struct SharedPtrControlBlockSeperateDataConstexpr : SharedPtrControlBlockSeperateDataPolymorphicConstexpr {
+		struct SharedPtrControlBlockSeperateConstexpr : SharedPtrControlBlockSeperatePolymorphicConstexpr {
+			using control_block_polymorphic_destroy_function = SharedPtrControlBlockSeperateConstexpr::control_block_polymorphic_destroy_function;
+			using control_block_polymorphic_increment_function = SharedPtrControlBlockSeperateConstexpr::control_block_polymorphic_increment_function;
+			using control_block_polymorphic_get_count_function = SharedPtrControlBlockSeperateConstexpr::control_block_polymorphic_get_count_function;
+			using control_block_polymorphic_increment_if_not_zero_function = SharedPtrControlBlockSeperateConstexpr::control_block_polymorphic_increment_if_not_zero_function;
+			
 			using pre_delete_function_type = Function<void(DataType*)>;
 			using post_delete_function_type = Function<void(void)>;
 			using deleter_function_type = Function<void(DataType*)>;
-			using control_block_deleter_function_type = Function<void(SharedPtrControlBlockSeperateDataConstexpr*)>;
-
-
+			using control_block_deleter_function_type = Function<void(SharedPtrControlBlockSeperateConstexpr*)>;
 
 			DataType* dataPtr;
 			Size useCount;
@@ -466,7 +479,7 @@ namespace natl {
 			deleter_function_type deleter;
 			control_block_deleter_function_type controlBlockDeleter;
 
-			constexpr SharedPtrControlBlockSeperateDataConstexpr(
+			constexpr SharedPtrControlBlockSeperateConstexpr(
 				DataType* ptr,
 				pre_delete_function_type&& preDeleteFunction,
 				post_delete_function_type&& postDeleteFunction,
@@ -479,82 +492,75 @@ namespace natl {
 				postDeleteFunction(natl::move(postDeleteFunction)),
 				deleter(natl::move(deleterFunction)),
 				controlBlockDeleter(natl::move(controlBlockDeleter)) {};
-		};
 
+			[[nodiscard]] constexpr control_block_polymorphic_destroy_function getDestroyFunction() const noexcept override {
+				return [](SharedPtrControlBlockSeperatePolymorphicConstexpr* controlBlockPolymorpic) -> bool {
+					auto controlBlock = static_cast<SharedPtrControlBlockSeperateConstexpr*>(controlBlockPolymorpic);
+					if (controlBlock->useCount == 1) {
+						if (controlBlock->preDeleteFunction.isNotEmpty()) {
+							controlBlock->preDeleteFunction.invoke(controlBlock->dataPtr);
+						}
 
-		struct SharedPtrControlBlockSeperateFunctionsPolymorphicConstexpr {
-			constexpr virtual ~SharedPtrControlBlockSeperateFunctionsPolymorphicConstexpr() noexcept {};
-			[[nodiscard]] constexpr virtual bool destroy(SharedPtrControlBlockSeperateDataPolymorphicConstexpr* controlBlockPolymorpic) const noexcept = 0;
-			[[nodiscard]] constexpr virtual bool weakDestory(SharedPtrControlBlockSeperateDataPolymorphicConstexpr* controlBlockPolymorpic) const noexcept = 0;
-			constexpr virtual void refIncrement(SharedPtrControlBlockSeperateDataPolymorphicConstexpr* controlBlockPolymorpic) const noexcept = 0;
-			constexpr virtual void weakRefIncrement(SharedPtrControlBlockSeperateDataPolymorphicConstexpr* controlBlockPolymorpic) const noexcept = 0;
-			constexpr virtual Size getUseCount(SharedPtrControlBlockSeperateDataPolymorphicConstexpr* controlBlockPolymorpic) const noexcept = 0;
-			constexpr virtual bool incrementIfNotZero(SharedPtrControlBlockSeperateDataPolymorphicConstexpr* controlBlockPolymorpic) const noexcept = 0;
-		};
+						controlBlock->deleter.invoke(controlBlock->dataPtr);
 
+						if (controlBlock->postDeleteFunction.isNotEmpty()) {
+							controlBlock->postDeleteFunction.invoke();
+						}
 
-		template<class DataType>
-		struct SharedPtrControlBlockSeperateFunctionsConstexpr : SharedPtrControlBlockSeperateFunctionsPolymorphicConstexpr {
-			using shared_ptr_control_block_seperate_data_constexpr = SharedPtrControlBlockSeperateDataConstexpr<DataType>;
-			using control_block_deleter_function_type = Function<void(shared_ptr_control_block_seperate_data_constexpr*)>;
-
-			[[nodiscard]] constexpr bool destroy(SharedPtrControlBlockSeperateDataPolymorphicConstexpr* controlBlockPolymorpic) const noexcept override {
-				auto controlBlock = static_cast<shared_ptr_control_block_seperate_data_constexpr*>(controlBlockPolymorpic);
-				if (controlBlock->useCount == 1) {
-					if (controlBlock->preDeleteFunction.isNotEmpty()) {
-						controlBlock->preDeleteFunction.invoke(controlBlock->dataPtr);
+						controlBlock->useCount--;
+						if (controlBlock->weakCount == 0) {
+							control_block_deleter_function_type controlBlockDeleter = natl::move(controlBlock->controlBlockDeleter);
+							controlBlockDeleter.invoke(controlBlock);
+							return true;
+						}
 					}
-
-					controlBlock->deleter.invoke(controlBlock->dataPtr);
-
-					if (controlBlock->postDeleteFunction.isNotEmpty()) {
-						controlBlock->postDeleteFunction.invoke();
-					}
-
-					controlBlock->useCount--;
-					if (controlBlock->weakCount == 0) {
-						control_block_deleter_function_type controlBlockDeleter = natl::move(controlBlock->controlBlockDeleter);
-						controlBlockDeleter.invoke(controlBlock);
-						return true;
-					}
-				}
-				return false;
-			}
-			[[nodiscard]] constexpr bool weakDestory(SharedPtrControlBlockSeperateDataPolymorphicConstexpr* controlBlockPolymorpic) const noexcept override {
-				auto controlBlock = static_cast<shared_ptr_control_block_seperate_data_constexpr*>(controlBlockPolymorpic);
-				if (controlBlock->weakCount == 1) {
-					if (controlBlock->weakCount == 0) {
-						control_block_deleter_function_type controlBlockDeleter = natl::move(controlBlock->controlBlockDeleter);
-						controlBlockDeleter.invoke(controlBlock);
-						return true;
-					}
-				}
-				controlBlock->weakCount--;
-				return false;
-			}
-			constexpr void refIncrement(SharedPtrControlBlockSeperateDataPolymorphicConstexpr* controlBlockPolymorpic) const noexcept override {
-				auto controlBlock = static_cast<shared_ptr_control_block_seperate_data_constexpr*>(controlBlockPolymorpic);
-				controlBlock->useCount++;
-			}
-			constexpr void weakRefIncrement(SharedPtrControlBlockSeperateDataPolymorphicConstexpr* controlBlockPolymorpic) const noexcept override {
-				auto controlBlock = static_cast<shared_ptr_control_block_seperate_data_constexpr*>(controlBlockPolymorpic);
-				controlBlock->weakCount++;
-			}
-			constexpr Size getUseCount(SharedPtrControlBlockSeperateDataPolymorphicConstexpr* controlBlockPolymorpic) const noexcept override {
-				auto controlBlock = static_cast<shared_ptr_control_block_seperate_data_constexpr*>(controlBlockPolymorpic);
-				return controlBlock->useCount;
-			}
-			constexpr bool incrementIfNotZero(SharedPtrControlBlockSeperateDataPolymorphicConstexpr* controlBlockPolymorpic) const noexcept override {
-				auto controlBlock = static_cast<shared_ptr_control_block_seperate_data_constexpr*>(controlBlockPolymorpic);
-				if (controlBlock->useCount == 0) {
 					return false;
-				} else {
+					};
+			}
+			[[nodiscard]] constexpr control_block_polymorphic_destroy_function getWeakDestoryFunction() const noexcept override {
+				return [](SharedPtrControlBlockSeperatePolymorphicConstexpr* controlBlockPolymorpic) -> bool {
+					auto controlBlock = static_cast<SharedPtrControlBlockSeperateConstexpr*>(controlBlockPolymorpic);
+					if (controlBlock->weakCount == 1) {
+						if (controlBlock->weakCount == 0) {
+							control_block_deleter_function_type controlBlockDeleter = natl::move(controlBlock->controlBlockDeleter);
+							controlBlockDeleter.invoke(controlBlock);
+							return true;
+						}
+					}
+					controlBlock->weakCount--;
+					return false;
+				};
+			}
+			constexpr control_block_polymorphic_increment_function getRefIncrementFunction() const noexcept override {
+				return [](SharedPtrControlBlockSeperatePolymorphicConstexpr* controlBlockPolymorpic) -> void {
+					auto controlBlock = static_cast<SharedPtrControlBlockSeperateConstexpr*>(controlBlockPolymorpic);
 					controlBlock->useCount++;
-					return true;
-				}
+					};
+			}
+			constexpr control_block_polymorphic_increment_function getWeakRefIncrementFunction() const noexcept override {
+				return [](SharedPtrControlBlockSeperatePolymorphicConstexpr* controlBlockPolymorpic) -> void {
+					auto controlBlock = static_cast<SharedPtrControlBlockSeperateConstexpr*>(controlBlockPolymorpic);
+					controlBlock->weakCount++;
+					};
+			}
+			constexpr control_block_polymorphic_get_count_function getUseCountFunction() const noexcept override {
+				return [](SharedPtrControlBlockSeperatePolymorphicConstexpr* controlBlockPolymorpic) -> Size {
+					auto controlBlock = static_cast<SharedPtrControlBlockSeperateConstexpr*>(controlBlockPolymorpic);
+					return controlBlock->useCount;
+					};
+			}
+			constexpr control_block_polymorphic_increment_if_not_zero_function getIncrementIfNotZeroFunction() const noexcept override {
+				return [](SharedPtrControlBlockSeperatePolymorphicConstexpr* controlBlockPolymorpic) -> bool {
+					auto controlBlock = static_cast<SharedPtrControlBlockSeperateConstexpr*>(controlBlockPolymorpic);
+					if (controlBlock->useCount == 0) {
+						return false;
+					} else {
+						controlBlock->useCount++;
+						return true;
+					}
+				};
 			}
 		};
-
 	}
 
 	struct SharedPtrFusedConstruct {};
@@ -569,9 +575,8 @@ namespace natl {
 		using control_block_seperate_polymorphic = impl::SharedPtrControlBlockSeperatePolymorphic;
 		using control_block_fused = impl::SharedPtrControlBlockFused<DataType>;
 		using control_block_fused_polymorphic = impl::SharedPtrControlBlockFusedPolymorphic;
+		using control_block_seperate_polymorphic_constexpr = impl::SharedPtrControlBlockSeperatePolymorphicConstexpr;
 
-		using control_block_seperate_data_polymorphic_constexpr = impl::SharedPtrControlBlockSeperateDataPolymorphicConstexpr;
-		using control_block_seperate_functions_polymorphic_constexpr = impl::SharedPtrControlBlockSeperateFunctionsPolymorphicConstexpr;
 
 		//movement info 
 		constexpr static bool triviallyRelocatable = true;
@@ -580,12 +585,6 @@ namespace natl {
 		constexpr static bool triviallyDestructible = false;
 		constexpr static bool triviallyConstRefConstructedable = false;
 		constexpr static bool triviallyMoveConstructedable = false;
-
-		struct SharedPtrControlBlockSeperateConstexprCombinedData {
-			control_block_seperate_data_polymorphic_constexpr* data;
-			control_block_seperate_functions_polymorphic_constexpr* functions;
-		};
-
 	private:
 		element_pointer dataPtr;
 		impl::SharedPtrControlBlockState controlBlockState;
@@ -594,7 +593,7 @@ namespace natl {
 			control_block_fused* controlBlockFused;
 			control_block_seperate_polymorphic* controlBlockSeperatePolymorphic;
 			control_block_fused_polymorphic* controlBlockFusedPolymorphic;
-			SharedPtrControlBlockSeperateConstexprCombinedData controlBlockSeperatePolymorphicConstexpr;
+			control_block_seperate_polymorphic_constexpr* controlBlockSeperatePolymorphicConstexpr;
 		};
 	public:
 
@@ -609,10 +608,7 @@ namespace natl {
 			using control_block_seperate_polymorphic = impl::SharedPtrControlBlockSeperatePolymorphic;
 			using control_block_fused = impl::SharedPtrControlBlockFused<WeakPtrDataType>;
 			using control_block_fused_polymorphic = impl::SharedPtrControlBlockFusedPolymorphic;
-
-			using control_block_seperate_data_polymorphic_constexpr = impl::SharedPtrControlBlockSeperateDataPolymorphicConstexpr;
-			using control_block_seperate_functions_polymorphic_constexpr = impl::SharedPtrControlBlockSeperateFunctionsPolymorphicConstexpr;
-
+			using control_block_seperate_polymorphic_constexpr = impl::SharedPtrControlBlockSeperatePolymorphicConstexpr;
 
 			//movement info 
 			constexpr static bool triviallyRelocatable = true;
@@ -622,8 +618,6 @@ namespace natl {
 			constexpr static bool triviallyConstRefConstructedable = false;
 			constexpr static bool triviallyMoveConstructedable = false;
 
-			using control_block_seperate_constexpr_combined_data = SharedPtrControlBlockSeperateConstexprCombinedData;
-
 		private:
 			impl::SharedPtrControlBlockState controlBlockState;
 			element_pointer dataPtr;
@@ -632,7 +626,7 @@ namespace natl {
 				control_block_fused* controlBlockFused;
 				control_block_seperate_polymorphic* controlBlockSeperatePolymorphic;
 				control_block_fused_polymorphic* controlBlockFusedPolymorphic;
-				control_block_seperate_constexpr_combined_data controlBlockSeperatePolymorphicConstexpr;
+				control_block_seperate_polymorphic_constexpr* controlBlockSeperatePolymorphicConstexpr;
 			};
 		public:
 			//constructor 
@@ -851,10 +845,7 @@ namespace natl {
 						break;
 					case impl::SharedPtrControlBlockState::seperatePolymorphicConstexpr:
 						if (isConstantEvaluated()) {
-							const bool destoryFunctions = controlBlockSeperatePolymorphicConstexpr.functions->weakDestory(controlBlockSeperatePolymorphicConstexpr.data);
-							if (destoryFunctions) {
-								delete controlBlockSeperatePolymorphicConstexpr.functions;
-							}
+							controlBlockSeperatePolymorphicConstexpr->getWeakDestoryFunction()(controlBlockSeperatePolymorphicConstexpr);
 						} else {
 							unreachable();
 						}
@@ -959,9 +950,9 @@ namespace natl {
 				}
 				case impl::SharedPtrControlBlockState::seperatePolymorphicConstexpr: {
 					if (isConstantEvaluated()) {
-						control_block_seperate_constexpr_combined_data controlBlockSeperatePolymorphicConstexprCombindDataTemp = other.controlBlockSeperatePolymorphicConstexpr;
+						control_block_seperate_polymorphic_constexpr* controlBlockSeperatePolymorphicConstexprTemp = other.controlBlockSeperatePolymorphicConstexpr;
 						other.controlBlockSeperatePolymorphicConstexpr = controlBlockSeperatePolymorphicConstexpr;
-						controlBlockSeperatePolymorphicConstexpr = controlBlockSeperatePolymorphicConstexprCombindDataTemp;
+						controlBlockSeperatePolymorphicConstexpr = controlBlockSeperatePolymorphicConstexprTemp;
 					} else {
 						unreachable();
 					}
@@ -986,7 +977,7 @@ namespace natl {
 						return controlBlockFusedPolymorphic->getUseCount(controlBlockFusedPolymorphic);
 					case impl::SharedPtrControlBlockState::seperatePolymorphicConstexpr:
 						if (isConstantEvaluated()) {
-							return controlBlockSeperatePolymorphicConstexpr.functions->getUseCount(controlBlockSeperatePolymorphicConstexpr.data);
+							return controlBlockSeperatePolymorphicConstexpr->getUseCountFunction()(controlBlockSeperatePolymorphicConstexpr);
 						} else {
 							unreachable();
 						}
@@ -1055,7 +1046,7 @@ namespace natl {
 					if (isConstantEvaluated()) {
 						controlBlockSeperatePolymorphicConstexpr = other.controlBlockSeperatePolymorphicConstexpr;
 						if constexpr (IncrementRefCount) {
-							controlBlockSeperatePolymorphicConstexpr.functions->refIncrement(controlBlockSeperatePolymorphicConstexpr.data);
+							controlBlockSeperatePolymorphicConstexpr->getRefIncrementFunction()(controlBlockSeperatePolymorphicConstexpr);
 						}
 					} else {
 						unreachable();
@@ -1245,6 +1236,8 @@ namespace natl {
 			}
 		}
 
+
+
 	private:
 		template<class OtherType>
 		constexpr bool incrementIfNotZero(const OtherType& other) noexcept {
@@ -1259,7 +1252,7 @@ namespace natl {
 				return other.controlBlockFusedPolymorphic->incrementIfNotZero(other.controlBlockFusedPolymorphic);
 			case impl::SharedPtrControlBlockState::seperatePolymorphicConstexpr:
 				if (isConstantEvaluated()) {
-					return other.controlBlockSeperatePolymorphicConstexpr.functions->incrementIfNotZero(other.controlBlockSeperatePolymorphicConstexpr.data);
+					return other.controlBlockSeperatePolymorphicConstexpr->getIncrementIfNotZeroFunction()(other.controlBlockSeperatePolymorphicConstexpr);
 				} else {
 					unreachable();
 				}
@@ -1273,52 +1266,45 @@ namespace natl {
 			requires(IsAllocator<Alloc>)
 		constexpr void constructContexpr(
 			DataType* ptr, 
-			typename impl::SharedPtrControlBlockSeperateDataConstexpr<LocalDataType>::pre_delete_function_type&& preDeleteFunction,
-			typename impl::SharedPtrControlBlockSeperateDataConstexpr<LocalDataType>::post_delete_function_type&& postDeleteFunction,
-			typename impl::SharedPtrControlBlockSeperateDataConstexpr<LocalDataType>::deleter_function_type&& deleterFunction) noexcept {
-			using shared_ptr_control_block_seperate_data_constexpr_type = impl::SharedPtrControlBlockSeperateDataConstexpr<LocalDataType>;
+			typename impl::SharedPtrControlBlockSeperateConstexpr<LocalDataType>::pre_delete_function_type&& preDeleteFunction,
+			typename impl::SharedPtrControlBlockSeperateConstexpr<LocalDataType>::post_delete_function_type&& postDeleteFunction,
+			typename impl::SharedPtrControlBlockSeperateConstexpr<LocalDataType>::deleter_function_type&& deleterFunction) noexcept {
+			using SharedPtrControlBlockSeperateConstexprType = impl::SharedPtrControlBlockSeperateConstexpr<LocalDataType>;
 			dataPtr = ptr;
 			controlBlockState = impl::SharedPtrControlBlockState::seperatePolymorphicConstexpr;
 			
-			SharedPtrControlBlockSeperateConstexprCombinedData combinedData;
-
-			auto controlBlockFunctions = new impl::SharedPtrControlBlockSeperateFunctionsConstexpr<DataType>();
-			combinedData.functions = static_cast<impl::SharedPtrControlBlockSeperateFunctionsPolymorphicConstexpr*>(controlBlockFunctions);
-
-			using control_block_seperate_data_constexpr_alloc = Alloc::template rebind_alloc<shared_ptr_control_block_seperate_data_constexpr_type>;
-			typename shared_ptr_control_block_seperate_data_constexpr_type::control_block_deleter_function_type controlBlockDeleter =
-				[](shared_ptr_control_block_seperate_data_constexpr_type* controlBlockPtr) {
+			using control_block_seperate_data_constexpr_alloc = Alloc::template rebind_alloc<SharedPtrControlBlockSeperateConstexprType>;
+			typename SharedPtrControlBlockSeperateConstexprType::control_block_deleter_function_type controlBlockDeleter =
+				[](SharedPtrControlBlockSeperateConstexprType* controlBlockPtr) {
 				natl::defaultDeconstruct(controlBlockPtr);
 				control_block_seperate_data_constexpr_alloc::deallocate(controlBlockPtr, 1);
 			};
 
-			shared_ptr_control_block_seperate_data_constexpr_type* controlBlockData = control_block_seperate_data_constexpr_alloc::allocate(1);
-			std::construct_at(controlBlockData, 
+			SharedPtrControlBlockSeperateConstexprType* controlBlock = control_block_seperate_data_constexpr_alloc::allocate(1);
+			std::construct_at(controlBlock, 
 				ptr,
 				natl::move(preDeleteFunction), 
 				natl::move(postDeleteFunction), 
 				natl::move(deleterFunction), 
 				natl::move(controlBlockDeleter));
 
-
-			combinedData.data = static_cast<impl::SharedPtrControlBlockSeperateDataPolymorphicConstexpr*>(controlBlockData);
-			controlBlockSeperatePolymorphicConstexpr = combinedData;
+			controlBlockSeperatePolymorphicConstexpr = static_cast<impl::SharedPtrControlBlockSeperatePolymorphicConstexpr*>(controlBlock);
 		}
 
 		template<typename LocalDataType>
-		constexpr typename impl::SharedPtrControlBlockSeperateDataConstexpr<LocalDataType>::pre_delete_function_type constructConstexprNullPreDelete() noexcept {
-			return typename impl::SharedPtrControlBlockSeperateDataConstexpr<LocalDataType>::pre_delete_function_type();
+		constexpr typename impl::SharedPtrControlBlockSeperateConstexpr<LocalDataType>::pre_delete_function_type constructConstexprNullPreDelete() noexcept {
+			return typename impl::SharedPtrControlBlockSeperateConstexpr<LocalDataType>::pre_delete_function_type();
 		}
 
 		template<typename LocalDataType>
-		constexpr typename impl::SharedPtrControlBlockSeperateDataConstexpr<LocalDataType>::post_delete_function_type constructConstexprNullPostDelete() noexcept {
-			return typename impl::SharedPtrControlBlockSeperateDataConstexpr<LocalDataType>::post_delete_function_type();
+		constexpr typename impl::SharedPtrControlBlockSeperateConstexpr<LocalDataType>::post_delete_function_type constructConstexprNullPostDelete() noexcept {
+			return typename impl::SharedPtrControlBlockSeperateConstexpr<LocalDataType>::post_delete_function_type();
 		}
 		template<typename LocalDataType, typename Alloc>
 			requires(IsAllocator<Alloc>)
-		constexpr typename impl::SharedPtrControlBlockSeperateDataConstexpr<LocalDataType>::deleter_function_type constructConstexprStandardDeleter() noexcept {
+		constexpr typename impl::SharedPtrControlBlockSeperateConstexpr<LocalDataType>::deleter_function_type constructConstexprStandardDeleter() noexcept {
 			return 
-				typename impl::SharedPtrControlBlockSeperateDataConstexpr<LocalDataType>::deleter_function_type(
+				typename impl::SharedPtrControlBlockSeperateConstexpr<LocalDataType>::deleter_function_type(
 					[](LocalDataType* ptr) {
 						using LocalDataTypeAlloc = typename Alloc::template rebind_alloc<LocalDataType>;
 						LocalDataTypeAlloc::deallocate(ptr, 1);
@@ -1503,10 +1489,7 @@ namespace natl {
 					break;
 				case impl::SharedPtrControlBlockState::seperatePolymorphicConstexpr:
 					if (isConstantEvaluated()) {
-						const bool destoryFunctions = controlBlockSeperatePolymorphicConstexpr.functions->destroy(controlBlockSeperatePolymorphicConstexpr.data);
-						if (destoryFunctions) {
-							delete controlBlockSeperatePolymorphicConstexpr.functions;
-						}
+						controlBlockSeperatePolymorphicConstexpr->getDestroyFunction()(controlBlockSeperatePolymorphicConstexpr);
 					} else {
 						unreachable();
 					}
@@ -1629,9 +1612,9 @@ namespace natl {
 			}
 			case impl::SharedPtrControlBlockState::seperatePolymorphicConstexpr: {
 				if (isConstantEvaluated()) {
-					SharedPtrControlBlockSeperateConstexprCombinedData sharedPtrControlBlockSeperateConstexprCombinedDataTemp = other.controlBlockSeperatePolymorphicConstexpr;
+					control_block_seperate_polymorphic_constexpr controlBlockSeperatePolymorphicConstexprTemp = other.controlBlockSeperatePolymorphicConstexpr;
 					other.controlBlockSeperatePolymorphicConstexpr = controlBlockSeperatePolymorphicConstexpr;
-					controlBlockSeperatePolymorphicConstexpr = sharedPtrControlBlockSeperateConstexprCombinedDataTemp;
+					controlBlockSeperatePolymorphicConstexpr = controlBlockSeperatePolymorphicConstexprTemp;
 				} else {
 					unreachable();
 				}

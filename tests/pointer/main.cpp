@@ -15,5 +15,4 @@ constexpr natl::Size constexprTest() {
 int main() {
 	[[maybe_unused]] constexpr natl::Size value = constexprTest();
 	[[maybe_unused]] natl::Size value2 = constexprTest();
-	std::cout << value2;
 }
