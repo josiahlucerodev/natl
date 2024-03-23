@@ -239,6 +239,16 @@ namespace natl {
 
 	template<typename PtrDataType, typename SmallDataType>
 	class PackedPtrAndSmallData {
+	public:
+		using pointer_type = PtrDataType*;
+		using small_data_type = SmallDataType;
+
+		constexpr static bool triviallyRelocatable = true;
+		constexpr static bool triviallyDefaultConstructible = true;
+		constexpr static bool triviallyCompareable = true;
+		constexpr static bool triviallyDestructible = true;
+		constexpr static bool triviallyConstRefConstructedable = true;
+		constexpr static bool triviallyMoveConstructedable = true;
 	private:
 		constexpr static Size convertPtrToInt(const PtrDataType* ptr) noexcept {
 			return std::bit_cast<Size, const PtrDataType*>(ptr); 
@@ -248,12 +258,14 @@ namespace natl {
 		}
 #ifdef NATL_64BIT
 		struct PackingType {
-			SmallDataType smallDataStorage : natl::min<Size>(16, sizeof(SmallDataType) * 8);
 			Size ptr : 48;
+			Size smallDataStorage : natl::min<Size>(16, sizeof(SmallDataType) * 8);
 			constexpr PackingType() noexcept = default;
 			constexpr PackingType(SmallDataType smallData, PtrDataType* ptr) noexcept : 
-				smallDataStorage(smallData), 
+				smallDataStorage(toUnderlying<SmallDataType>(smallData)),
 				ptr(convertPtrToInt(ptr)) {}
+
+			//ptr
 			constexpr void setPtr(const PtrDataType* ptrIn) noexcept { 
 				ptr = convertPtrToInt(ptrIn);
 			}
@@ -264,17 +276,27 @@ namespace natl {
 				return convertIntToPtr(ptr);
 			}
 
+			//smallData
+			constexpr void setSmallData(const SmallDataType smallData) noexcept {
+				smallDataStorage = toUnderlying<SmallDataType>(smallData);
+			}
+			constexpr SmallDataType getSmallData() const noexcept {
+				return fromUnderlying<SmallDataType>(static_cast<UnderlyingType<SmallDataType>>(smallDataStorage));
+			}
 		};
+
 		constexpr static bool combindPacking = true;
 #else 
 		struct PackingType {
 			SmallDataType smallDataStorage;
 			PtrDataType* ptr;
 			constexpr PackingType() noexcept = default;
-			constexpr PackingType(SmallDataType smallData, PtrDataType* ptr) noexcept : smallDataStorage(smallData), ptr(ptr) {}
+			constexpr PackingType(const SmallDataType smallData, PtrDataType* ptr) noexcept : smallDataStorage(smallData), ptr(ptr) {}
 			constexpr void setPtr(PtrDataType* ptrIn) noexcept { ptr = ptrIn; }
 			constexpr PtrDataType* getPtr() noexcept { return ptr; }
 			constexpr const PtrDataType* getPtr() const noexcept { return ptr; }
+			constexpr void setSmallData(const SmallDataType smallData) noexcept { smallDataStorage = smallData; }
+			constexpr SmallDataType getSmallData() const noexcept { return smallDataStorage; }
 		};
 		constexpr static bool combindPacking = false;
 #endif // NATL_64BIT
@@ -392,7 +414,7 @@ namespace natl {
 			if constexpr (isConstantEvaluated()) {
 				return constexprPackingPtr->smallDataStorage;
 			} else {
-				return packing.smallDataStorage;
+				return packing.getSmallData();
 			}
 		}
 
@@ -408,7 +430,7 @@ namespace natl {
 			if (isConstantEvaluated()) {
 				constexprPackingPtr->smallDataStorage = smallData;
 			} else {
-				packing.smallDataStorage = smallData;
+				packing.setSmallData(smallData);
 			}
 		}
 		
@@ -418,7 +440,7 @@ namespace natl {
 				constexprPackingPtr->smallDataStorage = smallData;
 			} else {
 				packing.setPtr(ptr);
-				packing.smallDataStorage = smallData;
+				packing.setSmallData(smallData);
 			}
 		}
 
@@ -428,7 +450,7 @@ namespace natl {
 				constexprPackingPtr->smallDataStorage = SmallDataType();
 			} else {
 				packing.setPtr(nullptr);
-				packing.smallDataStorage = SmallDataType();
+				packing.setSmallData(SmallDataType());
 			}
 		}
 	};
@@ -797,6 +819,7 @@ namespace natl {
 		using control_block_fused = impl::SharedPtrControlBlockFused<DataType>;
 		using control_block_fused_polymorphic = impl::SharedPtrControlBlockFusedPolymorphic;
 		using control_block_seperate_polymorphic_constexpr = impl::SharedPtrControlBlockSeperatePolymorphicConstexpr;
+		using pointer_and_control_block_state = PackedPtrAndSmallData<element_type, impl::SharedPtrControlBlockState>;
 
 
 		//movement info 
@@ -807,7 +830,6 @@ namespace natl {
 		constexpr static bool triviallyConstRefConstructedable = false;
 		constexpr static bool triviallyMoveConstructedable = false;
 	private:
-		using pointer_and_control_block_state = PackedPtrAndSmallData<element_type, impl::SharedPtrControlBlockState>;
 		pointer_and_control_block_state dataPtrAndControlBlockState;
 		union {
 			control_block_seperate* controlBlockSeperate;

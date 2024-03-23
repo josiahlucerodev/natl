@@ -10,6 +10,19 @@
 
 //interface
 namespace natl {
+	template <typename EnumType>
+	using UnderlyingType = std::underlying_type_t<EnumType>;
+
+	template <typename EnumType>
+	constexpr UnderlyingType<EnumType> toUnderlying(const EnumType value) {
+		return static_cast<UnderlyingType<EnumType>>(value);
+	}
+	template <typename EnumType>
+	constexpr EnumType fromUnderlying(const UnderlyingType<EnumType> value) {
+		return static_cast<EnumType>(value);
+	}
+
+
 	template<typename Type>
 	concept isNotConst = !std::is_const_v<Type>;
 	template<typename Type>
