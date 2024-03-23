@@ -55,20 +55,4 @@ namespace natl {
     NATL_FORCE_INLINE constexpr bool isPowerOfTwo(const Integer value) noexcept {
         return (value > Integer(0)) && ((value & (value - Integer(1))) == Integer(0));
     }
-
-    template<typename Integer>
-        requires(IsUnsignedItergerType<Integer>)
-    NATL_FORCE_INLINE constexpr Integer setNthBitToZero(const Integer num, const Integer n) noexcept {
-        const Integer mask = ~(Integer(1) << n);
-        const Integer result = num & mask;
-        return result;
-    }
-
-    template<typename Integer>
-        requires(IsUnsignedItergerType<Integer>)
-    NATL_FORCE_INLINE constexpr Integer setNthBitToOne(const Integer num, const Integer n) noexcept {
-        const Integer mask = Integer(1) << n;
-        const Integer result = num | mask;
-        return result;
-    }
 }

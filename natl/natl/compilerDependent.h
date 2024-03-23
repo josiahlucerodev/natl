@@ -1,28 +1,50 @@
 #pragma once
 
-//NATL_FORCE_INLINE
-#ifdef __EMSCRIPTEN__ 
-#define NATL_FORCE_INLINE __attribute__((always_inline)) 
-#endif //  __EMSCRIPTEN__
+#if NATL_COMPILER_EMSCRIPTEN
+#define __EMSCRIPTEN__
+#define NATL_COMPILER_DEFINED
+#endif // NATL_COMPILER_EMSCRIPTEN
 
-
-#ifndef NATL_FORCE_INLINE
+#ifndef NATL_COMPILER_DEFINED
 #ifdef __clang__
-#define NATL_FORCE_INLINE [[clang::always_inline]] 
+#define NATL_COMPILER_CLANG
+#define NATL_COMPILER_DEFINED
 #endif //__clang__
-#endif // !NATL_FORCE_INLINE
+#endif // !NATL_COMPILER_DEFINED
 
-#ifndef NATL_FORCE_INLINE
+#ifndef NATL_COMPILER_DEFINED
 #ifdef __GNUC__
-#define NATL_FORCE_INLINE [[gnu::always_inline]]
-#endif //__GNUC__
+#define NATL_COMPILER_DEFINED
+#endif // __GNUC__
+#endif // !NATL_COMPILER_DEFINED
+
+#ifndef NATL_COMPILER_DEFINED
+#ifdef _MSC_VER
+#define NATL_COMPILER_MSVC
+#define NATL_COMPILER_DEFINED
+#endif // _MSC_VER
+#endif // !NATL_COMPILER_DEFINED
+
+#undef NATL_COMPILER_DEFINED
+
+
+//NATL_FORCE_INLINE
+#ifdef NATL_COMPILER_EMSCRIPTEN 
+#define NATL_FORCE_INLINE __attribute__((always_inline)) 
+#endif //  NATL_COMPILER_EMSCRIPTEN
+
+
+#ifdef NATL_COMPILER_CLANG
+#define NATL_FORCE_INLINE [[clang::always_inline]] 
 #endif // !NATL_FORCE_INLINE
 
-#ifndef NATL_FORCE_INLINE
-#ifdef _MSC_VER
+#ifdef NATL_COMPILER_GCC
+#define NATL_FORCE_INLINE [[gnu::always_inline]]
+#endif //NATL_COMPILER_GCC
+
+#ifdef NATL_COMPILER_MSVC
 #define NATL_FORCE_INLINE __forceinline
-#endif // _MSC_VER
-#endif // !NATL_FORCE_INLINE
+#endif // NATL_COMPILER_MSVC
 
 
 //NATL_IN_DEBUG
@@ -44,6 +66,25 @@
 #endif // _LIBCPP___DEBUG
 #endif // !NATL_IN_DEBUG
 
+//NATL_FORCE_INLINE
+#if defined(NATL_COMPILER_EMSCRIPTEN) ||  defined(NATL_COMPILER_CLANG) || defined(NATL_COMPILER_GCC)
+#if defined(__LP64__) || defined(_LP64)
+#define NATL_64BIT
+#else
+#define NATL_32BIT
+#endif
+#endif //  NATL_COMPILER_EMSCRIPTEN || NATL_COMPILER_CLANG || NATL_COMPILER_GCC
+
+
+#if !(defined(NATL_64BIT) || defined(NATL_32BIT))
+#ifdef NATL_COMPILER_MSVC
+#if defined(_WIN64)
+#define NATL_64BIT
+#else
+#define NATL_32BIT
+#endif
+#endif //NATL_COMPILER_MSVC
+#endif // ! NATL_64BIT || NATL_32BIT
 
 //own
 #include "utility.h"
@@ -72,33 +113,21 @@ namespace natl {
         } else {
 
 
-#ifdef __EMSCRIPTEN__ 
+#ifdef NATL_COMPILER_EMSCRIPTEN 
             emscripten_debugger();
-#define NATL_DEBUG_BREAK_DEFINE
-#endif //  __EMSCRIPTEN__
+#endif //  NATL_COMPILER_EMSCRIPTEN
 
-#ifndef NATL_DEBUG_BREAK_DEFINE
-#ifdef __clang__
+#ifdef NATL_COMPILER_CLANG
             __builtin_debugtrap();
-#define NATL_DEBUG_BREAK_DEFINE
-#endif //  __clang__
-#endif // !NATL_DEBUG_BREAK_DEFINE
+#endif //  NATL_COMPILER_CLANG
 
-#ifndef NATL_DEBUG_BREAK_DEFINE
-#ifdef __GNUC__
+#ifdef NATL_COMPILER_GCC
             __builtin_trap();
-#define NATL_DEBUG_BREAK_DEFINE
-#endif //  __GNUC__
-#endif // !NATL_DEBUG_BREAK_DEFINE
+#endif //  NATL_COMPILER_GCC
 
-#ifndef NATL_DEBUG_BREAK_DEFINE
-#ifdef _MSC_VER
+#ifdef NATL_COMPILER_MSVC
             __debugbreak();
-#define NATL_DEBUG_BREAK_DEFINE
-#endif //  _MSC_VER
-#endif // !NATL_DEBUG_BREAK_DEFINE
-
-#undef NATL_DEBUG_BREAK_DEFINE
+#endif //  NATL_COMPILER_MSVC
 
         }
 #endif
@@ -110,34 +139,24 @@ namespace natl {
         }
 
 
-#ifdef __EMSCRIPTEN__
+#ifdef NATL_COMPILER_EMSCRIPTEN
+        __builtin_unreachable();
+#endif //  NATL_COMPILER_EMSCRIPTEN
+
+#ifdef NATL_COMPILER_CLANG
+        __builtin_unreachable();
+#endif //  NATL_COMPILER_CLANG
+
+#ifdef NATL_COMPILER_GCC
         __builtin_unreachable();
 #define NATL_UNREACHABLE_DEFINE
-#endif //  __EMSCRIPTEN__
-
-#ifndef NATL_UNREACHABLE_DEFINE
-#ifdef __clang__
-        __builtin_unreachable();
-#define NATL_UNREACHABLE_DEFINE
-#endif //  __clang__
-#endif //  !NATL_UNREACHABLE_DEFINE
-
-#ifndef NATL_UNREACHABLE_DEFINE
-#ifdef __GNUC__
-        __builtin_unreachable();
-#define NATL_UNREACHABLE_DEFINE
-#endif // __GNUC__
-#endif //  !NATL_UNREACHABLE_DEFINE
+#endif // NATL_COMPILER_GCC
 
 
-#ifndef NATL_UNREACHABLE_DEFINE
-#ifdef _MSC_VER
+#ifdef NATL_COMPILER_MSVC
 		__assume(false);
 #define NATL_UNREACHABLE_DEFINE
-#endif // _MSC_VER
-#endif //  !NATL_UNREACHABLE_DEFINE
-
-#undef NATL_UNREACHABLE_DEFINE
+#endif // NATL_COMPILER_MSVC
 	}
 }
 

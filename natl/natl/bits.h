@@ -1,17 +1,24 @@
 #pragma once 
 
+//own
+#include "compilerDependent.h"
+#include "typeTraits.h"
+
 //interface 
 namespace natl {
-	template<typename DataType>
-	constexpr static DataType setNthBitToZero(const DataType num, const DataType n) noexcept {
-		const DataType mask = ~(DataType(1) << n);
-		const DataType result = num & mask;
-		return result;
-	}
-	template<typename DataType>
-	constexpr static DataType setNthBitToOne(const DataType num, const DataType n) noexcept {
-		const DataType mask = DataType(1) << n;
-		const DataType result = num | mask;
-		return result;
-	}
+    template<typename Integer>
+        requires(IsUnsignedItergerType<Integer>)
+    NATL_FORCE_INLINE constexpr Integer setNthBitToZero(const Integer num, const Integer n) noexcept {
+        const Integer mask = ~(Integer(1) << n);
+        const Integer result = num & mask;
+        return result;
+    }
+
+    template<typename Integer>
+        requires(IsUnsignedItergerType<Integer>)
+    NATL_FORCE_INLINE constexpr Integer setNthBitToOne(const Integer num, const Integer n) noexcept {
+        const Integer mask = Integer(1) << n;
+        const Integer result = num | mask;
+        return result;
+    }
 }
