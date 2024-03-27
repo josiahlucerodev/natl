@@ -108,6 +108,11 @@ namespace natl {
 		}
 	};
 
+	template<typename ResultCacheType>
+	inline ResultCacheType& getThreadLocalResultCacheOfCallFunctionCached() noexcept {
+		thread_local ResultCacheType resultCache;
+		return resultCache;
+	}
 
 	template<typename Functor, typename... ArgTypes>
 	constexpr InvokeResultWithArgs<Functor, ArgTypes...> callFunctionCached(Functor&& functor, ArgTypes&&... arguments) noexcept {
@@ -119,13 +124,8 @@ namespace natl {
 			return natl::forward<Functor>(functor)(natl::forward<ArgTypes>(arguments)...);
 		} else {
 
-#ifdef __EMSCRIPTEN__
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wc++23-extensions"
-#endif // __EMSCRIPTEN__
-
 			ArgsStorageType argumentStorage(arguments...);
-			thread_local ResultCacheType resultCache;
+			ResultCacheType& resultCache = getThreadLocalResultCacheOfCallFunctionCached<ResultCacheType>();
 			Option<typename ResultCacheType::entry_type*> value = resultCache.find(argumentStorage);
 			if (value.hasValue()) {
 				return value.value()->data;
@@ -133,9 +133,6 @@ namespace natl {
 				return resultCache.insert(argumentStorage, natl::forward<Functor>(functor)(natl::forward<ArgTypes>(arguments)...))->data;
 			}
 
-#ifdef __EMSCRIPTEN__
-#pragma GCC diagnostic pop
-#endif // __EMSCRIPTEN__
 		}
 	}
 

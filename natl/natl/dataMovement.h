@@ -433,7 +433,7 @@ namespace natl {
         using rebind_allocation_move_adapater = AllocationMoveAdapater<OtherDataType, typename Alloc::template rebind_alloc<OtherDataType>>;
 
     private:
-        mutable DataType* arrayDataPtr;
+        DataType* arrayDataPtr;
         Size arraySize;
         Size arrayCapacity;
         AllocationMoveAdapaterRequireCopy dataRequiresCopy;
@@ -452,9 +452,9 @@ namespace natl {
         constexpr AllocationMoveAdapater() noexcept : arrayDataPtr(0), arraySize(0), arrayCapacity(0), 
             dataRequiresCopy(AllocationMoveAdapaterRequireCopy::False), dataPtrCanBeDealloc(AllocationMoveAdapaterCanDealloc::False) {}
         constexpr AllocationMoveAdapater(
-            DataType* dataPtr, const Size arraySize, const Size arrayCapacity,
-            const AllocationMoveAdapaterRequireCopy dataRequiresCopy, const AllocationMoveAdapaterCanDealloc dataPtrCanBeDealloc) noexcept :
-            arrayDataPtr(dataPtr), arraySize(arraySize), arrayCapacity(arrayCapacity), dataRequiresCopy(dataRequiresCopy), dataPtrCanBeDealloc(dataPtrCanBeDealloc) {}
+            DataType* dataPtr, const Size arraySizeIn, const Size arrayCapacityIn,
+            const AllocationMoveAdapaterRequireCopy requiresCopy, const AllocationMoveAdapaterCanDealloc ptrCanBeDealloc) noexcept :
+            arrayDataPtr(dataPtr), arraySize(arraySizeIn), arrayCapacity(arrayCapacityIn), dataRequiresCopy(requiresCopy), dataPtrCanBeDealloc(ptrCanBeDealloc) {}
 
         //destructor
         constexpr ~AllocationMoveAdapater() noexcept {

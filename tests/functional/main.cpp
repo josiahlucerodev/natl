@@ -14,5 +14,5 @@ constexpr natl::Size compileTimeTest() {
 
 int main() {
 	[[maybe_unused]] constexpr natl::Size number = compileTimeTest();
-
+	[[maybe_unused]] natl::Size number2 = compileTimeTest();
 }

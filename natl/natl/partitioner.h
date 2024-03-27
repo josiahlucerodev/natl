@@ -150,7 +150,7 @@ namespace natl {
 		size_type partitionIndex;
 	public:
 		constexpr SubPartitioner() : partition(), partitionIndex(0) {};
-		constexpr SubPartitioner(const ArrayView<value_type>& partition) : partition(partition), partitionIndex(0) {}
+		constexpr SubPartitioner(const ArrayView<value_type>& partitionIn) : partition(partitionIn), partitionIndex(0) {}
 
 		constexpr size_type size() const noexcept { return partitionIndex + 1; }
 		constexpr size_type capacity() const noexcept { return partition.size(); }

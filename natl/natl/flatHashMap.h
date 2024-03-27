@@ -33,8 +33,8 @@ namespace natl {
 		pointer endPtr;
 	public:
 		constexpr FlatHashMapIterator() : dataPtr(nullptr), beginPtr(nullptr), endPtr(nullptr) {};
-		constexpr FlatHashMapIterator(pointer dataPtr, pointer beginPtr, pointer endPtr) noexcept
-			: dataPtr(dataPtr), beginPtr(beginPtr), endPtr(endPtr) {}
+		constexpr FlatHashMapIterator(pointer dataPtrIn, pointer beginPtrIn, pointer endPtrIn) noexcept
+			: dataPtr(dataPtrIn), beginPtr(beginPtrIn), endPtr(endPtrIn) {}
 	private:
 		constexpr iterator& getSelf() noexcept { return *this; }
 		constexpr const iterator& getSelf() const noexcept { return *this; }
@@ -88,8 +88,8 @@ namespace natl {
 		bool used;
 	public:
 		constexpr FlatHashMapEntry() : key(), data(), used(false) {};
-		constexpr FlatHashMapEntry(const Key& key, const DataType& data, const bool used)
-			: key(key), data(data), used(used) {}
+		constexpr FlatHashMapEntry(const Key& keyIn, const DataType& dataIn, const bool usedIn)
+			: key(keyIn), data(dataIn), used(usedIn) {}
 		constexpr ~FlatHashMapEntry() {}
 
 		constexpr FlatHashMapEntry(const FlatHashMapEntry& src) {

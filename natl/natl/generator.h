@@ -58,15 +58,15 @@ namespace natl {
 		public:
 			using iterator_category = std::input_iterator_tag;
 			using difference_type = PtrDiff;
-			using value_type = value_type;
-			using reference = reference;
-			using pointer = pointer;
+			using value_type = DataType;
+			using reference = DataType&;
+			using pointer = value_type*;
 		private:
 			handle_type handle;
 		public:
 			//constructor
 			GeneratorIterator() noexcept : handle(nullptr) {}
-			explicit GeneratorIterator(handle_type handle) noexcept : handle(handle) {}
+			explicit GeneratorIterator(handle_type handleIn) noexcept : handle(handleIn) {}
 
 			//destructor 
 			~GeneratorIterator() noexcept = default;
@@ -107,7 +107,7 @@ namespace natl {
 		using iterator = GeneratorIterator;
 	public:
 		//constructor 
-		Generator(handle_type handle) : handle(handle) {}
+		Generator(handle_type handleIn) : handle(handleIn) {}
 		Generator(const Generator&) noexcept = delete;
 		Generator(Generator&& other) noexcept : handle(other.handle) { other.handle = nullptr; }
 

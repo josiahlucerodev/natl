@@ -5,7 +5,7 @@
 #include <fenv.h>
 #include <float.h>
 #include <inttypes.h>
-#include <Limits.h>
+#include <limits.h>
 #include <locale.h>
 #include <math.h>
 #include <setjmp.h>
@@ -22,27 +22,27 @@
 #include <wctype.h>
 
 //C++
-#if ((defined(_MSVC_LANG) && _MSVC_LANG >= 199711L) || __cplusplus >= 199711L)
+#if __cplusplus >= 199711L
 #define NATL_CXX_98 
 #endif
 
-#if ((defined(_MSVC_LANG) && _MSVC_LANG >= 201103L) || __cplusplus >= 201103L)
+#if __cplusplus >= 201103L
 #define NATL_CXX_11 
 #endif
 
-#if ((defined(_MSVC_LANG) && _MSVC_LANG >= 201703L) || __cplusplus >= 201703L)
+#if __cplusplus >= 201703L
 #define NATL_CXX_17 
 #endif
 
-#if ((defined(_MSVC_LANG) && _MSVC_LANG >= 201402L) || __cplusplus >= 201402L)
+#if __cplusplus >= 201402L
 #define NATL_CXX_14 
 #endif
 
-#if ((defined(_MSVC_LANG) && _MSVC_LANG >= 202002L) || __cplusplus >= 202002L)
+#if __cplusplus >= 202002L
 #define NATL_CXX_20 
 #endif
 
-#if ((defined(_MSVC_LANG) && _MSVC_LANG >= 1000000L) || __cplusplus >= 1000000L)
+#if __cplusplus >= 1000000L
 #define NATL_CXX_23 
 #endif
 
@@ -123,7 +123,11 @@
 #include <compare>
 #include <concepts>
 #include <coroutine>
+
+#if __has_include(<format>)
 #include <format>
+#endif
+
 #include <numbers>
 #include <ranges>
 //#include <source_location>

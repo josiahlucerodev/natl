@@ -26,7 +26,7 @@ namespace natl {
 		using NameType = decltype(name);
 		using value_type = DataType;
 		const DataType& data;
-		constexpr VariantAssign(const DataType& data) noexcept : data(data) {}
+		constexpr VariantAssign(const DataType& dataIn) noexcept : data(dataIn) {}
 		constexpr operator BaseVariantAssign() const noexcept { return BaseVariantAssign(); };
 	};
 
@@ -37,7 +37,7 @@ namespace natl {
 		using NameType = decltype(name);
 		using value_type = DataType;
 		DataType&& data;
-		constexpr VariantAssignMove(DataType&& data) noexcept : data(forward<DataType>(data)) {}
+		constexpr VariantAssignMove(DataType&& dataIn) noexcept : data(forward<DataType>(dataIn)) {}
 		constexpr operator BaseVariantAssignMove() const noexcept { return BaseVariantAssignMove(); };
 	};
 
@@ -271,12 +271,8 @@ namespace natl {
 			}
 		}
 		constexpr void destoryValue() noexcept {
-			if (isConstantEvaluated()) {
+			if (isConstantEvaluated() || !triviallyDestructible) {
 				actuallyDestoryValue();
-			} else {
-				if (!triviallyDestructible) {
-					actuallyDestoryValue();
-				}
 			}
 		}
 	public:

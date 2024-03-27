@@ -25,8 +25,8 @@ namespace natl {
 		constexpr Pair() noexcept = default;
 		constexpr Pair(const Pair& other) noexcept = default;
 		constexpr Pair(Pair&& other) noexcept = default;
-		constexpr Pair(const DataTypeFirst& first, const DataTypeSecond& second) noexcept : first(first), second(second) {}
-		constexpr Pair(DataTypeFirst&& first, DataTypeSecond& second) noexcept : first(forward<DataTypeFirst>(first)), second(forward<DataTypeSecond>(second)) {}
+		constexpr Pair(const DataTypeFirst& firstIn, const DataTypeSecond& secondIn) noexcept : first(firstIn), second(secondIn) {}
+		constexpr Pair(DataTypeFirst&& firstIn, DataTypeSecond& secondIn) noexcept : first(natl::forward<DataTypeFirst>(firstIn)), second(natl::forward<DataTypeSecond>(secondIn)) {}
 
 		//destructor 
 		constexpr ~Pair() noexcept = default;
@@ -110,8 +110,8 @@ namespace natl {
 		constexpr CompressedPair() noexcept = default;
 		constexpr CompressedPair(const CompressedPair& other) noexcept = default;
 		constexpr CompressedPair(CompressedPair&& other) noexcept = default;
-		constexpr CompressedPair(const DataTypeFirst& first, const DataTypeSecond& second) noexcept : first(first), second(second) {}
-		constexpr CompressedPair(DataTypeFirst&& first, DataTypeSecond& second) noexcept : first(forward<DataTypeFirst>(first)), second(forward<DataTypeSecond>(second)) {}
+		constexpr CompressedPair(const DataTypeFirst& firstIn, const DataTypeSecond& secondIn) noexcept : first(firstIn), second(secondIn) {}
+		constexpr CompressedPair(DataTypeFirst&& firstIn, DataTypeSecond&& secondIn) noexcept : first(natl::forward<DataTypeFirst>(firstIn)), second(natl::forward<DataTypeSecond>(secondIn)) {}
 
 		//destructor 
 		constexpr ~CompressedPair() noexcept = default;

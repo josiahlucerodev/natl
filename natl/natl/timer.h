@@ -195,13 +195,13 @@ namespace natl {
 		void changeName(const ConstStringView& nameIn) noexcept { name = nameIn; }
 
 		i64 getNanoseconds() const noexcept {
-			std::chrono::steady_clock::time_point endTimpoint = std::chrono::high_resolution_clock::now();
+			std::chrono::high_resolution_clock::time_point endTimpoint = std::chrono::high_resolution_clock::now();
 			auto start = std::chrono::time_point_cast<std::chrono::nanoseconds>(startpoint).time_since_epoch().count();
 			auto end = std::chrono::time_point_cast<std::chrono::nanoseconds>(endTimpoint).time_since_epoch().count();
 			return end - start;
 		}
 		i64  getMicroseconds() const noexcept {
-			std::chrono::steady_clock::time_point endTimpoint = std::chrono::high_resolution_clock::now();
+			std::chrono::high_resolution_clock::time_point endTimpoint = std::chrono::high_resolution_clock::now();
 			auto start = std::chrono::time_point_cast<std::chrono::microseconds>(startpoint).time_since_epoch().count();
 			auto end = std::chrono::time_point_cast<std::chrono::microseconds>(endTimpoint).time_since_epoch().count();
 			return end - start;

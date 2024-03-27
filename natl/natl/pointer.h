@@ -106,10 +106,12 @@ namespace natl {
 		constexpr UniquePtr(const UniquePtr&) noexcept = delete;
 
 		
-		constexpr UniquePtr(UniquePtr&& other) noexcept requires(IsEmpty<Deleter>) = default;
-		constexpr UniquePtr(UniquePtr&& other) noexcept requires(IsNotEmpty<Deleter>) : dataPtr(nullptr), deleter() {
-			dataPtr = other.dataPtr;
-			deleter = move(deleter);
+		constexpr UniquePtr(UniquePtr&& other) noexcept requires(IsEmpty<Deleter>) : dataPtr(other.dataPtr) {
+			other.dataPtr = nullptr;
+		}
+		constexpr UniquePtr(UniquePtr&& other) noexcept requires(IsNotEmpty<Deleter>) : 
+			dataPtr(other.dataPtr), deleter(natl::move(deleter)) {
+			other.dataPtr = nullptr;
 		}
 
 		constexpr UniquePtr(std::nullptr_t) noexcept : dataPtr(nullptr), deleter() {}
@@ -124,21 +126,21 @@ namespace natl {
 			std::construct_at<DataType, DataType>(dataPtr, forward<DataType>(value));
 		}
 
-		constexpr UniquePtr(pointer ptr, const deleter_type& deleter) noexcept requires(IsNotEmpty<Deleter>) : dataPtr(ptr), deleter(deleter) {}
-		constexpr UniquePtr(pointer ptr, deleter_type&& deleter) noexcept requires(IsNotEmpty<Deleter>) : dataPtr(ptr), deleter(move(deleter)) {}
-		constexpr UniquePtr(const value_type& value, const deleter_type& deleter) noexcept requires(IsNotEmpty<Deleter>) : dataPtr(nullptr), deleter(deleter) {
+		constexpr UniquePtr(pointer ptr, const deleter_type& deleterIn) noexcept requires(IsNotEmpty<Deleter>) : dataPtr(ptr), deleter(deleterIn) {}
+		constexpr UniquePtr(pointer ptr, deleter_type&& deleterIn) noexcept requires(IsNotEmpty<Deleter>) : dataPtr(ptr), deleter(natl::move(deleterIn)) {}
+		constexpr UniquePtr(const value_type& value, const deleter_type& deleterIn) noexcept requires(IsNotEmpty<Deleter>) : dataPtr(nullptr), deleter(deleterIn) {
 			dataPtr = Alloc::allocate(1);
 			std::construct_at<DataType, DataType>(dataPtr, value);
 		}
-		constexpr UniquePtr(const value_type& value, deleter_type&& deleter) noexcept requires(IsNotEmpty<Deleter>) : dataPtr(nullptr), deleter(move(deleter)) {
+		constexpr UniquePtr(const value_type& value, deleter_type&& deleterIn) noexcept requires(IsNotEmpty<Deleter>) : dataPtr(nullptr), deleter(natl::move(deleterIn)) {
 			dataPtr = Alloc::allocate(1);
 			std::construct_at<DataType, DataType>(dataPtr, value);
 		}
-		constexpr UniquePtr(value_type&& value, const deleter_type& deleter) noexcept requires(IsNotEmpty<Deleter>) : dataPtr(nullptr), deleter(deleter) {
+		constexpr UniquePtr(value_type&& value, const deleter_type& deleterIn) noexcept requires(IsNotEmpty<Deleter>) : dataPtr(nullptr), deleter(deleterIn) {
 			dataPtr = Alloc::allocate(1);
 			std::construct_at<DataType, DataType>(dataPtr, forward<DataType>(value));
 		}
-		constexpr UniquePtr(value_type&& value, deleter_type&& deleter) noexcept requires(IsNotEmpty<Deleter>) : dataPtr(nullptr), deleter(move(deleter)) {
+		constexpr UniquePtr(value_type&& value, deleter_type&& deleterIn) noexcept requires(IsNotEmpty<Deleter>) : dataPtr(nullptr), deleter(natl::move(deleterIn)) {
 			dataPtr = Alloc::allocate(1);
 			std::construct_at<DataType, DataType>(dataPtr, forward<DataType>(value));
 		}
@@ -257,13 +259,19 @@ namespace natl {
 			return std::bit_cast<PtrDataType*, Size>(ptr);
 		}
 #ifdef NATL_64BIT
+
+#ifdef NATL_COMPILER_GCC
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wconversion"
+#endif // NATL_COMPILER_GCC
+
 		struct PackingType {
-			Size ptr : 48;
 			Size smallDataStorage : natl::min<Size>(16, sizeof(SmallDataType) * 8);
+			Size ptr : 48;
 			constexpr PackingType() noexcept = default;
-			constexpr PackingType(SmallDataType smallData, PtrDataType* ptr) noexcept : 
-				smallDataStorage(toUnderlying<SmallDataType>(smallData)),
-				ptr(convertPtrToInt(ptr)) {}
+			constexpr PackingType(SmallDataType smallDataIn, PtrDataType* ptrIn) noexcept : 
+				smallDataStorage(toUnderlying<SmallDataType>(smallDataIn)),
+				ptr(convertPtrToInt(ptrIn)) {}
 
 			//ptr
 			constexpr void setPtr(const PtrDataType* ptrIn) noexcept { 
@@ -285,6 +293,10 @@ namespace natl {
 			}
 		};
 
+#ifdef NATL_COMPILER_GCC
+#pragma GCC diagnostic pop
+#endif // NATL_COMPILER_GCC
+
 		constexpr static bool combindPacking = true;
 #else 
 		struct PackingType {
@@ -304,17 +316,13 @@ namespace natl {
 			SmallDataType smallDataStorage;
 			PtrDataType* ptr;
 			constexpr ConstexprPackingType() noexcept = default;
-			constexpr ConstexprPackingType(SmallDataType smallData, PtrDataType* ptr) noexcept : smallDataStorage(smallData), ptr(ptr) {}
+			constexpr ConstexprPackingType(const SmallDataType smallDataIn, PtrDataType* ptrIn) noexcept 
+				: smallDataStorage(smallDataIn), ptr(ptrIn) {}
 		};
 
-		using constexpr_packing_ptr_type = 
-			UniquePtr<
-				ConstexprPackingType, 
-				DefaultAllocator<ConstexprPackingType>, 
-				NewDeleteDeleter<ConstexprPackingType>>;
 		union {
 			PackingType packing;
-			constexpr_packing_ptr_type constexprPackingPtr;
+			ConstexprPackingType* constexprPackingPtr;
 		};
 	public:
 		using packed_type = PackingType;
@@ -336,6 +344,7 @@ namespace natl {
 		constexpr PackedPtrAndSmallData(PackedPtrAndSmallData&& other) noexcept {
 			if (isConstantEvaluated()) {
 				std::construct_at(&constexprPackingPtr, natl::move(other.constexprPackingPtr));
+				other.constexprPackingPtr = nullptr;
 			} else {
 				std::construct_at(&packing, other.packing);
 				other.packing = PackingType{};
@@ -353,7 +362,7 @@ namespace natl {
 	private:
 		constexpr void destruct() noexcept {
 			if (isConstantEvaluated()) {
-				natl::defaultDeconstruct<constexpr_packing_ptr_type>(&constexprPackingPtr);
+				delete constexprPackingPtr;
 			}
 		}
 	public:
@@ -364,10 +373,11 @@ namespace natl {
 		//util 
 		constexpr PackedPtrAndSmallData& self() noexcept { return *this; }
 		constexpr const PackedPtrAndSmallData& self() const noexcept { return *this; }
+
 		//assignment 
 		constexpr PackedPtrAndSmallData& operator=(const PackedPtrAndSmallData& other) noexcept {
 			if (isConstantEvaluated()) {
-				constexprPackingPtr.reset(new ConstexprPackingType(*other.constexprPackingPtr));
+				constexprPackingPtr = new ConstexprPackingType(*other.constexprPackingPtr);
 			} else {
 				packing = other.packing;
 			}
@@ -377,6 +387,7 @@ namespace natl {
 		constexpr PackedPtrAndSmallData& operator=(PackedPtrAndSmallData&& other) noexcept {
 			if (isConstantEvaluated()) {
 				constexprPackingPtr = natl::move(other.constexprPackingPtr);
+				other.constexprPackingPtr = nullptr;
 			} else {
 				std::construct_at<PackingType, PackingType>(packing, other.packing);
 				other.packing = PackingType{};
@@ -411,7 +422,7 @@ namespace natl {
 		}
 
 		constexpr SmallDataType getSmallData() const noexcept {
-			if constexpr (isConstantEvaluated()) {
+			if (isConstantEvaluated()) {
 				return constexprPackingPtr->smallDataStorage;
 			} else {
 				return packing.getSmallData();
@@ -496,8 +507,8 @@ namespace natl {
 			
 			template<class Deleter, class ControlBlockDeleter>
 				requires(IsDeleter<Deleter, DataType> && IsDeleter<ControlBlockDeleter, SharedPtrControlBlockSeperate>)
-			 SharedPtrControlBlockSeperate(DataType* dataPtr, Deleter&& deleter, ControlBlockDeleter&& controlBlockDeleter) noexcept
-				: dataPtr(dataPtr), useCount(1), weakCount(), deleter(deleter), controlBlockDeleter(controlBlockDeleter) {}
+			 SharedPtrControlBlockSeperate(DataType* dataPtrIn, Deleter&& deleterIn, ControlBlockDeleter&& controlBlockDeleterIn) noexcept
+				: dataPtr(dataPtrIn), useCount(1), weakCount(), deleter(deleterIn), controlBlockDeleter(controlBlockDeleterIn) {}
 
 			 ~SharedPtrControlBlockSeperate() noexcept override = default;
 
@@ -599,14 +610,14 @@ namespace natl {
 						HasFunctionSignature<PostDeleteFunctor, void> && 
 						IsDeleter<ControlBlockDeleter, SharedPtrControlBlockFused> &&
 						std::is_constructible_v<DataType, ConstructArgTypes...>)
-			SharedPtrControlBlockFused(PreDeleteFunctor&& preDeleteFunctor, 
-				PostDeleteFunctor&& postDeleteFunctor, 
-				ControlBlockDeleter&& controlBlockDeleter, 
+			SharedPtrControlBlockFused(PreDeleteFunctor&& preDeleteFunctorIn, 
+				PostDeleteFunctor&& postDeleteFunctorIn, 
+				ControlBlockDeleter&& controlBlockDeleterIn, 
 				ConstructArgTypes... constructArg) noexcept : 
 					useCount(1), weakCount(0),
-					preDeleteFunction(forward<PreDeleteFunctor>(preDeleteFunctor)),
-					postDeleteFunction(forward<PostDeleteFunctor>(postDeleteFunctor)),
-					controlBlockDeleter(forward<ControlBlockDeleter>(controlBlockDeleter)),  
+					preDeleteFunction(forward<PreDeleteFunctor>(preDeleteFunctorIn)),
+					postDeleteFunction(forward<PostDeleteFunctor>(postDeleteFunctorIn)),
+					controlBlockDeleter(forward<ControlBlockDeleter>(controlBlockDeleterIn)),  
 					data(forward<ConstructArgTypes>(constructArg)...) {}
 
 			 ~SharedPtrControlBlockFused() noexcept override = default;
@@ -720,17 +731,17 @@ namespace natl {
 
 			constexpr SharedPtrControlBlockSeperateConstexpr(
 				DataType* ptr,
-				pre_delete_function_type&& preDeleteFunction,
-				post_delete_function_type&& postDeleteFunction,
-				deleter_function_type&& deleterFunction,
-				control_block_deleter_function_type&& controlBlockDeleter) noexcept :
+				pre_delete_function_type&& preDeleteFunctionIn,
+				post_delete_function_type&& postDeleteFunctionIn,
+				deleter_function_type&& deleterFunctionIn,
+				control_block_deleter_function_type&& controlBlockDeleterIn) noexcept :
 				dataPtr(ptr),
 				useCount(1),
 				weakCount(0),
-				preDeleteFunction(natl::move(preDeleteFunction)),
-				postDeleteFunction(natl::move(postDeleteFunction)),
-				deleter(natl::move(deleterFunction)),
-				controlBlockDeleter(natl::move(controlBlockDeleter)) {};
+				preDeleteFunction(natl::move(preDeleteFunctionIn)),
+				postDeleteFunction(natl::move(postDeleteFunctionIn)),
+				deleter(natl::move(deleterFunctionIn)),
+				controlBlockDeleter(natl::move(controlBlockDeleterIn)) {};
 
 			[[nodiscard]] constexpr control_block_polymorphic_destroy_function getDestroyFunction() const noexcept override {
 				return [](SharedPtrControlBlockSeperatePolymorphicConstexpr* controlBlockPolymorpic) -> bool {
@@ -748,8 +759,8 @@ namespace natl {
 
 						controlBlock->useCount--;
 						if (controlBlock->weakCount == 0) {
-							control_block_deleter_function_type controlBlockDeleter = natl::move(controlBlock->controlBlockDeleter);
-							controlBlockDeleter.invoke(controlBlock);
+							control_block_deleter_function_type controlBlockDeleterFunc = natl::move(controlBlock->controlBlockDeleter);
+							controlBlockDeleterFunc.invoke(controlBlock);
 							return true;
 						}
 					}
@@ -761,8 +772,8 @@ namespace natl {
 					auto controlBlock = static_cast<SharedPtrControlBlockSeperateConstexpr*>(controlBlockPolymorpic);
 					if (controlBlock->weakCount == 1) {
 						if (controlBlock->weakCount == 0) {
-							control_block_deleter_function_type controlBlockDeleter = natl::move(controlBlock->controlBlockDeleter);
-							controlBlockDeleter.invoke(controlBlock);
+							control_block_deleter_function_type controlBlockDeleterFunc = natl::move(controlBlock->controlBlockDeleter);
+							controlBlockDeleterFunc.invoke(controlBlock);
 							return true;
 						}
 					}
@@ -1221,7 +1232,11 @@ namespace natl {
 				return use_count() == 0;
 			}
 			constexpr SharedPtr lock() const noexcept {
-				return expired() ? SharedPtr() : SharedPtr(self());
+				if (isConstantEvaluated()) {
+					return expired() ? natl::move(SharedPtr()) : natl::move(SharedPtr(self()));
+				} else {
+					return expired() ? SharedPtr() : SharedPtr(self());
+				}
 			}
 
 			constexpr bool empty() const noexcept { return dataPtrAndControlBlockState.getPtr() == nullptr; }
@@ -1896,7 +1911,7 @@ namespace natl {
 		constexpr ObserverPtr() noexcept = default;
 		constexpr ObserverPtr(const ObserverPtr&) noexcept = default;
 		constexpr ObserverPtr(ObserverPtr&&) noexcept = default;
-		constexpr explicit ObserverPtr(element_type* dataPtr) noexcept : dataPtr(dataPtr) {}
+		constexpr explicit ObserverPtr(element_type* ptr) noexcept : dataPtr(ptr) {}
 
 		//destructor
 		constexpr ~ObserverPtr() noexcept = default;

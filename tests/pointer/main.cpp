@@ -34,4 +34,5 @@ int main() {
 	[[maybe_unused]] constexpr natl::Size value3 = constexprTest2();
 	[[maybe_unused]] natl::Size value4 = constexprTest2();
 	std::cout << value << value3;
+	std::cout << value2 << value2;
 }

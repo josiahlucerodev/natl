@@ -17,8 +17,8 @@ namespace natl {
 		Size minGroupSize;
 		Size maxGroupSize;
 		constexpr ColonyLimits() noexcept = default;
-		constexpr ColonyLimits(const Size minGroupSize, const Size maxGroupSize) noexcept : 
-			minGroupSize(minGroupSize), maxGroupSize(maxGroupSize) {}
+		constexpr ColonyLimits(const Size minGroupSizeIn, const Size maxGroupSizeIn) noexcept : 
+			minGroupSize(minGroupSizeIn), maxGroupSize(maxGroupSizeIn) {}
 	};
 
 	template<typename DataType>
@@ -70,8 +70,8 @@ namespace natl {
 	public:
 		//construtor
 		constexpr ColonyIterator() noexcept = default;
-		constexpr ColonyIterator(colony_block* colonyBlock, const natl::i64 skipFieldIndex, SkipFieldType* skipFieldPos) noexcept :
-			colonyBlock(colonyBlock), skipFieldIndex(skipFieldIndex), skipFieldPos(skipFieldPos) {}
+		constexpr ColonyIterator(colony_block* colonyBlockIn, const natl::i64 skipFieldIndexIn, SkipFieldType* skipFieldPosIn) noexcept :
+			colonyBlock(colonyBlockIn), skipFieldIndex(skipFieldIndexIn), skipFieldPos(skipFieldPosIn) {}
 
 		//destructor 
 		constexpr ~ColonyIterator() noexcept = default;
@@ -203,10 +203,10 @@ namespace natl {
 			colonySize(0), colonyCapacity(0), 
 			headColonyBlock(nullptr), tailColonyBlock(nullptr), 
 			internalGrowthFactor(0), internalColonyLimits(ColonyLimits(0, 0)), index(0) {}
-		constexpr Colony(const ColonyLimits internalColonyLimits) noexcept : 
+		constexpr Colony(const ColonyLimits colonyLimits) noexcept : 
 			colonySize(0), colonyCapacity(0), 
 			headColonyBlock(0), tailColonyBlock(nullptr),
-			internalGrowthFactor(0), internalColonyLimits(internalColonyLimits), index(0) {}
+			internalGrowthFactor(0), internalColonyLimits(colonyLimits), index(0) {}
 
 		constexpr Colony(const Colony& other) noexcept {
 			colonySize = other.colonySize;

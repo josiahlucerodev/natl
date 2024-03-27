@@ -89,14 +89,14 @@ namespace natl {
 			const SerializationStructType* structType;
 		};
 
-		constexpr SerializationBaseTypeElementVariant(const SerializationTypeFlag basicType) noexcept 
-			: basicType(basicType) {}
-		constexpr SerializationBaseTypeElementVariant(const SerializationStructType* structType) noexcept
-			: structType(structType) {}
-		constexpr SerializationBaseTypeElementVariant(const SerializationEnumType* enumType) noexcept
-			: enumType(enumType) {}
-		constexpr SerializationBaseTypeElementVariant(const SerializationVariantType* variantType) noexcept
-			: variantType(variantType) {}
+		constexpr SerializationBaseTypeElementVariant(const SerializationTypeFlag basicTypeIn) noexcept 
+			: basicType(basicTypeIn) {}
+		constexpr SerializationBaseTypeElementVariant(const SerializationStructType* structTypeIn) noexcept
+			: structType(structTypeIn) {}
+		constexpr SerializationBaseTypeElementVariant(const SerializationEnumType* enumTypeIn) noexcept
+			: enumType(enumTypeIn) {}
+		constexpr SerializationBaseTypeElementVariant(const SerializationVariantType* variantTypeIn) noexcept
+			: variantType(variantTypeIn) {}
 
 		constexpr SerializationBaseTypeElementVariant(
 			const SerializationTypeCategory& typeCategory,
@@ -189,11 +189,11 @@ namespace natl {
 
 
 			constexpr SchemaElementData() : structType(nullptr) {}
-			constexpr SchemaElementData(const SerializationStructType* structType) noexcept : structType(structType) {}
-			constexpr SchemaElementData(const SerializationEnumType* enumType) noexcept : enumType(enumType) {}
-			constexpr SchemaElementData(const SerializationVariantType* variantType) noexcept : variantType(variantType) {}
-			constexpr SchemaElementData(const SerializationArrayInfo& arrayInfo) noexcept : arrayInfo(arrayInfo) {}
-			constexpr SchemaElementData(const SerializationDicInfo& dicInfo) noexcept : dicInfo(dicInfo) {}
+			constexpr SchemaElementData(const SerializationStructType* structTypeIn) noexcept : structType(structTypeIn) {}
+			constexpr SchemaElementData(const SerializationEnumType* enumTypeIn) noexcept : enumType(enumTypeIn) {}
+			constexpr SchemaElementData(const SerializationVariantType* variantTypeIn) noexcept : variantType(variantTypeIn) {}
+			constexpr SchemaElementData(const SerializationArrayInfo& arrayInfoIn) noexcept : arrayInfo(arrayInfoIn) {}
+			constexpr SchemaElementData(const SerializationDicInfo& dicInfoIn) noexcept : dicInfo(dicInfoIn) {}
 		} data;
 
 		constexpr SerializationType() noexcept = default;
@@ -224,29 +224,29 @@ namespace natl {
 
 		constexpr SerializationStructTypeElement() noexcept = default;
 		constexpr SerializationStructTypeElement(
-			const StringView& name, 
+			const StringView& nameIn, 
 			const SerializationBasicType basicType,
 			const SerializationOptionalType& optionalFlag = SerializationOptionalType::False) noexcept :
-			name(name), type(basicType, optionalFlag) {}
+			name(nameIn), type(basicType, optionalFlag) {}
 
 
 		constexpr SerializationStructTypeElement(
-			const StringView& name, 
-			const SerializationStructType* type,
+			const StringView& nameIn, 
+			const SerializationStructType* structType,
 			const SerializationOptionalType& optionalFlag = SerializationOptionalType::False) noexcept :
-			name(name), type(type, optionalFlag) {}
+			name(nameIn), type(structType, optionalFlag) {}
 
 		constexpr SerializationStructTypeElement(
-			const StringView& name, 
+			const StringView& nameIn, 
 			const SerializationEnumType* enumType,
 			const SerializationOptionalType& optionalFlag = SerializationOptionalType::False) noexcept :
-			name(name), type(enumType, optionalFlag) {}
+			name(nameIn), type(enumType, optionalFlag) {}
 
 		constexpr SerializationStructTypeElement(
-			const StringView& name, 
+			const StringView& nameIn, 
 			const SerializationVariantType* variantType,
 			const SerializationOptionalType& optionalFlag = SerializationOptionalType::False) noexcept :
-			name(name), type(variantType, optionalFlag) {}
+			name(nameIn), type(variantType, optionalFlag) {}
 	};
 
 	struct SerializationStructType {
@@ -259,7 +259,7 @@ namespace natl {
 			requires(IsTheSame<SerializationStructTypeElement, SerializationStructTypeElementArgs> && ...)
 		constexpr SerializationStructType(const StringView& name, SerializationStructTypeElementArgs&&... elements) noexcept : name(name), elements(elements...) {};
 		*/
-		constexpr SerializationStructType(const StringView& name, std::initializer_list<SerializationStructTypeElement> elements) noexcept : name(name), elements(elements) {};
+		constexpr SerializationStructType(const StringView& nameIn, std::initializer_list<SerializationStructTypeElement> elementsIn) noexcept : name(nameIn), elements(elementsIn) {};
 	};
 
 	struct SerializationVariantType {
@@ -267,7 +267,7 @@ namespace natl {
 		SmallDynArray<SerializationType, 7> types;
 
 		constexpr SerializationVariantType() noexcept = default;
-		constexpr SerializationVariantType(const StringView& name, std::initializer_list<SerializationType> types) noexcept : name(name), types(types) {};
+		constexpr SerializationVariantType(const StringView& nameIn, std::initializer_list<SerializationType> typesIn) noexcept : name(nameIn), types(typesIn) {};
 	};
 
 	struct SerializationEnumType {

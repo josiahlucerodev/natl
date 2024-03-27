@@ -20,6 +20,11 @@ namespace natl {
 		{ functor(natl::forward<ArgTypes>(args)...) } -> std::same_as<ReturnType>;
 	};
 
+#ifdef NATL_COMPILER_MSVC
+#pragma warning(push)
+#pragma warning(disable : 4265)
+#endif // NATL_COMPILER_MSVC
+
 	namespace impl{
 		template<typename ReturnType, typename... ArgTypes>
 		struct CallableBase {
@@ -40,8 +45,8 @@ namespace natl {
 			mutable Functor functor;
 		public:
 
-			constexpr Callable(const Functor& functor) noexcept requires(IsCopyConstructible<Functor>) : functor(functor) {}
-			constexpr Callable(Functor&& functor) noexcept : functor(natl::move(functor)) {}
+			constexpr Callable(const Functor& functorIn) noexcept requires(IsCopyConstructible<Functor>) : functor(functorIn) {}
+			constexpr Callable(Functor&& functorIn) noexcept : functor(natl::move(functorIn)) {}
 
 			constexpr callable_base* copyCallable(callable_base* location) const noexcept override {
 				if constexpr (IsCopyConstructible<Functor>) {
@@ -69,7 +74,7 @@ namespace natl {
 			}
 			constexpr destory_function getDestoryFunction() const noexcept override {
 				return [](callable_base* location) noexcept -> void {
-					Callable* destoryCallable = dynamic_cast<Callable*>(location);
+					Callable* destoryCallable = static_cast<Callable*>(location);
 					std::destroy_at<Callable>(destoryCallable);
 					Alloc::template rebind_alloc<Callable>::deallocate(destoryCallable, 1);
 				};
@@ -79,63 +84,58 @@ namespace natl {
 			}
 		};
 
-		struct PolymorphicFunctorStorageBase {
-			constexpr virtual ~PolymorphicFunctorStorageBase() noexcept = default;
-		};
-
-		template<class Functor>
-		struct PolymorphicFunctorStorage : public PolymorphicFunctorStorageBase {
-			Functor functor;
-			constexpr PolymorphicFunctorStorage(Functor&& functor) noexcept : functor(natl::move(functor)) {}
-			constexpr PolymorphicFunctorStorage(const Functor& functor) noexcept : functor(functor) {}
-		};
-
 		template<typename ReturnType, typename... ArgTypes>
 		struct ConstexprCallableBase {
-		public:
-			constexpr virtual ReturnType invoke(PolymorphicFunctorStorageBase* polymorphicFunctorStorageBase, ArgTypes... args) const noexcept = 0;
-			constexpr virtual PolymorphicFunctorStorageBase* copyCallableFunctorStorage(const PolymorphicFunctorStorageBase* polymorphicFunctorStorageBase) const noexcept = 0;
-			constexpr virtual ConstexprCallableBase* copyCallable() const noexcept = 0;
-			constexpr virtual ~ConstexprCallableBase() noexcept = default;
+			using invoke_function_type = ReturnType(*)(ConstexprCallableBase*, ArgTypes...) noexcept;
+			using copy_functor_storage_function_type = ConstexprCallableBase*(*)(const ConstexprCallableBase*) noexcept;
+			using destory_callable_function_type = void(*)(ConstexprCallableBase*) noexcept;
+
+			constexpr virtual invoke_function_type getInvokeFunction() const noexcept = 0;
+			constexpr virtual copy_functor_storage_function_type getCopyFunctorStorageFunction() const noexcept = 0;
+			constexpr virtual destory_callable_function_type getDestoryFunction() const noexcept = 0;
 		};
 
 		template <typename Functor, typename ReturnType, typename... ArgTypes>
-		struct ConstexprCallable : public ConstexprCallableBase<ReturnType, ArgTypes...> {
-
+		struct ConstexprCallable final : public ConstexprCallableBase<ReturnType, ArgTypes...> {
 			using constexpr_callable_base = ConstexprCallableBase<ReturnType, ArgTypes...>;
-			
-			constexpr ConstexprCallable() noexcept {}
 
-			constexpr ReturnType invoke(PolymorphicFunctorStorageBase* polymorphicFunctorStorageBase, ArgTypes... args) const noexcept override {
-				return dynamic_cast<PolymorphicFunctorStorage<Functor>*>(polymorphicFunctorStorageBase)->functor(forward<ArgTypes>(args)...);
+			using typename constexpr_callable_base::invoke_function_type;
+			using typename constexpr_callable_base::copy_functor_storage_function_type;
+			using typename constexpr_callable_base::destory_callable_function_type;
+
+			Functor functor;
+			constexpr ConstexprCallable(Functor&& functorIn) noexcept : functor(natl::move(functorIn)) {}
+			constexpr ConstexprCallable(const Functor& functorIn) noexcept : functor(functorIn) {}
+
+			constexpr ~ConstexprCallable() noexcept = default;
+
+			constexpr invoke_function_type getInvokeFunction() const noexcept override {
+				return [](constexpr_callable_base* callableBase, ArgTypes... args) noexcept -> ReturnType {
+					return static_cast<ConstexprCallable*>(callableBase)->functor(forward<ArgTypes>(args)...);
+				};
 			}
-			constexpr PolymorphicFunctorStorageBase* copyCallableFunctorStorage(const PolymorphicFunctorStorageBase* polymorphicFunctorStorageBase) const noexcept override {
-				if constexpr (IsCopyConstructible<Functor>) {
-					PolymorphicFunctorStorage<Functor>* copyOfFunctorStorage =
-						new PolymorphicFunctorStorage<Functor>(
-							dynamic_cast<const PolymorphicFunctorStorage<Functor>*>(polymorphicFunctorStorageBase)->functor
-						);
-					return static_cast<PolymorphicFunctorStorageBase*>(copyOfFunctorStorage);
-				} else {
-					return nullptr;
-				}
+
+			constexpr copy_functor_storage_function_type getCopyFunctorStorageFunction() const noexcept override {
+				return [](const constexpr_callable_base* callableBase) noexcept -> constexpr_callable_base* {
+					if constexpr (IsCopyConstructible<Functor>) {
+						using constexpr_callable_alloc = DefaultAllocator<ConstexprCallable>;
+						ConstexprCallable* newCallable = constexpr_callable_alloc::allocate(1);
+						std::construct_at<ConstexprCallable>(newCallable, static_cast<const ConstexprCallable*>(callableBase)->functor);
+
+						return static_cast<constexpr_callable_base*>(newCallable);
+					} else {
+						return nullptr;
+					}
+				};
 			}
-			constexpr constexpr_callable_base* copyCallable() const noexcept override {
-				return new ConstexprCallable();
+
+			constexpr destory_callable_function_type getDestoryFunction() const noexcept override {
+				return [](constexpr_callable_base* callableBase) noexcept -> void {
+					ConstexprCallable* constexprCallable = static_cast<ConstexprCallable*>(callableBase);
+					natl::defaultDeconstruct(constexprCallable);
+					natl::DefaultAllocator<ConstexprCallable>::deallocate(constexprCallable, 1);
+				};
 			}
-		};
-
-		template<typename ReturnType, typename... ArgTypes>
-		struct BaseConstexprFunctionStorage {
-
-			PolymorphicFunctorStorageBase* polymorphicFunctorStorageBase;
-			ConstexprCallableBase<ReturnType, ArgTypes...>* constexprCallable;
-
-			//constructor
-			constexpr BaseConstexprFunctionStorage() noexcept = default;
-			constexpr BaseConstexprFunctionStorage(PolymorphicFunctorStorageBase* polymorphicFunctorStorageBase, 
-				ConstexprCallableBase<ReturnType, ArgTypes...>* constexprCallable) noexcept : 
-				polymorphicFunctorStorageBase(polymorphicFunctorStorageBase),  constexprCallable(constexprCallable) {}
 		};
 
 		enum class FunctionStorageType {
@@ -170,8 +170,8 @@ namespace natl {
 			constexpr static Size smallBufferSize = Capacity;
 
 			using callable_base = impl::CallableBase<ReturnType, ArgTypes...>;
-			using callable_destory_function = typename callable_base::destory_function;
-			using base_constexpr_function_storage = impl::BaseConstexprFunctionStorage<ReturnType, ArgTypes...>;
+			using callable_destory_function = callable_base::destory_function;
+			using constexpr_callable_base = ConstexprCallableBase<ReturnType, ArgTypes...>;
 
 			template<typename>
 			friend struct FunctionRefBase;
@@ -181,7 +181,7 @@ namespace natl {
 				callable_base* heapCallable;
 				function_ptr_type functionPtr;
 				Byte smallCallableStorage[smallBufferSize];
-				base_constexpr_function_storage constexprFunctionStorage;
+				constexpr_callable_base* constexprCallable;
 			};
 		public:
 			//constructor 
@@ -215,9 +215,9 @@ namespace natl {
 					break;
 				case impl::FunctionStorageType::constexprCallable:
 					if (isConstantEvaluated()) {
-						delete constexprFunctionStorage.constexprCallable;
-						delete constexprFunctionStorage.polymorphicFunctorStorageBase;
-						std::destroy_at<base_constexpr_function_storage>(&constexprFunctionStorage);
+						constexprCallable->getDestoryFunction()(constexprCallable);
+					} else {
+						unreachable();
 					}
 					break;
 				default:
@@ -275,10 +275,11 @@ namespace natl {
 						break;
 					case impl::FunctionStorageType::constexprCallable:
 						if (isConstantEvaluated()) {
-							std::construct_at<base_constexpr_function_storage>(
-								&constexprFunctionStorage,
-								other.constexprFunctionStorage.constexprCallable->copyCallableFunctorStorage(other.constexprFunctionStorage.polymorphicFunctorStorageBase),
-								other.constexprFunctionStorage.constexprCallable->copyCallable());
+							std::construct_at<constexpr_callable_base>(
+								&constexprCallable,
+								other.constexprCallable->getCopyFunctorStorageFunction()(other.constexprCallable));
+						} else {
+							unreachable();
 						}
 						break;
 					}
@@ -310,11 +311,11 @@ namespace natl {
 						break;
 					case impl::FunctionStorageType::constexprCallable:
 						if (isConstantEvaluated()) {
-							std::construct_at<base_constexpr_function_storage>(
-								&constexprFunctionStorage,
-								other.constexprFunctionStorage.polymorphicFunctorStorageBase,
-								other.constexprFunctionStorage.constexprCallable);
-							std::destroy_at<base_constexpr_function_storage>(&other.constexprFunctionStorage);
+							std::construct_at<constexpr_callable_base*>(
+								&constexprCallable,
+								other.constexprCallable);
+						} else {
+							unreachable();
 						}
 						break;
 					}
@@ -335,11 +336,15 @@ namespace natl {
 
 				using FunctorCallableType = impl::Callable<Alloc, Functor, ReturnType, ArgTypes...>;
 				if (isConstantEvaluated()) {
+					using constexpr_callable_type = impl::ConstexprCallable<Functor, ReturnType, ArgTypes...>;
+					using constexpr_callable_type_alloc = DefaultAllocator<constexpr_callable_type>;
+					constexpr_callable_type* newConstexprCallable = constexpr_callable_type_alloc::allocate(1);
+					std::construct_at<constexpr_callable_type>(newConstexprCallable, natl::move(functor));
+
 					functionStorageType = impl::FunctionStorageType::constexprCallable;
-					std::construct_at<base_constexpr_function_storage>(
-						&constexprFunctionStorage,
-						new impl::PolymorphicFunctorStorage(natl::move(functor)),
-						static_cast<impl::ConstexprCallableBase<ReturnType, ArgTypes...>*>(new impl::ConstexprCallable<Functor, ReturnType, ArgTypes...>()));
+					std::construct_at<constexpr_callable_base*>(
+						&constexprCallable,
+						static_cast<constexpr_callable_base*>(newConstexprCallable));
 				} else {
 					if constexpr (sizeof(FunctorCallableType) <= smallBufferSize) {
 						functionStorageType = impl::FunctionStorageType::smallCallable;
@@ -383,7 +388,7 @@ namespace natl {
 					return heapCallable->invoke(forward<ArgTypes>(args)...);
 				case impl::FunctionStorageType::constexprCallable: 
 					if (isConstantEvaluated()) {
-						return constexprFunctionStorage.constexprCallable->invoke(constexprFunctionStorage.polymorphicFunctorStorageBase, forward<ArgTypes>(args)...);
+						return constexprCallable->getInvokeFunction()(constexprCallable, forward<ArgTypes>(args)...);
 					} else {
 						unreachable();
 					}
@@ -874,57 +879,46 @@ namespace natl {
 		private:
 			Functor& functorRef;
 		public:
-			constexpr CallableRef(Functor& functorRef) noexcept : functorRef(functorRef) {}
+			constexpr CallableRef(Functor& functorRefIn) noexcept : functorRef(functorRefIn) {}
 			constexpr ~CallableRef() noexcept = default;
 			constexpr ReturnType invoke(ArgTypes... args) const noexcept override {
 				return functor(forward<ArgTypes>(args)...);
 			}
 		};
 
-		struct PolymorphicFunctorRefStorageBase {
-			//constexpr virtual ~PolymorphicFunctorRefStorageBase() noexcept = default;
-		};
-
-		template<class Functor>
-		struct PolymorphicFunctorRefStorage : public PolymorphicFunctorRefStorageBase {
-			Functor& functorRef;
-			constexpr PolymorphicFunctorRefStorage(Functor& functorRef) noexcept : functorRef(functorRef) {}
-		};
-
 		template<typename ReturnType, typename... ArgTypes>
 		struct ConstexprCallableRefBase {
-		public:
-			constexpr virtual ReturnType invoke(PolymorphicFunctorRefStorageBase* polymorphicFunctorRefStorageBase, ArgTypes... args) const noexcept = 0;
+			using invoke_function_type = ReturnType(*)(ConstexprCallableRefBase*, ArgTypes...) noexcept;
+			using destory_function_type = void(*)(ConstexprCallableRefBase*) noexcept;
+			constexpr virtual invoke_function_type getInvokeFunction() const noexcept = 0;
+			constexpr virtual destory_function_type getDestroyFunction() const noexcept = 0;
 		};
 
 		template <typename Functor, typename ReturnType, typename... ArgTypes>
-		struct ConstexprCallableRef : public ConstexprCallableRefBase<ReturnType, ArgTypes...> {
+		struct ConstexprCallableRef final : public ConstexprCallableRefBase<ReturnType, ArgTypes...> {
 			using constexpr_callable_ref_base = ConstexprCallableRefBase<ReturnType, ArgTypes...>;
+			using typename constexpr_callable_ref_base::invoke_function_type;
+			using typename constexpr_callable_ref_base::destory_function_type;
+
+			Functor& functorRef;
 
 			constexpr ConstexprCallableRef() noexcept = default;
+			constexpr ConstexprCallableRef(Functor& functorRefIn) noexcept : functorRef(functorRefIn) {}
 			constexpr ~ConstexprCallableRef() noexcept = default;
 
-			constexpr ReturnType invoke(PolymorphicFunctorRefStorageBase* polymorphicFunctorRefStorageBase, ArgTypes... args) const noexcept override {
-				return dynamic_cast<PolymorphicFunctorRefStorage<Functor>*>(polymorphicFunctorRefStorageBase)->functor(forward<ArgTypes>(args)...);
+			constexpr virtual invoke_function_type getInvokeFunction() const noexcept override {
+				return [](constexpr_callable_ref_base* callableRefBase, ArgTypes... args) -> ReturnType {
+					return static_cast<constexpr_callable_ref_base*>(callableRefBase)->functor(forward<ArgTypes>(args)...);
+				};
+			}
+			constexpr virtual destory_function_type getDestroyFunction() const noexcept override {
+				return [](constexpr_callable_ref_base* callableRefBase) noexcept -> ReturnType {
+					ConstexprCallableRef* callableRef = static_cast<ConstexprCallableRef*>(callableRefBase);
+					natl::defaultDeconstruct(callableRef);
+					natl::DefaultAllocator<ConstexprCallableRef>::deallocate(callableRef, 1);
+				};
 			}
 		};
-
-		template<typename ReturnType, typename... ArgTypes>
-		struct BaseConstexprFunctionRefStorage {
-			using constexpr_callable_ref_base = ConstexprCallableRefBase<ReturnType, ArgTypes...>;
-
-			PolymorphicFunctorRefStorageBase* polymorphicFunctorRefStorageBase;
-			constexpr_callable_ref_base* constexpreCallableRef;
-
-			//constructor
-			constexpr BaseConstexprFunctionRefStorage() noexcept = default;
-			constexpr BaseConstexprFunctionRefStorage(
-				PolymorphicFunctorRefStorageBase* polymorphicFunctorRefStorageBase, 
-				constexpr_callable_ref_base* constexpreCallableRef) noexcept :
-				polymorphicFunctorRefStorageBase(polymorphicFunctorRefStorageBase), 
-				constexpreCallableRef(constexpreCallableRef) {}
-		};
-
 
 		enum class FunctionRefStorageType {
 			functionPtr = 0,
@@ -956,16 +950,16 @@ namespace natl {
 			constexpr static Size smallBufferSize = sizeof(void*) * 2;
 			using callable_base = CallableBase<ReturnType, ArgTypes...>;
 			using callable_ref_base = CallableRefBase<ReturnType, ArgTypes...>;
-			using base_constexpr_function_storage = BaseConstexprFunctionStorage<ReturnType, ArgTypes...>;
-			using base_constexpr_function_ref_storage = BaseConstexprFunctionRefStorage<ReturnType, ArgTypes...>;
+			using constexpr_callable_base = ConstexprCallableBase<ReturnType, ArgTypes...>;
+			using constexpr_callable_ref_base = ConstexprCallableRefBase<ReturnType, ArgTypes...>;
 		private:
 			FunctionRefStorageType functionRefStorageType;
 			union {
 				function_ptr_type functionPtr;
 				Byte callableRefStorage[smallBufferSize];
-				base_constexpr_function_ref_storage constexprFunctionRefStorage;
+				constexpr_callable_base constexprCallable;
 				callable_base* callable;
-				base_constexpr_function_storage constexprFunctionStorage;
+				constexpr_callable_ref_base constexprCallableRef;
 			};
 		public:
 			//constructor
@@ -986,9 +980,7 @@ namespace natl {
 			constexpr void destruct() noexcept {
 				if (isConstantEvaluated()) {
 					if (functionRefStorageType == FunctionRefStorageType::constexprCallableRef) {
-						delete constexprFunctionRefStorage.constexpreCallableRef;
-						delete constexprFunctionRefStorage.polymorphicFunctorRefStorageBase;
-						std::destroy_at<base_constexpr_function_ref_storage>(&constexprFunctionRefStorage);
+						constexprCallableRef.getDestroyFunction()(constexprCallableRef);
 					}
 				}
 			}
@@ -1033,19 +1025,26 @@ namespace natl {
 					functionPtr = other.functionPtr;
 					break;
 				case FunctionRefStorageType::callableRef:
-					copyNoOverlap<const Byte*, Byte*>(&other.callableRefStorage, &other.callableRefStorage + smallBufferSize, callableRefStorage);
+					copyNoOverlap<const Byte*, Byte*>(
+						static_cast<const Byte*>(other.callableRefStorage), 
+						static_cast<const Byte*>(other.callableRefStorage) + smallBufferSize,
+						callableRefStorage);
 					break;
 				case FunctionRefStorageType::constexprCallableRef:
 					if (isConstantEvaluated()) {
-						constexprFunctionRefStorage = constexprFunctionRefStorage;
+						constexprCallableRef = other.constexprCallableRef;
+					} else {
+						unreachable();
 					}
 					break;
 				case FunctionRefStorageType::callable:
-					callable = callable;
+					callable = other.callable;
 					break;
 				case FunctionRefStorageType::constexprCallable:
 					if (isConstantEvaluated()) {
-						constexprFunctionStorage = constexprFunctionStorage;
+						constexprCallable = other.constexprCallable;
+					} else {
+						unreachable();
 					}
 					break;
 				}
@@ -1060,21 +1059,25 @@ namespace natl {
 					break;
 				case FunctionRefStorageType::callableRef:
 					copyNoOverlap<const Byte*, Byte*>(
-						&other.callableRefStorage,
-						&other.callableRefStorage + smallBufferSize,
+						static_cast<const Byte*>(other.callableRefStorage),
+						static_cast<const Byte*>(other.callableRefStorage) + smallBufferSize,
 						callableRefStorage);
 					break;
 				case FunctionRefStorageType::constexprCallableRef:
 					if (isConstantEvaluated()) {
-						constexprFunctionRefStorage = constexprFunctionRefStorage;
+						constexprCallableRef = other.constexprCallableRef;
+					} else {
+						unreachable();
 					}
 					break;
 				case FunctionRefStorageType::callable:
-					callable = callable;
+					other.callable = other.callable;
 					break;
 				case FunctionRefStorageType::constexprCallable:
 					if (isConstantEvaluated()) {
-						constexprFunctionStorage = constexprFunctionStorage;
+						constexprCallable = other.constexprCallable;
+					} else {
+						unreachable();
 					}
 					break;
 				}
@@ -1095,11 +1098,13 @@ namespace natl {
 				}
 
 				if (isConstantEvaluated()) {
+					using constexpr_callable_ref_type = ConstexprCallableRef<Functor, ReturnType, ArgTypes...>;
+					using constexpr_callable_ref_type_alloc = DefaultAllocator<constexpr_callable_ref_type>;
+					constexpr_callable_ref_type* constexprCallableRefType = constexpr_callable_ref_type_alloc::allocate(1);
+					std::construct_at<constexpr_callable_ref_type>(constexprCallableRefType, functor);
+
 					functionRefStorageType = FunctionRefStorageType::constexprCallableRef;
-					std::construct_at<base_constexpr_function_ref_storage>(
-						&constexprFunctionRefStorage,
-						new PolymorphicFunctorRefStorage(functor),
-						static_cast<ConstexprCallableRefBase<ReturnType, ArgTypes...>*>(new ConstexprCallableRef<Functor, ReturnType, ArgTypes...>()));
+					std::construct_at<constexpr_callable_ref_base>(&constexprCallableRef, static_cast<constexpr_callable_ref_base*>(constexprCallableRefType));
 				} else {
 					using FunctorCallableRefType = CallableRef<Functor, ReturnType, ArgTypes...>;
 					functionRefStorageType = FunctionRefStorageType::callableRef;
@@ -1126,7 +1131,9 @@ namespace natl {
 				case FunctionStorageType::constexprCallable:
 					if (isConstantEvaluated()) {
 						functionRefStorageType = FunctionRefStorageType::constexprCallable;
-						constexprFunctionStorage = other.constexprFunctionStorage;
+						constexprCallable = other.constexprCallable;
+					} else {
+						unreachable();
 					}
 					break;
 				}
@@ -1160,7 +1167,9 @@ namespace natl {
 					return reinterpret_cast<const callable_ref_base*>(callableRefStorage)->invoke(forward<ArgTypes>(args)...);
 				case FunctionRefStorageType::constexprCallableRef:
 					if (isConstantEvaluated()) {
-						constexprFunctionRefStorage.constexpreCallableRef->invoke(constexprFunctionRefStorage.polymorphicFunctorRefStorageBase, forward<ArgTypes>(args)...);
+						return constexprCallableRef->getInvokeFunction()(constexprCallableRef);
+					} else {
+						unreachable();
 					}
 					break;
 				case FunctionRefStorageType::callable:
@@ -1168,7 +1177,9 @@ namespace natl {
 					break;
 				case FunctionRefStorageType::constexprCallable:
 					if (isConstantEvaluated()) {
-						return constexprFunctionStorage.constexprCallable->invoke(constexprFunctionStorage.polymorphicFunctorStorageBase, forward<ArgTypes>(args)...);
+						return constexprCallable->getInvokeFunction()(constexprCallable);
+					} else {
+						unreachable();
 					}
 					break;
 				}
@@ -1404,6 +1415,10 @@ namespace natl {
 		}
 
 	};
+
+#ifdef NATL_COMPILER_MSVC
+#pragma warning(pop)
+#endif // NATL_COMPILER_MSVC
 
 	namespace impl {
 		template<typename Functor, typename... ArgTypes>

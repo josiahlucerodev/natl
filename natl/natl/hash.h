@@ -48,29 +48,29 @@ namespace natl {
 
 
 	template<> struct Hash<i8> {
-		constexpr static Size hash(const i8 value) { return static_cast<Size>(std::bit_cast<ui64, i64>(static_cast<i64>(value))); }
+		constexpr static Size hash(const i8 value) { return static_cast<Size>(std::bit_cast<ui8, i8>(value)); }
 	};
 	template<> struct Hash<i16> {
-		constexpr static Size hash(const i16 value) { return static_cast<Size>(std::bit_cast<ui64, i64>(static_cast<i64>(value))); }
+		constexpr static Size hash(const i16 value) { return static_cast<Size>(std::bit_cast<ui16, i16>(value)); }
 	};
 	template<> struct Hash<i32> {
-		constexpr static Size hash(const i32 value) { return static_cast<Size>(std::bit_cast<ui64, i64>(static_cast<i64>(value))); }
+		constexpr static Size hash(const i32 value) { return static_cast<Size>(std::bit_cast<ui32, i32>(value)); }
 	};
 	template<> struct Hash<i64> {
 		constexpr static Size hash(const i64 value) { return static_cast<Size>(std::bit_cast<ui64, i64>(value)); }
 	};
 
 	template<> struct Hash<ui8> {
-		constexpr static Size hash(const ui8 value) { return static_cast<Size>(std::bit_cast<ui64, ui64>(static_cast<ui64>(value))); }
+		constexpr static Size hash(const ui8 value) { return static_cast<Size>(value); }
 	};
 	template<> struct Hash<ui16> {
-		constexpr static Size hash(const ui16 value) { return static_cast<Size>(std::bit_cast<ui64, ui64>(static_cast<ui64>(value))); }
+		constexpr static Size hash(const ui16 value) { return static_cast<Size>(value); }
 	};
 	template<> struct Hash<ui32> {
-		constexpr static Size hash(const ui32 value) { return static_cast<Size>(std::bit_cast<ui64, ui64>(static_cast<ui64>(value))); }
+		constexpr static Size hash(const ui32 value) { return static_cast<Size>(value); }
 	};
 	template<> struct Hash<ui64> {
-		constexpr static Size hash(const ui64 value) { return static_cast<Size>(std::bit_cast<ui64, ui64>(value)); }
+		constexpr static Size hash(const ui64 value) { return static_cast<Size>(value); }
 	};
 
 

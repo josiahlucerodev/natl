@@ -64,10 +64,10 @@ namespace natl {
 	public:
 		//constructor
 		constexpr Expect() : state(ExpectState::dummy), dummy() {}
-		constexpr Expect(const DataType& data) : state(ExpectState::value), data(data) {}
-		constexpr Expect(DataType&& data) : state(ExpectState::value), data(move(data)) {}
+		constexpr Expect(const DataType& value) : state(ExpectState::value), data(value) {}
+		constexpr Expect(DataType&& value) : state(ExpectState::value), data(natl::move(value)) {}
 		constexpr Expect(const ErrorType& error) : state(ExpectState::error), errorData(error) {}
-		constexpr Expect(ErrorType&& error) : state(ExpectState::error), errorData(forward(error)) {}
+		constexpr Expect(ErrorType&& error) : state(ExpectState::error), errorData(natl::forward<ErrorType>(error)) {}
 		constexpr Expect(const Unexpected<ErrorType>& unexpectd) : state(ExpectState::error), errorData(unexpectd.error()) {}
 		constexpr Expect(Unexpected<ErrorType>&& unexpectd) : state(ExpectState::error), errorData(unexpectd.error()) {}
 

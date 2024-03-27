@@ -35,7 +35,7 @@ namespace natl {
 
 
 	constexpr ui64 convertDecimalCharacterToNumber(const char& character) noexcept {
-		return static_cast<ui64>(character) - 48ULL;
+		return static_cast<ui64>(character) - ui64(48);
 	}
 	constexpr bool checkIfStringConvertInRange(const bool hardEnd, const bool softEnd, const ui64 maxEndingPosValue,
 		const ui64 maxTrailingValue, const ui64 number, const ui64 value) noexcept {
@@ -92,7 +92,7 @@ namespace natl {
 				}
 			}
 
-			value += number * mul;
+			value += static_cast<decltype(value)>(number * mul);
 			mul = mul * 10;
 			pos += 1;
 
@@ -418,7 +418,7 @@ namespace natl {
 
 		Size count = 0;
 		while (number > 0) {
-			const char digitChar = '0' + (number % 10); 
+			const char digitChar = '0' + static_cast<char>(number % 10); 
 			output.push_back(digitChar);
 			number /= 10; 
 			count += 1;

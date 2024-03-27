@@ -54,7 +54,7 @@ namespace natl {
 	public:
 		//constructor 
 		constexpr ArrayView() : dataPtr(nullptr), arraySize(0) {}
-		constexpr ArrayView(pointer dataPtr, const size_type size) : dataPtr(dataPtr), arraySize(size) {}
+		constexpr ArrayView(pointer ptr, const size_type size) : dataPtr(ptr), arraySize(size) {}
 		constexpr ArrayView(ArrayView& other) noexcept : dataPtr(other.data()), arraySize(other.size()) {}
 		constexpr ArrayView(const ArrayView& other) noexcept requires(isConst<DataType>) : dataPtr(other.data()), arraySize(other.size()) {}
 		constexpr ArrayView(std::initializer_list<DataType> initList) noexcept requires(isConst<DataType>) : dataPtr(initList.begin()), arraySize(initList.size()) {}
@@ -392,7 +392,7 @@ namespace natl {
 	public:
 		//constructor
 		SpatialRegion() = default;
-		SpatialRegion(const Size offset, const Size extent, const Size size) : offset(offset), extent(extent), size(size) {}
+		SpatialRegion(const Size offsetIn, const Size extentIn, const Size sizeIn) : offset(offsetIn), extent(extentIn), size(sizeIn) {}
 	};
 
 	namespace impl {

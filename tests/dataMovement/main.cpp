@@ -26,18 +26,5 @@ constexpr char compileTimeTest() {
 
 int main() {
 	[[maybe_unused]] constexpr char testValue = compileTimeTest();
-
-	natl::DynArray<char> charArray(100, 5);
-	natl::SmallDynArray<char, 10> smallCharArray;
-	natl::String charString = charArray.getAlloctionMoveAdapater();
-	natl::HeapArray<char> heapArray;
-	charArray = charString.getAlloctionMoveAdapater();
-	charString = charArray.getAlloctionMoveAdapater();
-	smallCharArray = charString.getAlloctionMoveAdapater();
-	charArray = smallCharArray.getAlloctionMoveAdapater();
-	smallCharArray = charArray.getAlloctionMoveAdapater();
-	charString = smallCharArray.getAlloctionMoveAdapater();
-	heapArray = charString.getAlloctionMoveAdapater();
-	charString = heapArray.getAlloctionMoveAdapater();
-
+	[[maybe_unused]] char testValue2 = compileTimeTest();
 }

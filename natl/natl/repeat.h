@@ -23,7 +23,7 @@ namespace natl {
         std::size_t index;
 
         constexpr RepeatIterator() : index(0) {}
-        constexpr RepeatIterator(const std::size_t index) : index(index) {}
+        constexpr RepeatIterator(const std::size_t indexIn) : index(indexIn) {}
 
         constexpr reference operator*() noexcept { return index; }
         constexpr const_reference operator*() const noexcept { return index; }
@@ -94,15 +94,15 @@ namespace natl {
         using const_iterator = RepeatIterator;
         using const_reverse_iterator = RepeatIterator;
     private:
-        std::size_t count;
+        std::size_t repeatCount;
     public:
-        constexpr Repeat() : count(0) {}
-        constexpr Repeat(const std::size_t count) : count(count) {}
+        constexpr Repeat() : repeatCount(0) {}
+        constexpr Repeat(const std::size_t count) : repeatCount(count) {}
         constexpr ~Repeat() = default;
 
-        constexpr std::size_t size() const noexcept { return count; }
+        constexpr std::size_t size() const noexcept { return repeatCount; }
         constexpr size_type beginIndex() const noexcept { return 0; };
-        constexpr size_type endIndex() const noexcept { return count; };
+        constexpr size_type endIndex() const noexcept { return repeatCount; };
 
         constexpr const_iterator begin() const noexcept { return const_iterator(beginIndex()); }
         constexpr const_iterator cbegin() const noexcept { return const_iterator(beginIndex()); }
@@ -131,7 +131,7 @@ namespace natl {
         std::size_t repeatTo;
     public:
         constexpr RepeatFromTo() : repeatFrom(0), repeatTo(0) {}
-        constexpr RepeatFromTo(const std::size_t repeatFrom, const std::size_t repeatTo) : repeatFrom(repeatFrom), repeatTo(repeatTo) {}
+        constexpr RepeatFromTo(const std::size_t repeatFromIn, const std::size_t repeatToIn) : repeatFrom(repeatFromIn), repeatTo(repeatToIn) {}
         constexpr RepeatFromTo(const std::size_t count) : repeatFrom(0), repeatTo(count) {}
         constexpr ~RepeatFromTo() = default;
 

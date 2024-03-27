@@ -16,8 +16,8 @@ namespace natl {
 		DataType data;
 	public:
 		constexpr Option() : isValid(false), data() {}
-		constexpr Option(const DataType& data) : isValid(true), data(data) { }
-		constexpr Option(DataType&& data) : isValid(true), data(data) { }
+		constexpr Option(const DataType& value) : isValid(true), data(value) { }
+		constexpr Option(DataType&& value) : isValid(true), data(value) { }
 		constexpr Option([[maybe_unused]] OptionEmpty empty) : isValid(false), data() { }
 
 		constexpr DataType& value()& { return data; }

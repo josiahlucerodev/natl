@@ -28,7 +28,7 @@ namespace natl {
 		DataType* dataPtr;
 	public:
 		constexpr RandomAccessIterator() : dataPtr(nullptr) {}
-		constexpr RandomAccessIterator(DataType* const dataPtr) noexcept : dataPtr(dataPtr) {}
+		constexpr RandomAccessIterator(DataType* const ptr) noexcept : dataPtr(ptr) {}
 		constexpr ~RandomAccessIterator() = default;
 	private:
 		constexpr iterator& getSelf() noexcept { return *this; }
@@ -89,8 +89,8 @@ namespace natl {
 		pointer dataPtr;
 	public:
 		constexpr RandomAccessIteratorAlloc() : dataPtr(nullptr) {}
-		constexpr RandomAccessIteratorAlloc(pointer dataPtr) noexcept requires(isNotConst<value_type>) : dataPtr(dataPtr) {}
-		constexpr RandomAccessIteratorAlloc(const_pointer dataPtr) noexcept requires(isConst<value_type>) : dataPtr(dataPtr) {}
+		constexpr RandomAccessIteratorAlloc(pointer ptr) noexcept requires(isNotConst<value_type>) : dataPtr(ptr) {}
+		constexpr RandomAccessIteratorAlloc(const_pointer ptr) noexcept requires(isConst<value_type>) : dataPtr(ptr) {}
 		constexpr ~RandomAccessIteratorAlloc() = default;
 	private:
 		constexpr iterator& getSelf() noexcept { return *this; }

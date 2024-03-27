@@ -32,7 +32,7 @@ namespace natl {
 	};
 	//custom 
 	class TestTypeCustomTrivialStdOut {
-		[[maybe_unused]] ui8 addressableData;
+		ui8 addressableData;
 	public:
 		//movement info  
 		constexpr static bool triviallyRelocatable = true;
@@ -62,6 +62,9 @@ namespace natl {
 		TestTypeCustomTrivialStdOut& operator=(const TestTypeCustomTrivialStdOut&) { std::cout << "const ref assigned\n"; return self(); }
 		TestTypeCustomTrivialStdOut& operator=(TestTypeCustomTrivialStdOut&&) noexcept { std::cout << "moved assigned\n"; return self(); }
 		TestTypeCustomTrivialStdOut& operator=(const TestTypeCustomTrivialStdOut&&) noexcept { std::cout << "const moved assigned\n"; return self(); }
+
+		//element access 
+		const ui8* getAddress() const noexcept { return &addressableData; }
 	};
 
 #define NATL_TEST_ASSERT(from, condition, message) \

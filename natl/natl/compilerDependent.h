@@ -5,17 +5,19 @@
 #define NATL_COMPILER_DEFINED
 #endif // NATL_COMPILER_EMSCRIPTEN
 
+
+#ifndef NATL_COMPILER_DEFINED
+#ifdef __GNUC__
+#define NATL_COMPILER_GCC
+#define NATL_COMPILER_DEFINED
+#endif // __GNUC__
+#endif // !NATL_COMPILER_DEFINED
+
 #ifndef NATL_COMPILER_DEFINED
 #ifdef __clang__
 #define NATL_COMPILER_CLANG
 #define NATL_COMPILER_DEFINED
 #endif //__clang__
-#endif // !NATL_COMPILER_DEFINED
-
-#ifndef NATL_COMPILER_DEFINED
-#ifdef __GNUC__
-#define NATL_COMPILER_DEFINED
-#endif // __GNUC__
 #endif // !NATL_COMPILER_DEFINED
 
 #ifndef NATL_COMPILER_DEFINED

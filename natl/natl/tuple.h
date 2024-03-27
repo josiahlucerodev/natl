@@ -46,10 +46,10 @@ namespace natl {
 
 		template<typename FirstU, typename... RestU>
 			requires(std::is_constructible_v<FirstDataType, const FirstU&>&& std::is_constructible_v<rest_tuple_type, const RestU&...>)
-		constexpr Tuple(const FirstU& first, const RestU&... rest) noexcept : first(first), rest(rest...) {}
+		constexpr Tuple(const FirstU& firstIn, const RestU&... restIn) noexcept : first(firstIn), rest(restIn...) {}
 		template<typename FirstU, typename... RestU>
 			requires(std::is_constructible_v<FirstDataType, FirstU&&>&& std::is_constructible_v<rest_tuple_type, RestU&&...>)
-		constexpr Tuple(FirstU&& first, RestU&&... rest) noexcept : first(natl::forward<FirstU>(first)), rest(natl::forward<RestU>(rest)...) {}
+		constexpr Tuple(FirstU&& firstIn, RestU&&... restIn) noexcept : first(natl::forward<FirstU>(firstIn)), rest(natl::forward<RestU>(restIn)...) {}
 
 		template<typename FirstU, typename... RestU>
 			requires(std::is_constructible_v<FirstDataType, const FirstU&>&& std::is_constructible_v<rest_tuple_type, const RestU&...>)
@@ -136,7 +136,7 @@ namespace natl {
 				result ^= hashValues[index] + Size(0x9e3779b9) + (result << Size(6)) + (result >> Size(2));
 			}
 			return result;
-		};
+		}
 	public:
 
 		constexpr Size hash() const noexcept 

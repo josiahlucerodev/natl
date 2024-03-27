@@ -94,7 +94,7 @@ namespace natl {
     public:
         //constructor
         NATL_FORCE_INLINE constexpr UnitValue() noexcept = default;
-        NATL_FORCE_INLINE constexpr explicit UnitValue(const DataType value) noexcept : value(value) {}
+        NATL_FORCE_INLINE constexpr explicit UnitValue(const DataType valueIn) noexcept : value(valueIn) {}
 
         //destructor
         NATL_FORCE_INLINE constexpr ~UnitValue() noexcept = default;
