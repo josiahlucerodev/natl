@@ -24,6 +24,7 @@ natl/functionCache.h
 natl/generator.h
 natl/hash.h
 natl/heapArray.h
+natl/iteration.h
 natl/iterators.h
 natl/lexicographicalCompare.h
 natl/limits.h
@@ -34,10 +35,8 @@ natl/numerics.h
 natl/option.h
 natl/pair.h
 natl/partitioner.h
-natl/peramaterPackOperations.h
 natl/pointer.h
 natl/priorityQueue.h
-natl/repeat.h
 natl/serialization.h
 natl/smallDynArray.h
 natl/string.h
@@ -47,6 +46,7 @@ natl/stringView.h
 natl/test.h
 natl/timer.h
 natl/tuple.h
+natl/typePack.h
 natl/typeTraits.h
 natl/units.h
 natl/utility.h

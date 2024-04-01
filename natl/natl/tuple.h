@@ -1,7 +1,7 @@
 #pragma once 
 
 //own
-#include "peramaterPackOperations.h"
+#include "typePack.h"
 #include "container.h"
 #include "typeTraits.h"
 #include "functional.h"
@@ -55,8 +55,10 @@ namespace natl {
 			requires(std::is_constructible_v<FirstDataType, const FirstU&>&& std::is_constructible_v<rest_tuple_type, const RestU&...>)
 		constexpr Tuple(const Tuple<FirstU, RestU...>& other) noexcept : first(other.first), rest(other.rest) {}
 		template<typename FirstU, typename... RestU>
-			requires(std::is_constructible_v<FirstDataType, FirstU&&>&& std::is_constructible_v<rest_tuple_type, RestU&&...>)
-		constexpr Tuple(Tuple<FirstU, RestU...>&& other) noexcept : first(natl::move(other.first)), rest(natl::move(other.rest)) {}
+			requires(std::is_constructible_v<FirstDataType, FirstU&&> && std::is_constructible_v<rest_tuple_type, RestU&&...>)
+		constexpr Tuple(Tuple<FirstU, RestU...>&& other) noexcept : 
+			first(natl::move(static_cast<FirstDataType>(other.first))), 
+			rest(natl::move(other.rest)) {}
 
 		//destructor 
 		constexpr ~Tuple() noexcept = default;
@@ -227,7 +229,7 @@ namespace natl {
 	template<class TupleType> using TupleSizeTypeImpl = impl::TupleSizeTypeImpl<Decay<TupleType>>;
 	template<class TupleType> constexpr inline Size TupleSize = impl::TupleSizeTypeImpl<Decay<TupleType>>::value;
 	template<Size Index, class TupleType> using TupleElementType = impl::TupleElementTypeImpl<Index, Decay<TupleType>>;
-	template<Size Index, class TupleType> using TupleElement = impl::TupleElementTypeImpl<Index, Decay<TupleType>>::value;
+	template<Size Index, class TupleType> using TupleElement = impl::TupleElementTypeImpl<Index, Decay<TupleType>>::type;
 
 	namespace impl {
 		template<typename Functor, typename Tuple, Size... Indices>
@@ -244,4 +246,16 @@ namespace natl {
 			MakeIndexSequence<TupleSize<Tuple>>{}
 		);
 	}
+}
+
+namespace std {
+	template<typename... DataTypes>
+	struct tuple_size<natl::Tuple<DataTypes...>> : natl::IntegralConstant<natl::Size, sizeof...(DataTypes)> {};
+	template<> struct tuple_size<natl::Tuple<>> : natl::IntegralConstant<natl::Size, 0> {};
+	template<std::size_t Index, class... DataTypes >
+	struct tuple_element<Index, natl::Tuple<DataTypes...>> { 
+		using type = natl::TupleElement<Index, natl::Tuple<DataTypes...>>;  
+	};
+	template<std::size_t Index>
+	struct tuple_element<Index, natl::Tuple<>> { using type = void; };
 }

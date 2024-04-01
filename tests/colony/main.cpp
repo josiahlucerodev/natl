@@ -1,7 +1,7 @@
 
 //natl
 #include <natl/colony.h>
-#include <natl/repeat.h>
+#include <natl/iteration.h>
 
 int main() {
 	natl::Colony<natl::Size> colony(natl::ColonyLimits(30, 300));
