@@ -1,9 +1,9 @@
 #pragma once
 
-#if NATL_COMPILER_EMSCRIPTEN
-#define __EMSCRIPTEN__
+#if __EMSCRIPTEN__
+#define NATL_COMPILER_EMSCRIPTEN
 #define NATL_COMPILER_DEFINED
-#endif // NATL_COMPILER_EMSCRIPTEN
+#endif // __EMSCRIPTEN__
 
 
 #ifndef NATL_COMPILER_DEFINED
@@ -88,11 +88,36 @@
 #endif //NATL_COMPILER_MSVC
 #endif // ! NATL_64BIT || NATL_32BIT
 
+
+#ifdef __unix__
+#define NATL_UNIX_PLATFORM
+#elif defined(_WIN32) || defined(WIN32)
+#define NATL_WINDOWS_PLATFORM
+#else 
+static_assert(false, "natl: platform type not supported");
+#endif
+
 //own
 #include "utility.h"
 
 //interface 
 namespace natl {
+    enum class ProgramPlatformType : int {
+        unknownPlatform,
+        unixPlatform, 
+        windowsPlatform,
+    };
+
+    consteval ProgramPlatformType getPlatformType() noexcept {
+#ifdef NATL_UNIX_PLATFORM
+        return ProgramPlatformType::unixPlatform;
+#elif defined(NATL_WINDOWS_PLATFORM)
+        return ProgramPlatformType::windowsPlatform;
+#else
+        return ProgramPlatformType::unknownPlatform;
+#endif
+    }
+
     consteval bool natlInDebug() noexcept {
 #ifdef NATL_IN_DEBUG
         return true;

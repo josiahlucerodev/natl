@@ -18,6 +18,7 @@ natl/dataMovement.h
 natl/dynArray.h
 natl/error.h
 natl/expect.h
+natl/filesystem.h
 natl/flatHashMap.h
 natl/functional.h
 natl/functionCache.h
@@ -46,6 +47,7 @@ natl/stringView.h
 natl/test.h
 natl/timer.h
 natl/tuple.h
+natl/typeinfo.h
 natl/typePack.h
 natl/typeTraits.h
 natl/units.h
