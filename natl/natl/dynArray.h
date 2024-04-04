@@ -110,12 +110,12 @@ namespace natl {
 				return self();
 			}
 
-			const size_type newsize_type = count;
-			factorReserve(newsize_type);
+			const size_type newSize = count;
+			factorReserve(newSize);
 			const_pointer srcDataPtrFirst = otherPtr;
 			const_pointer srcDataPtrLast = srcDataPtrFirst + count;
 			uninitializedCopyNoOverlap<const_pointer, pointer>(srcDataPtrFirst, srcDataPtrLast, data());
-			setsize_type(newsize_type);
+			setSize(newSize);
 
 			return self();
 		}
@@ -143,7 +143,7 @@ namespace natl {
 			pointer fillDstPtr = data();
 			pointer fillDstPtrLast = fillDstPtr + count;
 			uninitializedFill<pointer, value_type>(fillDstPtr, fillDstPtrLast, value);
-			setsize_type(count);
+			setSize(count);
 			return self();
 		}
 
@@ -211,10 +211,10 @@ namespace natl {
 				return self();
 			}
 
-			const size_type newsize_type = count;
-			factorReserve(newsize_type);
-			internalCopyNoOverlap(otherPtr, otherPtr + newsize_type, data());
-			setsize_type(newsize_type);
+			const size_type newSize = count;
+			factorReserve(newSize);
+			internalCopyNoOverlap(otherPtr, otherPtr + newSize, data());
+			setSize(newSize);
 
 			return self();
 		}
@@ -254,7 +254,7 @@ namespace natl {
 
 				internalFill(data(), data() + size(), value);
 			}
-			setsize_type(count);
+			setSize(count);
 			return self();
 		}
 		template<class Iter> 
@@ -323,14 +323,14 @@ namespace natl {
 			if (count < size()) {
 				if constexpr (!IsTriviallyDestructible<value_type>) {
 					defaultDeconstructAll<value_type>(data() + count, size() - count);
-					setsize_type(count);
+					setSize(count);
 					return;
 				}
 				else {
 					if (isConstantEvaluated()) {
 						defaultDeconstructAll<value_type>(data() + count, size() - count);
 					}
-					setsize_type(count);
+					setSize(count);
 				}
 			} else if (count > size()) {
 				insert(cend(), count - size(), value_type());
@@ -342,7 +342,7 @@ namespace natl {
 				if constexpr (!IsTriviallyDestructible<value_type> || isConstantEvaluated()) {
 					defaultDeconstructAll<value_type>(data() + count, size() - count);
 				}
-				setsize_type(count);
+				setSize(count);
 			} else if (count > size()) {
 				insert(cend(), count - size(), value);
 			}
@@ -423,7 +423,7 @@ namespace natl {
 			if (typeHasToBeDestructed<value_type>()) {
 				defaultDeconstructAll<value_type>(data(), size());
 			}
-			setsize_type(0);
+			setSize(0);
 		}
 
 	private:
@@ -438,7 +438,7 @@ namespace natl {
 			}
 		}
 
-		constexpr void setsize_type(const size_type newsize_type) { arraySize = newsize_type; }
+		constexpr void setSize(const size_type newSize) { arraySize = newSize; }
 	public:
 
 		//element access
@@ -560,33 +560,33 @@ namespace natl {
 
 		constexpr iterator insert(const_iterator pos, const value_type& value) noexcept {
 			const size_type index = iterDistance<typename const_iterator::pointer>(&*cbegin(), &*pos);
-			const size_type newsize_type = size() + 1;
-			factorReserve(newsize_type);
+			const size_type newSize = size() + 1;
+			factorReserve(newSize);
 
 			shiftRelocateLeft(index, 1);
 			set(index, value);
 
-			setsize_type(newsize_type);
+			setSize(newSize);
 			return iterator(data() + index);
 
 		}
 		constexpr iterator insert(const_iterator pos, value_type&& value) noexcept {
 			const size_type index = iterDistance<typename const_iterator::pointer>(&*cbegin(), &*pos);
-			const size_type newsize_type = size() + 1;
-			factorReserve(newsize_type);
+			const size_type newSize = size() + 1;
+			factorReserve(newSize);
 
 			shiftRelocateLeft(index, 1);
 
 			set(index, forward<value_type>(value));
 
-			setsize_type(newsize_type);
+			setSize(newSize);
 			return iterator(data() + index);
 		}
 		constexpr iterator insert(const_iterator pos, const_pointer srcPtr, const size_type count) noexcept {
 			if (count == 0) { return constIteratorToIterator(pos); }
 			const size_type index = iterDistance<typename const_iterator::pointer>(&*cbegin(), &*pos);
-			const size_type newsize_type = size() + count;
-			factorReserve(newsize_type);
+			const size_type newSize = size() + count;
+			factorReserve(newSize);
 
 			const size_type relocateCount = shiftRelocateLeft(index, count);
 
@@ -597,7 +597,7 @@ namespace natl {
 					const_pointer insertSrcPtrLast = insertSrcPtrFirst + count;
 					internalCopyNoOverlap(insertSrcPtrFirst, insertSrcPtrLast, insertDstPtr);
 
-					setsize_type(newsize_type);
+					setSize(newSize);
 					return iterator(data() + index);
 				}
 			}
@@ -614,14 +614,14 @@ namespace natl {
 			const_pointer insertUninilizedSrcPtrLast = insertUninilizedSrcPtrFirst + uninilizedCopyCount;
 			natl::uninitializedCopyNoOverlap<const_pointer, pointer>(insertUninilizedSrcPtrFirst, insertUninilizedSrcPtrLast, insertUninilizedDstPtr);
 
-			setsize_type(newsize_type);
+			setSize(newSize);
 			return iterator(data() + index);
 		}
 		constexpr iterator insert(const_iterator pos, const size_type count, const value_type& value) {
 			if (count == 0) { return constIteratorToIterator(pos); }
 			const size_type index = iterDistance<typename const_iterator::pointer>(&*cbegin(), &*pos);
-			const size_type newsize_type = size() + count;
-			factorReserve(newsize_type);
+			const size_type newSize = size() + count;
+			factorReserve(newSize);
 
 			const size_type relocateCount = shiftRelocateLeft(index, count);
 
@@ -631,7 +631,7 @@ namespace natl {
 					pointer fillDstPtrLast = fillDstPtrFirst + count;
 					internalFill(fillDstPtrFirst, fillDstPtrLast, value);
 
-					setsize_type(newsize_type);
+					setSize(newSize);
 					return iterator(data() + index);
 				}
 			}
@@ -646,7 +646,7 @@ namespace natl {
 			pointer fillUninilizedDrcPtrLast = fillUninilizedDstPtrFirst + uninilizedFillCount;
 			natl::uninitializedFill<pointer, value_type>(fillUninilizedDstPtrFirst, fillUninilizedDrcPtrLast, value);
 
-			setsize_type(newsize_type);
+			setSize(newSize);
 			return iterator(data() + index);
 		}
 		template<class Iter>
@@ -660,8 +660,8 @@ namespace natl {
 
 			const size_type index = iterDistance<typename const_iterator::pointer>(&*cbegin(), &*pos);
 			const size_type count = iterDistance<Iter>(first, last);
-			const size_type newsize_type = size() + count;
-			factorReserve(newsize_type);
+			const size_type newSize = size() + count;
+			factorReserve(newSize);
 
 			const size_type relocateCount = shiftRelocateLeft(index, count);
 
@@ -670,7 +670,7 @@ namespace natl {
 					pointer insertDstPtr = data() + index;
 					internalCopyNoOverlap<Iter>(first, last, insertDstPtr);
 					
-					setsize_type(newsize_type);
+					setSize(newSize);
 					return iterator(data() + index);
 				}
 			}
@@ -686,7 +686,7 @@ namespace natl {
 				std::construct_at<value_type, value_type>(dstPtr, *srcIter);
 			}
 
-			setsize_type(newsize_type);
+			setSize(newSize);
 			return iterator(data() + index);
 		}
 		template<class ArrayViewLike>
@@ -701,19 +701,19 @@ namespace natl {
 		template<class... Args >
 		constexpr iterator emplace(const_iterator pos, Args&&... args) {
 			const size_type index = iterDistance<typename const_iterator::pointer>(&*cbegin(), &*pos);
-			const size_type newsize_type = size() + 1;
-			factorReserve(newsize_type);
+			const size_type newSize = size() + 1;
+			factorReserve(newSize);
 
 			shiftRelocateLeft(index, 1);
 
 			std::construct_at<value_type, Args...>(&*pos, std::forward<Args>(args)...);
 
-			setsize_type(newsize_type);
+			setSize(newSize);
 			return iterator(data() + index);
 		}
 
 		constexpr iterator erase(const_iterator pos) noexcept {
-			const size_type newsize_type = size() - 1;
+			const size_type newSize = size() - 1;
 			const size_type index = iterDistance<typename const_iterator::pointer>(&*cbegin(), &*pos);
 			
 
@@ -726,13 +726,13 @@ namespace natl {
 				defaultDeconstruct<value_type>(at(backIndex()));
 			}
 
-			setsize_type(newsize_type);
+			setSize(newSize);
 			return iterator(data() + index);
 		}
 		constexpr iterator erase(const_iterator first, const_iterator last) noexcept {
 			const size_type index = iterDistance<typename const_iterator::pointer>(&*cbegin(), &*first);
 			const size_type count = iterDistance<typename const_iterator::pointer>(&*first, &*last);
-			const size_type newsize_type = size() - count;
+			const size_type newSize = size() - count;
 
 			pointer relocateDstPtr = data() + index;
 			const_pointer relocateSrcPtrFirst = data() + index + count;
@@ -740,10 +740,10 @@ namespace natl {
 			internalCopy(relocateSrcPtrFirst, relocateSrcPtrLast, relocateDstPtr);
 
 			if (!IsTriviallyDestructible<value_type> || isConstantEvaluated()) {
-				defaultDeconstructAll<value_type>(data() + newsize_type, count);
+				defaultDeconstructAll<value_type>(data() + newSize, count);
 			}
 
-			setsize_type(newsize_type);
+			setSize(newSize);
 			return iterator(data() + index);
 		}
 
@@ -753,24 +753,25 @@ namespace natl {
 
 		constexpr reference push_back(const value_type& value) noexcept {
 			const size_type index = size();
-			const size_type newsize_type = index + 1;
-			factorReserve(newsize_type);
+			const size_type newSize = index + 1;
+			factorReserve(newSize);
+			setSize(newSize);
 			return set(index, value);
 		}
 		constexpr reference push_back(value_type&& value) noexcept {
 			const size_type index = size();
-			const size_type newsize_type = index + 1;
-			factorReserve(newsize_type);
-			setsize_type(newsize_type);
+			const size_type newSize = index + 1;
+			factorReserve(newSize);
+			setSize(newSize);
 			return set(index, forward<value_type>(value));;
 		}
 
 		template<class... Args >
 		constexpr reference emplace_back(Args&&... args) noexcept {
 			const size_type index = size();
-			const size_type newsize_type = index + sizeof...(Args);
-			factorReserve(newsize_type);
-			setsize_type(newsize_type);
+			const size_type newSize = index + sizeof...(Args);
+			factorReserve(newSize);
+			setSize(newSize);
 			reference value = at(index);
 			std::construct_at<value_type, Args...>(value, std::forward<Args>(args)...);
 			return value;
@@ -778,15 +779,15 @@ namespace natl {
 
 		constexpr DynArray& append(const_pointer srcPtr, const size_type count) noexcept {
 			const size_type index = size();
-			const size_type newsize_type = index + count;
-			factorReserve(newsize_type);
+			const size_type newSize = index + count;
+			factorReserve(newSize);
 
 			pointer insertDstPtr = data() + index;
 			const_pointer insertSrcPtrFirst = srcPtr;
 			const_pointer insertSrcPtrLast = insertSrcPtrFirst + count;
 			internalCopyNoOverlap(insertSrcPtrFirst, insertSrcPtrLast, insertDstPtr);
 
-			setsize_type(newsize_type);
+			setSize(newSize);
 			return self();
 		}
 		template<class ArrayViewLike>
@@ -807,7 +808,7 @@ namespace natl {
 			if (!IsTriviallyDestructible<value_type> || isConstantEvaluated()) {
 				defaultDeconstruct<value_type>(&at(backIndex()));
 			}
-			setsize_type(size() - 1);
+			setSize(size() - 1);
 			return;
 		}
 

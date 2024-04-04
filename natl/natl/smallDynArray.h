@@ -922,6 +922,7 @@ namespace natl {
 			const size_type index = size();
 			const size_type newSize = index + 1;
 			factorReserve(newSize);
+			setSize(newSize);
 			return set(index, value);
 		}
 		constexpr reference push_back(value_type&& value) noexcept {

@@ -141,6 +141,16 @@ namespace natl {
 	template<typename DataType> struct AddPointerType : decltype(impl::tryAddPointer<DataType>(0)) {};
 	template<typename DataType> using AddPointer = typename AddPointerType<DataType>::type;
 
+
+	template<typename DataType> struct RemovePointerType { using type = DataType; };
+	template<typename DataType> struct RemovePointerType<DataType*> { using type = DataType; };
+	template<typename DataType> struct RemovePointerType<DataType* const> { using type = DataType; };
+	template<typename DataType> struct RemovePointerType<DataType* volatile> { using type = DataType; };
+	template<typename DataType> struct RemovePointerType<DataType* const volatile> { using type = DataType; };
+
+	template<typename DataType> using RemovePointer = RemovePointerType<DataType>::type;
+
+
 	template<typename... AnyTypes>
 	struct MakeVoidType { using type = void; };
 
