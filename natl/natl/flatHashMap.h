@@ -154,8 +154,8 @@ namespace natl {
 
 		using iterator = FlatHashMapIterator<value_type, Alloc>;
 		using const_iterator = FlatHashMapIterator<const value_type, Alloc>;
-		using reverse_iterator = std::reverse_iterator<FlatHashMapIterator<value_type, Alloc>>;
-		using const_reverse_iterator = std::reverse_iterator<FlatHashMapIterator<const value_type, Alloc>>;
+		using reverse_iterator = ReverseIterator<FlatHashMapIterator<value_type, Alloc>>;
+		using const_reverse_iterator = ReverseIterator<FlatHashMapIterator<const value_type, Alloc>>;
 
 		static constexpr f64 load_factor = 0.7;
 
@@ -191,22 +191,22 @@ namespace natl {
 		constexpr operator bool() const noexcept { return isNotEmpty(); }
 
 	private:
-		constexpr pointer beginPtr() noexcept requires(isNotConst<DataType>) { return table.data(); }
+		constexpr pointer beginPtr() noexcept requires(IsNotConstV<DataType>) { return table.data(); }
 		constexpr const_pointer beginPtr() const noexcept { return table.data(); }
-		constexpr pointer endPtr() noexcept requires(isNotConst<DataType>) { return table.data() + table.size(); }
+		constexpr pointer endPtr() noexcept requires(IsNotConstV<DataType>) { return table.data() + table.size(); }
 		constexpr const_pointer endPtr() const noexcept { return table.data() + table.size(); }
 
 	public:
-		constexpr iterator begin() noexcept requires(isNotConst<DataType>) { return iterator(beginPtr(), beginPtr(), endPtr()); }
+		constexpr iterator begin() noexcept requires(IsNotConstV<DataType>) { return iterator(beginPtr(), beginPtr(), endPtr()); }
 		constexpr const_iterator begin() const noexcept { return const_iterator(beginPtr(), beginPtr(), endPtr()); }
 		constexpr const_iterator cbegin() const noexcept { return const_iterator(beginPtr(), beginPtr(), endPtr()); }
-		constexpr iterator end() noexcept requires(isNotConst<DataType>) { return iterator(endPtr(), beginPtr(), endPtr()); }
+		constexpr iterator end() noexcept requires(IsNotConstV<DataType>) { return iterator(endPtr(), beginPtr(), endPtr()); }
 		constexpr const_iterator end() const noexcept { return const_iterator(endPtr(), beginPtr(), endPtr()); }
 		constexpr const_iterator cend() const noexcept { return const_iterator(endPtr(), beginPtr(), endPtr()); }
-		constexpr reverse_iterator rbegin() noexcept requires(isNotConst<DataType>) { return reverse_iterator(endPtr(), beginPtr(), endPtr()); }
+		constexpr reverse_iterator rbegin() noexcept requires(IsNotConstV<DataType>) { return reverse_iterator(endPtr(), beginPtr(), endPtr()); }
 		constexpr const_reverse_iterator rbegin() const noexcept { return const_reverse_iterator(endPtr(), beginPtr(), endPtr()); }
 		constexpr const_reverse_iterator crbegin() const noexcept { return const_reverse_iterator(endPtr(), beginPtr(), endPtr()); }
-		constexpr reverse_iterator rend() noexcept requires(isNotConst<DataType>) { return reverse_iterator(beginPtr(), beginPtr(), endPtr()); }
+		constexpr reverse_iterator rend() noexcept requires(IsNotConstV<DataType>) { return reverse_iterator(beginPtr(), beginPtr(), endPtr()); }
 		constexpr const_reverse_iterator rend() const noexcept { return const_reverse_iterator(beginPtr(), beginPtr(), endPtr()); }
 		constexpr const_reverse_iterator crend() const noexcept { return const_reverse_iterator(beginPtr(), beginPtr(), endPtr()); }
 

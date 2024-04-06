@@ -665,6 +665,6 @@ namespace natl {
 	using AtomicPtrDiff = Atomic<PtrDiff>;
 
 	using AtomicChar = Atomic<Char>;
-	using AtomicAssciCode = Atomic<AssciCode>;
+	using AtomicAssciCode = Atomic<Assci>;
 	using AtomicUtf32 = Atomic<Utf32>;
 }

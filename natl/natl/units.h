@@ -42,14 +42,14 @@ namespace natl {
     concept IsNotUnitTag = !IsUnitTag<UnitTag>;
 
     template<typename LhsUnitTage, typename RhsUnitTag>
-    concept IsTheSameUnitTagGroup = IsTheSame<typename LhsUnitTage::tag_group, typename RhsUnitTag::tag_group>;
+    concept IsTheSameUnitTagGroup = IsSameV<typename LhsUnitTage::tag_group, typename RhsUnitTag::tag_group>;
 
     template<typename LhsUnitTage, typename RhsUnitTag>
     concept IsNotTheSameUnitTagGroup = !IsTheSameUnitTagGroup<LhsUnitTage, RhsUnitTag>;
 
     template <typename FromTag, typename ToTag, typename FromDataType, typename ToDataType>
     struct StrongUnitConversionFactor {
-        static_assert(IsTheSame<FromTag, ToTag>, "Unsupported conversion");
+        static_assert(IsSameV<FromTag, ToTag>, "Unsupported conversion");
         static_assert(IsNotUnitTag<FromTag>, "FromTag is not a UnitTag");
         static_assert(IsNotUnitTag<ToTag>, "ToTag is not a UnitTag");
         constexpr static FromDataType factor = FromDataType(0);
@@ -59,7 +59,7 @@ namespace natl {
     concept DoesNotUnitConvertDown = FromTag::magnitudeIndex > ToTag::magnitudeIndex;
 
     template<typename FromTag, typename ToTag, typename ToDataType>
-    concept DoesNotUnitConvertRequireFloat = IsFloatingPointType<ToDataType> || DoesNotUnitConvertDown<FromTag, ToTag>;
+    concept DoesNotUnitConvertRequireFloat = IsFloatingPointV<ToDataType> || DoesNotUnitConvertDown<FromTag, ToTag>;
 
     template <typename FromTag, typename ToTag, typename FromDataType, typename ToDataType>
         requires(
@@ -70,7 +70,7 @@ namespace natl {
         //std::is_same_v<typename FromTag::tag_group, StrongUnitGroupTypeMagnitude>
         )
         struct StrongUnitConversionFactor<FromTag, ToTag, FromDataType, ToDataType> {
-        static_assert(IsNotTheSame<FromTag, ToTag>, "Unsupported conversion");
+        static_assert(IsNotSameV<FromTag, ToTag>, "Unsupported conversion");
         static_assert(DoesNotUnitConvertRequireFloat<FromTag, ToTag, ToDataType>, "converting down requires a base float type");
         using tag_group = typename FromTag::tag_group;
         constexpr static ToDataType value = impl::unitPowFn<ToDataType>(tag_group::orderOfMagnitude, FromTag::magnitudeIndex - ToTag::magnitudeIndex);
@@ -111,13 +111,13 @@ namespace natl {
         NATL_FORCE_INLINE constexpr const DataType& getValue() const { return value; }
 
         template<typename Interger>
-            requires(IsItergerType<Interger>)
-        NATL_FORCE_INLINE constexpr Interger asInt() const noexcept requires(IsFloatingPointType<DataType>) {
+            requires(IsFundamentalItergerV<Interger>)
+        NATL_FORCE_INLINE constexpr Interger asInt() const noexcept requires(IsFloatingPointV<DataType>) {
             return static_cast<Interger>(value);
         }
         template<typename Float>
-            requires(IsFloatingPointType<Float>)
-        NATL_FORCE_INLINE constexpr Float asFloat() const noexcept requires(IsItergerType<DataType>) {
+            requires(IsFloatingPointV<Float>)
+        NATL_FORCE_INLINE constexpr Float asFloat() const noexcept requires(IsFundamentalItergerV<DataType>) {
             return static_cast<Float>(value);
         }
 

@@ -199,8 +199,8 @@ namespace natl {
 		}
 	}
 
-	template <typename... DataTypes> constexpr Tuple<Decay<DataTypes>...> makeTuple(DataTypes&&... args) {
-		return Tuple<Decay<DataTypes>...>(natl::forward<DataTypes>(args)...);
+	template <typename... DataTypes> constexpr Tuple<DecayT<DataTypes>...> makeTuple(DataTypes&&... args) {
+		return Tuple<DecayT<DataTypes>...>(natl::forward<DataTypes>(args)...);
 	}
 
 	template <typename... Args>
@@ -226,10 +226,10 @@ namespace natl {
 
 	}
 
-	template<class TupleType> using TupleSizeTypeImpl = impl::TupleSizeTypeImpl<Decay<TupleType>>;
-	template<class TupleType> constexpr inline Size TupleSize = impl::TupleSizeTypeImpl<Decay<TupleType>>::value;
-	template<Size Index, class TupleType> using TupleElementType = impl::TupleElementTypeImpl<Index, Decay<TupleType>>;
-	template<Size Index, class TupleType> using TupleElement = impl::TupleElementTypeImpl<Index, Decay<TupleType>>::type;
+	template<class TupleType> using TupleSizeTypeImpl = impl::TupleSizeTypeImpl<DecayT<TupleType>>;
+	template<class TupleType> constexpr inline Size TupleSize = impl::TupleSizeTypeImpl<DecayT<TupleType>>::value;
+	template<Size Index, class TupleType> using TupleElementType = impl::TupleElementTypeImpl<Index, DecayT<TupleType>>;
+	template<Size Index, class TupleType> using TupleElement = impl::TupleElementTypeImpl<Index, DecayT<TupleType>>::type;
 
 	namespace impl {
 		template<typename Functor, typename Tuple, Size... Indices>

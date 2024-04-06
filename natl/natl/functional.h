@@ -329,7 +329,7 @@ namespace natl {
 			template<class Functor>
 				requires(HasFunctionSignature<Functor, ReturnType, ArgTypes...>)
 			constexpr FunctionBase& assign(Functor&& functor) noexcept {
-				if constexpr (ConvertibleTo<RemoveReference<Functor>, ReturnType(*)(ArgTypes...) noexcept>) {
+				if constexpr (ConvertibleTo<RemoveReferenceT<Functor>, ReturnType(*)(ArgTypes...) noexcept>) {
 					functionPtr = static_cast<function_ptr_type>(functor);
 					functionStorageType = impl::FunctionStorageType::functionPtr;
 					return self();

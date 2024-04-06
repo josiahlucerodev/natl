@@ -82,16 +82,16 @@ namespace natl {
 		constexpr const iterator& self() const noexcept { return *this; }
 	public:
 		using const_iterator = ColonyIterator<const DataType, Alloc>;
-		constexpr operator const_iterator() const noexcept requires(isNotConst<DataType>) {
+		constexpr operator const_iterator() const noexcept requires(IsNotConstV<DataType>) {
 			return const_iterator(colonyBlock, skipFieldIndex, skipFieldPos);
 		}
 
-		constexpr pointer getAddress() noexcept requires(isNotConst<DataType>) { return &colonyBlock->data[skipFieldIndex]; }
+		constexpr pointer getAddress() noexcept requires(IsNotConstV<DataType>) { return &colonyBlock->data[skipFieldIndex]; }
 		constexpr const_pointer getAddress() const noexcept { return &colonyBlock->data[skipFieldIndex]; }
 
-		constexpr reference operator*() noexcept requires(isNotConst<DataType>) { return colonyBlock->data[skipFieldIndex]; }
+		constexpr reference operator*() noexcept requires(IsNotConstV<DataType>) { return colonyBlock->data[skipFieldIndex]; }
 		constexpr const_reference operator*() const noexcept { return colonyBlock->data[skipFieldIndex]; }
-		constexpr pointer operator->() noexcept requires(isNotConst<DataType>) { return &colonyBlock->data[skipFieldIndex]; }
+		constexpr pointer operator->() noexcept requires(IsNotConstV<DataType>) { return &colonyBlock->data[skipFieldIndex]; }
 		constexpr const_pointer operator->() const noexcept { return &colonyBlock->data[skipFieldIndex]; }
 
 		constexpr bool operator==(const iterator rhs) const noexcept { 
@@ -184,8 +184,8 @@ namespace natl {
 
 		using iterator = ColonyIterator<DataType, Alloc>;
 		using const_iterator = ColonyIterator<const DataType, Alloc>;
-		using reverse_iterator = std::reverse_iterator<ColonyIterator<DataType, Alloc>>;
-		using const_reverse_iterator = std::reverse_iterator<ColonyIterator<const DataType, Alloc>>;
+		using reverse_iterator = ReverseIterator<ColonyIterator<DataType, Alloc>>;
+		using const_reverse_iterator = ReverseIterator<ColonyIterator<const DataType, Alloc>>;
 
 		using SkipFieldType = ColonySkipFieldType;
 		using colony_block = ColonyBlock<std::remove_cv_t<DataType>>;

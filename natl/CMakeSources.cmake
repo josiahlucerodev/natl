@@ -8,6 +8,7 @@ natl/basicTypes.h
 natl/batchPool.h
 natl/bitArray.h
 natl/bits.h
+natl/characterTest.h
 natl/colony.h
 natl/commonHashs.h
 natl/compare.h

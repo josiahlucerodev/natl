@@ -644,7 +644,7 @@ namespace natl {
 		//special element access
 		constexpr size_type clampIndex(const size_type index) const noexcept { return clamp<size_type>(index, frontIndex(), backIndex()); }
 
-		constexpr reference atClamped(const size_type index) noexcept requires(isNotConst<value_type>) { return at(clampIndex(index)); }
+		constexpr reference atClamped(const size_type index) noexcept requires(IsNotConstV<value_type>) { return at(clampIndex(index)); }
 		constexpr const_pointer atClamped(const size_type index) const noexcept { return at(clampIndex(index)); }
 
 		optional_pointer optionalAt(const size_type index) {

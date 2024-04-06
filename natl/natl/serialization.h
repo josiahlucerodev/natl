@@ -256,7 +256,7 @@ namespace natl {
 		constexpr SerializationStructType() noexcept = default;
 		/*
 		template<typename... SerializationStructTypeElementArgs>
-			requires(IsTheSame<SerializationStructTypeElement, SerializationStructTypeElementArgs> && ...)
+			requires(IsSameV<SerializationStructTypeElement, SerializationStructTypeElementArgs> && ...)
 		constexpr SerializationStructType(const StringView& name, SerializationStructTypeElementArgs&&... elements) noexcept : name(name), elements(elements...) {};
 		*/
 		constexpr SerializationStructType(const StringView& nameIn, std::initializer_list<SerializationStructTypeElement> elementsIn) noexcept : name(nameIn), elements(elementsIn) {};
@@ -298,7 +298,7 @@ namespace natl {
 
 		using SerializationArrayData = SmallDynArray<SerializationElement*, ((commonByteSize - 24) / sizeof(SerializationElement*))>;
 		using SerializationDicData = SmallDynArray<SerializationElement*, ((commonByteSize - 24) / sizeof(SerializationElement*))>;
-		using SerializationAssicStringData = BaseStringByteSize<AssciCode, commonByteSize >;
+		using SerializationAssicStringData = BaseStringByteSize<Assci, commonByteSize >;
 		using SerializationStructData = SmallDynArray<SerializationElement*, ((commonByteSize - 24) / sizeof(SerializationElement*))>;
 		using SerializationTStructData = SmallDynArray<SerializationElement*, ((commonByteSize - 24) / sizeof(SerializationElement*))>;
 
@@ -356,114 +356,114 @@ namespace natl {
 	namespace impl {
 		template<class Serializer>
 		concept DoesSerializerHaveInt8 = requires(Serializer serializer, const i8& value) {
-			{ serializer.serialize_i8(value) } -> IsTheSame<void>; 
-			{ serializer.serializeNull_i8() } -> IsTheSame<void>; 
+			{ serializer.serialize_i8(value) } -> SameAs<void>; 
+			{ serializer.serializeNull_i8() } -> SameAs<void>; 
 		};
 		template<class Serializer>
 		concept DoesSerializerHaveInt16 = requires(Serializer serializer, const i16& value) {
-				{ serializer.serialize_i16(value) } -> IsTheSame<void>;
-				{ serializer.serializeNull_i16() } -> IsTheSame<void>;
+				{ serializer.serialize_i16(value) } -> SameAs<void>;
+				{ serializer.serializeNull_i16() } -> SameAs<void>;
 		};
 		template<class Serializer>
 		concept DoesSerializerHaveInt32 = requires(Serializer serializer, const i32 & value) {
-			{ serializer.serialize_i32(value) } -> IsTheSame<void>;
-			{ serializer.serializeNull_i32() } -> IsTheSame<void>;
+			{ serializer.serialize_i32(value) } -> SameAs<void>;
+			{ serializer.serializeNull_i32() } -> SameAs<void>;
 		};
 		template<class Serializer>
 		concept DoesSerializerHaveInt64 = requires(Serializer serializer, const i64 & value) {
-			{ serializer.serialize_i64(value) } -> IsTheSame<void>;
-			{ serializer.serializeNull_i64() } -> IsTheSame<void>;
+			{ serializer.serialize_i64(value) } -> SameAs<void>;
+			{ serializer.serializeNull_i64() } -> SameAs<void>;
 		};
 
 		template<class Serializer>
 		concept DoesSerializerHaveUInt8 = requires(Serializer serializer, const ui8 & value) {
-			{ serializer.serialize_ui8(value) } -> IsTheSame<void>;
-			{ serializer.serializeNull_ui8() } -> IsTheSame<void>;
+			{ serializer.serialize_ui8(value) } -> SameAs<void>;
+			{ serializer.serializeNull_ui8() } -> SameAs<void>;
 		};
 		template<class Serializer>
 		concept DoesSerializerHaveUInt16 = requires(Serializer serializer, const ui16 & value) {
-			{ serializer.serialize_ui16(value) } -> IsTheSame<void>;
-			{ serializer.serializeNull_ui16() } -> IsTheSame<void>;
+			{ serializer.serialize_ui16(value) } -> SameAs<void>;
+			{ serializer.serializeNull_ui16() } -> SameAs<void>;
 		};
 		template<class Serializer>
 		concept DoesSerializerHaveUInt32 = requires(Serializer serializer, const ui32 & value) {
-			{ serializer.serialize_ui32(value) } -> IsTheSame<void>;
-			{ serializer.serializeNull_ui32() } -> IsTheSame<void>;
+			{ serializer.serialize_ui32(value) } -> SameAs<void>;
+			{ serializer.serializeNull_ui32() } -> SameAs<void>;
 		};
 		template<class Serializer>
 		concept DoesSerializerHaveUInt64 = requires(Serializer serializer, const ui64 & value) {
-			{ serializer.serialize_ui64(value) } -> IsTheSame<void>;
-			{ serializer.serializeNull_ui64() } -> IsTheSame<void>;
+			{ serializer.serialize_ui64(value) } -> SameAs<void>;
+			{ serializer.serializeNull_ui64() } -> SameAs<void>;
 		};
 
 		template<class Serializer>
 		concept DoesSerializerHaveFloat32 = requires(Serializer serializer, const f32 & value) {
-			{ serializer.serialize_f32(value) } -> IsTheSame<void>;
-			{ serializer.serializeNull_f32() } -> IsTheSame<void>;
+			{ serializer.serialize_f32(value) } -> SameAs<void>;
+			{ serializer.serializeNull_f32() } -> SameAs<void>;
 		};
 		template<class Serializer>
 		concept DoesSerializerHaveFloat64 = requires(Serializer serializer, const f64 & value) {
-			{ serializer.serialize_f64(value) } -> IsTheSame<void>;
-			{ serializer.serializeNull_f64() } -> IsTheSame<void>;
+			{ serializer.serialize_f64(value) } -> SameAs<void>;
+			{ serializer.serializeNull_f64() } -> SameAs<void>;
 		};
 
 		template<class Serializer>concept DoesSerializerHaveAssicStr = requires(Serializer serializer,
 			const ConstAsciiStringView & value) {
-				{ serializer.serializeAssicStr(value) } -> IsTheSame<void>;
-				{ serializer.serializeNullAssicStr() } -> IsTheSame<void>;
+				{ serializer.serializeAssicStr(value) } -> SameAs<void>;
+				{ serializer.serializeNullAssicStr() } -> SameAs<void>;
 		};
 
 		template<class Serializer>
 		concept DoesSerializeHaveTStruct = requires(Serializer serializer, const SerializationStructType& structType) {
-				{ serializer.serializeStructType(structType) } -> IsTheSame<void>;
-				{ serializer.serializeNamedTstructInfo(structType) } -> IsTheSame<void>;
-				{ serializer.serializeTypedStruct(structType) } -> IsTheSame<void>;
-				{ serializer.endSerializeTypedStruct() } -> IsTheSame<void>;
-				{ serializer.serializeNullTypedStruct(structType) } -> IsTheSame<void>;
+				{ serializer.serializeStructType(structType) } -> SameAs<void>;
+				{ serializer.serializeNamedTstructInfo(structType) } -> SameAs<void>;
+				{ serializer.serializeTypedStruct(structType) } -> SameAs<void>;
+				{ serializer.endSerializeTypedStruct() } -> SameAs<void>;
+				{ serializer.serializeNullTypedStruct(structType) } -> SameAs<void>;
 		};
 		template<class Serializer>
 		concept DoesSerializeHaveStruct = requires(Serializer serializer) {
-				{ serializer.serializeStruct() } -> IsTheSame<void>;
-				{ serializer.endSerializeStruct() } -> IsTheSame<void>;
-				{ serializer.serializeNullStruct() } -> IsTheSame<void>;
+				{ serializer.serializeStruct() } -> SameAs<void>;
+				{ serializer.endSerializeStruct() } -> SameAs<void>;
+				{ serializer.serializeNullStruct() } -> SameAs<void>;
 		};
 		template<class Serializer>
 		concept DoesSerializeHaveDic = requires(Serializer serializer, const natl::SerializationDicInfo& dicInfo) {
-				{ serializer.serializeNamedDicInfo(dicInfo) } -> IsTheSame<void>;
-				{ serializer.serializeDic(dicInfo) } -> IsTheSame<void>;
-				{ serializer.endSerializeDic() } -> IsTheSame<void>;
-				{ serializer.serializeDicKey() } -> IsTheSame<void>;
-				{ serializer.serializeDicValue() } -> IsTheSame<void>;
-				{ serializer.serializeNullDic(dicInfo) } -> IsTheSame<void>;
+				{ serializer.serializeNamedDicInfo(dicInfo) } -> SameAs<void>;
+				{ serializer.serializeDic(dicInfo) } -> SameAs<void>;
+				{ serializer.endSerializeDic() } -> SameAs<void>;
+				{ serializer.serializeDicKey() } -> SameAs<void>;
+				{ serializer.serializeDicValue() } -> SameAs<void>;
+				{ serializer.serializeNullDic(dicInfo) } -> SameAs<void>;
 		};
 		template<class Serializer>
 		concept DoesSerializeHaveArray = requires(Serializer serializer, const natl::SerializationArrayInfo& arrayInfo) {
-				{ serializer.serializeNamedArrayInfo(arrayInfo) } ->IsTheSame<void>;
-				{ serializer.serializeNextArrayElement() } ->IsTheSame<void>;
-				{ serializer.serializeArray(arrayInfo) } -> IsTheSame<void>;
-				{ serializer.endSerializeArray() } -> IsTheSame<void>;
-				{ serializer.serializeNullArray(arrayInfo) } -> IsTheSame<void>;
+				{ serializer.serializeNamedArrayInfo(arrayInfo) } ->SameAs<void>;
+				{ serializer.serializeNextArrayElement() } ->SameAs<void>;
+				{ serializer.serializeArray(arrayInfo) } -> SameAs<void>;
+				{ serializer.endSerializeArray() } -> SameAs<void>;
+				{ serializer.serializeNullArray(arrayInfo) } -> SameAs<void>;
 		};
 		template<class Serializer>
 		concept DoesSerializeHaveVariant = requires(
 			Serializer serializer,
 			const SerializationVariantType& variantType,
 			const SerializationType& variantElementType) {
-				{ serializer.serializeNamedVariantInfo(variantType, variantElementType) } -> IsTheSame<void>;
-				{ serializer.serializeVariantType(variantType) } -> IsTheSame<void>;
-				{ serializer.serializeVariant(variantType, variantElementType) } -> IsTheSame<void>;
-				{ serializer.endSerializeVariant() } -> IsTheSame<void>;
-				{ serializer.serializeNullVariant(variantType) } -> IsTheSame<void>;
+				{ serializer.serializeNamedVariantInfo(variantType, variantElementType) } -> SameAs<void>;
+				{ serializer.serializeVariantType(variantType) } -> SameAs<void>;
+				{ serializer.serializeVariant(variantType, variantElementType) } -> SameAs<void>;
+				{ serializer.endSerializeVariant() } -> SameAs<void>;
+				{ serializer.serializeNullVariant(variantType) } -> SameAs<void>;
 		};
 		
 		template<class Serializer>
 		concept DoesSerializeHaveEnum = requires(Serializer serializer,
 			const natl::SerializationEnumType& enumType,
 			const natl::Size nameIndex) {
-				{ serializer.serializeEnumType(enumType) } -> IsTheSame<void>;
-				{ serializer.serializeNamedEnumInfo(enumType) } -> IsTheSame<void>;
-				{ serializer.serializeEnum(enumType, nameIndex) } -> IsTheSame<void>;
-				{ serializer.serializeNullEnum(enumType) } -> IsTheSame<void>;
+				{ serializer.serializeEnumType(enumType) } -> SameAs<void>;
+				{ serializer.serializeNamedEnumInfo(enumType) } -> SameAs<void>;
+				{ serializer.serializeEnum(enumType, nameIndex) } -> SameAs<void>;
+				{ serializer.serializeNullEnum(enumType) } -> SameAs<void>;
 		};	
 
 		template<class Serializer>
@@ -471,9 +471,9 @@ namespace natl {
 			Serializer serializer, 
 			const Size& bytes, 
 			const ConstAsciiStringView& name) {
-				{ serializer.serializeBegin(bytes) } -> IsTheSame<void>;
-				{ serializer.serializeEnd() } -> IsTheSame<void>;
-				{ serializer. template serializeNamedElement<SerializationTypeFlag::dt_i8, SerializationOptionalType::True>(name) } -> IsTheSame<void>;
+				{ serializer.serializeBegin(bytes) } -> SameAs<void>;
+				{ serializer.serializeEnd() } -> SameAs<void>;
+				{ serializer. template serializeNamedElement<SerializationTypeFlag::dt_i8, SerializationOptionalType::True>(name) } -> SameAs<void>;
 		};
 	}
 

@@ -18,7 +18,7 @@ namespace natl {
 		using arg_types = TypePack<ArgTypes...>;
 		using function_signature = ReturnType(ArgTypes...) noexcept;
 		using function_type = Function<ReturnType(ArgTypes...), FunctionByteCapacity, Alloc>;
-		using arg_storage_type = Tuple<RemoveCV<RemoveReference<ArgTypes>>...>;
+		using arg_storage_type = Tuple<RemoveCVT<RemoveReferenceT<ArgTypes>>...>;
 	private:
 		function_type functionStorage;
 		Option<arg_storage_type> functionArgumentStroage;

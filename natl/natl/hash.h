@@ -94,6 +94,6 @@ namespace natl {
 	template<typename DataType>
 		requires(Hashable<DataType>)
 	constexpr Size hashValue(const DataType& value) noexcept {
-		return Hash<Decay<DataType>>().hash(value);
+		return Hash<DecayT<DataType>>().hash(value);
 	}
  }

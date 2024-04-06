@@ -5,10 +5,12 @@
 #include "container.h"
 #include "string.h"
 #include "compilerDependent.h"
+#include "stringView.h"
+#include "characterTest.h"
 
 //interface
 namespace natl {
-	consteval AssciCode getPlatformPreferredPathSeparator() noexcept {
+	consteval Assci getPlatformPreferredPathSeparator() noexcept {
 		static_assert(!(getPlatformType() == ProgramPlatformType::unknownPlatform), "natl: getPlatformPreferredPathSeparator() error - not a supported platform");
 		if constexpr (getPlatformType() == ProgramPlatformType::unixPlatform) {
 			return '/';
@@ -22,15 +24,17 @@ namespace natl {
 	enum class PathFormat {
 		nativeFormat,
 		genericFormat,
-		defaultFormat = nativeFormat,
+		defaultFormat,
 	};
 
-	template<Size BufferSize = (128 - sizeof(BaseStringBaseMembersRef<AssciCode>)), class Alloc = DefaultAllocator<AssciCode>>
+	template<Size BufferSize = (128 - sizeof(BaseStringBaseMembersRef<Assci>)), class Alloc = DefaultAllocator<Assci>>
 		requires(IsAllocator<Alloc>)
-	class BasicPath {
+	class BasePath {
 	public:
 		using allocator_type = Alloc;
-		using string_type = BaseString<AssciCode, BufferSize, Alloc>;
+		using string_type = BaseString<Assci, BufferSize, Alloc>;
+		using string_view_type = BaseStringView<AsciiString>;
+		using const_string_view_type = BaseStringView<const AsciiString>;
 
 		using value_type = string_type::value_type;
 		using reference = string_type::reference;
@@ -47,44 +51,52 @@ namespace natl {
 
 		using allocation_move_adapater = string_type::allocation_move_adapater;
 
+		//movement info 
+		constexpr static bool triviallyRelocatable = string_type::triviallyRelocatable;
+		constexpr static bool triviallyDefaultConstructible = string_type::triviallyDefaultConstructible;
+		constexpr static bool triviallyCompareable = string_type::triviallyCompareable;
+		constexpr static bool triviallyDestructible = string_type::triviallyDestructible;
+		constexpr static bool triviallyConstRefConstructedable = string_type::triviallyConstRefConstructedable;
+		constexpr static bool triviallyMoveConstructedable = string_type::triviallyMoveConstructedable;
+
 		constexpr static value_type pathSeparator = getPlatformPreferredPathSeparator();
 	private:
 		string_type pathStorage;
 	public:
 		//constructor
-		constexpr BasicPath() noexcept = default;
-		constexpr BasicPath(const BasicPath& other) noexcept : pathStorage(other.pathStorage) {}
-		constexpr BasicPath(BasicPath&& other) noexcept : pathStorage(natl::move(other.pathStorage)) {}
+		constexpr BasePath() noexcept = default;
+		constexpr BasePath(const BasePath& other) noexcept : pathStorage(other.pathStorage) {}
+		constexpr BasePath(BasePath&& other) noexcept : pathStorage(natl::move(other.pathStorage)) {}
 
 		template<Size OtherBufferSize>
-		constexpr BasicPath(const BasicPath<OtherBufferSize, Alloc>& other) noexcept : pathStorage(other.pathStorage) {}
+		constexpr BasePath(const BasePath<OtherBufferSize, Alloc>& other) noexcept : pathStorage(other.pathStorage) {}
 		template<Size OtherBufferSize>
-		constexpr BasicPath(BasicPath<OtherBufferSize, Alloc>&& other) noexcept : pathStorage(natl::move(other.pathStorage)) {}
+		constexpr BasePath(BasePath<OtherBufferSize, Alloc>&& other) noexcept : pathStorage(natl::move(other.pathStorage)) {}
 
 		//destructor 
-		constexpr ~BasicPath() noexcept = default;
+		constexpr ~BasePath() noexcept = default;
 
 		//util 
-		constexpr BasicPath& self() noexcept { return *this; }
-		constexpr const BasicPath& self() const noexcept { return *this; }
+		constexpr BasePath& self() noexcept { return *this; }
+		constexpr const BasePath& self() const noexcept { return *this; }
 
 		//assignment 
-		constexpr BasicPath& operator=(const BasicPath& other) noexcept { 
+		constexpr BasePath& operator=(const BasePath& other) noexcept { 
 			pathStorage = other.pathStorage; 
 			return self();
 		}
-		constexpr BasicPath& operator=(BasicPath&& other) noexcept {
+		constexpr BasePath& operator=(BasePath&& other) noexcept {
 			pathStorage = natl::move(other.pathStorage);
 			return self();
 		}
 
 		template<Size OtherBufferSize>
-		constexpr BasicPath& operator=(const BasicPath<OtherBufferSize, Alloc>& other) noexcept {
+		constexpr BasePath& operator=(const BasePath<OtherBufferSize, Alloc>& other) noexcept {
 			pathStorage = other.pathStorage;
 			return self();
 		}
 		template<Size OtherBufferSize>
-		constexpr BasicPath& operator=(BasicPath<OtherBufferSize, Alloc>&& other) noexcept {
+		constexpr BasePath& operator=(BasePath<OtherBufferSize, Alloc>&& other) noexcept {
 			pathStorage = natl::move(other.pathStorage);
 			return self();
 		}
@@ -113,6 +125,23 @@ namespace natl {
 		constexpr bool isEmpty() const noexcept { return pathStorage.isEmpty(); }
 		constexpr bool isNotEmpty() const noexcept { return pathStorage.isNotEmpty(); }
 
+		//format observer
+		constexpr const value_type* c_str() const noexcept { pathStorage.c_str(); }
+		constexpr const string_type& native() const noexcept { return pathStorage; }
+		constexpr operator string_type() const noexcept { return pathStorage; }
 
+
+		//decomposition
+		constexpr const_string_view_type rootName() const noexcept {
+			if constexpr (getPlatformType() == ProgramPlatformType::windowsPlatform) {
+				if (pathStorage.size() < 2) { return {}; }
+				if (isAlphabetic(pathStorage[0]) && pathStorage[1] != ':') {
+					return pathStorage.substrView(0, 2);
+				}
+				return {};
+			} else {
+				return {};
+			}
+		}
 	};
 }

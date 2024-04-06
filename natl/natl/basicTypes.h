@@ -26,8 +26,11 @@ namespace natl {
 	using Size = std::size_t;
 	using PtrDiff = std::ptrdiff_t;
 
+	using SChar = signed char;
 	using Char = char;
-	using AssciCode = char;
+	using Assci = char;
+	using Utf8 = char8_t;
+	using Utf16 = char16_t;
 	using Utf32 = char32_t;
 
 	template<typename DataType, typename TypeToAlignTo>
@@ -126,5 +129,5 @@ constexpr natl::Size operator ""_natl_size(unsigned long long value) noexcept { 
 constexpr natl::SSize operator ""_natl_ssize(unsigned long long value) noexcept { return static_cast<natl::SSize>(value); }
 
 constexpr natl::Char operator ""_natl_char(char value) noexcept { return value; }
-constexpr natl::AssciCode operator ""_natl_assci_char(char value) noexcept { return value; }
+constexpr natl::Assci operator ""_natl_assci_char(char value) noexcept { return value; }
 constexpr natl::Utf32 operator ""_natl_utf32_char(char32_t value) noexcept { return value; }

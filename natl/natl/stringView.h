@@ -78,7 +78,7 @@ namespace natl {
 		constexpr ~BaseStringView() = default;
 
 		//conversion 
-		constexpr operator BaseStringView<const CharType>() requires(isNotConst<CharType>) {
+		constexpr operator BaseStringView<const CharType>() requires(IsNotConstV<CharType>) {
 			return BaseStringView<const CharType>(data(), size());
 		}
 
@@ -100,24 +100,24 @@ namespace natl {
 		constexpr const_reverse_iterator crend() const noexcept { return const_reverse_iterator(beginPtr()); }
 
 		//element access
-		constexpr reference operator[] (const size_type index) requires(isNotConst<CharType>) { return at(index); }
+		constexpr reference operator[] (const size_type index) requires(IsNotConstV<CharType>) { return at(index); }
 		constexpr const_reference operator[] (const size_type index) const { return at(index); }
 
-		constexpr reference at(const size_type index) noexcept requires(isNotConst<CharType>) { return dataPtr[index]; };
+		constexpr reference at(const size_type index) noexcept requires(IsNotConstV<CharType>) { return dataPtr[index]; };
 		constexpr const_reference at(const size_type index) const noexcept { return dataPtr[index]; };
 
 		constexpr size_type frontIndex() const noexcept { return 0; }
 		constexpr size_type backIndex() const noexcept { return size() ? size() - 1 : 0; }
 
-		constexpr reference front() noexcept requires(isNotConst<CharType>) { return at(frontIndex()); }
+		constexpr reference front() noexcept requires(IsNotConstV<CharType>) { return at(frontIndex()); }
 		constexpr const_reference front() const noexcept { return at(frontIndex()); }
-		constexpr reference back() noexcept requires(isNotConst<CharType>) { return at(backIndex()); }
+		constexpr reference back() noexcept requires(IsNotConstV<CharType>) { return at(backIndex()); }
 		constexpr const_reference back() const noexcept { return at(backIndex()); }
 
-		constexpr CharType* data() noexcept requires(isNotConst<CharType>) { return dataPtr; }
+		constexpr CharType* data() noexcept requires(IsNotConstV<CharType>) { return dataPtr; }
 		constexpr const CharType* data() const noexcept { return dataPtr; }
 
-		constexpr CharType* c_str() noexcept requires(isNotConst<CharType>) { return dataPtr; }
+		constexpr CharType* c_str() noexcept requires(IsNotConstV<CharType>) { return dataPtr; }
 		constexpr const CharType* c_str() const noexcept { return dataPtr; }
 
 		//capacity 
@@ -370,7 +370,7 @@ namespace natl {
 			return rfind(static_cast<BaseStringView<const char>>(sv), pos);
 		}
 
-		constexpr BaseStringView& reverse() noexcept requires(isNotConst<CharType>) {
+		constexpr BaseStringView& reverse() noexcept requires(IsNotConstV<CharType>) {
 			reverse<iterator>(begin(), end());
 			return self();
 		}
@@ -559,7 +559,7 @@ namespace natl {
 		friend constexpr bool operator==(const BaseStringView& lhs, const BaseStringView& rhs) noexcept {
 			return compareEqual<CharType, CharType>(lhs, rhs);
 		}
-		friend constexpr bool operator==(const BaseStringView& lhs, const BaseStringView<const CharType>& rhs) noexcept requires(isNotConst<CharType>) {
+		friend constexpr bool operator==(const BaseStringView& lhs, const BaseStringView<const CharType>& rhs) noexcept requires(IsNotConstV<CharType>) {
 			return compareEqual<CharType, CharType>(lhs, rhs);
 		}
 		friend constexpr bool operator==(const BaseStringView& lhs, const CharType* rhs) noexcept {
@@ -602,7 +602,7 @@ namespace natl {
 		friend constexpr bool operator!=(const BaseStringView& lhs, const BaseStringView& rhs) noexcept {
 			return compareNotEqual<CharType, CharType>(lhs, rhs);
 		}
-		friend constexpr bool operator!=(const BaseStringView& lhs, const BaseStringView<const CharType>& rhs) noexcept requires(isNotConst<CharType>) {
+		friend constexpr bool operator!=(const BaseStringView& lhs, const BaseStringView<const CharType>& rhs) noexcept requires(IsNotConstV<CharType>) {
 			return compareNotEqual<CharType, CharType>(lhs, rhs);
 		}
 		friend constexpr bool operator!=(const BaseStringView& lhs, const CharType* rhs) noexcept {
@@ -645,7 +645,7 @@ namespace natl {
 		friend constexpr bool operator<(const BaseStringView& lhs, const BaseStringView& rhs) noexcept {
 			return compareLessThan<CharType, CharType>(lhs, rhs);
 		}
-		friend constexpr bool operator<(const BaseStringView& lhs, const BaseStringView<const CharType>& rhs) noexcept requires(isNotConst<CharType>) {
+		friend constexpr bool operator<(const BaseStringView& lhs, const BaseStringView<const CharType>& rhs) noexcept requires(IsNotConstV<CharType>) {
 			return compareLessThan<CharType, CharType>(lhs, rhs);
 		}
 		friend constexpr bool operator<(const BaseStringView& lhs, const CharType* rhs) noexcept {
@@ -688,7 +688,7 @@ namespace natl {
 		friend constexpr bool operator<=(const BaseStringView& lhs, const BaseStringView& rhs) noexcept {
 			return compareLessThanEqual<CharType, CharType>(lhs, rhs);
 		}
-		friend constexpr bool operator<=(const BaseStringView& lhs, const BaseStringView<const CharType>& rhs) noexcept requires(isNotConst<CharType>) {
+		friend constexpr bool operator<=(const BaseStringView& lhs, const BaseStringView<const CharType>& rhs) noexcept requires(IsNotConstV<CharType>) {
 			return compareLessThanEqual<CharType, CharType>(lhs, rhs);
 		}
 		friend constexpr bool operator<=(const BaseStringView& lhs, const CharType* rhs) noexcept {
@@ -731,7 +731,7 @@ namespace natl {
 		friend constexpr bool operator>(const BaseStringView& lhs, const BaseStringView& rhs) noexcept {
 			return compareGreaterThan<CharType, CharType>(lhs, rhs);
 		}
-		friend constexpr bool operator>(const BaseStringView& lhs, const BaseStringView<const CharType>& rhs) noexcept requires(isNotConst<CharType>) {
+		friend constexpr bool operator>(const BaseStringView& lhs, const BaseStringView<const CharType>& rhs) noexcept requires(IsNotConstV<CharType>) {
 			return compareGreaterThan<CharType, CharType>(lhs, rhs);
 		}
 		friend constexpr bool operator>(const BaseStringView& lhs, const CharType* rhs) noexcept {
@@ -774,7 +774,7 @@ namespace natl {
 		friend constexpr bool operator>=(const BaseStringView& lhs, const BaseStringView& rhs) noexcept {
 			return compareGreaterThanEqual<CharType, CharType>(lhs, rhs);
 		}
-		friend constexpr bool operator>=(const BaseStringView& lhs, const BaseStringView<const CharType>& rhs) noexcept requires(isNotConst<CharType>) {
+		friend constexpr bool operator>=(const BaseStringView& lhs, const BaseStringView<const CharType>& rhs) noexcept requires(IsNotConstV<CharType>) {
 			return compareGreaterThanEqual<CharType, CharType>(lhs, rhs);
 		}
 		friend constexpr bool operator>=(const BaseStringView& lhs, const CharType* rhs) noexcept {
@@ -817,7 +817,7 @@ namespace natl {
 		friend constexpr StrongOrdering operator<=>(const BaseStringView& lhs, const BaseStringView& rhs) noexcept {
 			return compareSpaceship<CharType, CharType>(lhs, rhs);
 		}
-		friend constexpr StrongOrdering operator<=>(const BaseStringView& lhs, const BaseStringView<const CharType>& rhs) noexcept requires(isNotConst<CharType>) {
+		friend constexpr StrongOrdering operator<=>(const BaseStringView& lhs, const BaseStringView<const CharType>& rhs) noexcept requires(IsNotConstV<CharType>) {
 			return compareSpaceship<CharType, CharType>(lhs, rhs);
 		}
 		friend constexpr StrongOrdering operator<=>(const BaseStringView& lhs, const CharType* rhs) noexcept {

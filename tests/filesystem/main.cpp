@@ -8,5 +8,5 @@ constexpr int compileTimeTest() {
 }
 
 int main() {
-	
+	natl::BasePath<> path;
 }

@@ -20,15 +20,15 @@ namespace natl {
 
 	//basic operations
 	template<typename NumericType>
-		requires(IsNumericType<NumericType>)
+		requires(IsFundamentalNumericV<NumericType>)
 	NATL_FORCE_INLINE constexpr NumericType math_abs(const NumericType value) noexcept {
-		if constexpr (IsUnsignedItergerType<NumericType>) {
+		if constexpr (IsFundamentalUnsignedItergerV<NumericType>) {
 			return value;
 		} else {
 			if (isConstantEvaluated()) {
 				return (value < NumericType(0)) ? -value : value;
 			} else {
-				if constexpr (IsFloatingPointType<NumericType>) {
+				if constexpr (IsFloatingPointV<NumericType>) {
 					return std::abs(value);
 				} else {
 					return std::fabs(value);
@@ -38,12 +38,12 @@ namespace natl {
 	}
 
 	template<typename Integer>
-		requires(IsItergerType<Integer>)
+		requires(IsFundamentalItergerV<Integer>)
 	NATL_FORCE_INLINE constexpr Integer twoToThePower(const Integer value) noexcept {
-		if constexpr (IsSignedItergerType<Integer>) {
+		if constexpr (IsFundamentalSignedItergerV<Integer>) {
 			return (value >= Integer(0) && value < ((sizeof(Integer) * 8) - 1)) ? Integer(1) << value : Integer(0);
 		}
-		if constexpr (IsUnsignedItergerType<Integer>) {
+		if constexpr (IsFundamentalUnsignedItergerV<Integer>) {
 			return (value < ((sizeof(Integer) * 8))) ? Integer(1) << value : Integer(0);
 		}
 	}

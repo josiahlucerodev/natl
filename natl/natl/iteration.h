@@ -99,6 +99,7 @@ namespace natl {
 
         using iterator = RepeatIterator;
         using const_iterator = RepeatIterator;
+        using reverse_iterator = RepeatIterator;
         using const_reverse_iterator = RepeatIterator;
     private:
         Size repeatCount;
@@ -170,14 +171,14 @@ namespace natl {
     namespace impl {
         template<typename IterationRange>
         struct IteratorActionPreIncrement {
-            constexpr void operator()(RemoveReference<IterationRange>& iterationRange) noexcept {
+            constexpr void operator()(RemoveReferenceT<IterationRange>& iterationRange) noexcept {
                 ++iterationRange;
             }
         };
 
         template<template<typename Iterators> typename IteratorAction, typename... Iterators>
         struct CallActionOnIteratorsStructFunc {
-            constexpr void operator()(RemoveReference<Iterators>&... iterationRanges) noexcept {
+            constexpr void operator()(RemoveReferenceT<Iterators>&... iterationRanges) noexcept {
                 (IteratorAction<Iterators>{}(iterationRanges), ...);
             }
         };
@@ -259,25 +260,25 @@ namespace natl {
     namespace impl {
         template<typename IterationRange>
         using CombindedIterationIterationRangeStorageType =
-            Conditional<!IsLValueReference<IterationRange>,
-                RemoveReference<IterationRange>,
-                RemoveReference<IterationRange>&
+            ConditionalT<!IsLValueReferenceV<IterationRange>,
+                RemoveReferenceT<IterationRange>,
+                RemoveReferenceT<IterationRange>&
         >;
         template<typename IterationRange> 
         struct IteratorAccessBegin {
-            constexpr typename IterationRange::iterator operator()(RemoveReference<IterationRange>& iterationRange) noexcept {
+            constexpr typename IterationRange::iterator operator()(RemoveReferenceT<IterationRange>& iterationRange) noexcept {
                 return iterationRange.begin();
             }
         };
         template<typename IterationRange>
         struct IteratorAccessEnd {
-            constexpr typename IterationRange::iterator operator()(RemoveReference<IterationRange>& iterationRange) noexcept {
+            constexpr typename IterationRange::iterator operator()(RemoveReferenceT<IterationRange>& iterationRange) noexcept {
                 return iterationRange.end();
             }
         };
         template<template<typename IterationRange> typename IteratorAccess, typename... IterationRanges>
         struct IterationRangesToIteratorsStructFunc {
-            constexpr Tuple<typename IterationRanges::iterator...> operator()(RemoveReference<IterationRanges>... iterationRanges) noexcept {
+            constexpr Tuple<typename IterationRanges::iterator...> operator()(RemoveReferenceT<IterationRanges>... iterationRanges) noexcept {
                 using iterator_storage = Tuple<typename IterationRanges::iterator...>;
                 return iterator_storage(IteratorAccess<IterationRanges>{}(iterationRanges)...);
             }
@@ -367,5 +368,50 @@ namespace natl {
     constexpr auto makeCombindedIteration(auto... iterationRanges) noexcept {
         using combined_iteration_type = CombinedIteration<TypePack<DataTypes...>, TypePack<decltype(iterationRanges)...>>;
         return combined_iteration_type(iterationRanges...);
+    }
+
+    template<typename IterationRange> 
+    class ReverseIteration {
+    public:
+        using value_type = IterationRange::value_type;
+        using reference = IterationRange::reference;
+        using const_reference = IterationRange::const_reference;
+        using pointer = IterationRange::pointer;
+        using const_pointer = IterationRange::const_pointer;
+        using difference_type = IterationRange::difference_type;
+        using size_type = IterationRange::size_type;
+
+        using iterator = IterationRange::reverse_iterator;
+        using const_iterator = IterationRange::const_reverse_iterator;
+        using reverse_iterator = IterationRange::iterator;
+        using const_reverse_iterator = IterationRange::const_iterator;
+    private:
+        IterationRange& iterationRangeRef;
+    public:
+        //constructor
+        constexpr ReverseIteration(IterationRange& iterationRange) noexcept : iterationRangeRef(iterationRange) {};
+
+        //destructor
+        constexpr ~ReverseIteration() noexcept = default;
+
+        //iterators 
+        constexpr iterator begin() noexcept requires(IsNotConstV<IterationRange>) { return iterationRangeRef.rbegin(); }
+        constexpr const_iterator begin() const noexcept { return iterationRangeRef.rbegin(); }
+        constexpr const_iterator cbegin() const noexcept { return iterationRangeRef.rbegin(); }
+        constexpr iterator end() noexcept requires(IsNotConstV<IterationRange>) { return iterationRangeRef.rend(); }
+        constexpr const_iterator end() const noexcept { return iterationRangeRef.rend(); }
+        constexpr const_iterator cend() const noexcept { return iterationRangeRef.rend(); }
+
+        constexpr reverse_iterator rbegin() noexcept requires(IsNotConstV<IterationRange>) { return iterationRangeRef.begin(); }
+        constexpr const_reverse_iterator rbegin() const noexcept { return iterationRangeRef.begin(); }
+        constexpr const_reverse_iterator crbegin() const noexcept { return iterationRangeRef.begin(); }
+        constexpr reverse_iterator rend() noexcept requires(IsNotConstV<IterationRange>) { return iterationRangeRef.end(); }
+        constexpr const_reverse_iterator rend() const noexcept { return iterationRangeRef.end(); }
+        constexpr const_reverse_iterator crend() const noexcept { return iterationRangeRef.end(); }
+    };
+
+    template<typename IterationRange>
+    constexpr ReverseIteration<IterationRange> makeReverseIteration(IterationRange& iterationRange) noexcept {
+        return ReverseIteration<IterationRange>(iterationRange);
     }
 }
