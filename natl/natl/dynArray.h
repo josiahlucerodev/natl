@@ -8,6 +8,26 @@
 
 //interface 
 namespace natl {
+	template<typename DynArrayLike, typename DataType>
+	concept IsDynamicArrayLike = HasBeginIterator<DynArrayLike> && HasEndIterator<DynArrayLike> && 
+		requires(DynArrayLike & dynArray, const Size newSize) {
+		{ dynArray.reserve(newSize) };
+		{ dynArray.resize(newSize) };
+		{ dynArray.data() } -> ConvertibleTo<DataType*>;
+	};
+	template<typename DynArrayLike, typename DataType>
+	concept IsCloselyDynamicArrayLike =
+		HasBeginIterator<DynArrayLike> &&
+		HasEndIterator<DynArrayLike> &&
+		(sizeof(typename DynArrayLike::value_type) == sizeof(DataType)) &&
+		requires(DynArrayLike& dynArray, const Size newSize) {
+			{ dynArray.reserve(newSize) };
+			{ dynArray.resize(newSize) };
+			{ dynArray.data() };
+	};
+	template<typename DynArrayLike>
+	concept IsByteDynamicArrayLike = IsCloselyDynamicArrayLike<DynArrayLike, Byte>;
+
 	template<class DataType, class Alloc = DefaultAllocator<DataType>>
 		requires(IsAllocator<Alloc>)
 	class DynArray {

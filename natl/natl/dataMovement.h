@@ -16,6 +16,10 @@ namespace natl {
     constexpr DataType* addressof(DataType& val) noexcept {
         return std::addressof<DataType>(val);
     }
+    constexpr bool isInBufferRegion(const Size bufferSize, const Size offset, const Size count) noexcept {
+        const Size endOffset = offset + count;
+        return endOffset < bufferSize;
+    }
 
     template <class Iter, class NoThrowForwardIter>
         requires(IsIterPtr<Iter> && IsIterPtr<NoThrowForwardIter>)

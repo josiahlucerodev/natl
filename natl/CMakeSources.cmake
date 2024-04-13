@@ -45,6 +45,7 @@ natl/string.h
 natl/stringConvert.h
 natl/stringLiteral.h
 natl/stringView.h
+natl/strongType.h
 natl/test.h
 natl/timer.h
 natl/tuple.h

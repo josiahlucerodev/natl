@@ -68,7 +68,7 @@ namespace natl {
 		//observers 
 		constexpr bool hasFunction() noexcept { return functionStorage.isNotEmpty(); }
 		constexpr bool doesNotHaveFunction() noexcept { return functionStorage.isEmpty(); }
-		constexpr bool hasArguments() noexcept { return functionArgumentStroage.notHaveValue(); }
+		constexpr bool hasArguments() noexcept { return functionArgumentStroage.doesNotHaveValue(); }
 		constexpr bool doesNotHaveArguments() noexcept { return functionArgumentStroage.hasValue(); }
 		constexpr operator bool() const noexcept { return hasFunction() && hasArguments(); }
 

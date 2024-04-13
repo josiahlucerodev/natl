@@ -47,7 +47,7 @@ namespace natl {
 		using const_pointer = const value_type*;
 		using optional_pointer = Option<value_type*>;
 		using optional_const_pointer = Option<const value_type*>;
-		using difference_value_type = PtrDiff;
+		using difference_type = PtrDiff;
 		using size_type = Size;
 
 		using iterator = RandomAccessIterator<value_type>;
@@ -77,8 +77,8 @@ namespace natl {
 		//destrutor
 		constexpr ~BaseStringView() = default;
 
-		//conversion 
-		constexpr operator BaseStringView<const CharType>() requires(IsNotConstV<CharType>) {
+		//convert 
+		constexpr operator BaseStringView<const CharType>() const requires(IsNotConstV<CharType>) {
 			return BaseStringView<const CharType>(data(), size());
 		}
 
@@ -87,15 +87,22 @@ namespace natl {
 		constexpr const BaseStringView& self() const noexcept { return *this; }
 
 		//iterators
+		constexpr pointer beginPtr() requires(IsNotConstV<CharType>) { return dataPtr; }
 		constexpr const_pointer beginPtr() const noexcept { return dataPtr; }
+		constexpr pointer endPtr() requires(IsNotConstV<CharType>) { return dataPtr + stringLength; }
 		constexpr const_pointer endPtr() const noexcept { return dataPtr + stringLength; }
 
+		constexpr iterator begin() noexcept requires(IsNotConstV<CharType>) { return iterator(beginPtr()); }
 		constexpr const_iterator begin() const noexcept { return const_iterator(beginPtr()); }
 		constexpr const_iterator cbegin() const noexcept { return const_iterator(beginPtr()); }
+		constexpr iterator end() noexcept requires(IsNotConstV<CharType>) { return iterator(endPtr()); }
 		constexpr const_iterator end() const noexcept { return const_iterator(endPtr()); }
 		constexpr const_iterator cend() const noexcept { return const_iterator(endPtr()); }
+
+		constexpr reverse_iterator rbegin() noexcept requires(IsNotConstV<CharType>) { return reverse_iterator(endPtr()); }
 		constexpr const_reverse_iterator rbegin() const noexcept { return const_reverse_iterator(endPtr()); }
 		constexpr const_reverse_iterator crbegin() const noexcept { return const_reverse_iterator(endPtr()); }
+		constexpr reverse_iterator rend() noexcept requires(IsNotConstV<CharType>) { return reverse_iterator(beginPtr()); }
 		constexpr const_reverse_iterator rend() const noexcept { return const_reverse_iterator(beginPtr()); }
 		constexpr const_reverse_iterator crend() const noexcept { return const_reverse_iterator(beginPtr()); }
 
@@ -152,11 +159,19 @@ namespace natl {
 			return copyCount;
 		}
 
-		constexpr BaseStringView substr(const size_type pos = 0, const size_type count = npos) const noexcept {
-			if (pos > size()) { 
-				return BaseStringView(nullptr, 0); 
+		constexpr BaseStringView substr(const size_type pos = 0, const size_type count = npos) noexcept requires(IsNotConstV<CharType>) {
+			if (pos > size()) {
+				return BaseStringView(nullptr, 0);
 			} else {
 				return BaseStringView(data() + pos, min<size_type>(size() - pos, count));
+			}
+		}
+
+		constexpr ConstBaseStringView substr(const size_type pos = 0, const size_type count = npos) const noexcept {
+			if (pos > size()) { 
+				return ConstBaseStringView(nullptr, 0);
+			} else {
+				return ConstBaseStringView(data() + pos, min<size_type>(size() - pos, count));
 			}
 		}
 
