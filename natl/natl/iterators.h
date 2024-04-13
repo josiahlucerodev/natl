@@ -20,10 +20,10 @@ namespace natl {
 	using IteratorCategory = typename std::iterator_traits<Iter>::iterator_category;
 
 	template <typename Iter, typename = void>
-	inline constexpr bool IsIteratorV = false;
+	inline constexpr Bool IsIteratorV = false;
 
 	template <typename Iter>
-	inline constexpr bool IsIteratorV<Iter, std::void_t<IteratorCategory<Iter>>> = true;
+	inline constexpr Bool IsIteratorV<Iter, std::void_t<IteratorCategory<Iter>>> = true;
 
 	template<typename Iter>
 	concept IsIterator = IsIteratorV<Iter>;
@@ -135,7 +135,7 @@ namespace natl {
 
 	template <typename AIter, typename BIter>
 		requires(MemcpyCompareIter<AIter, BIter>)
-	bool iterPtrMemcpy(AIter a, BIter b, const Size count) {
+	Bool iterPtrMemcpy(AIter a, BIter b, const Size count) {
 		const typename IterPtrTraits<AIter>::value_type* const aPtr = iteratorToAddress<AIter>(a);
 		const typename IterPtrTraits<BIter>::value_type* const bPtr = iteratorToAddress<BIter>(b);
 		const void* const aVoidPtr = reinterpret_cast<const void* const>(aPtr);
@@ -283,32 +283,32 @@ namespace natl {
 
 	template<typename LhsIter, typename RhsIter>
 		requires(IsIterator<LhsIter> && IsIterator<RhsIter> && IsOneWayEqualTestable<LhsIter, RhsIter>)
-	constexpr bool operator==(const ReverseIterator<LhsIter>& lhs, const ReverseIterator<RhsIter> rhs) noexcept {
+	constexpr Bool operator==(const ReverseIterator<LhsIter>& lhs, const ReverseIterator<RhsIter> rhs) noexcept {
 		return lhs.base() == rhs.base();
 	}
 	template<typename LhsIter, typename RhsIter>
 		requires(IsIterator<LhsIter> && IsIterator<RhsIter> && IsOneWayNotEqualTestable<LhsIter, RhsIter>)
-	constexpr bool operator!=(const ReverseIterator<LhsIter>& lhs, const ReverseIterator<RhsIter> rhs) noexcept {
+	constexpr Bool operator!=(const ReverseIterator<LhsIter>& lhs, const ReverseIterator<RhsIter> rhs) noexcept {
 		return lhs.base() != rhs.base();
 	}
 	template<typename LhsIter, typename RhsIter>
 		requires(IsIterator<LhsIter> && IsIterator<RhsIter> && IsOneWayLessThanTestable<LhsIter, RhsIter>)
-	constexpr bool operator<(const ReverseIterator<LhsIter>& lhs, const ReverseIterator<RhsIter> rhs) noexcept {
+	constexpr Bool operator<(const ReverseIterator<LhsIter>& lhs, const ReverseIterator<RhsIter> rhs) noexcept {
 		return lhs.base() > rhs.base();
 	}
 	template<typename LhsIter, typename RhsIter>
 		requires(IsIterator<LhsIter> && IsIterator<RhsIter> && IsOneWayLessThanEqualTestable<LhsIter, RhsIter>)
-	constexpr bool operator<=(const ReverseIterator<LhsIter>& lhs, const ReverseIterator<RhsIter> rhs) noexcept {
+	constexpr Bool operator<=(const ReverseIterator<LhsIter>& lhs, const ReverseIterator<RhsIter> rhs) noexcept {
 		return lhs.base() >= rhs.base();
 	}
 	template<typename LhsIter, typename RhsIter>
 		requires(IsIterator<LhsIter> && IsIterator<RhsIter> && IsOneWayGreaterThanTestable<LhsIter, RhsIter>)
-	constexpr bool operator>(const ReverseIterator<LhsIter>& lhs, const ReverseIterator<RhsIter> rhs) noexcept {
+	constexpr Bool operator>(const ReverseIterator<LhsIter>& lhs, const ReverseIterator<RhsIter> rhs) noexcept {
 		return lhs.base() < rhs.base();
 	}
 	template<typename LhsIter, typename RhsIter>
 		requires(IsIterator<LhsIter> && IsIterator<RhsIter> && IsOneWayGreaterThanEqualTestable<LhsIter, RhsIter>)
-	constexpr bool operator>=(const ReverseIterator<LhsIter>& lhs, const ReverseIterator<RhsIter> rhs) noexcept {
+	constexpr Bool operator>=(const ReverseIterator<LhsIter>& lhs, const ReverseIterator<RhsIter> rhs) noexcept {
 		return lhs.base() <= rhs.base();
 	}
 
@@ -348,12 +348,12 @@ namespace natl {
 		constexpr reference operator[](const size_type pos) noexcept requires(IsNotConstV<DataType>) { return dataPtr[pos]; };
 		constexpr const_reference operator[](const size_type pos) const noexcept { return dataPtr[pos]; };
 
-		constexpr bool operator== (const iterator rhs) const noexcept { return dataPtr == rhs.dataPtr; }
-		constexpr bool operator!= (const iterator rhs) const noexcept { return dataPtr != rhs.dataPtr; }
-		constexpr bool operator<(const iterator rhs) const noexcept { return dataPtr < rhs.dataPtr; }
-		constexpr bool operator>(const iterator rhs) const noexcept { return dataPtr > rhs.dataPtr; }
-		constexpr bool operator<=(const iterator rhs) const noexcept { return dataPtr <= rhs.dataPtr; }
-		constexpr bool operator>=(const iterator rhs) const noexcept { return dataPtr >= rhs.dataPtr; }
+		constexpr Bool operator== (const iterator rhs) const noexcept { return dataPtr == rhs.dataPtr; }
+		constexpr Bool operator!= (const iterator rhs) const noexcept { return dataPtr != rhs.dataPtr; }
+		constexpr Bool operator<(const iterator rhs) const noexcept { return dataPtr < rhs.dataPtr; }
+		constexpr Bool operator>(const iterator rhs) const noexcept { return dataPtr > rhs.dataPtr; }
+		constexpr Bool operator<=(const iterator rhs) const noexcept { return dataPtr <= rhs.dataPtr; }
+		constexpr Bool operator>=(const iterator rhs) const noexcept { return dataPtr >= rhs.dataPtr; }
 
 		constexpr iterator& operator++() noexcept { dataPtr++; return getSelf(); }
 		constexpr iterator operator++(int) noexcept { iterator tempIt = getSelf(); ++getSelf().dataPtr; return tempIt; }
@@ -410,12 +410,12 @@ namespace natl {
 		constexpr reference operator[](const size_type pos) noexcept requires(IsNotConstV<value_type>) { return dataPtr[pos]; };
 		constexpr const_reference operator[](const size_type pos) const noexcept { return dataPtr[pos]; };
 
-		constexpr bool operator== (const iterator rhs) const noexcept { return dataPtr == rhs.dataPtr; }
-		constexpr bool operator!= (const iterator rhs) const noexcept { return dataPtr != rhs.dataPtr; }
-		constexpr bool operator<(const iterator rhs) const noexcept { return dataPtr < rhs.dataPtr; }
-		constexpr bool operator>(const iterator rhs) const noexcept { return dataPtr > rhs.dataPtr; }
-		constexpr bool operator<=(const iterator rhs) const noexcept { return dataPtr <= rhs.dataPtr; }
-		constexpr bool operator>=(const iterator rhs) const noexcept { return dataPtr >= rhs.dataPtr; }
+		constexpr Bool operator== (const iterator rhs) const noexcept { return dataPtr == rhs.dataPtr; }
+		constexpr Bool operator!= (const iterator rhs) const noexcept { return dataPtr != rhs.dataPtr; }
+		constexpr Bool operator<(const iterator rhs) const noexcept { return dataPtr < rhs.dataPtr; }
+		constexpr Bool operator>(const iterator rhs) const noexcept { return dataPtr > rhs.dataPtr; }
+		constexpr Bool operator<=(const iterator rhs) const noexcept { return dataPtr <= rhs.dataPtr; }
+		constexpr Bool operator>=(const iterator rhs) const noexcept { return dataPtr >= rhs.dataPtr; }
 
 		constexpr iterator& operator++() noexcept { dataPtr++; return getSelf(); }
 		constexpr iterator operator++(int) noexcept { iterator tempIt = getSelf(); ++getSelf().dataPtr; return tempIt; }

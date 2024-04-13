@@ -39,8 +39,8 @@ namespace natl {
         template <typename LhsDataType, typename RhsDataType>
         constexpr auto operator()(const LhsDataType& lhs, const RhsDataType& rhs) const
             requires(requires {
-                { lhs < rhs } -> std::convertible_to<bool>;
-                { rhs < lhs } -> std::convertible_to<bool>; }) {
+                { lhs < rhs } -> std::convertible_to<Bool>;
+                { rhs < lhs } -> std::convertible_to<Bool>; }) {
             if constexpr (std::three_way_comparable_with<LhsDataType, RhsDataType>) {
                 return lhs <=> rhs;
             } else {

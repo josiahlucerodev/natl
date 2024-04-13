@@ -112,12 +112,12 @@ namespace natl {
 		constexpr static Size emptyVariantValue = 0;
 
 		//movement info  
-		constexpr static bool triviallyRelocatable = (IsTriviallyRelocatable<typename Elements::value_type> && ...);
-		constexpr static bool triviallyDefaultConstructible = true;
-		constexpr static bool triviallyCompareable = false;
-		constexpr static bool triviallyDestructible = (IsTriviallyDestructible<typename Elements::value_type> && ...);
-		constexpr static bool triviallyConstRefConstructedable = (IsTriviallyConstRefConstructible<typename Elements::value_type> && ...) && triviallyDestructible;
-		constexpr static bool triviallyMoveConstructedable = (IsTriviallyMoveConstructible<typename Elements::value_type> && ...) && triviallyDestructible;
+		constexpr static Bool triviallyRelocatable = (IsTriviallyRelocatable<typename Elements::value_type> && ...);
+		constexpr static Bool triviallyDefaultConstructible = true;
+		constexpr static Bool triviallyCompareable = false;
+		constexpr static Bool triviallyDestructible = (IsTriviallyDestructible<typename Elements::value_type> && ...);
+		constexpr static Bool triviallyConstRefConstructedable = (IsTriviallyConstRefConstructible<typename Elements::value_type> && ...) && triviallyDestructible;
+		constexpr static Bool triviallyMoveConstructedable = (IsTriviallyMoveConstructible<typename Elements::value_type> && ...) && triviallyDestructible;
 
 	private:
 		Size variantIndex;
@@ -516,10 +516,10 @@ namespace natl {
 			return index;
 		}
 
-		constexpr bool doesnotHaveValue() const noexcept {
+		constexpr Bool doesnotHaveValue() const noexcept {
 			return variantIndex == emptyVariantValue;
 		}
-		constexpr bool hasValue() const noexcept {
+		constexpr Bool hasValue() const noexcept {
 			return variantIndex != emptyVariantValue;
 		}
 		constexpr Size getIndex() const noexcept {
@@ -527,7 +527,7 @@ namespace natl {
 		}
 
 		template<StringLiteral name>
-		constexpr bool isValue() const noexcept {
+		constexpr Bool isValue() const noexcept {
 			return variantIndex == getIndexOf<name>();
 		}
 	};

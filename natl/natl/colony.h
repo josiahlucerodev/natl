@@ -12,7 +12,7 @@
 
 //interface 
 namespace natl {
-	using ColonySkipFieldType = bool;
+	using ColonySkipFieldType = Bool;
 	struct ColonyLimits {
 		Size minGroupSize;
 		Size maxGroupSize;
@@ -41,7 +41,7 @@ namespace natl {
 		Byte* blockByteStorage;
 		Size byteSize;
 
-		constexpr bool isFull() noexcept {
+		constexpr Bool isFull() noexcept {
 			return colonyBlockSize == colonyBlockCapacity;
 		}
 	};
@@ -94,22 +94,22 @@ namespace natl {
 		constexpr pointer operator->() noexcept requires(IsNotConstV<DataType>) { return &colonyBlock->data[skipFieldIndex]; }
 		constexpr const_pointer operator->() const noexcept { return &colonyBlock->data[skipFieldIndex]; }
 
-		constexpr bool operator==(const iterator rhs) const noexcept { 
+		constexpr Bool operator==(const iterator rhs) const noexcept { 
 			return colonyBlock == rhs.colonyBlock && skipFieldIndex == rhs.skipFieldIndex;
 		}
-		constexpr bool operator!= (const iterator rhs) const noexcept { 
+		constexpr Bool operator!= (const iterator rhs) const noexcept { 
 			return !(self() == rhs);
 		}
-		constexpr bool operator<(const iterator rhs) const noexcept { 
+		constexpr Bool operator<(const iterator rhs) const noexcept { 
 			return colonyBlock->index <= rhs.colonyBlock->index && skipFieldIndex < rhs.skipFieldIndex;
 		}
-		constexpr bool operator<=(const iterator rhs) const noexcept { 
+		constexpr Bool operator<=(const iterator rhs) const noexcept { 
 			return colonyBlock->index <= rhs.colonyBlock->index && skipFieldIndex <= rhs.skipFieldIndex;
 		}
-		constexpr bool operator>(const iterator rhs) const noexcept { 
+		constexpr Bool operator>(const iterator rhs) const noexcept { 
 			return colonyBlock->index >= rhs.colonyBlock->index && skipFieldIndex > rhs.skipFieldIndex;
 		}
-		constexpr bool operator>=(const iterator rhs) const noexcept { 
+		constexpr Bool operator>=(const iterator rhs) const noexcept { 
 			return colonyBlock->index >= rhs.colonyBlock->index && skipFieldIndex >= rhs.skipFieldIndex;
 		}
 
@@ -492,9 +492,9 @@ namespace natl {
 	
 
 		//capacity
-		[[nodiscard]] constexpr bool empty() const noexcept { return size() == 0; }
-		[[nodiscard]] constexpr bool isEmpty() const noexcept { return empty(); }
-		[[nodiscard]] constexpr bool isNotEmpty() const noexcept { return !empty(); }
+		[[nodiscard]] constexpr Bool empty() const noexcept { return size() == 0; }
+		[[nodiscard]] constexpr Bool isEmpty() const noexcept { return empty(); }
+		[[nodiscard]] constexpr Bool isNotEmpty() const noexcept { return !empty(); }
 		constexpr size_type size() const noexcept { return colonySize; }
 		constexpr size_type max_size() const noexcept { return Limits<Size>::max(); }
 		constexpr size_type capacity() const noexcept { return colonyCapacity; }
@@ -661,7 +661,7 @@ namespace natl {
 		}
 
 	private:
-		template<bool ClearSkipFeild>
+		template<Bool ClearSkipFeild>
 		constexpr void internalClear() noexcept {
 			if (!ClearSkipFeild && !typeHasToBeDestructed<DataType>()) { return; }
 			if (isEmpty()) { return; }
@@ -776,7 +776,7 @@ namespace natl {
 
 			return OptionEmpty();
 		}
-		constexpr bool isActive(const_iterator iter) const noexcept {
+		constexpr Bool isActive(const_iterator iter) const noexcept {
 			return *iter.skipFieldPos == true;
 		}
 

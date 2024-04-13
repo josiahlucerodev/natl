@@ -5,7 +5,7 @@
 template<class StringType>
 class StringTest {
 public:
-     static bool testConstructionAndAccess() {
+     static natl::Bool testConstructionAndAccess() {
         StringType emptyStr;
         NATL_TEST_ASSERT(typeid(StringType).name() ,emptyStr == "", "Default construction failed");
 
@@ -31,7 +31,7 @@ public:
         return true;
     }
 
-     static bool testModification() {
+     static natl::Bool testModification() {
         StringType str = "Hello, World!";
 
         // Test appending
@@ -65,7 +65,7 @@ public:
         return true;
     }
 
-     static bool testComparison() {
+     static natl::Bool testComparison() {
         StringType str = "Hello, World! Welcome!";
         StringType sameStr = "Hello, World! Welcome!";
         NATL_TEST_ASSERT(typeid(StringType).name() ,str == sameStr, "Equality comparison failed");
@@ -81,7 +81,7 @@ public:
         return true;
     }
 
-     static bool testConcatenation() {
+     static natl::Bool testConcatenation() {
         StringType str1 = "Hello, ";
         StringType str2 = "World!";
         StringType result = str1 + str2;
@@ -91,7 +91,7 @@ public:
         return true;
     }
 
-     static bool testSubstring() {
+     static natl::Bool testSubstring() {
         StringType str = "Hello, World!";
 
         // Extract substring
@@ -109,7 +109,7 @@ public:
         return true;
     }
 
-     static bool testCharacterManipulation() {
+     static natl::Bool testCharacterManipulation() {
         StringType str = "Hello, World";
 
         // Test pushing back and popping back
@@ -131,7 +131,7 @@ public:
         return true;
     }
 
-     static bool testIterators() {
+     static natl::Bool testIterators() {
         StringType str = "Hello, World!";
 
         // Test iterating forward
@@ -151,7 +151,7 @@ public:
         return true;
     }
 
-     static bool testCStringConversion() {
+     static natl::Bool testCStringConversion() {
         if constexpr (std::is_same_v<typename StringType::value_type, char>) {
             StringType str = "Hello, World!";
 
@@ -163,7 +163,7 @@ public:
         return true;
     }
 
-     static bool testSwap() {
+     static natl::Bool testSwap() {
         StringType str1 = "First String";
         StringType str2 = "Second String";
 
@@ -175,7 +175,7 @@ public:
         return true;
     }
 
-     static bool testShrinkToFit() {
+     static natl::Bool testShrinkToFit() {
         StringType str;
         str.resize(10000, 'A');
         natl::Size initialCapacity = str.capacity();
@@ -201,8 +201,8 @@ public:
         return true;
     }
 
-     static bool test(int) {
-        bool allTestsPassed = true;
+     static natl::Bool test(int) {
+         natl::Bool allTestsPassed = true;
 
         allTestsPassed &= testConstructionAndAccess();
         allTestsPassed &= testModification();

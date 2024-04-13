@@ -38,12 +38,12 @@ namespace natl {
 		using allocation_move_adapater = AllocationMoveAdapater<value_type, Alloc>;
 
 		//movement info 
-		constexpr static bool triviallyRelocatable = true;
-		constexpr static bool triviallyDefaultConstructible = true;
-		constexpr static bool triviallyCompareable = false;
-		constexpr static bool triviallyDestructible = false;
-		constexpr static bool triviallyConstRefConstructedable = false;
-		constexpr static bool triviallyMoveConstructedable = false;
+		constexpr static Bool triviallyRelocatable = true;
+		constexpr static Bool triviallyDefaultConstructible = true;
+		constexpr static Bool triviallyCompareable = false;
+		constexpr static Bool triviallyDestructible = false;
+		constexpr static Bool triviallyConstRefConstructedable = false;
+		constexpr static Bool triviallyMoveConstructedable = false;
 	private:
 		DynArray<value_type, Alloc> data;
 		size_type partitionIndex;
@@ -53,9 +53,9 @@ namespace natl {
 		constexpr void resize(const size_type newCapacity) noexcept { data.resize(newCapacity); }
 		constexpr size_type size() const noexcept { return partitionIndex + 1; }
 		constexpr size_type capacity() const noexcept { return data.capacity(); }
-		constexpr bool isFull() const noexcept { return capacity() < partitionIndex + 1; };
-		constexpr bool isEmpty() const noexcept { return partitionIndex == 0; };
-		constexpr bool isNotEmpty() const noexcept { return partitionIndex != 0; };
+		constexpr Bool isFull() const noexcept { return capacity() < partitionIndex + 1; };
+		constexpr Bool isEmpty() const noexcept { return partitionIndex == 0; };
+		constexpr Bool isNotEmpty() const noexcept { return partitionIndex != 0; };
 		constexpr void shrinkToFit() noexcept { data.shrink_to_fit(); }
 		constexpr void clear() noexcept { data.clear(); }
 		constexpr ArrayView<value_type> newPartition(const size_type partiationSize) noexcept {
@@ -118,12 +118,12 @@ namespace natl {
 		using allocation_move_adapater = AllocationMoveAdapater<value_type, Alloc>;
 
 		//movement info 
-		constexpr static bool triviallyRelocatable = true;
-		constexpr static bool triviallyDefaultConstructible = true;
-		constexpr static bool triviallyCompareable = false;
-		constexpr static bool triviallyDestructible = false;
-		constexpr static bool triviallyConstRefConstructedable = false;
-		constexpr static bool triviallyMoveConstructedable = false;
+		constexpr static Bool triviallyRelocatable = true;
+		constexpr static Bool triviallyDefaultConstructible = true;
+		constexpr static Bool triviallyCompareable = false;
+		constexpr static Bool triviallyDestructible = false;
+		constexpr static Bool triviallyConstRefConstructedable = false;
+		constexpr static Bool triviallyMoveConstructedable = false;
 	public:
 		DynamicBytePartitioner() : DynamicPartitioner<std::uint8_t, Alloc>() {}
 	public:
@@ -154,9 +154,9 @@ namespace natl {
 
 		constexpr size_type size() const noexcept { return partitionIndex + 1; }
 		constexpr size_type capacity() const noexcept { return partition.size(); }
-		constexpr bool isFull() const noexcept { return capacity() < size(); };
-		constexpr bool isEmpty() const noexcept { return partitionIndex == 0; };
-		constexpr bool isNotEmpty() const noexcept { return partitionIndex != 0; };
+		constexpr Bool isFull() const noexcept { return capacity() < size(); };
+		constexpr Bool isEmpty() const noexcept { return partitionIndex == 0; };
+		constexpr Bool isNotEmpty() const noexcept { return partitionIndex != 0; };
 		constexpr ArrayView<value_type> getInternalPartition() const noexcept { return partition; };
 
 		constexpr ArrayView<value_type> newPartition(const size_type partiationSize) noexcept {

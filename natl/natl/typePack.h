@@ -79,7 +79,7 @@ namespace natl {
         constexpr static Size value = Limits<Size>::max();
     };
 
-    constexpr bool findImplCompareStrings(const char a[], const char b[]) {
+    constexpr Bool findImplCompareStrings(const char a[], const char b[]) {
         const char* aPtr = a;
         const char *bPtr = b;
         while (*aPtr != '\0' && *bPtr != '\0' && *aPtr == *bPtr) {
@@ -315,7 +315,7 @@ namespace natl {
 
         template<template<typename, typename> typename TypeCompare, typename TestElement, typename... TypePackElements>
         struct TypePackHasElementImpl<TypeCompare, TestElement, TypePack<TypePackElements...>> {
-            constexpr static bool value = (TypeCompare<TestElement, TypePackElements>::value || ...);
+            constexpr static Bool value = (TypeCompare<TestElement, TypePackElements>::value || ...);
         };
 
         //TypePackAddUniqueImpl
@@ -404,7 +404,7 @@ namespace natl {
     using MergeTwoTypePack = typename impl::MergeTwoTypePackImpl<LhsTypePack, RhsTypePack>::type;
     
     template<template<typename, typename> typename TypeCompare, typename TestElement, typename InputTypePack>
-    constexpr bool TypePackHasElement = impl::TypePackHasElementImpl<TypeCompare, TestElement, InputTypePack>::value;
+    constexpr Bool TypePackHasElement = impl::TypePackHasElementImpl<TypeCompare, TestElement, InputTypePack>::value;
 
     template<template<typename, typename> typename TypeCompare, typename ExistingTypePack, typename... TestElements>
     using TypePackAddUnique = typename impl::TypePackAddUniqueImpl<TypeCompare, ExistingTypePack, TestElements...>::type;

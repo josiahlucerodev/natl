@@ -10,7 +10,7 @@
 namespace natl {
     template<typename Integer>
         requires(IsFundamentalItergerV<Integer>)
-    NATL_FORCE_INLINE constexpr bool isEven(const Integer value) noexcept {
+    NATL_FORCE_INLINE constexpr Bool isEven(const Integer value) noexcept {
         return value % Integer(2) == Integer(0);
     }
 
@@ -52,7 +52,7 @@ namespace natl {
     }
     template<typename Integer>
         requires(IsFundamentalItergerV<Integer>)
-    NATL_FORCE_INLINE constexpr bool isPowerOfTwo(const Integer value) noexcept {
+    NATL_FORCE_INLINE constexpr Bool isPowerOfTwo(const Integer value) noexcept {
         return (value > Integer(0)) && ((value & (value - Integer(1))) == Integer(0));
     }
 }

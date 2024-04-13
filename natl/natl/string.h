@@ -51,16 +51,16 @@ namespace natl {
 		using allocation_move_adapater = AllocationMoveAdapater<value_type, Alloc>;
 
 		//movement info 
-		constexpr static bool triviallyRelocatable = true;
-		constexpr static bool triviallyDefaultConstructible = true;
-		constexpr static bool triviallyCompareable = false;
-		constexpr static bool triviallyDestructible = false;
-		constexpr static bool triviallyConstRefConstructedable = false;
-		constexpr static bool triviallyMoveConstructedable = false;
+		constexpr static Bool triviallyRelocatable = true;
+		constexpr static Bool triviallyDefaultConstructible = true;
+		constexpr static Bool triviallyCompareable = false;
+		constexpr static Bool triviallyDestructible = false;
+		constexpr static Bool triviallyConstRefConstructedable = false;
+		constexpr static Bool triviallyMoveConstructedable = false;
 
-		constexpr static bool enableSmallString = true;
+		constexpr static Bool enableSmallString = true;
 	private:
-		constexpr static bool enableIncreasedSmallBufferSize = sizeof(BaseStringBaseMembersRef<CharType>) + bufferSize <= 64;
+		constexpr static Bool enableIncreasedSmallBufferSize = sizeof(BaseStringBaseMembersRef<CharType>) + bufferSize <= 64;
 		constexpr static Size increasedSmallBufferForCharSize = sizeof(size_type) - sizeof(ui8);
 		constexpr static Size standardSmallBufferSize = sizeof(size_type) - sizeof(ui8);
 		constexpr static Size increasedSizeToSmallBuffer = (enableIncreasedSmallBufferSize && sizeof(CharType) == 1) ? increasedSmallBufferForCharSize : 0;
@@ -117,14 +117,14 @@ namespace natl {
 			}
 		}
 	public:
-		constexpr bool isSmallString() const noexcept { 
+		constexpr Bool isSmallString() const noexcept { 
 			if constexpr (!enableSmallString) {
 				return false;
 			} else {
 				return !(stringSizeAndSmallStringFlag & ~getMask());
 			}
 		}
-		constexpr bool isNotSmallString() const noexcept { 
+		constexpr Bool isNotSmallString() const noexcept { 
 			return !isSmallString();
 		}
 		constexpr static size_type smallStringCapacity() noexcept {
@@ -732,7 +732,7 @@ namespace natl {
 		}
 
 		[[nodiscard]] constexpr allocation_move_adapater getAlloctionMoveAdapater() noexcept {
-			const bool stringIsSmallBuffer = isSmallString();
+			const Bool stringIsSmallBuffer = isSmallString();
 			AllocationMoveAdapaterRequireCopy requireCopy = stringIsSmallBuffer ? AllocationMoveAdapaterRequireCopy::True : AllocationMoveAdapaterRequireCopy::False;
 			AllocationMoveAdapaterCanDealloc canBeDealloc = stringIsSmallBuffer ? AllocationMoveAdapaterCanDealloc::False : AllocationMoveAdapaterCanDealloc::True;
 			allocation_move_adapater allocationMoveAdapater(data(), size(), capacity(), requireCopy, canBeDealloc);
@@ -814,12 +814,12 @@ namespace natl {
 			}
 		}
 	public:
-		constexpr bool empty() const noexcept { return size() == 0; }
-		constexpr bool isEmpty() const noexcept { return empty(); }
-		constexpr bool isNotEmpty() const noexcept { return !empty(); }
+		constexpr Bool empty() const noexcept { return size() == 0; }
+		constexpr Bool isEmpty() const noexcept { return empty(); }
+		constexpr Bool isNotEmpty() const noexcept { return !empty(); }
 
 	private:
-		constexpr bool reserveTest(size_type newCapacity) noexcept {
+		constexpr Bool reserveTest(size_type newCapacity) noexcept {
 			newCapacity += 1;
 			if (newCapacity <= capacity()) {
 				//Error if by default small string 
@@ -886,8 +886,8 @@ namespace natl {
 
 		constexpr void shrink_to_fit() {
 			const size_type newCapacity = size() + 1;
-			const bool sameSize = newCapacity == capacity();
-			const bool canBeSmallString = newCapacity <= smallStringCapacity();
+			const Bool sameSize = newCapacity == capacity();
+			const Bool canBeSmallString = newCapacity <= smallStringCapacity();
 			if (isSmallString()) {
 				return;
 			} else if (isNotSmallString() && canBeSmallString) {
@@ -1507,33 +1507,33 @@ namespace natl {
 		}
 
 		//operations
-		constexpr bool starts_with(const BaseStringView<value_type>& sv) const noexcept {
+		constexpr Bool starts_with(const BaseStringView<value_type>& sv) const noexcept {
 			return toStringView().starts_with(sv);
 		}
-		constexpr bool starts_with(const value_type ch) const noexcept {
+		constexpr Bool starts_with(const value_type ch) const noexcept {
 			return toStringView().starts_with(ch);
 		}
-		constexpr bool starts_with(const_pointer s) const noexcept {
+		constexpr Bool starts_with(const_pointer s) const noexcept {
 			return toStringView().starts_with(s);
 		}
 
-		constexpr bool ends_with(const BaseStringView<value_type>& sv) const noexcept {
+		constexpr Bool ends_with(const BaseStringView<value_type>& sv) const noexcept {
 			return toStringView().ends_with(sv);
 		}
-		constexpr bool ends_with(const value_type ch) const noexcept {
+		constexpr Bool ends_with(const value_type ch) const noexcept {
 			return toStringView().ends_with(ch);
 		}
-		constexpr bool ends_with(const_pointer s) const noexcept {
+		constexpr Bool ends_with(const_pointer s) const noexcept {
 			return toStringView().ends_with(s);
 		}
 
-		constexpr bool contains(const BaseStringView<value_type>& sv) const noexcept {
+		constexpr Bool contains(const BaseStringView<value_type>& sv) const noexcept {
 			return find(sv) != npos;
 		}
-		constexpr bool contains(const value_type ch) const noexcept {
+		constexpr Bool contains(const value_type ch) const noexcept {
 			return find(ch) != npos;
 		}
-		constexpr bool contains(const_pointer s) const {
+		constexpr Bool contains(const_pointer s) const {
 			return find(s) != npos;
 		}
 
@@ -1631,189 +1631,189 @@ namespace natl {
 
 
 		//compare operators 
-		friend constexpr bool operator==(const BaseString& lhs, const BaseString& rhs) noexcept {
+		friend constexpr Bool operator==(const BaseString& lhs, const BaseString& rhs) noexcept {
 			return lhs.toStringView() == rhs.toStringView();
 		}
-		friend constexpr bool operator==(const BaseString& lhs, const_pointer rhs) noexcept {
+		friend constexpr Bool operator==(const BaseString& lhs, const_pointer rhs) noexcept {
 			return lhs.toStringView() == rhs;
 		}
-		friend constexpr bool operator==(const BaseString& lhs, const value_type rhs) noexcept {
+		friend constexpr Bool operator==(const BaseString& lhs, const value_type rhs) noexcept {
 			return lhs.toStringView() == rhs;
 		}
 		template<class StringLike>
 			requires(IsStringViewLike<StringLike, value_type>)
-		friend constexpr bool operator==(const BaseString& lhs, const StringLike& rhs) noexcept {
+		friend constexpr Bool operator==(const BaseString& lhs, const StringLike& rhs) noexcept {
 			return lhs.toStringView() == rhs;
 		}
 		template<class StringLike>
 			requires(std::is_convertible_v<StringLike, BaseStringView<value_type>> && !IsStringViewLike<StringLike, value_type>)
-		friend constexpr bool operator==(const BaseString& lhs, const StringLike& rhs) noexcept {
+		friend constexpr Bool operator==(const BaseString& lhs, const StringLike& rhs) noexcept {
 			return lhs.toStringView() == rhs;
 		}
-		friend constexpr bool operator==(const BaseString& lhs, const Assci* rhs) noexcept requires(std::is_same_v<std::decay_t<value_type>, Utf32>) {
+		friend constexpr Bool operator==(const BaseString& lhs, const Assci* rhs) noexcept requires(std::is_same_v<std::decay_t<value_type>, Utf32>) {
 			return lhs.toStringView() == rhs;
 		}
-		friend constexpr bool operator==(const BaseString& lhs, const Assci rhs) noexcept requires(std::is_same_v<std::decay_t<value_type>, Utf32>) {
+		friend constexpr Bool operator==(const BaseString& lhs, const Assci rhs) noexcept requires(std::is_same_v<std::decay_t<value_type>, Utf32>) {
 			return lhs.toStringView() == rhs;
 		}
 		template<class StringLike>
 			requires(IsStringViewLike<StringLike, Assci>)
-		friend constexpr bool operator==(const BaseString& lhs, const StringLike& rhs) noexcept requires(std::is_same_v<std::decay_t<value_type>, Utf32>) {
+		friend constexpr Bool operator==(const BaseString& lhs, const StringLike& rhs) noexcept requires(std::is_same_v<std::decay_t<value_type>, Utf32>) {
 			return lhs.toStringView() == rhs;
 		}
 
-		friend constexpr bool operator!=(const BaseString& lhs, const BaseString& rhs) noexcept {
+		friend constexpr Bool operator!=(const BaseString& lhs, const BaseString& rhs) noexcept {
 			return lhs.toStringView() != rhs.toStringView();
 		}
-		friend constexpr bool operator!=(const BaseString& lhs, const_pointer rhs) noexcept {
+		friend constexpr Bool operator!=(const BaseString& lhs, const_pointer rhs) noexcept {
 			return lhs.toStringView() != rhs;
 		}
-		friend constexpr bool operator!=(const BaseString& lhs, const value_type rhs) noexcept {
+		friend constexpr Bool operator!=(const BaseString& lhs, const value_type rhs) noexcept {
 			return lhs.toStringView() != rhs;
 		}
 		template<class StringLike>
 			requires(IsStringViewLike<StringLike, value_type>)
-		friend constexpr bool operator!=(const BaseString& lhs, const StringLike& rhs) noexcept {
+		friend constexpr Bool operator!=(const BaseString& lhs, const StringLike& rhs) noexcept {
 			return lhs.toStringView() != rhs;
 		}
 		template<class StringLike>
 			requires(std::is_convertible_v<StringLike, BaseStringView<value_type>> && !IsStringViewLike<StringLike, value_type>)
-		friend constexpr bool operator!=(const BaseString& lhs, const StringLike& rhs) noexcept {
+		friend constexpr Bool operator!=(const BaseString& lhs, const StringLike& rhs) noexcept {
 			return lhs.toStringView() != rhs;
 		}
-		friend constexpr bool operator!=(const BaseString& lhs, const Assci* rhs) noexcept requires(std::is_same_v<std::decay_t<value_type>, Utf32>) {
+		friend constexpr Bool operator!=(const BaseString& lhs, const Assci* rhs) noexcept requires(std::is_same_v<std::decay_t<value_type>, Utf32>) {
 			return lhs.toStringView() != rhs;
 		}
-		friend constexpr bool operator!=(const BaseString& lhs, const Assci rhs) noexcept requires(std::is_same_v<std::decay_t<value_type>, Utf32>) {
+		friend constexpr Bool operator!=(const BaseString& lhs, const Assci rhs) noexcept requires(std::is_same_v<std::decay_t<value_type>, Utf32>) {
 			return lhs.toStringView() != rhs;
 		}
 		template<class StringLike>
 			requires(IsStringViewLike<StringLike, Assci>)
-		friend constexpr bool operator!=(const BaseString& lhs, const StringLike& rhs) noexcept requires(std::is_same_v<std::decay_t<value_type>, Utf32>) {
+		friend constexpr Bool operator!=(const BaseString& lhs, const StringLike& rhs) noexcept requires(std::is_same_v<std::decay_t<value_type>, Utf32>) {
 			return lhs.toStringView() != rhs;
 		}
 
-		friend constexpr bool operator<(const BaseString& lhs, const BaseString& rhs) noexcept {
+		friend constexpr Bool operator<(const BaseString& lhs, const BaseString& rhs) noexcept {
 			return lhs.toStringView() < rhs.toStringView();
 		}
-		friend constexpr bool operator<(const BaseString& lhs, const_pointer rhs) noexcept {
+		friend constexpr Bool operator<(const BaseString& lhs, const_pointer rhs) noexcept {
 			return lhs.toStringView() < rhs;
 		}
-		friend constexpr bool operator<(const BaseString& lhs, const value_type rhs) noexcept {
+		friend constexpr Bool operator<(const BaseString& lhs, const value_type rhs) noexcept {
 			return lhs.toStringView() < rhs;
 		}
 		template<class StringLike>
 			requires(IsStringViewLike<StringLike, value_type>)
-		friend constexpr bool operator<(const BaseString& lhs, const StringLike& rhs) noexcept {
+		friend constexpr Bool operator<(const BaseString& lhs, const StringLike& rhs) noexcept {
 			return lhs.toStringView() < rhs;
 		}
 		template<class StringLike>
 			requires(std::is_convertible_v<StringLike, BaseStringView<value_type>> && !IsStringViewLike<StringLike, value_type>)
-		friend constexpr bool operator<(const BaseString& lhs, const StringLike& rhs) noexcept {
+		friend constexpr Bool operator<(const BaseString& lhs, const StringLike& rhs) noexcept {
 			return lhs.toStringView() < rhs;
 		}
-		friend constexpr bool operator<(const BaseString& lhs, const Assci* rhs) noexcept requires(std::is_same_v<std::decay_t<value_type>, Utf32>) {
+		friend constexpr Bool operator<(const BaseString& lhs, const Assci* rhs) noexcept requires(std::is_same_v<std::decay_t<value_type>, Utf32>) {
 			return lhs.toStringView() < rhs;
 		}
-		friend constexpr bool operator<(const BaseString& lhs, const Assci rhs) noexcept requires(std::is_same_v<std::decay_t<value_type>, Utf32>) {
+		friend constexpr Bool operator<(const BaseString& lhs, const Assci rhs) noexcept requires(std::is_same_v<std::decay_t<value_type>, Utf32>) {
 			return lhs.toStringView() < rhs;
 		}
 		template<class StringLike>
 			requires(IsStringViewLike<StringLike, Assci>)
-		friend constexpr bool operator<(const BaseString& lhs, const StringLike& rhs) noexcept requires(std::is_same_v<std::decay_t<value_type>, Utf32>) {
+		friend constexpr Bool operator<(const BaseString& lhs, const StringLike& rhs) noexcept requires(std::is_same_v<std::decay_t<value_type>, Utf32>) {
 			return lhs.toStringView() < rhs;
 		}
 
-		friend constexpr bool operator<=(const BaseString& lhs, const BaseString& rhs) noexcept {
+		friend constexpr Bool operator<=(const BaseString& lhs, const BaseString& rhs) noexcept {
 			return lhs.toStringView() <= rhs.toStringView();
 		}
-		friend constexpr bool operator<=(const BaseString& lhs, const_pointer rhs) noexcept {
+		friend constexpr Bool operator<=(const BaseString& lhs, const_pointer rhs) noexcept {
 			return lhs.toStringView() <= rhs;
 		}
-		friend constexpr bool operator<=(const BaseString& lhs, const value_type rhs) noexcept {
+		friend constexpr Bool operator<=(const BaseString& lhs, const value_type rhs) noexcept {
 			return lhs.toStringView() <= rhs;
 		}
 		template<class StringLike>
 			requires(IsStringViewLike<StringLike, value_type>)
-		friend constexpr bool operator<=(const BaseString& lhs, const StringLike& rhs) noexcept {
+		friend constexpr Bool operator<=(const BaseString& lhs, const StringLike& rhs) noexcept {
 			return lhs.toStringView() <= rhs;
 		}
 		template<class StringLike>
 			requires(std::is_convertible_v<StringLike, BaseStringView<value_type>> && !IsStringViewLike<StringLike, value_type>)
-		friend constexpr bool operator<=(const BaseString& lhs, const StringLike& rhs) noexcept {
+		friend constexpr Bool operator<=(const BaseString& lhs, const StringLike& rhs) noexcept {
 			return lhs.toStringView() <= rhs;
 		}
-		friend constexpr bool operator<=(const BaseString& lhs, const Assci* rhs) noexcept requires(std::is_same_v<std::decay_t<value_type>, Utf32>) {
+		friend constexpr Bool operator<=(const BaseString& lhs, const Assci* rhs) noexcept requires(std::is_same_v<std::decay_t<value_type>, Utf32>) {
 			return lhs.toStringView() <= rhs;
 		}
-		friend constexpr bool operator<=(const BaseString& lhs, const Assci rhs) noexcept requires(std::is_same_v<std::decay_t<value_type>, Utf32>) {
+		friend constexpr Bool operator<=(const BaseString& lhs, const Assci rhs) noexcept requires(std::is_same_v<std::decay_t<value_type>, Utf32>) {
 			return lhs.toStringView() <= rhs;
 		}
 		template<class StringLike>
 			requires(IsStringViewLike<StringLike, Assci>)
-		friend constexpr bool operator<=(const BaseString& lhs, const StringLike& rhs) noexcept requires(std::is_same_v<std::decay_t<value_type>, Utf32>) {
+		friend constexpr Bool operator<=(const BaseString& lhs, const StringLike& rhs) noexcept requires(std::is_same_v<std::decay_t<value_type>, Utf32>) {
 			return lhs.toStringView() <= rhs;
 		}
 
-		friend constexpr bool operator>(const BaseString& lhs, const BaseString& rhs) noexcept {
+		friend constexpr Bool operator>(const BaseString& lhs, const BaseString& rhs) noexcept {
 			return lhs.toStringView() > rhs.toStringView();
 		}
-		friend constexpr bool operator>(const BaseString& lhs, const_pointer rhs) noexcept {
+		friend constexpr Bool operator>(const BaseString& lhs, const_pointer rhs) noexcept {
 			return lhs.toStringView() > rhs;
 		}
-		friend constexpr bool operator>(const BaseString& lhs, const value_type rhs) noexcept {
+		friend constexpr Bool operator>(const BaseString& lhs, const value_type rhs) noexcept {
 			return lhs.toStringView() > rhs;
 		}
 		template<class StringLike>
 			requires(IsStringViewLike<StringLike, value_type>)
-		friend constexpr bool operator>(const BaseString& lhs, const StringLike& rhs) noexcept {
+		friend constexpr Bool operator>(const BaseString& lhs, const StringLike& rhs) noexcept {
 			return lhs.toStringView() > rhs;
 		}
 		template<class StringLike>
 			requires(std::is_convertible_v<StringLike, BaseStringView<value_type>> && !IsStringViewLike<StringLike, value_type>)
-		friend constexpr bool operator>(const BaseString& lhs, const StringLike& rhs) noexcept {
+		friend constexpr Bool operator>(const BaseString& lhs, const StringLike& rhs) noexcept {
 			return lhs.toStringView() > rhs;
 		}
-		friend constexpr bool operator>(const BaseString& lhs, const Assci* rhs) noexcept requires(std::is_same_v<std::decay_t<value_type>, Utf32>) {
+		friend constexpr Bool operator>(const BaseString& lhs, const Assci* rhs) noexcept requires(std::is_same_v<std::decay_t<value_type>, Utf32>) {
 			return lhs.toStringView() > rhs;
 		}
-		friend constexpr bool operator>(const BaseString& lhs, const Assci rhs) noexcept requires(std::is_same_v<std::decay_t<value_type>, Utf32>) {
+		friend constexpr Bool operator>(const BaseString& lhs, const Assci rhs) noexcept requires(std::is_same_v<std::decay_t<value_type>, Utf32>) {
 			return lhs.toStringView() > rhs;
 		}
 		template<class StringLike>
 			requires(IsStringViewLike<StringLike, Assci>)
-		friend constexpr bool operator>(const BaseString& lhs, const StringLike& rhs) noexcept requires(std::is_same_v<std::decay_t<value_type>, Utf32>) {
+		friend constexpr Bool operator>(const BaseString& lhs, const StringLike& rhs) noexcept requires(std::is_same_v<std::decay_t<value_type>, Utf32>) {
 			return lhs.toStringView() > rhs;
 		}
 
-		friend constexpr bool operator>=(const BaseString& lhs, const BaseString& rhs) noexcept {
+		friend constexpr Bool operator>=(const BaseString& lhs, const BaseString& rhs) noexcept {
 			return lhs.toStringView() >= rhs.toStringView();
 		}
-		friend constexpr bool operator>=(const BaseString& lhs, const_pointer rhs) noexcept {
+		friend constexpr Bool operator>=(const BaseString& lhs, const_pointer rhs) noexcept {
 			return lhs.toStringView() >= rhs;
 		}
-		friend constexpr bool operator>=(const BaseString& lhs, const value_type rhs) noexcept {
+		friend constexpr Bool operator>=(const BaseString& lhs, const value_type rhs) noexcept {
 			return lhs.toStringView() >= rhs;
 		}
 		template<class StringLike>
 			requires(IsStringViewLike<StringLike, value_type>)
-		friend constexpr bool operator>=(const BaseString& lhs, const StringLike& rhs) noexcept {
+		friend constexpr Bool operator>=(const BaseString& lhs, const StringLike& rhs) noexcept {
 			return lhs.toStringView() >= rhs;
 		}
 		template<class StringLike>
 			requires(std::is_convertible_v<StringLike, BaseStringView<value_type>> && !IsStringViewLike<StringLike, value_type>)
-		friend constexpr bool operator>=(const BaseString& lhs, const StringLike& rhs) noexcept {
+		friend constexpr Bool operator>=(const BaseString& lhs, const StringLike& rhs) noexcept {
 			return lhs.toStringView() >= rhs;
 		}
-		friend constexpr bool operator>=(const BaseString& lhs, const Assci* rhs) noexcept requires(std::is_same_v<std::decay_t<value_type>, Utf32>) {
+		friend constexpr Bool operator>=(const BaseString& lhs, const Assci* rhs) noexcept requires(std::is_same_v<std::decay_t<value_type>, Utf32>) {
 			return lhs.toStringView() >= rhs;
 		}
-		friend constexpr bool operator>=(const BaseString& lhs, const Assci rhs) noexcept requires(std::is_same_v<std::decay_t<value_type>, Utf32>) {
+		friend constexpr Bool operator>=(const BaseString& lhs, const Assci rhs) noexcept requires(std::is_same_v<std::decay_t<value_type>, Utf32>) {
 			return lhs.toStringView() >= rhs;
 		}
 		template<class StringLike>
 			requires(IsStringViewLike<StringLike, Assci>)
-		friend constexpr bool operator>=(const BaseString& lhs, const StringLike& rhs) noexcept requires(std::is_same_v<std::decay_t<value_type>, Utf32>) {
+		friend constexpr Bool operator>=(const BaseString& lhs, const StringLike& rhs) noexcept requires(std::is_same_v<std::decay_t<value_type>, Utf32>) {
 			return lhs.toStringView() >= rhs;
 		}
 

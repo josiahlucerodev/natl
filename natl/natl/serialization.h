@@ -9,7 +9,7 @@
 
 //interface 
 namespace natl {
-	enum class SerializationOptionalType : bool {
+	enum class SerializationOptionalType : Bool {
 		False = false,
 		True = true,
 	};

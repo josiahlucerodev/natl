@@ -12,7 +12,7 @@ namespace natl {
 	public:
 		using value_type = DataType;
 	private:
-		bool isValid;
+		Bool isValid;
 		DataType data;
 	public:
 		constexpr Option() : isValid(false), data() {}
@@ -32,9 +32,9 @@ namespace natl {
 		constexpr const DataType&& operator*() const&& noexcept { return data; }
 		constexpr DataType&& operator*() && noexcept { return data; }
 
-		constexpr bool hasValue() const noexcept { return isValid; }
-		constexpr bool doesNotHaveValue() const noexcept { return !isValid; }
-		constexpr explicit operator bool() const noexcept { return isValid; }
+		constexpr Bool hasValue() const noexcept { return isValid; }
+		constexpr Bool doesNotHaveValue() const noexcept { return !isValid; }
+		constexpr explicit operator Bool() const noexcept { return isValid; }
 
 		constexpr std::size_t staticHash(const Option& option) requires(Hashable<DataType>) {
 			if (option.hasValue()) {

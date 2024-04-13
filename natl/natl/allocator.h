@@ -12,7 +12,7 @@
 
 //interface
 namespace natl {
-	constexpr static bool natl_enable_allocator_tracking = true;
+	constexpr static Bool natl_enable_allocator_tracking = true;
 
 	struct TrackerAllocatorData {
 		i64 allocs;

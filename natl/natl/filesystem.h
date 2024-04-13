@@ -39,7 +39,7 @@ namespace natl {
 		}
 	}
 
-	constexpr bool isPlatformPathSeparator(const Assci character) noexcept {
+	constexpr Bool isPlatformPathSeparator(const Assci character) noexcept {
 		return character == '\\' || character == '/';
 	}
 
@@ -146,35 +146,35 @@ namespace natl {
 			constexpr size_type size() const noexcept { return pathStringView.size(); }
 			constexpr size_type length() const noexcept { return pathStringView.length(); }
 			constexpr size_type max_size() const noexcept { return pathStringView.max_size(); }
-			constexpr bool empty() const noexcept { return pathStringView.empty(); }
-			constexpr bool isEmpty() const noexcept { return pathStringView.isEmpty(); }
-			constexpr bool isNotEmpty() const noexcept { return pathStringView.isNotEmpty(); }
+			constexpr Bool empty() const noexcept { return pathStringView.empty(); }
+			constexpr Bool isEmpty() const noexcept { return pathStringView.isEmpty(); }
+			constexpr Bool isNotEmpty() const noexcept { return pathStringView.isNotEmpty(); }
 
 			friend class BasePathView<Assci>;
 			friend class BasePathView<const Assci>;
 
 			//compare
-			constexpr bool operator==(const path_view_type& rhs) const noexcept {
+			constexpr Bool operator==(const path_view_type& rhs) const noexcept {
 				const BasePathView& lhs = self();
 				return lhs.pathStringView == rhs.pathStringView;
 			}
-			constexpr bool operator!=(const path_view_type& rhs) const noexcept {
+			constexpr Bool operator!=(const path_view_type& rhs) const noexcept {
 				const BasePathView& lhs = self();
 				return lhs.pathStringView != rhs.pathStringView;
 			}
-			constexpr bool operator<(const path_view_type& rhs) const noexcept {
+			constexpr Bool operator<(const path_view_type& rhs) const noexcept {
 				const BasePathView& lhs = self();
 				return lhs.pathStringView < rhs.pathStringView;
 			}
-			constexpr bool operator<=(const path_view_type& rhs) const noexcept {
+			constexpr Bool operator<=(const path_view_type& rhs) const noexcept {
 				const BasePathView& lhs = self();
 				return lhs.pathStringView <= rhs.pathStringView;
 			}
-			constexpr bool operator>(const path_view_type& rhs) const noexcept {
+			constexpr Bool operator>(const path_view_type& rhs) const noexcept {
 				const BasePathView& lhs = self();
 				return lhs.pathStringView > rhs.pathStringView;
 			}
-			constexpr bool operator>=(const path_view_type& rhs) const noexcept {
+			constexpr Bool operator>=(const path_view_type& rhs) const noexcept {
 				const BasePathView& lhs = self();
 				return lhs.pathStringView >= rhs.pathStringView;
 			}
@@ -183,27 +183,27 @@ namespace natl {
 				return lhs.pathStringView <=> rhs.pathStringView;
 			}
 
-			constexpr bool operator==(const const_path_view_type& rhs) const noexcept {
+			constexpr Bool operator==(const const_path_view_type& rhs) const noexcept {
 				const BasePathView& lhs = self();
 				return lhs.pathStringView == rhs.pathStringView;
 			}
-			constexpr bool operator!=(const const_path_view_type& rhs) const noexcept {
+			constexpr Bool operator!=(const const_path_view_type& rhs) const noexcept {
 				const BasePathView& lhs = self();
 				return lhs.pathStringView != rhs.pathStringView;
 			}
-			constexpr bool operator<(const const_path_view_type& rhs) const noexcept {
+			constexpr Bool operator<(const const_path_view_type& rhs) const noexcept {
 				const BasePathView& lhs = self();
 				return lhs.pathStringView < rhs.pathStringView;
 			}
-			constexpr bool operator<=(const const_path_view_type& rhs) const noexcept {
+			constexpr Bool operator<=(const const_path_view_type& rhs) const noexcept {
 				const BasePathView& lhs = self();
 				return lhs.pathStringView <= rhs.pathStringView;
 			}
-			constexpr bool operator>(const const_path_view_type& rhs) const noexcept {
+			constexpr Bool operator>(const const_path_view_type& rhs) const noexcept {
 				const BasePathView& lhs = self();
 				return lhs.pathStringView > rhs.pathStringView;
 			}
-			constexpr bool operator>=(const const_path_view_type& rhs) const noexcept {
+			constexpr Bool operator>=(const const_path_view_type& rhs) const noexcept {
 				const BasePathView& lhs = self();
 				return lhs.pathStringView >= rhs.pathStringView;
 			}
@@ -222,7 +222,7 @@ namespace natl {
 
 			//decomposition
 		private:
-			constexpr bool internalHasRootName() const noexcept {
+			constexpr Bool internalHasRootName() const noexcept {
 				return isAlphabetic(pathStringView[0]) && pathStringView[1] != ':';
 			}
 
@@ -500,26 +500,26 @@ namespace natl {
 
 
 			//queries
-			constexpr bool hasRootName() const noexcept { return rootName().isNotEmpty(); }
-			constexpr bool hasRootPath() const noexcept { return rootPath().isNotEmpty(); }
-			constexpr bool hasRootDirectory() const noexcept { return rootDirectory().isNotEmpty(); }
-			constexpr bool hasRelativePath() const noexcept { return relativePath().isNotEmpty(); }
-			constexpr bool hasParentPath() const noexcept { return parentPath().isNotEmpty(); }
-			constexpr bool hasFilename() const noexcept { return filename().isNotEmpty(); }
-			constexpr bool hasStem() const noexcept { return stem().isNotEmpty(); }
-			constexpr bool hasExtension() const noexcept { return extension().isNotEmpty(); }
+			constexpr Bool hasRootName() const noexcept { return rootName().isNotEmpty(); }
+			constexpr Bool hasRootPath() const noexcept { return rootPath().isNotEmpty(); }
+			constexpr Bool hasRootDirectory() const noexcept { return rootDirectory().isNotEmpty(); }
+			constexpr Bool hasRelativePath() const noexcept { return relativePath().isNotEmpty(); }
+			constexpr Bool hasParentPath() const noexcept { return parentPath().isNotEmpty(); }
+			constexpr Bool hasFilename() const noexcept { return filename().isNotEmpty(); }
+			constexpr Bool hasStem() const noexcept { return stem().isNotEmpty(); }
+			constexpr Bool hasExtension() const noexcept { return extension().isNotEmpty(); }
 
-			constexpr bool doesNotHaveRootName() const noexcept { return rootName().isEmpty(); }
-			constexpr bool doesNotHaveRootPath() const noexcept { return rootPath().isEmpty(); }
-			constexpr bool doesNotHaveRootDirectory() const noexcept { return rootDirectory().isEmpty(); }
-			constexpr bool doesNotHaveRelativePath() const noexcept { return relativePath().isEmpty(); }
-			constexpr bool doesNotHaveParentPath() const noexcept { return parentPath().isEmpty(); }
-			constexpr bool doesNotHaveFilename() const noexcept { return filename().isEmpty(); }
-			constexpr bool doesNotHaveStem() const noexcept { return stem().isEmpty(); }
-			constexpr bool doesNotHaveExtension() const noexcept { return extension().isEmpty(); }
+			constexpr Bool doesNotHaveRootName() const noexcept { return rootName().isEmpty(); }
+			constexpr Bool doesNotHaveRootPath() const noexcept { return rootPath().isEmpty(); }
+			constexpr Bool doesNotHaveRootDirectory() const noexcept { return rootDirectory().isEmpty(); }
+			constexpr Bool doesNotHaveRelativePath() const noexcept { return relativePath().isEmpty(); }
+			constexpr Bool doesNotHaveParentPath() const noexcept { return parentPath().isEmpty(); }
+			constexpr Bool doesNotHaveFilename() const noexcept { return filename().isEmpty(); }
+			constexpr Bool doesNotHaveStem() const noexcept { return stem().isEmpty(); }
+			constexpr Bool doesNotHaveExtension() const noexcept { return extension().isEmpty(); }
 
-			constexpr bool isAbsolute() const noexcept { return hasRootPath(); }
-			constexpr bool isRelative() const noexcept { return !hasRootPath(); }
+			constexpr Bool isAbsolute() const noexcept { return hasRootPath(); }
+			constexpr Bool isRelative() const noexcept { return !hasRootPath(); }
 		};
 	}
 
@@ -562,12 +562,12 @@ namespace natl {
 		using allocation_move_adapater = string_type::allocation_move_adapater;
 
 		//movement info 
-		constexpr static bool triviallyRelocatable = string_type::triviallyRelocatable;
-		constexpr static bool triviallyDefaultConstructible = string_type::triviallyDefaultConstructible;
-		constexpr static bool triviallyCompareable = string_type::triviallyCompareable;
-		constexpr static bool triviallyDestructible = string_type::triviallyDestructible;
-		constexpr static bool triviallyConstRefConstructedable = string_type::triviallyConstRefConstructedable;
-		constexpr static bool triviallyMoveConstructedable = string_type::triviallyMoveConstructedable;
+		constexpr static Bool triviallyRelocatable = string_type::triviallyRelocatable;
+		constexpr static Bool triviallyDefaultConstructible = string_type::triviallyDefaultConstructible;
+		constexpr static Bool triviallyCompareable = string_type::triviallyCompareable;
+		constexpr static Bool triviallyDestructible = string_type::triviallyDestructible;
+		constexpr static Bool triviallyConstRefConstructedable = string_type::triviallyConstRefConstructedable;
+		constexpr static Bool triviallyMoveConstructedable = string_type::triviallyMoveConstructedable;
 
 		constexpr static value_type pathSeparator = getPlatformPreferredPathSeparator();
 		constexpr static PathFormat autoFormat = PathFormat::defaultFormat;
@@ -773,9 +773,9 @@ namespace natl {
 		constexpr size_type size() const noexcept { return pathStorage.size(); }
 		constexpr size_type length() const noexcept { return pathStorage.length(); }
 		constexpr size_type max_size() const noexcept { return pathStorage.max_size(); }
-		constexpr bool empty() const noexcept { return pathStorage.empty(); }
-		constexpr bool isEmpty() const noexcept { return pathStorage.isEmpty(); }
-		constexpr bool isNotEmpty() const noexcept { return pathStorage.isNotEmpty(); }
+		constexpr Bool empty() const noexcept { return pathStorage.empty(); }
+		constexpr Bool isEmpty() const noexcept { return pathStorage.isEmpty(); }
+		constexpr Bool isNotEmpty() const noexcept { return pathStorage.isNotEmpty(); }
 
 		//format observer
 		constexpr const value_type* c_str() const noexcept { return pathStorage.c_str(); }
@@ -800,26 +800,26 @@ namespace natl {
 		constexpr const_path_view_type extension() const noexcept { return toPathView().extension(); }
 
 		//queries
-		constexpr bool hasRootName() const noexcept { return toPathView().hasRootName(); }
-		constexpr bool hasRootPath() const noexcept { return toPathView().hasRootPath(); }
-		constexpr bool hasRootDirectory() const noexcept { return toPathView().hasRootDirectory(); }
-		constexpr bool hasRelativePath() const noexcept { return toPathView().hasRelativePath(); }
-		constexpr bool hasParentPath() const noexcept { return toPathView().hasParentPath(); }
-		constexpr bool hasFilename() const noexcept { return toPathView().hasFilename(); }
-		constexpr bool hasStem() const noexcept { return toPathView().hasStem(); }
-		constexpr bool hasExtension() const noexcept { return toPathView().hasExtension(); }
+		constexpr Bool hasRootName() const noexcept { return toPathView().hasRootName(); }
+		constexpr Bool hasRootPath() const noexcept { return toPathView().hasRootPath(); }
+		constexpr Bool hasRootDirectory() const noexcept { return toPathView().hasRootDirectory(); }
+		constexpr Bool hasRelativePath() const noexcept { return toPathView().hasRelativePath(); }
+		constexpr Bool hasParentPath() const noexcept { return toPathView().hasParentPath(); }
+		constexpr Bool hasFilename() const noexcept { return toPathView().hasFilename(); }
+		constexpr Bool hasStem() const noexcept { return toPathView().hasStem(); }
+		constexpr Bool hasExtension() const noexcept { return toPathView().hasExtension(); }
 
-		constexpr bool doesNotHaveRootName() const noexcept { return toPathView().doesNotHaveRootName(); }
-		constexpr bool doesNotHaveRootPath() const noexcept { return toPathView().doesNotHaveRootPath(); }
-		constexpr bool doesNotHaveRootDirectory() const noexcept { return toPathView().doesNotHaveRootDirectory(); }
-		constexpr bool doesNotHaveRelativePath() const noexcept { return toPathView().doesNotHaveRelativePath(); }
-		constexpr bool doesNotHaveParentPath() const noexcept { return toPathView().doesNotHaveParentPath(); }
-		constexpr bool doesNotHaveFilename() const noexcept { return toPathView().doesNotHaveFilename(); }
-		constexpr bool doesNotHaveStem() const noexcept { return toPathView().doesNotHaveStem(); }
-		constexpr bool doesNotHaveExtension() const noexcept { return toPathView().doesNotHaveExtension(); }
+		constexpr Bool doesNotHaveRootName() const noexcept { return toPathView().doesNotHaveRootName(); }
+		constexpr Bool doesNotHaveRootPath() const noexcept { return toPathView().doesNotHaveRootPath(); }
+		constexpr Bool doesNotHaveRootDirectory() const noexcept { return toPathView().doesNotHaveRootDirectory(); }
+		constexpr Bool doesNotHaveRelativePath() const noexcept { return toPathView().doesNotHaveRelativePath(); }
+		constexpr Bool doesNotHaveParentPath() const noexcept { return toPathView().doesNotHaveParentPath(); }
+		constexpr Bool doesNotHaveFilename() const noexcept { return toPathView().doesNotHaveFilename(); }
+		constexpr Bool doesNotHaveStem() const noexcept { return toPathView().doesNotHaveStem(); }
+		constexpr Bool doesNotHaveExtension() const noexcept { return toPathView().doesNotHaveExtension(); }
 
-		constexpr bool isAbsolute() const noexcept { return toPathView().isAbsolute(); }
-		constexpr bool isRelative() const noexcept { return toPathView().isRelative(); }
+		constexpr Bool isAbsolute() const noexcept { return toPathView().isAbsolute(); }
+		constexpr Bool isRelative() const noexcept { return toPathView().isRelative(); }
 
 		//modifiers 
 		constexpr void clear() const noexcept { pathStorage.clear(); }
@@ -880,32 +880,32 @@ namespace natl {
 
 		//compare
 		template<Size RhsBufferSize>
-		constexpr bool operator==(const BasePath<RhsBufferSize, Alloc>& rhs) const noexcept {
+		constexpr Bool operator==(const BasePath<RhsBufferSize, Alloc>& rhs) const noexcept {
 			const BasePath& lhs = self();
 			return lhs.toPathView() == rhs.toPathView();
 		}
 		template<Size RhsBufferSize>
-		constexpr bool operator!=(const BasePath<RhsBufferSize, Alloc>& rhs) const noexcept {
+		constexpr Bool operator!=(const BasePath<RhsBufferSize, Alloc>& rhs) const noexcept {
 			const BasePath& lhs = self();
 			return lhs.toPathView() != rhs.toPathView();
 		}
 		template<Size RhsBufferSize>
-		constexpr bool operator<(const BasePath<RhsBufferSize, Alloc>& rhs) const noexcept {
+		constexpr Bool operator<(const BasePath<RhsBufferSize, Alloc>& rhs) const noexcept {
 			const BasePath& lhs = self();
 			return lhs.toPathView() < rhs.toPathView();
 		}
 		template<Size RhsBufferSize>
-		constexpr bool operator<=(const BasePath<RhsBufferSize, Alloc>& rhs) const noexcept {
+		constexpr Bool operator<=(const BasePath<RhsBufferSize, Alloc>& rhs) const noexcept {
 			const BasePath& lhs = self();
 			return lhs.toPathView() <= rhs.toPathView();
 		}
 		template<Size RhsBufferSize>
-		constexpr bool operator>(const BasePath<RhsBufferSize, Alloc>& rhs) const noexcept {
+		constexpr Bool operator>(const BasePath<RhsBufferSize, Alloc>& rhs) const noexcept {
 			const BasePath& lhs = self();
 			return lhs.toPathView() > rhs.toPathView();
 		}
 		template<Size RhsBufferSize>
-		constexpr bool operator>=(const BasePath<RhsBufferSize, Alloc>& rhs) const noexcept {
+		constexpr Bool operator>=(const BasePath<RhsBufferSize, Alloc>& rhs) const noexcept {
 			const BasePath& lhs = self();
 			return lhs.toPathView() >= rhs.toPathView();
 		}
@@ -915,27 +915,27 @@ namespace natl {
 			return lhs.toPathView() <=> rhs.toPathView();
 		}
 
-		constexpr bool operator==(const const_path_view_type& rhs) const noexcept {
+		constexpr Bool operator==(const const_path_view_type& rhs) const noexcept {
 			const BasePath& lhs = self();
 			return lhs.toPathView() == rhs;
 		}
-		constexpr bool operator!=(const const_path_view_type& rhs) const noexcept {
+		constexpr Bool operator!=(const const_path_view_type& rhs) const noexcept {
 			const BasePath& lhs = self();
 			return lhs.toPathView() != rhs;
 		}
-		constexpr bool operator<(const const_path_view_type& rhs) const noexcept {
+		constexpr Bool operator<(const const_path_view_type& rhs) const noexcept {
 			const BasePath& lhs = self();
 			return lhs.toPathView() < rhs;
 		}
-		constexpr bool operator<=(const const_path_view_type& rhs) const noexcept {
+		constexpr Bool operator<=(const const_path_view_type& rhs) const noexcept {
 			const BasePath& lhs = self();
 			return lhs.toPathView() <= rhs;
 		}
-		constexpr bool operator>(const const_path_view_type& rhs) const noexcept {
+		constexpr Bool operator>(const const_path_view_type& rhs) const noexcept {
 			const BasePath& lhs = self();
 			return lhs.toPathView() > rhs;
 		}
-		constexpr bool operator>=(const const_path_view_type& rhs) const noexcept {
+		constexpr Bool operator>=(const const_path_view_type& rhs) const noexcept {
 			const BasePath& lhs = self();
 			return lhs.toPathView() >= rhs;
 		}
@@ -1053,8 +1053,8 @@ namespace natl {
 		constexpr ~FileHandle() noexcept = default;
 		
 		//observers 
-		constexpr bool isHandleOpen() const noexcept { return fileHandle != INVALID_HANDLE_VALUE; }
-		constexpr bool isHandleNotOpen() const noexcept { return !isHandleOpen(); }
+		constexpr Bool isHandleOpen() const noexcept { return fileHandle != INVALID_HANDLE_VALUE; }
+		constexpr Bool isHandleNotOpen() const noexcept { return !isHandleOpen(); }
 
 		//access 
 		constexpr HANDLE nativeHandle() const noexcept { return fileHandle; }
@@ -1067,7 +1067,7 @@ namespace natl {
 		if (file.isHandleNotOpen()) { return OptionEmpty(); }
 
 		LARGE_INTEGER newFilePointer;
-		const bool successfulGetFileSize = GetFileSizeEx(file.nativeHandle(), &newFilePointer);
+		const Bool successfulGetFileSize = GetFileSizeEx(file.nativeHandle(), &newFilePointer);
 
 		if (successfulGetFileSize == true) {
 			return newFilePointer.QuadPart;
@@ -1119,9 +1119,9 @@ namespace natl {
 			return FileHandle(fileHandle);
 		}
 	}
-	inline bool closeFile(FileHandle& file) noexcept {
+	inline Bool closeFile(FileHandle& file) noexcept {
 		if (file.isHandleNotOpen()) { return false; }
-		const bool successfulCloseFile = CloseHandle(file.nativeHandle());
+		const Bool successfulCloseFile = CloseHandle(file.nativeHandle());
 		file.setHandleNull();
 		return successfulCloseFile;
 	}
@@ -1132,14 +1132,14 @@ namespace natl {
 		LARGE_INTEGER  distanceToMove;
 		distanceToMove.QuadPart = offset.value();
 		LARGE_INTEGER newFilePointer;
-		const bool successfulMoveFilePointer = SetFilePointerEx(file.nativeHandle(), distanceToMove, &newFilePointer, FILE_BEGIN);
+		const Bool successfulMoveFilePointer = SetFilePointerEx(file.nativeHandle(), distanceToMove, &newFilePointer, FILE_BEGIN);
 
 		if (successfulMoveFilePointer == false) {
 			return {};
 		}
 
 		DWORD numberOfBytesRead = 0;
-		const bool successfulFileRead = ReadFile(file.nativeHandle(), dst, static_cast<DWORD>(count.value()), &numberOfBytesRead, NULL);
+		const Bool successfulFileRead = ReadFile(file.nativeHandle(), dst, static_cast<DWORD>(count.value()), &numberOfBytesRead, NULL);
 
 		if (successfulFileRead == false && numberOfBytesRead == 0) {
 			return {};
@@ -1154,13 +1154,13 @@ namespace natl {
 		LARGE_INTEGER  distanceToMove;
 		distanceToMove.QuadPart = offset.value();
 		LARGE_INTEGER newFilePointer;
-		const bool successfulMoveFilePointer = SetFilePointerEx(file.nativeHandle(), distanceToMove, &newFilePointer, FILE_BEGIN);
+		const Bool successfulMoveFilePointer = SetFilePointerEx(file.nativeHandle(), distanceToMove, &newFilePointer, FILE_BEGIN);
 		if (successfulMoveFilePointer == false) {
 			return {};
 		}
 
 		DWORD bytesWritten;
-		const bool successfulWriteFile = WriteFile(file.nativeHandle(), src, static_cast<DWORD>(count.value()), &bytesWritten, NULL);
+		const Bool successfulWriteFile = WriteFile(file.nativeHandle(), src, static_cast<DWORD>(count.value()), &bytesWritten, NULL);
 		if (successfulWriteFile == false && bytesWritten == 0) {
 			return {};
 		}
@@ -1189,29 +1189,29 @@ namespace natl {
 		return path;
 	}
 
-	inline bool doesFileExist(const Assci* fileName) noexcept {
+	inline Bool doesFileExist(const Assci* fileName) noexcept {
 		DWORD fileAttributes = GetFileAttributesA(fileName);
 		return (fileAttributes != INVALID_FILE_ATTRIBUTES);
 	}
 
 	namespace impl {
-		inline bool doesFileHaveAttributes(const Assci* fileName, const DWORD attributes) noexcept {
+		inline Bool doesFileHaveAttributes(const Assci* fileName, const DWORD attributes) noexcept {
 			DWORD fileAttributes = GetFileAttributesA(fileName);
 			return (fileAttributes != INVALID_FILE_ATTRIBUTES) && ((fileAttributes & attributes) != 0);
 		}
-		inline bool doesFileNotHaveAttributes(const Assci* fileName, const DWORD attributes) noexcept {
+		inline Bool doesFileNotHaveAttributes(const Assci* fileName, const DWORD attributes) noexcept {
 			DWORD fileAttributes = GetFileAttributesA(fileName);
 			return (fileAttributes != INVALID_FILE_ATTRIBUTES) && ((fileAttributes & attributes) == 0);
 		}
 	}
 
-	inline bool isBlockFile(const Assci* fileName) noexcept {
+	inline Bool isBlockFile(const Assci* fileName) noexcept {
 		return impl::doesFileHaveAttributes(fileName, FILE_ATTRIBUTE_DEVICE);
 	}
-	inline bool isDirectory(const Assci* fileName) noexcept {
+	inline Bool isDirectory(const Assci* fileName) noexcept {
 		return impl::doesFileHaveAttributes(fileName, FILE_ATTRIBUTE_DIRECTORY);
 	}
-	inline bool isFifo(const Assci* fileName) noexcept {
+	inline Bool isFifo(const Assci* fileName) noexcept {
 		HANDLE namedPipe = CreateNamedPipeA(fileName, PIPE_ACCESS_DUPLEX, PIPE_TYPE_BYTE | PIPE_READMODE_BYTE | PIPE_WAIT, 1, 0, 0, 0, NULL);
 		if (namedPipe != INVALID_HANDLE_VALUE) {
 			CloseHandle(namedPipe);
@@ -1220,10 +1220,10 @@ namespace natl {
 			return false;
 		}
 	}
-	inline bool isRegularFile(const Assci* fileName) noexcept {
+	inline Bool isRegularFile(const Assci* fileName) noexcept {
 		return impl::doesFileNotHaveAttributes(fileName, FILE_ATTRIBUTE_DEVICE | FILE_ATTRIBUTE_DIRECTORY | FILE_ATTRIBUTE_VIRTUAL);
 	}
-	inline bool isSymbolicLink(const Assci* fileName) noexcept {
+	inline Bool isSymbolicLink(const Assci* fileName) noexcept {
 		return impl::doesFileHaveAttributes(fileName, FILE_ATTRIBUTE_REPARSE_POINT);
 	}
 
@@ -1274,8 +1274,8 @@ namespace natl {
 		constexpr ~FileHandle() noexcept = default;
 
 		//observers 
-		constexpr bool isHandleOpen() const noexcept { return fileHandle != unixFileOpFailValue; }
-		constexpr bool isHandleNotOpen() const noexcept { return !isHandleOpen(); }
+		constexpr Bool isHandleOpen() const noexcept { return fileHandle != unixFileOpFailValue; }
+		constexpr Bool isHandleNotOpen() const noexcept { return !isHandleOpen(); }
 
 		//access 
 		constexpr UnixNativeFileHandle nativeHandle() const noexcept { return fileHandle; }
@@ -1321,7 +1321,7 @@ namespace natl {
 		}
 	}
 
-	inline bool closeFile(FileHandle& file) noexcept {
+	inline Bool closeFile(FileHandle& file) noexcept {
 		if (file.isHandleNotOpen()) { return false; }
 		const GenericInt closeFileResult = close(file.nativeHandle());
 		file.setHandleNull();
@@ -1381,40 +1381,40 @@ namespace natl {
 		return path;
 	}
 
-	inline bool doesFileExist(const Assci* fileName) noexcept {
+	inline Bool doesFileExist(const Assci* fileName) noexcept {
 		struct stat64 fileStat;
 		return stat64(fileName, &fileStat) != unixFileOpFailValue;
 	}
 
-	inline bool isBlockFile(const Assci* fileName) noexcept {
+	inline Bool isBlockFile(const Assci* fileName) noexcept {
 		struct stat64 fileStat;
 		if (stat64(fileName, &fileStat) == unixFileOpFailValue) {
 			return false;
 		}
 		return S_ISBLK(fileStat.st_mode);
 	}
-	inline bool isDirectory(const Assci* fileName) noexcept {
+	inline Bool isDirectory(const Assci* fileName) noexcept {
 		struct stat64 fileStat;
 		if (stat64(fileName, &fileStat) == unixFileOpFailValue) {
 			return false;
 		}
 		return S_ISDIR(fileStat.st_mode);
 	}
-	inline bool isFifo(const Assci* fileName) noexcept {
+	inline Bool isFifo(const Assci* fileName) noexcept {
 		struct stat64 fileStat;
 		if (stat64(fileName, &fileStat) == unixFileOpFailValue) {
 			return false;
 		}
 		return S_ISFIFO(fileStat.st_mode);
 	}
-	inline bool isRegularFile(const Assci* fileName) noexcept {
+	inline Bool isRegularFile(const Assci* fileName) noexcept {
 		struct stat64 fileStat;
 		if (stat64(fileName, &fileStat) == unixFileOpFailValue) {
 			return false;
 		}
 		return S_ISREG(fileStat.st_mode);
 	}
-	inline bool isSymbolicLink(const Assci* fileName) noexcept {
+	inline Bool isSymbolicLink(const Assci* fileName) noexcept {
 		struct stat64 fileStat;
 		if (stat64(fileName, &fileStat) == unixFileOpFailValue) {
 			return false;
@@ -1489,8 +1489,8 @@ namespace natl {
 		
 
 		//observers 
-		constexpr bool isOpen() const noexcept { return fileHandle.isHandleOpen(); }
-		constexpr bool isNotOpen() const noexcept { return fileHandle.isHandleNotOpen(); }
+		constexpr Bool isOpen() const noexcept { return fileHandle.isHandleOpen(); }
+		constexpr Bool isNotOpen() const noexcept { return fileHandle.isHandleNotOpen(); }
 
 		Option<Size> fileSize() const noexcept {
 			return getFileSize(fileHandle);
@@ -1499,11 +1499,11 @@ namespace natl {
 		constexpr const FileHandle handle() const noexcept { return fileHandle; }
 		
 		//file operations 
-		bool open(const Assci* path, const FileOpenMode openMode) noexcept {
+		Bool open(const Assci* path, const FileOpenMode openMode) noexcept {
 			fileHandle = openFile(path, openMode);
 			return fileHandle.isHandleOpen();
 		}
-		bool close() noexcept {
+		Bool close() noexcept {
 			return closeFile(fileHandle);
 		}
 		Option<Size> read(const FileOffset offset, const FileCount count, Byte* dst) const noexcept {

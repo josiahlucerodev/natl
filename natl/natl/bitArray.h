@@ -32,22 +32,22 @@ namespace natl {
 				bitArrayPtr(bitArrayPtr), index(index) {}
 			constexpr ~reference() = default;
 
-			constexpr reference& operator=(const bool value) noexcept {
+			constexpr reference& operator=(const Bool value) noexcept {
 				return bitArrayPtr->set(index, value);
 			}
 			constexpr reference& operator=(const reference& ref) noexcept {
-				bitArrayPtr->set(index, static_cast<bool>(ref));
+				bitArrayPtr->set(index, static_cast<Bool>(ref));
 				return *this;
 			}
 			constexpr reference& flip() noexcept {
 				bitArrayPtr->flip(index);
 				return *this;
 			}
-			constexpr bool operator~() const noexcept {
+			constexpr Bool operator~() const noexcept {
 				return !bitArrayPtr->test(index);
 			}
 
-			constexpr operator bool() const noexcept {
+			constexpr operator Bool() const noexcept {
 				return bitArrayPtr->test(index);
 			}
 		};
@@ -60,7 +60,7 @@ namespace natl {
 			set(bitIndex, true);
 		}
 
-		constexpr BitArrayBitStorageType(const BitIndex bitIndex, const bool value) {
+		constexpr BitArrayBitStorageType(const BitIndex bitIndex, const Bool value) {
 			reset();
 			set(bitIndex, value);
 		}
@@ -106,7 +106,7 @@ namespace natl {
 			return bitsArray[index / bitsPerWordCount];
 		}
 
-		constexpr BitArrayBitStorageType& set(const Size index, bool value = true) noexcept {
+		constexpr BitArrayBitStorageType& set(const Size index, Bool value = true) noexcept {
 			BitStorageType& word = atWord(index);
 			const BitStorageType& bitMask = BitStorageType{1} << index % bitsPerWordCount;
 			if (value) {
@@ -134,7 +134,7 @@ namespace natl {
 			return self();
 		}
 
-		constexpr bool test(const Size index) const noexcept {
+		constexpr Bool test(const Size index) const noexcept {
 			return (bitsArray[index / bitsPerWordCount] & (BitStorageType{1} << index % bitsPerWordCount)) != 0;
 		}
 
@@ -142,12 +142,12 @@ namespace natl {
 			return bitCount == 0 ? 0 : wordCount - 1;
 		}
 
-		constexpr bool all() const noexcept {
+		constexpr Bool all() const noexcept {
 			if constexpr (bitCount == 0) {
 				return true;
 			}
 
-			constexpr bool padding = bitCount % bitsPerWordCount == 0;
+			constexpr Bool padding = bitCount % bitsPerWordCount == 0;
 			for (Size i = 0; i < endWordIndex()  + padding; i++) {
 				if (bitsArray[i] != ~static_cast<BitStorageType>(0)) {
 					return false;
@@ -157,7 +157,7 @@ namespace natl {
 			return padding || 
 				bitsArray[endWordIndex()] == (static_cast<BitStorageType>(1) << (bitCount % bitsPerWordCount)) - 1;
 		}
-		constexpr bool any() const noexcept {
+		constexpr Bool any() const noexcept {
 			for (size_t i = 0; i < wordCount; i++) {
 				if (bitsArray[i] != 0) {
 					return true;
@@ -165,18 +165,18 @@ namespace natl {
 			}
 			return false;
 		}
-		constexpr bool none() const noexcept {
+		constexpr Bool none() const noexcept {
 			return !any();
 		}
 
 		constexpr reference operator[] (const Size index) const noexcept {
 			return reference(&self(), index);
 		}
-		constexpr bool operator[] (const Size index) const noexcept {
+		constexpr Bool operator[] (const Size index) const noexcept {
 			return test(index);
 		}
 
-		constexpr bool operator==(const BitArrayBitStorageType& rhs) const noexcept {
+		constexpr Bool operator==(const BitArrayBitStorageType& rhs) const noexcept {
 			if (isConstantEvaluated()) {
 				for (Size i = 0; i < wordCount; i++) {
 					if (bitsArray[i] != rhs.bitsArray[i]) {
@@ -188,7 +188,7 @@ namespace natl {
 				return std::memcmp(&bitsArray, rhs.bitsArray, sizeof(bitsArray)) == 0;
 			}
 		}
-		constexpr bool operator!=(const BitArrayBitStorageType& rhs) const noexcept {
+		constexpr Bool operator!=(const BitArrayBitStorageType& rhs) const noexcept {
 			return !(*this == rhs);
 		}
 
@@ -235,7 +235,7 @@ namespace natl {
 			return temp;
 		}
 
-		constexpr operator bool() const noexcept {
+		constexpr operator Bool() const noexcept {
 			return any(); 
 		}
 	};

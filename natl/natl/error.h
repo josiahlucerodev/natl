@@ -42,7 +42,7 @@ namespace natl {
             natlTerminate();
         }
     }
-    constexpr void fatalError(const bool conditional, const StringView message) noexcept {
+    constexpr void fatalError(const Bool conditional, const StringView message) noexcept {
         if (conditional) [[unlikely]] {
             fatalError(message);
         }

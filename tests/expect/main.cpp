@@ -9,12 +9,12 @@ enum class TestError {
 	overflow
 };
 
-constexpr natl::Expect<bool, TestError> testFunc() {
+constexpr natl::Expect<natl::Bool, TestError> testFunc() {
 	return natl::unexpected<TestError>(TestError::overflow);
 }
 
 int main() {
-	[[maybe_unused]] constexpr natl::Expect<bool, TestError> number = testFunc();
+	[[maybe_unused]] constexpr natl::Expect<natl::Bool, TestError> number = testFunc();
 	[[maybe_unused]] constexpr natl::Expect<float, natl::StringNumericConvertError> number2 = natl::stringToFloatExpect<float>("3.3");
 
 	if (number.hasValue()) {

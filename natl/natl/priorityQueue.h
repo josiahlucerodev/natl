@@ -80,7 +80,7 @@ namespace natl {
 	}
 
 	template<class RandomIter, class Compare>
-	constexpr bool isHeap(RandomIter first, RandomIter last, Compare compare) noexcept {
+	constexpr Bool isHeap(RandomIter first, RandomIter last, Compare compare) noexcept {
 		using difference_type = typename IterPtrTraits<RandomIter>::difference_type;
 		Size size = iterDistance<RandomIter>(first, last);
 		for (Size index = 1; index < size; index++) {
@@ -175,9 +175,9 @@ namespace natl {
 		}
 
 		//capacity
-		[[nodiscard]] constexpr bool empty() const noexcept { return sequentialContainer.empty(); }
-		[[nodiscard]] constexpr bool isEmpty() const noexcept { return empty(); }
-		[[nodiscard]] constexpr bool isNotEmpty() const noexcept { return !empty(); }
+		[[nodiscard]] constexpr Bool empty() const noexcept { return sequentialContainer.empty(); }
+		[[nodiscard]] constexpr Bool isEmpty() const noexcept { return empty(); }
+		[[nodiscard]] constexpr Bool isNotEmpty() const noexcept { return !empty(); }
 		constexpr size_type size() const noexcept { return sequentialContainer.size(); };
 
 		//element access

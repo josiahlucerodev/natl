@@ -19,12 +19,12 @@ namespace natl {
 		using const_pointer = const DataType*;
 	public:
 		//movement info 
-		constexpr static bool triviallyRelocatable = true;
-		constexpr static bool triviallyDefaultConstructible = true;
-		constexpr static bool triviallyCompareable = true;
-		constexpr static bool triviallyDestructible = true;
-		constexpr static bool triviallyConstRefConstructedable = true;
-		constexpr static bool triviallyMoveConstructedable = true;
+		constexpr static Bool triviallyRelocatable = true;
+		constexpr static Bool triviallyDefaultConstructible = true;
+		constexpr static Bool triviallyCompareable = true;
+		constexpr static Bool triviallyDestructible = true;
+		constexpr static Bool triviallyConstRefConstructedable = true;
+		constexpr static Bool triviallyMoveConstructedable = true;
 	private:
 		DataType* dataPtr;
 	public:
@@ -91,12 +91,12 @@ namespace natl {
 		using deleter_type = Deleter;
 	public:
 		//movement info 
-		constexpr static bool triviallyRelocatable = true && (IsEmptyV<Deleter> || IsTriviallyRelocatable<Deleter>);
-		constexpr static bool triviallyDefaultConstructible = true && (IsEmptyV<Deleter> || IsTriviallyDefaultConstructible<Deleter>);
-		constexpr static bool triviallyCompareable = true && (IsEmptyV<Deleter> || IsTriviallyCompareable<Deleter>);
-		constexpr static bool triviallyDestructible = false;
-		constexpr static bool triviallyConstRefConstructedable = false;
-		constexpr static bool triviallyMoveConstructedable = false;
+		constexpr static Bool triviallyRelocatable = true && (IsEmptyV<Deleter> || IsTriviallyRelocatable<Deleter>);
+		constexpr static Bool triviallyDefaultConstructible = true && (IsEmptyV<Deleter> || IsTriviallyDefaultConstructible<Deleter>);
+		constexpr static Bool triviallyCompareable = true && (IsEmptyV<Deleter> || IsTriviallyCompareable<Deleter>);
+		constexpr static Bool triviallyDestructible = false;
+		constexpr static Bool triviallyConstRefConstructedable = false;
+		constexpr static Bool triviallyMoveConstructedable = false;
 	private:
 		pointer dataPtr;
 		[[no_unique_address]] deleter_type deleter;
@@ -205,10 +205,10 @@ namespace natl {
 			return deleter;
 		}
 
-		constexpr bool empty() const noexcept { return dataPtr == nullptr; }
-		constexpr bool isEmpty() const noexcept { return empty(); }
-		constexpr bool isNotEmpty() const noexcept { return !empty(); }
-		explicit constexpr operator bool() const noexcept { return isNotEmpty(); }
+		constexpr Bool empty() const noexcept { return dataPtr == nullptr; }
+		constexpr Bool isEmpty() const noexcept { return empty(); }
+		constexpr Bool isNotEmpty() const noexcept { return !empty(); }
+		explicit constexpr operator Bool() const noexcept { return isNotEmpty(); }
 
 		constexpr reference operator*() noexcept { return *dataPtr; }
 		constexpr const_reference operator*() const noexcept { return *dataPtr; }
@@ -216,16 +216,16 @@ namespace natl {
 		constexpr const_pointer operator->() const noexcept { return dataPtr; }
 
 		//compare
-		constexpr bool operator==(const UniquePtr& other) const noexcept { return get() == other.get(); }
-		constexpr bool operator!=(const UniquePtr& other) const noexcept { return get() != other.get(); }
-		constexpr bool operator<(const UniquePtr& other) const noexcept { return get() < other.get(); }
-		constexpr bool operator<=(const UniquePtr& other) const noexcept { return get() <= other.get(); }
-		constexpr bool operator>(const UniquePtr& other) const noexcept { return get() > other.get(); }
-		constexpr bool operator>=(const UniquePtr& other) const noexcept { return get() >= other.get(); }
+		constexpr Bool operator==(const UniquePtr& other) const noexcept { return get() == other.get(); }
+		constexpr Bool operator!=(const UniquePtr& other) const noexcept { return get() != other.get(); }
+		constexpr Bool operator<(const UniquePtr& other) const noexcept { return get() < other.get(); }
+		constexpr Bool operator<=(const UniquePtr& other) const noexcept { return get() <= other.get(); }
+		constexpr Bool operator>(const UniquePtr& other) const noexcept { return get() > other.get(); }
+		constexpr Bool operator>=(const UniquePtr& other) const noexcept { return get() >= other.get(); }
 		constexpr std::compare_three_way_result_t<pointer> operator<=>(const UniquePtr& other) { return get() <=> other.get(); };
 
-		constexpr bool operator==(std::nullptr_t) const noexcept { return !self(); }
-		constexpr bool operator!=(std::nullptr_t) const noexcept { return static_cast<bool>(self()); }
+		constexpr Bool operator==(std::nullptr_t) const noexcept { return !self(); }
+		constexpr Bool operator!=(std::nullptr_t) const noexcept { return static_cast<Bool>(self()); }
 
 		//special
 		constexpr Size hash() const noexcept {
@@ -245,12 +245,12 @@ namespace natl {
 		using pointer_type = PtrDataType*;
 		using small_data_type = SmallDataType;
 
-		constexpr static bool triviallyRelocatable = true;
-		constexpr static bool triviallyDefaultConstructible = true;
-		constexpr static bool triviallyCompareable = true;
-		constexpr static bool triviallyDestructible = true;
-		constexpr static bool triviallyConstRefConstructedable = true;
-		constexpr static bool triviallyMoveConstructedable = true;
+		constexpr static Bool triviallyRelocatable = true;
+		constexpr static Bool triviallyDefaultConstructible = true;
+		constexpr static Bool triviallyCompareable = true;
+		constexpr static Bool triviallyDestructible = true;
+		constexpr static Bool triviallyConstRefConstructedable = true;
+		constexpr static Bool triviallyMoveConstructedable = true;
 	private:
 		constexpr static Size convertPtrToInt(const PtrDataType* ptr) noexcept {
 			return std::bit_cast<Size, const PtrDataType*>(ptr); 
@@ -297,7 +297,7 @@ namespace natl {
 #pragma GCC diagnostic pop
 #endif // NATL_COMPILER_GCC
 
-		constexpr static bool combindPacking = true;
+		constexpr static Bool combindPacking = true;
 #else 
 		struct PackingType {
 			SmallDataType smallDataStorage;
@@ -310,7 +310,7 @@ namespace natl {
 			constexpr void setSmallData(const SmallDataType smallData) noexcept { smallDataStorage = smallData; }
 			constexpr SmallDataType getSmallData() const noexcept { return smallDataStorage; }
 		};
-		constexpr static bool combindPacking = false;
+		constexpr static Bool combindPacking = false;
 #endif // NATL_64BIT
 		struct ConstexprPackingType {
 			SmallDataType smallDataStorage;
@@ -490,7 +490,7 @@ namespace natl {
 			 virtual void refIncrement(SharedPtrControlBlockSeperatePolymorphic*) const noexcept = 0;
 			 virtual void weakRefIncrement(SharedPtrControlBlockSeperatePolymorphic*) const noexcept = 0;
 			 virtual Size getUseCount(SharedPtrControlBlockSeperatePolymorphic*) const noexcept = 0;
-			 virtual bool incrementIfNotZero(SharedPtrControlBlockSeperatePolymorphic*) const noexcept = 0;
+			 virtual Bool incrementIfNotZero(SharedPtrControlBlockSeperatePolymorphic*) const noexcept = 0;
 		};
 
 		template<class DataType>
@@ -533,7 +533,7 @@ namespace natl {
 				}
 				controlBlockSeperate->weakCount--;
 			}
-			static inline bool incrementIfNotZero(SharedPtrControlBlockSeperate* controlBlockSeperate) {
+			static inline Bool incrementIfNotZero(SharedPtrControlBlockSeperate* controlBlockSeperate) {
 				Size previous = controlBlockSeperate->useCount.load();
 				for (;;) {
 					if (previous == 0) {
@@ -569,7 +569,7 @@ namespace natl {
 				 SharedPtrControlBlockSeperate* controlBlockSeperate = static_cast<SharedPtrControlBlockSeperate*>(controlBlockSeperatePolymorphicPtr);
 				 return controlBlockSeperate->useCount.load();
 			}
-			bool incrementIfNotZero(SharedPtrControlBlockSeperatePolymorphic* controlBlockSeperatePolymorphicPtr) const noexcept override {
+			Bool incrementIfNotZero(SharedPtrControlBlockSeperatePolymorphic* controlBlockSeperatePolymorphicPtr) const noexcept override {
 				 SharedPtrControlBlockSeperate* controlBlockSeperate = static_cast<SharedPtrControlBlockSeperate*>(controlBlockSeperatePolymorphicPtr);
 				 return incrementIfNotZero(controlBlockSeperate);
 			}
@@ -584,7 +584,7 @@ namespace natl {
 			 virtual void refIncrement(SharedPtrControlBlockFusedPolymorphic*) const noexcept = 0;
 			 virtual void weakRefIncrement(SharedPtrControlBlockFusedPolymorphic*) const noexcept = 0;
 			 virtual Size getUseCount(SharedPtrControlBlockFusedPolymorphic*) const noexcept = 0;
-			 virtual bool incrementIfNotZero(SharedPtrControlBlockFusedPolymorphic*) const noexcept = 0;
+			 virtual Bool incrementIfNotZero(SharedPtrControlBlockFusedPolymorphic*) const noexcept = 0;
 		};
 
 		template<class DataType>
@@ -651,7 +651,7 @@ namespace natl {
 				}
 				controlBlockFused->weakCount--;
 			}
-			static inline bool incrementIfNotZero(SharedPtrControlBlockFused* controlBlockFused) noexcept {
+			static inline Bool incrementIfNotZero(SharedPtrControlBlockFused* controlBlockFused) noexcept {
 				Size previous = controlBlockFused->useCount.load();
 				for (;;) {
 					if (previous == 0) {
@@ -687,17 +687,17 @@ namespace natl {
 				SharedPtrControlBlockFused* controlBlockFused = static_cast<SharedPtrControlBlockFused*>(controlBlockFusedPolymorphicPtr);
 				return controlBlockFused->useCount.load();
 			}
-			bool incrementIfNotZero(SharedPtrControlBlockFusedPolymorphic* controlBlockFusedPolymorphicPtr) const noexcept override {
+			Bool incrementIfNotZero(SharedPtrControlBlockFusedPolymorphic* controlBlockFusedPolymorphicPtr) const noexcept override {
 				SharedPtrControlBlockFused* controlBlockFused = static_cast<SharedPtrControlBlockFused*>(controlBlockFusedPolymorphicPtr);
 				return incrementIfNotZero(controlBlockFused);
 			}
 		};
 
 		struct SharedPtrControlBlockSeperatePolymorphicConstexpr {
-			using control_block_polymorphic_destroy_function = bool(*)(SharedPtrControlBlockSeperatePolymorphicConstexpr*);
+			using control_block_polymorphic_destroy_function = Bool(*)(SharedPtrControlBlockSeperatePolymorphicConstexpr*);
 			using control_block_polymorphic_increment_function = void(*)(SharedPtrControlBlockSeperatePolymorphicConstexpr*);
 			using control_block_polymorphic_get_count_function = Size(*)(SharedPtrControlBlockSeperatePolymorphicConstexpr*);
-			using control_block_polymorphic_increment_if_not_zero_function = bool(*)(SharedPtrControlBlockSeperatePolymorphicConstexpr*);
+			using control_block_polymorphic_increment_if_not_zero_function = Bool(*)(SharedPtrControlBlockSeperatePolymorphicConstexpr*);
 
 			[[nodiscard]] constexpr virtual control_block_polymorphic_destroy_function getDestroyFunction() const noexcept = 0;
 			[[nodiscard]] constexpr virtual control_block_polymorphic_destroy_function getWeakDestoryFunction() const noexcept = 0;
@@ -744,7 +744,7 @@ namespace natl {
 				controlBlockDeleter(natl::move(controlBlockDeleterIn)) {};
 
 			[[nodiscard]] constexpr control_block_polymorphic_destroy_function getDestroyFunction() const noexcept override {
-				return [](SharedPtrControlBlockSeperatePolymorphicConstexpr* controlBlockPolymorpic) -> bool {
+				return [](SharedPtrControlBlockSeperatePolymorphicConstexpr* controlBlockPolymorpic) -> Bool {
 					auto controlBlock = static_cast<SharedPtrControlBlockSeperateConstexpr*>(controlBlockPolymorpic);
 					if (controlBlock->useCount == 1) {
 						if (controlBlock->preDeleteFunction.isNotEmpty()) {
@@ -768,7 +768,7 @@ namespace natl {
 					};
 			}
 			[[nodiscard]] constexpr control_block_polymorphic_destroy_function getWeakDestoryFunction() const noexcept override {
-				return [](SharedPtrControlBlockSeperatePolymorphicConstexpr* controlBlockPolymorpic) -> bool {
+				return [](SharedPtrControlBlockSeperatePolymorphicConstexpr* controlBlockPolymorpic) -> Bool {
 					auto controlBlock = static_cast<SharedPtrControlBlockSeperateConstexpr*>(controlBlockPolymorpic);
 					if (controlBlock->weakCount == 1) {
 						if (controlBlock->weakCount == 0) {
@@ -800,7 +800,7 @@ namespace natl {
 					};
 			}
 			constexpr control_block_polymorphic_increment_if_not_zero_function getIncrementIfNotZeroFunction() const noexcept override {
-				return [](SharedPtrControlBlockSeperatePolymorphicConstexpr* controlBlockPolymorpic) -> bool {
+				return [](SharedPtrControlBlockSeperatePolymorphicConstexpr* controlBlockPolymorpic) -> Bool {
 					auto controlBlock = static_cast<SharedPtrControlBlockSeperateConstexpr*>(controlBlockPolymorpic);
 					if (controlBlock->useCount == 0) {
 						return false;
@@ -834,12 +834,12 @@ namespace natl {
 
 
 		//movement info 
-		constexpr static bool triviallyRelocatable = true;
-		constexpr static bool triviallyDefaultConstructible = true;
-		constexpr static bool triviallyCompareable = false;
-		constexpr static bool triviallyDestructible = false;
-		constexpr static bool triviallyConstRefConstructedable = false;
-		constexpr static bool triviallyMoveConstructedable = false;
+		constexpr static Bool triviallyRelocatable = true;
+		constexpr static Bool triviallyDefaultConstructible = true;
+		constexpr static Bool triviallyCompareable = false;
+		constexpr static Bool triviallyDestructible = false;
+		constexpr static Bool triviallyConstRefConstructedable = false;
+		constexpr static Bool triviallyMoveConstructedable = false;
 	private:
 		pointer_and_control_block_state dataPtrAndControlBlockState;
 		union {
@@ -865,12 +865,12 @@ namespace natl {
 			using control_block_seperate_polymorphic_constexpr = impl::SharedPtrControlBlockSeperatePolymorphicConstexpr;
 
 			//movement info 
-			constexpr static bool triviallyRelocatable = true;
-			constexpr static bool triviallyDefaultConstructible = true;
-			constexpr static bool triviallyCompareable = false;
-			constexpr static bool triviallyDestructible = false;
-			constexpr static bool triviallyConstRefConstructedable = false;
-			constexpr static bool triviallyMoveConstructedable = false;
+			constexpr static Bool triviallyRelocatable = true;
+			constexpr static Bool triviallyDefaultConstructible = true;
+			constexpr static Bool triviallyCompareable = false;
+			constexpr static Bool triviallyDestructible = false;
+			constexpr static Bool triviallyConstRefConstructedable = false;
+			constexpr static Bool triviallyMoveConstructedable = false;
 
 		private:
 			using weak_ptr_pointer_and_control_block_state = PackedPtrAndSmallData<WeakPtrDataType, impl::SharedPtrControlBlockState>;
@@ -1228,7 +1228,7 @@ namespace natl {
 				return 0;
 			}
 
-			constexpr bool expired() const noexcept {
+			constexpr Bool expired() const noexcept {
 				return use_count() == 0;
 			}
 			constexpr SharedPtr lock() const noexcept {
@@ -1239,10 +1239,10 @@ namespace natl {
 				}
 			}
 
-			constexpr bool empty() const noexcept { return dataPtrAndControlBlockState.getPtr() == nullptr; }
-			constexpr bool isEmpty() const noexcept { return empty(); }
-			constexpr bool isNotEmpty() const noexcept { return !empty(); }
-			explicit constexpr operator bool() const noexcept { return isNotEmpty(); }
+			constexpr Bool empty() const noexcept { return dataPtrAndControlBlockState.getPtr() == nullptr; }
+			constexpr Bool isEmpty() const noexcept { return empty(); }
+			constexpr Bool isNotEmpty() const noexcept { return !empty(); }
+			explicit constexpr operator Bool() const noexcept { return isNotEmpty(); }
 
 			friend SharedPtr;
 		}; 
@@ -1251,7 +1251,7 @@ namespace natl {
 
 
 	private:
-		template<class OtherType, bool IncrementRefCount = true>
+		template<class OtherType, Bool IncrementRefCount = true>
 		constexpr void constructCopy(const OtherType& other) noexcept {
 			if (other.dataPtrAndControlBlockState.getPtr() == nullptr) {
 				dataPtrAndControlBlockState.setValues(nullptr, impl::SharedPtrControlBlockState::seperate);
@@ -1334,7 +1334,7 @@ namespace natl {
 
 			other.dataPtr = nullptr;
 		}
-		template<class OtherType, bool IncrementRefCount = true>
+		template<class OtherType, Bool IncrementRefCount = true>
 		constexpr void constructPolymorphicCopy(const OtherType& other) noexcept {
 			if (other.dataPtrAndControlBlockState.getPtr() == nullptr) {
 				dataPtrAndControlBlockState.setValues(nullptr, impl::SharedPtrControlBlockState::seperate);
@@ -1474,7 +1474,7 @@ namespace natl {
 
 	private:
 		template<class OtherType>
-		constexpr bool incrementIfNotZero(const OtherType& other) noexcept {
+		constexpr Bool incrementIfNotZero(const OtherType& other) noexcept {
 			switch (dataPtrAndControlBlockState.getSmallData()) {
 			case impl::SharedPtrControlBlockState::seperate:
 				return control_block_seperate::incrementIfNotZero(other.controlBlockSeperate);
@@ -1891,10 +1891,10 @@ namespace natl {
 			return 0;
 		}
 
-		constexpr bool empty() const noexcept { return get() == nullptr; }
-		constexpr bool isEmpty() const noexcept { return empty(); }
-		constexpr bool isNotEmpty() const noexcept { return !empty(); }
-		explicit constexpr operator bool() const noexcept { return isNotEmpty(); }
+		constexpr Bool empty() const noexcept { return get() == nullptr; }
+		constexpr Bool isEmpty() const noexcept { return empty(); }
+		constexpr Bool isNotEmpty() const noexcept { return !empty(); }
+		explicit constexpr operator Bool() const noexcept { return isNotEmpty(); }
 	};
 
 	template<class DataType>
@@ -1941,32 +1941,32 @@ namespace natl {
 
 		//observers
 		constexpr element_type* get() const noexcept { return dataPtr; }
-		constexpr explicit operator bool() const noexcept { return dataPtr; }
+		constexpr explicit operator Bool() const noexcept { return dataPtr; }
 		constexpr element_type& operator*() const { return dataPtr; }
 		constexpr element_type* operator->() const noexcept { return dataPtr; }
-		constexpr bool isNull() noexcept { return dataPtr == nullptr; }
-		constexpr bool isNotNull() noexcept { return dataPtr != nullptr; }
+		constexpr Bool isNull() noexcept { return dataPtr == nullptr; }
+		constexpr Bool isNotNull() noexcept { return dataPtr != nullptr; }
 
 		//conversions
 		constexpr explicit operator element_type* () const noexcept { return dataPtr; }
 
 		//compare 
-		constexpr bool operator==(const ObserverPtr<DataType>& other) noexcept {
+		constexpr Bool operator==(const ObserverPtr<DataType>& other) noexcept {
 			return dataPtr == other.dataPtr;
 		}
-		constexpr bool operator!=(const ObserverPtr<DataType>& other) noexcept {
+		constexpr Bool operator!=(const ObserverPtr<DataType>& other) noexcept {
 			return dataPtr != other.dataPtr;
 		}
-		constexpr bool operator<(const ObserverPtr<DataType>& other) noexcept {
+		constexpr Bool operator<(const ObserverPtr<DataType>& other) noexcept {
 			return dataPtr < other.dataPtr;
 		}
-		constexpr bool operator>(const ObserverPtr<DataType>& other) noexcept {
+		constexpr Bool operator>(const ObserverPtr<DataType>& other) noexcept {
 			return dataPtr > other.dataPtr;
 		}
-		constexpr bool operator<=(const ObserverPtr<DataType>& other) noexcept {
+		constexpr Bool operator<=(const ObserverPtr<DataType>& other) noexcept {
 			return dataPtr <= other.dataPtr;
 		}
-		constexpr bool operator>=(const ObserverPtr<DataType>& other) noexcept {
+		constexpr Bool operator>=(const ObserverPtr<DataType>& other) noexcept {
 			return dataPtr >= other.dataPtr;
 		}
 		constexpr auto operator<=>(const ObserverPtr<DataType>& other) noexcept {

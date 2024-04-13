@@ -53,12 +53,12 @@ namespace natl {
 		using allocation_move_adapater = AllocationMoveAdapater<value_type, Alloc>;
 
 		//movement info 
-		constexpr static bool triviallyRelocatable = true;
-		constexpr static bool triviallyDefaultConstructible = true;
-		constexpr static bool triviallyCompareable = false;
-		constexpr static bool triviallyDestructible = false;
-		constexpr static bool triviallyConstRefConstructedable = false;
-		constexpr static bool triviallyMoveConstructedable = false;
+		constexpr static Bool triviallyRelocatable = true;
+		constexpr static Bool triviallyDefaultConstructible = true;
+		constexpr static Bool triviallyCompareable = false;
+		constexpr static Bool triviallyDestructible = false;
+		constexpr static Bool triviallyConstRefConstructedable = false;
+		constexpr static Bool triviallyMoveConstructedable = false;
 	private:
 		size_type arraySize;
 		size_type arrayCapacity;
@@ -514,8 +514,8 @@ namespace natl {
 		optional_pointer optionalBack() { return optionalAt(backIndex()); }
 		optional_const_pointer optionalBack() const { return optionalAt(backIndex()); }
 
-		constexpr bool has(const size_type index) const noexcept { return index < size(); }
-		constexpr bool notHave(const size_type index) const noexcept { return index >= size(); }
+		constexpr Bool has(const size_type index) const noexcept { return index < size(); }
+		constexpr Bool notHave(const size_type index) const noexcept { return index >= size(); }
 
 
 		//iterators 
@@ -539,9 +539,9 @@ namespace natl {
 
 		//capacity 
 	public:
-		constexpr bool empty() const noexcept { return size() == 0; }
-		constexpr bool isEmpty() const noexcept { return empty(); }
-		constexpr bool isNotEmpty() const noexcept { return !empty(); }
+		constexpr Bool empty() const noexcept { return size() == 0; }
+		constexpr Bool isEmpty() const noexcept { return empty(); }
+		constexpr Bool isNotEmpty() const noexcept { return !empty(); }
 
 		//modifiers
 	private:
@@ -905,123 +905,123 @@ namespace natl {
 		}
 	public:
 		//compare operators 
-		friend constexpr bool operator==(const DynArray& lhs, const DynArray& rhs) noexcept {
+		friend constexpr Bool operator==(const DynArray& lhs, const DynArray& rhs) noexcept {
 			return lhs.toArrayView() == rhs.toArrayView();
 		}
-		friend constexpr bool operator==(const DynArray& lhs, const value_type rhs) noexcept {
+		friend constexpr Bool operator==(const DynArray& lhs, const value_type rhs) noexcept {
 			return lhs.toArrayView() == rhs;
 		}
 		template<class ArrayViewLike>
 			requires(IsArrayViewLike<ArrayViewLike, const value_type>)
-		friend constexpr bool operator==(const DynArray& lhs, const ArrayViewLike& rhs) noexcept {
+		friend constexpr Bool operator==(const DynArray& lhs, const ArrayViewLike& rhs) noexcept {
 			return lhs.toArrayView() == rhs;
 		}
 		template<class ArrayViewLike>
 			requires(std::is_convertible_v<ArrayViewLike, ArrayView<const value_type>> && !IsArrayViewLike<ArrayViewLike, const value_type>)
-		friend constexpr bool operator==(const DynArray& lhs, const ArrayViewLike& rhs) noexcept {
+		friend constexpr Bool operator==(const DynArray& lhs, const ArrayViewLike& rhs) noexcept {
 			return lhs.toArrayView() == rhs;
 		}
-		friend constexpr bool operator==(const DynArray& lhs, std::initializer_list<value_type> rhs) noexcept {
+		friend constexpr Bool operator==(const DynArray& lhs, std::initializer_list<value_type> rhs) noexcept {
 			return lhs.toArrayView() == rhs;
 		}
 
-		friend constexpr bool operator!=(const DynArray& lhs, const DynArray& rhs) noexcept {
+		friend constexpr Bool operator!=(const DynArray& lhs, const DynArray& rhs) noexcept {
 			return lhs.toArrayView() != rhs.toArrayView();
 		}
-		friend constexpr bool operator!=(const DynArray& lhs, const value_type rhs) noexcept {
+		friend constexpr Bool operator!=(const DynArray& lhs, const value_type rhs) noexcept {
 			return lhs.toArrayView() != rhs;
 		}
 		template<class ArrayViewLike>
 			requires(IsArrayViewLike<ArrayViewLike, const value_type>)
-		friend constexpr bool operator!=(const DynArray& lhs, const ArrayViewLike& rhs) noexcept {
+		friend constexpr Bool operator!=(const DynArray& lhs, const ArrayViewLike& rhs) noexcept {
 			return lhs.toArrayView() != rhs;
 		}
 		template<class ArrayViewLike>
 			requires(std::is_convertible_v<ArrayViewLike, ArrayView<const value_type>> && !IsArrayViewLike<ArrayViewLike, const value_type>)
-		friend constexpr bool operator!=(const DynArray& lhs, const ArrayViewLike& rhs) noexcept {
+		friend constexpr Bool operator!=(const DynArray& lhs, const ArrayViewLike& rhs) noexcept {
 			return lhs.toArrayView() != rhs;
 		}
-		friend constexpr bool operator!=(const DynArray& lhs, std::initializer_list<value_type> rhs) noexcept {
+		friend constexpr Bool operator!=(const DynArray& lhs, std::initializer_list<value_type> rhs) noexcept {
 			return lhs.toArrayView() != rhs;
 		}
 
-		friend constexpr bool operator<(const DynArray& lhs, const DynArray& rhs) noexcept {
+		friend constexpr Bool operator<(const DynArray& lhs, const DynArray& rhs) noexcept {
 			return lhs.toArrayView() < rhs.toArrayView();
 		}
-		friend constexpr bool operator<(const DynArray& lhs, const value_type rhs) noexcept {
+		friend constexpr Bool operator<(const DynArray& lhs, const value_type rhs) noexcept {
 			return lhs.toArrayView() < rhs;
 		}
 		template<class ArrayViewLike>
 			requires(IsArrayViewLike<ArrayViewLike, const value_type>)
-		friend constexpr bool operator<(const DynArray& lhs, const ArrayViewLike& rhs) noexcept {
+		friend constexpr Bool operator<(const DynArray& lhs, const ArrayViewLike& rhs) noexcept {
 			return lhs.toArrayView() < rhs;
 		}
 		template<class ArrayViewLike>
 			requires(std::is_convertible_v<ArrayViewLike, ArrayView<const value_type>> && !IsArrayViewLike<ArrayViewLike, const value_type>)
-		friend constexpr bool operator<(const DynArray& lhs, const ArrayViewLike& rhs) noexcept {
+		friend constexpr Bool operator<(const DynArray& lhs, const ArrayViewLike& rhs) noexcept {
 			return lhs.toArrayView() < rhs;
 		}
-		friend constexpr bool operator<(const DynArray& lhs, std::initializer_list<value_type> rhs) noexcept {
+		friend constexpr Bool operator<(const DynArray& lhs, std::initializer_list<value_type> rhs) noexcept {
 			return lhs.toArrayView() < rhs;
 		}
 
-		friend constexpr bool operator<=(const DynArray& lhs, const DynArray& rhs) noexcept {
+		friend constexpr Bool operator<=(const DynArray& lhs, const DynArray& rhs) noexcept {
 			return lhs.toArrayView() <= rhs.toArrayView();
 		}
-		friend constexpr bool operator<=(const DynArray& lhs, const value_type rhs) noexcept {
+		friend constexpr Bool operator<=(const DynArray& lhs, const value_type rhs) noexcept {
 			return lhs.toArrayView() <= rhs;
 		}
 		template<class ArrayViewLike>
 			requires(IsArrayViewLike<ArrayViewLike, const value_type>)
-		friend constexpr bool operator<=(const DynArray& lhs, const ArrayViewLike& rhs) noexcept {
+		friend constexpr Bool operator<=(const DynArray& lhs, const ArrayViewLike& rhs) noexcept {
 			return lhs.toArrayView() <= rhs;
 		}
 		template<class ArrayViewLike>
 			requires(std::is_convertible_v<ArrayViewLike, ArrayView<const value_type>> && !IsArrayViewLike<ArrayViewLike, const value_type>)
-		friend constexpr bool operator<=(const DynArray& lhs, const ArrayViewLike& rhs) noexcept {
+		friend constexpr Bool operator<=(const DynArray& lhs, const ArrayViewLike& rhs) noexcept {
 			return lhs.toArrayView() <= rhs;
 		}
-		friend constexpr bool operator<=(const DynArray& lhs, std::initializer_list<value_type> rhs) noexcept {
+		friend constexpr Bool operator<=(const DynArray& lhs, std::initializer_list<value_type> rhs) noexcept {
 			return lhs.toArrayView() <= rhs;
 		}
 
-		friend constexpr bool operator>(const DynArray& lhs, const DynArray& rhs) noexcept {
+		friend constexpr Bool operator>(const DynArray& lhs, const DynArray& rhs) noexcept {
 			return lhs.toArrayView() > rhs.toArrayView();
 		}
-		friend constexpr bool operator>(const DynArray& lhs, const value_type rhs) noexcept {
+		friend constexpr Bool operator>(const DynArray& lhs, const value_type rhs) noexcept {
 			return lhs.toArrayView() > rhs;
 		}
 		template<class ArrayViewLike>
 			requires(IsArrayViewLike<ArrayViewLike, const value_type>)
-		friend constexpr bool operator>(const DynArray& lhs, const ArrayViewLike& rhs) noexcept {
+		friend constexpr Bool operator>(const DynArray& lhs, const ArrayViewLike& rhs) noexcept {
 			return lhs.toArrayView() > rhs;
 		}
 		template<class ArrayViewLike>
 			requires(std::is_convertible_v<ArrayViewLike, ArrayView<const value_type>> && !IsArrayViewLike<ArrayViewLike, const value_type>)
-		friend constexpr bool operator>(const DynArray& lhs, const ArrayViewLike& rhs) noexcept {
+		friend constexpr Bool operator>(const DynArray& lhs, const ArrayViewLike& rhs) noexcept {
 			return lhs.toArrayView() > rhs;
 		}
-		friend constexpr bool operator>(const DynArray& lhs, std::initializer_list<value_type> rhs) noexcept {
+		friend constexpr Bool operator>(const DynArray& lhs, std::initializer_list<value_type> rhs) noexcept {
 			return lhs.toArrayView() > rhs;
 		}
 
-		friend constexpr bool operator>=(const DynArray& lhs, const DynArray& rhs) noexcept {
+		friend constexpr Bool operator>=(const DynArray& lhs, const DynArray& rhs) noexcept {
 			return lhs.toArrayView() >= rhs.toArrayView();
 		}
-		friend constexpr bool operator>=(const DynArray& lhs, const value_type rhs) noexcept {
+		friend constexpr Bool operator>=(const DynArray& lhs, const value_type rhs) noexcept {
 			return lhs.toArrayView() >= rhs;
 		}
 		template<class ArrayViewLike>
 			requires(IsArrayViewLike<ArrayViewLike, const value_type>)
-		friend constexpr bool operator>=(const DynArray& lhs, const ArrayViewLike& rhs) noexcept {
+		friend constexpr Bool operator>=(const DynArray& lhs, const ArrayViewLike& rhs) noexcept {
 			return lhs.toArrayView() >= rhs;
 		}
 		template<class ArrayViewLike>
 			requires(std::is_convertible_v<ArrayViewLike, ArrayView<const value_type>> && !IsArrayViewLike<ArrayViewLike, const value_type>)
-		friend constexpr bool operator>=(const DynArray& lhs, const ArrayViewLike& rhs) noexcept {
+		friend constexpr Bool operator>=(const DynArray& lhs, const ArrayViewLike& rhs) noexcept {
 			return lhs.toArrayView() >= rhs;
 		}
-		friend constexpr bool operator>=(const DynArray& lhs, std::initializer_list<value_type> rhs) noexcept {
+		friend constexpr Bool operator>=(const DynArray& lhs, std::initializer_list<value_type> rhs) noexcept {
 			return lhs.toArrayView() >= rhs;
 		}
 
@@ -1041,7 +1041,7 @@ namespace natl {
 		friend constexpr StrongOrdering operator<=>(const DynArray& lhs, const ArrayViewLike& rhs) noexcept {
 			return lhs.toArrayView() <=> rhs;
 		}
-		friend constexpr bool operator<=>(const DynArray& lhs, std::initializer_list<value_type> rhs) noexcept {
+		friend constexpr Bool operator<=>(const DynArray& lhs, std::initializer_list<value_type> rhs) noexcept {
 			return lhs.toArrayView() <=> rhs;
 		}
 

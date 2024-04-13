@@ -145,14 +145,14 @@ namespace natl {
 			heapCallable = 2,
 			constexprCallable = 3,
 		};
-		template<class Signature, Size Capacity, bool MoveOnly, typename Alloc>
+		template<class Signature, Size Capacity, Bool MoveOnly, typename Alloc>
 		class FunctionBase {
 		public:
 			template<typename>
 			friend struct FunctionRefBase;
 		};
 
-		template<typename ReturnType, typename... ArgTypes, Size Capacity, bool MoveOnly, typename Alloc>
+		template<typename ReturnType, typename... ArgTypes, Size Capacity, Bool MoveOnly, typename Alloc>
 		class FunctionBase<ReturnType(ArgTypes...), Capacity, MoveOnly, Alloc> {
 		public:
 			using result_type = ReturnType;
@@ -161,12 +161,12 @@ namespace natl {
 			using function_ptr_type = ReturnType(*)(ArgTypes...) noexcept;
 
 			//movement info 
-			constexpr static bool triviallyRelocatable = true;
-			constexpr static bool triviallyDefaultConstructible = true;
-			constexpr static bool triviallyCompareable = false;
-			constexpr static bool triviallyDestructible = false;
-			constexpr static bool triviallyConstRefConstructedable = false;
-			constexpr static bool triviallyMoveConstructedable = false;
+			constexpr static Bool triviallyRelocatable = true;
+			constexpr static Bool triviallyDefaultConstructible = true;
+			constexpr static Bool triviallyCompareable = false;
+			constexpr static Bool triviallyDestructible = false;
+			constexpr static Bool triviallyConstRefConstructedable = false;
+			constexpr static Bool triviallyMoveConstructedable = false;
 
 			constexpr static Size smallBufferSize = Capacity;
 
@@ -362,7 +362,7 @@ namespace natl {
 
 
 			//observers 
-			constexpr bool empty() const noexcept {
+			constexpr Bool empty() const noexcept {
 				if (functionStorageType == impl::FunctionStorageType::functionPtr) {
 					return !functionPtr;
 				}
@@ -370,9 +370,9 @@ namespace natl {
 					return false;
 				}
 			}
-			constexpr bool isEmpty() const noexcept { return empty(); }
-			constexpr bool isNotEmpty() const noexcept { return !empty(); }
-			explicit constexpr operator bool() const noexcept { return isNotEmpty(); }
+			constexpr Bool isEmpty() const noexcept { return empty(); }
+			constexpr Bool isNotEmpty() const noexcept { return !empty(); }
+			explicit constexpr operator Bool() const noexcept { return isNotEmpty(); }
 
 			//calling
 			constexpr ReturnType operator()(ArgTypes... args) const noexcept {
@@ -426,12 +426,12 @@ namespace natl {
 		using function_signature = ReturnType(ArgTypes...) noexcept;
 
 		//movement info 
-		constexpr static bool triviallyRelocatable = function_base::triviallyRelocatable;
-		constexpr static bool triviallyDefaultConstructible = function_base::triviallyDefaultConstructible;
-		constexpr static bool triviallyCompareable = function_base::triviallyCompareable;
-		constexpr static bool triviallyDestructible = function_base::triviallyDestructible;
-		constexpr static bool triviallyConstRefConstructedable = function_base::triviallyConstRefConstructedable;
-		constexpr static bool triviallyMoveConstructedable = function_base::triviallyMoveConstructedable;
+		constexpr static Bool triviallyRelocatable = function_base::triviallyRelocatable;
+		constexpr static Bool triviallyDefaultConstructible = function_base::triviallyDefaultConstructible;
+		constexpr static Bool triviallyCompareable = function_base::triviallyCompareable;
+		constexpr static Bool triviallyDestructible = function_base::triviallyDestructible;
+		constexpr static Bool triviallyConstRefConstructedable = function_base::triviallyConstRefConstructedable;
+		constexpr static Bool triviallyMoveConstructedable = function_base::triviallyMoveConstructedable;
 
 		constexpr static Size smallBufferSize = function_base::smallBufferSize;
 
@@ -499,10 +499,10 @@ namespace natl {
 		}
 
 		//observers 
-		constexpr bool empty() const noexcept { return functionBase.empty(); }
-		constexpr bool isEmpty() const noexcept { return functionBase.isEmpty(); }
-		constexpr bool isNotEmpty() const noexcept { return functionBase.isNotEmpty(); }
-		explicit constexpr operator bool() const noexcept { return bool(functionBase); }
+		constexpr Bool empty() const noexcept { return functionBase.empty(); }
+		constexpr Bool isEmpty() const noexcept { return functionBase.isEmpty(); }
+		constexpr Bool isNotEmpty() const noexcept { return functionBase.isNotEmpty(); }
+		explicit constexpr operator Bool() const noexcept { return Bool(functionBase); }
 		constexpr function_base& getFunctionBase() noexcept { return functionBase; }
 		constexpr const function_base& getFunctionBase() const noexcept { return functionBase; }
 
@@ -532,12 +532,12 @@ namespace natl {
 		using function_signature = ReturnType(ArgTypes...) const noexcept;
 
 		//movement info 
-		constexpr static bool triviallyRelocatable = function_base::triviallyRelocatable;
-		constexpr static bool triviallyDefaultConstructible = function_base::triviallyDefaultConstructible;
-		constexpr static bool triviallyCompareable = function_base::triviallyCompareable;
-		constexpr static bool triviallyDestructible = function_base::triviallyDestructible;
-		constexpr static bool triviallyConstRefConstructedable = function_base::triviallyConstRefConstructedable;
-		constexpr static bool triviallyMoveConstructedable = function_base::triviallyMoveConstructedable;
+		constexpr static Bool triviallyRelocatable = function_base::triviallyRelocatable;
+		constexpr static Bool triviallyDefaultConstructible = function_base::triviallyDefaultConstructible;
+		constexpr static Bool triviallyCompareable = function_base::triviallyCompareable;
+		constexpr static Bool triviallyDestructible = function_base::triviallyDestructible;
+		constexpr static Bool triviallyConstRefConstructedable = function_base::triviallyConstRefConstructedable;
+		constexpr static Bool triviallyMoveConstructedable = function_base::triviallyMoveConstructedable;
 
 		constexpr static Size smallBufferSize = function_base::smallBufferSize;
 	private:
@@ -585,10 +585,10 @@ namespace natl {
 		}
 
 		//observers 
-		constexpr bool empty() const noexcept { return functionBase.empty(); }
-		constexpr bool isEmpty() const noexcept { return functionBase.isEmpty(); }
-		constexpr bool isNotEmpty() const noexcept { return functionBase.isNotEmpty(); }
-		explicit constexpr operator bool() const noexcept { return bool(functionBase); }
+		constexpr Bool empty() const noexcept { return functionBase.empty(); }
+		constexpr Bool isEmpty() const noexcept { return functionBase.isEmpty(); }
+		constexpr Bool isNotEmpty() const noexcept { return functionBase.isNotEmpty(); }
+		explicit constexpr operator Bool() const noexcept { return Bool(functionBase); }
 		constexpr function_base& getFunctionBase() noexcept { return functionBase; }
 		constexpr const function_base& getFunctionBase() const noexcept { return functionBase; }
 
@@ -631,12 +631,12 @@ namespace natl {
 		using function_signature = ReturnType(ArgTypes...) noexcept;
 
 		//movement info 
-		constexpr static bool triviallyRelocatable = function_base::triviallyRelocatable;
-		constexpr static bool triviallyDefaultConstructible = function_base::triviallyDefaultConstructible;
-		constexpr static bool triviallyCompareable = function_base::triviallyCompareable;
-		constexpr static bool triviallyDestructible = function_base::triviallyDestructible;
-		constexpr static bool triviallyConstRefConstructedable = function_base::triviallyConstRefConstructedable;
-		constexpr static bool triviallyMoveConstructedable = function_base::triviallyMoveConstructedable;
+		constexpr static Bool triviallyRelocatable = function_base::triviallyRelocatable;
+		constexpr static Bool triviallyDefaultConstructible = function_base::triviallyDefaultConstructible;
+		constexpr static Bool triviallyCompareable = function_base::triviallyCompareable;
+		constexpr static Bool triviallyDestructible = function_base::triviallyDestructible;
+		constexpr static Bool triviallyConstRefConstructedable = function_base::triviallyConstRefConstructedable;
+		constexpr static Bool triviallyMoveConstructedable = function_base::triviallyMoveConstructedable;
 
 		constexpr static Size smallBufferSize = function_base::smallBufferSize;
 
@@ -725,10 +725,10 @@ namespace natl {
 		}
 
 		//observers 
-		constexpr bool empty() const noexcept { return functionBase.empty(); }
-		constexpr bool isEmpty() const noexcept { return functionBase.isEmpty(); }
-		constexpr bool isNotEmpty() const noexcept { return functionBase.isNotEmpty(); }
-		explicit constexpr operator bool() const noexcept { return bool(functionBase); }
+		constexpr Bool empty() const noexcept { return functionBase.empty(); }
+		constexpr Bool isEmpty() const noexcept { return functionBase.isEmpty(); }
+		constexpr Bool isNotEmpty() const noexcept { return functionBase.isNotEmpty(); }
+		explicit constexpr operator Bool() const noexcept { return Bool(functionBase); }
 		constexpr function_base& getFunctionBase() noexcept { return functionBase; }
 		constexpr const function_base& getFunctionBase() const noexcept { return functionBase; }
 
@@ -758,12 +758,12 @@ namespace natl {
 		using function_signature = ReturnType(ArgTypes...) const noexcept;
 
 		//movement info 
-		constexpr static bool triviallyRelocatable = function_base::triviallyRelocatable;
-		constexpr static bool triviallyDefaultConstructible = function_base::triviallyDefaultConstructible;
-		constexpr static bool triviallyCompareable = function_base::triviallyCompareable;
-		constexpr static bool triviallyDestructible = function_base::triviallyDestructible;
-		constexpr static bool triviallyConstRefConstructedable = function_base::triviallyConstRefConstructedable;
-		constexpr static bool triviallyMoveConstructedable = function_base::triviallyMoveConstructedable;
+		constexpr static Bool triviallyRelocatable = function_base::triviallyRelocatable;
+		constexpr static Bool triviallyDefaultConstructible = function_base::triviallyDefaultConstructible;
+		constexpr static Bool triviallyCompareable = function_base::triviallyCompareable;
+		constexpr static Bool triviallyDestructible = function_base::triviallyDestructible;
+		constexpr static Bool triviallyConstRefConstructedable = function_base::triviallyConstRefConstructedable;
+		constexpr static Bool triviallyMoveConstructedable = function_base::triviallyMoveConstructedable;
 
 		constexpr static Size smallBufferSize = function_base::smallBufferSize;
 	private:
@@ -839,10 +839,10 @@ namespace natl {
 		}
 
 		//observers 
-		constexpr bool empty() const noexcept { return functionBase.empty(); }
-		constexpr bool isEmpty() const noexcept { return functionBase.isEmpty(); }
-		constexpr bool isNotEmpty() const noexcept { return functionBase.isNotEmpty(); }
-		explicit constexpr operator bool() const noexcept { return bool(functionBase); }
+		constexpr Bool empty() const noexcept { return functionBase.empty(); }
+		constexpr Bool isEmpty() const noexcept { return functionBase.isEmpty(); }
+		constexpr Bool isNotEmpty() const noexcept { return functionBase.isNotEmpty(); }
+		explicit constexpr operator Bool() const noexcept { return Bool(functionBase); }
 		constexpr function_base& getFunctionBase() noexcept { return functionBase; }
 		constexpr const function_base& getFunctionBase() const noexcept { return functionBase; }
 
@@ -940,12 +940,12 @@ namespace natl {
 			using function_ptr_type = ReturnType(*)(ArgTypes...) noexcept;
 
 			//movement info 
-			constexpr static bool triviallyRelocatable = true;
-			constexpr static bool triviallyDefaultConstructible = true;
-			constexpr static bool triviallyCompareable = false;
-			constexpr static bool triviallyDestructible = true;
-			constexpr static bool triviallyConstRefConstructedable = true;
-			constexpr static bool triviallyMoveConstructedable = true;
+			constexpr static Bool triviallyRelocatable = true;
+			constexpr static Bool triviallyDefaultConstructible = true;
+			constexpr static Bool triviallyCompareable = false;
+			constexpr static Bool triviallyDestructible = true;
+			constexpr static Bool triviallyConstRefConstructedable = true;
+			constexpr static Bool triviallyMoveConstructedable = true;
 
 		private:
 			constexpr static Size smallBufferSize = sizeof(void*) * 2;
@@ -971,7 +971,7 @@ namespace natl {
 			constexpr FunctionRefBase(FunctionRefBase&& other) noexcept {
 				assign(natl::forward(other));
 			}
-			template<Size OtherCap, bool MoveOnly, typename Alloc>
+			template<Size OtherCap, Bool MoveOnly, typename Alloc>
 			constexpr FunctionRefBase(FunctionBase<ReturnType(ArgTypes...), OtherCap, MoveOnly, Alloc>& other) noexcept {
 				assign<OtherCap, MoveOnly, Alloc>(other);
 			}
@@ -1010,7 +1010,7 @@ namespace natl {
 				return assign(functor);
 			}
 
-			template<Size OtherCap, bool MoveOnly, typename Alloc>
+			template<Size OtherCap, Bool MoveOnly, typename Alloc>
 			constexpr FunctionRefBase& operator=(FunctionBase<ReturnType(ArgTypes...), OtherCap, MoveOnly, Alloc>& other) noexcept {
 				destruct();
 				return assign<OtherCap, MoveOnly, Alloc>(other);
@@ -1114,7 +1114,7 @@ namespace natl {
 				return self();
 			}
 
-			template<Size OtherCap, bool MoveOnly, typename Alloc>
+			template<Size OtherCap, Bool MoveOnly, typename Alloc>
 			constexpr FunctionRefBase& assign(FunctionBase<ReturnType(ArgTypes...), OtherCap, MoveOnly, Alloc>& other) noexcept {
 				switch (other.functionStorageType) {
 				case FunctionStorageType::functionPtr:
@@ -1144,16 +1144,16 @@ namespace natl {
 		public:
 
 			//observers 
-			constexpr bool empty() const noexcept {
+			constexpr Bool empty() const noexcept {
 				if (functionRefStorageType == FunctionRefStorageType::functionPtr) {
 					return !functionPtr;
 				} else {
 					return false;
 				}
 			}
-			constexpr bool isEmpty() const noexcept { return empty(); }
-			constexpr bool isNotEmpty() const noexcept { return !empty(); }
-			explicit constexpr operator bool() const noexcept { return isNotEmpty(); }
+			constexpr Bool isEmpty() const noexcept { return empty(); }
+			constexpr Bool isNotEmpty() const noexcept { return !empty(); }
+			explicit constexpr operator Bool() const noexcept { return isNotEmpty(); }
 
 			//calling
 			constexpr ReturnType operator()(ArgTypes... args) const noexcept {
@@ -1206,12 +1206,12 @@ namespace natl {
 		using arg_types = function_ref_base::arg_types;
 		using function_signature = ReturnType(ArgTypes...) noexcept;
 		//movement info 
-		constexpr static bool triviallyRelocatable = function_ref_base::triviallyRelocatable;
-		constexpr static bool triviallyDefaultConstructible = function_ref_base::triviallyDefaultConstructible;
-		constexpr static bool triviallyCompareable = function_ref_base::triviallyCompareable;
-		constexpr static bool triviallyDestructible = function_ref_base::triviallyDestructible;
-		constexpr static bool triviallyConstRefConstructedable = function_ref_base::triviallyConstRefConstructedable;
-		constexpr static bool triviallyMoveConstructedable = function_ref_base::triviallyMoveConstructedable;
+		constexpr static Bool triviallyRelocatable = function_ref_base::triviallyRelocatable;
+		constexpr static Bool triviallyDefaultConstructible = function_ref_base::triviallyDefaultConstructible;
+		constexpr static Bool triviallyCompareable = function_ref_base::triviallyCompareable;
+		constexpr static Bool triviallyDestructible = function_ref_base::triviallyDestructible;
+		constexpr static Bool triviallyConstRefConstructedable = function_ref_base::triviallyConstRefConstructedable;
+		constexpr static Bool triviallyMoveConstructedable = function_ref_base::triviallyMoveConstructedable;
 
 	private:
 		function_ref_base functionRefBase;
@@ -1288,10 +1288,10 @@ namespace natl {
 		}
 
 		//observers 
-		constexpr bool empty() const noexcept { return functionRefBase.empty(); }
-		constexpr bool isEmpty() const noexcept { return functionRefBase.isEmpty(); }
-		constexpr bool isNotEmpty() const noexcept { return functionRefBase.isNotEmpty(); }
-		explicit constexpr operator bool() const noexcept { return bool(functionRefBase); }
+		constexpr Bool empty() const noexcept { return functionRefBase.empty(); }
+		constexpr Bool isEmpty() const noexcept { return functionRefBase.isEmpty(); }
+		constexpr Bool isNotEmpty() const noexcept { return functionRefBase.isNotEmpty(); }
+		explicit constexpr operator Bool() const noexcept { return Bool(functionRefBase); }
 
 		//calling
 		constexpr ReturnType invoke(ArgTypes... args) noexcept {
@@ -1317,12 +1317,12 @@ namespace natl {
 		using arg_types = function_ref_base::arg_types;
 		using function_signature = ReturnType(ArgTypes...) const noexcept;
 		//movement info 
-		constexpr static bool triviallyRelocatable = function_ref_base::triviallyRelocatable;
-		constexpr static bool triviallyDefaultConstructible = function_ref_base::triviallyDefaultConstructible;
-		constexpr static bool triviallyCompareable = function_ref_base::triviallyCompareable;
-		constexpr static bool triviallyDestructible = function_ref_base::triviallyDestructible;
-		constexpr static bool triviallyConstRefConstructedable = function_ref_base::triviallyConstRefConstructedable;
-		constexpr static bool triviallyMoveConstructedable = function_ref_base::triviallyMoveConstructedable;
+		constexpr static Bool triviallyRelocatable = function_ref_base::triviallyRelocatable;
+		constexpr static Bool triviallyDefaultConstructible = function_ref_base::triviallyDefaultConstructible;
+		constexpr static Bool triviallyCompareable = function_ref_base::triviallyCompareable;
+		constexpr static Bool triviallyDestructible = function_ref_base::triviallyDestructible;
+		constexpr static Bool triviallyConstRefConstructedable = function_ref_base::triviallyConstRefConstructedable;
+		constexpr static Bool triviallyMoveConstructedable = function_ref_base::triviallyMoveConstructedable;
 
 	private:
 		function_ref_base functionRefBase;
@@ -1395,10 +1395,10 @@ namespace natl {
 
 
 		//observers 
-		constexpr bool empty() const noexcept { return functionRefBase.empty(); }
-		constexpr bool isEmpty() const noexcept { return functionRefBase.isEmpty(); }
-		constexpr bool isNotEmpty() const noexcept { return functionRefBase.isNotEmpty(); }
-		explicit constexpr operator bool() const noexcept { return bool(functionRefBase); }
+		constexpr Bool empty() const noexcept { return functionRefBase.empty(); }
+		constexpr Bool isEmpty() const noexcept { return functionRefBase.isEmpty(); }
+		constexpr Bool isNotEmpty() const noexcept { return functionRefBase.isNotEmpty(); }
+		explicit constexpr operator Bool() const noexcept { return Bool(functionRefBase); }
 
 		//calling
 		constexpr ReturnType invoke(ArgTypes... args) const noexcept {
@@ -1447,27 +1447,27 @@ namespace natl {
 
 	template<class Type>
 	struct CompareLess { 
-		constexpr bool operator()(const Type& lhs, const Type& rhs) const noexcept { return lhs < rhs; }
+		constexpr Bool operator()(const Type& lhs, const Type& rhs) const noexcept { return lhs < rhs; }
 	};
 	template<class Type>
 	struct CompareGreater {
-		constexpr bool operator()(const Type& lhs, const Type& rhs) const noexcept { return lhs > rhs; }
+		constexpr Bool operator()(const Type& lhs, const Type& rhs) const noexcept { return lhs > rhs; }
 	};
 	template<class Type>
 	struct CompareLessEqual {
-		constexpr bool operator()(const Type& lhs, const Type& rhs) const noexcept { return lhs <= rhs; }
+		constexpr Bool operator()(const Type& lhs, const Type& rhs) const noexcept { return lhs <= rhs; }
 	};
 	template<class Type>
 	struct CompareGreaterEqual {
-		constexpr bool operator()(const Type& lhs, const Type& rhs) const noexcept { return lhs >= rhs; }
+		constexpr Bool operator()(const Type& lhs, const Type& rhs) const noexcept { return lhs >= rhs; }
 	};
 	template<class Type>
 	struct CompareEqualTo {
-		constexpr bool operator()(const Type& lhs, const Type& rhs) const noexcept { return lhs == rhs; }
+		constexpr Bool operator()(const Type& lhs, const Type& rhs) const noexcept { return lhs == rhs; }
 	};
 	template<class Type>
 	struct CompareNotEqualTo {
-		constexpr bool operator()(const Type& lhs, const Type& rhs) const noexcept { return lhs != rhs; }
+		constexpr Bool operator()(const Type& lhs, const Type& rhs) const noexcept { return lhs != rhs; }
 	};
 
 }

@@ -74,16 +74,16 @@ namespace natl {
 			//util
 			GeneratorIterator& self() noexcept { return *this; }
 			const GeneratorIterator& self() const noexcept { return *this; }
-			friend bool operator==(const GeneratorIterator& it, GeneratorSentinel) noexcept {
+			friend Bool operator==(const GeneratorIterator& it, GeneratorSentinel) noexcept {
 				return !it.handle || it.handle.done();
 			}
-			friend bool operator!=(const GeneratorIterator& it, GeneratorSentinel sentinel) noexcept {
+			friend Bool operator!=(const GeneratorIterator& it, GeneratorSentinel sentinel) noexcept {
 				return !(it == sentinel);
 			}
-			friend bool operator==(GeneratorSentinel sentinel, const GeneratorIterator& it) noexcept {
+			friend Bool operator==(GeneratorSentinel sentinel, const GeneratorIterator& it) noexcept {
 				return (it == sentinel);
 			}
-			friend bool operator!=(GeneratorSentinel sentinel, const GeneratorIterator& it) noexcept {
+			friend Bool operator!=(GeneratorSentinel sentinel, const GeneratorIterator& it) noexcept {
 				return it != sentinel;
 			}
 

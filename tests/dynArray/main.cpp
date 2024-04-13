@@ -18,7 +18,7 @@ int main() {
 
 	[[maybe_unused]] natl::SmallDynArray<int, 8> smallDynArray(3);
 
-	[[maybe_unused]] constexpr bool test = natl::IsTriviallyDestructible<natl::DynArray<int>>;
+	[[maybe_unused]] constexpr natl::Bool test = natl::IsTriviallyDestructible<natl::DynArray<int>>;
 
 	[[maybe_unused]]  natl::BatchPool<int> batchPool;
 	batchPool.newElement();

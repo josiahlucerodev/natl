@@ -16,7 +16,7 @@ namespace natl {
     constexpr DataType* addressof(DataType& val) noexcept {
         return std::addressof<DataType>(val);
     }
-    constexpr bool isInBufferRegion(const Size bufferSize, const Size offset, const Size count) noexcept {
+    constexpr Bool isInBufferRegion(const Size bufferSize, const Size offset, const Size count) noexcept {
         const Size endOffset = offset + count;
         return endOffset < bufferSize;
     }
@@ -106,14 +106,14 @@ namespace natl {
 
     template <class Type, class TestType>
         requires(sizeof(Type) == sizeof(TestType))
-    bool bitCompare(const Type& value, const TestType& testType) noexcept {
+    Bool bitCompare(const Type& value, const TestType& testType) noexcept {
         const void* aptr = reinterpret_cast<const void*>(&value);
         const void* bPtr = reinterpret_cast<const void*>(&testType);
         return std::memcmp(aptr, bPtr, sizeof(TestType)) == 0;
     }
 
     template <class Type>
-    bool bitTestZero(const Type& value) noexcept {
+    Bool bitTestZero(const Type& value) noexcept {
         using ZeroArrayType = std::uint8_t[sizeof(Type)];
         ZeroArrayType zeroArray = {};
         return bitCompare<Type, ZeroArrayType>(value, zeroArray);
@@ -329,7 +329,7 @@ namespace natl {
 
     template <class AIter, class BIter>
         requires(IsIterPtr<AIter> && IsIterPtr<BIter>)
-    constexpr bool compareCount(AIter aIter, BIter bIter, const Size count) noexcept {
+    constexpr Bool compareCount(AIter aIter, BIter bIter, const Size count) noexcept {
         if (count == 0) {
             return false;
         }
@@ -388,7 +388,7 @@ namespace natl {
     }
 
     template<typename DataType>
-    constexpr bool typeHasToBeDestructed() noexcept {
+    constexpr Bool typeHasToBeDestructed() noexcept {
         return isConstantEvaluated() || !IsTriviallyDestructible<DataType>;
     }
 
@@ -398,11 +398,11 @@ namespace natl {
     template<typename DataType>
     constexpr static Size TypeByteSize = sizeof(DataType);
 
-    enum class AllocationMoveAdapaterRequireCopy : bool {
+    enum class AllocationMoveAdapaterRequireCopy : Bool {
         False = false,
         True = true
     };
-    enum class AllocationMoveAdapaterCanDealloc : bool {
+    enum class AllocationMoveAdapaterCanDealloc : Bool {
         False = false,
         True = true
     };
@@ -428,10 +428,10 @@ namespace natl {
         using const_reverse_iterator = ReverseRandomAccessIterator<const DataType>;
 
         //movement info  
-        constexpr static bool triviallyRelocatable = true;
-        constexpr static bool triviallyDefaultConstructible = true;
-        constexpr static bool triviallyCompareable = true;
-        constexpr static bool triviallyDestructible = true;
+        constexpr static Bool triviallyRelocatable = true;
+        constexpr static Bool triviallyDefaultConstructible = true;
+        constexpr static Bool triviallyCompareable = true;
+        constexpr static Bool triviallyDestructible = true;
 
         template<typename OtherDataType>
         using rebind_allocation_move_adapater = AllocationMoveAdapater<OtherDataType, typename Alloc::template rebind_alloc<OtherDataType>>;
@@ -481,19 +481,19 @@ namespace natl {
         }
 
         //capacity 
-        constexpr bool empty() const noexcept { return size() == 0; }
-        constexpr bool isEmpty() const noexcept { return empty(); }
-        constexpr bool isNotEmpty() const noexcept { return !empty(); }
+        constexpr Bool empty() const noexcept { return size() == 0; }
+        constexpr Bool isEmpty() const noexcept { return empty(); }
+        constexpr Bool isNotEmpty() const noexcept { return !empty(); }
 
         constexpr Size size() const noexcept { return arraySize; }
         constexpr Size capacity() const noexcept { return arrayCapacity; }
 
         //flags 
-        constexpr bool requiresCopy() const noexcept {
-            return static_cast<bool>(dataRequiresCopy);
+        constexpr Bool requiresCopy() const noexcept {
+            return static_cast<Bool>(dataRequiresCopy);
         }
-        constexpr bool canDealloc() const noexcept {
-            return static_cast<bool>(dataPtrCanBeDealloc);
+        constexpr Bool canDealloc() const noexcept {
+            return static_cast<Bool>(dataPtrCanBeDealloc);
         }
 
         constexpr AllocationMoveAdapaterRequireCopy getRequiresCopyFlag() noexcept {

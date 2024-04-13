@@ -213,17 +213,17 @@ namespace natl {
 		constexpr const DataType&& operator*() const&& noexcept { return value(); }
 		constexpr DataType&& operator*() && noexcept { return value(); }
 
-		constexpr bool hasValue() const noexcept { return state == ExpectState::value; }
-		constexpr bool doesNotHaveValue() const noexcept { return !hasValue(); }
-		constexpr bool hasError() const noexcept { return state == ExpectState::error; }
-		constexpr bool doesNotHaveError() const noexcept { return !hasError(); }
-		constexpr explicit operator bool() const noexcept { return hasValue(); }
+		constexpr Bool hasValue() const noexcept { return state == ExpectState::value; }
+		constexpr Bool doesNotHaveValue() const noexcept { return !hasValue(); }
+		constexpr Bool hasError() const noexcept { return state == ExpectState::error; }
+		constexpr Bool doesNotHaveError() const noexcept { return !hasError(); }
+		constexpr explicit operator Bool() const noexcept { return hasValue(); }
 
 		constexpr DataType valueOr(DataType&& defaultValue) const& noexcept {
-			return bool(*this) ? **this : forward<DataType>(defaultValue);
+			return Bool(*this) ? **this : forward<DataType>(defaultValue);
 		}
 		constexpr DataType valueOr(DataType&& defaultValue) && noexcept {
-			return bool(*this) ? move(**this) : forward<DataType>(defaultValue);
+			return Bool(*this) ? move(**this) : forward<DataType>(defaultValue);
 		}
 
 		//modifiers

@@ -35,14 +35,14 @@ namespace natl {
 		ui8 addressableData;
 	public:
 		//movement info  
-		constexpr static bool triviallyRelocatable = true;
-		constexpr static bool triviallyDefaultConstructible = true;
-		constexpr static bool triviallyCompareable = true;
-		constexpr static bool triviallyDestructible = true;
-		constexpr static bool triviallyConstRefConstructedable = true;
-		constexpr static bool triviallyMoveConstructedable = true;
-		constexpr static bool triviallyMoveAssignable = true;
-		constexpr static bool triviallyConstRefAssignable = true;
+		constexpr static Bool triviallyRelocatable = true;
+		constexpr static Bool triviallyDefaultConstructible = true;
+		constexpr static Bool triviallyCompareable = true;
+		constexpr static Bool triviallyDestructible = true;
+		constexpr static Bool triviallyConstRefConstructedable = true;
+		constexpr static Bool triviallyMoveConstructedable = true;
+		constexpr static Bool triviallyMoveAssignable = true;
+		constexpr static Bool triviallyConstRefAssignable = true;
 
 		//constructor
 		TestTypeCustomTrivialStdOut() noexcept : addressableData(0) { std::cout << "default constructed\n"; }
@@ -74,7 +74,7 @@ namespace natl {
     }
 
 
-	void runTest(bool(*func)(int), const std::string& testName) {
+	void runTest(Bool(*func)(int), const std::string& testName) {
 		std::cout << "Natl Test: " << testName << "\n";
 		func(rand());
 	}

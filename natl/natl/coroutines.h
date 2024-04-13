@@ -9,13 +9,13 @@ namespace natl {
 	using CoroutineHandle = std::coroutine_handle<Promise>;
 
 	struct SuspendAlways {
-		constexpr bool await_ready() const noexcept { return false; }
+		constexpr Bool await_ready() const noexcept { return false; }
 		constexpr void await_suspend(CoroutineHandle<>) const noexcept {}
 		constexpr void await_resume() const noexcept {}
 	};
 
 	struct SuspendNever {
-		constexpr bool await_ready() const noexcept { return true; }
+		constexpr Bool await_ready() const noexcept { return true; }
 		constexpr void await_suspend(CoroutineHandle<>) const noexcept {}
 		constexpr void await_resume() const noexcept {}
 	};

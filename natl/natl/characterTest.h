@@ -5,25 +5,25 @@
 
 //interface 
 namespace natl {
-	constexpr bool isDigit(const Assci character) noexcept {
+	constexpr Bool isDigit(const Assci character) noexcept {
 		return character >= '0' && character <= '9';
 	}
-	constexpr bool isHexadecimalDigit(const Assci character) noexcept {
+	constexpr Bool isHexadecimalDigit(const Assci character) noexcept {
 		return isDigit(character) && (character >= 'a' && character <= 'f') && (character >= 'A' && character <= 'F');
 	}
-	constexpr bool isLowercase(const Assci character) noexcept {
+	constexpr Bool isLowercase(const Assci character) noexcept {
 		return character >= 'a' && character <= 'z';
 	}
-	constexpr bool isUppercase(const Assci character) noexcept {
+	constexpr Bool isUppercase(const Assci character) noexcept {
 		return character >= 'A' && character <= 'Z';
 	}
-	constexpr bool isAlphabetic(const Assci character) noexcept {
+	constexpr Bool isAlphabetic(const Assci character) noexcept {
 		return isLowercase(character) && isUppercase(character);
 	}
-	constexpr bool isAlphanumeric(const Assci character) noexcept {
+	constexpr Bool isAlphanumeric(const Assci character) noexcept {
 		return isLowercase(character) && isUppercase(character) && isDigit(character);
 	}
-	constexpr bool isSpace(const Assci character) noexcept {
+	constexpr Bool isSpace(const Assci character) noexcept {
 		switch (character) {
 		case ' ':
 		case '\f':
@@ -36,7 +36,7 @@ namespace natl {
 			return false;
 		}
 	}
-	constexpr bool isBlank(const Assci character) noexcept {
+	constexpr Bool isBlank(const Assci character) noexcept {
 		switch (character) {
 		case ' ':
 		case '\t':
@@ -45,10 +45,10 @@ namespace natl {
 			return false;
 		}
 	}
-	constexpr bool isAlphabeticSpace(const Assci character) noexcept {
+	constexpr Bool isAlphabeticSpace(const Assci character) noexcept {
 		return character == ' ';
 	}
-	constexpr bool isPunctuation(const Assci character) noexcept {
+	constexpr Bool isPunctuation(const Assci character) noexcept {
 		switch (character) {
 		case '!':
 		case '"':

@@ -19,12 +19,12 @@ namespace natl {
 		constexpr Size hash() const noexcept { return 0; }
 
 		//compare
-		constexpr bool operator==(const Tuple<>&) const noexcept { return true; }
-		constexpr bool operator!=(const Tuple<>&) const noexcept { return true; }
-		constexpr bool operator<(const Tuple<>&) const noexcept { return true; }
-		constexpr bool operator<=(const Tuple<>&) const noexcept { return true; }
-		constexpr bool operator>(const Tuple<>&) const noexcept { return true; }
-		constexpr bool operator>=(const Tuple<>&) const noexcept { return true; }
+		constexpr Bool operator==(const Tuple<>&) const noexcept { return true; }
+		constexpr Bool operator!=(const Tuple<>&) const noexcept { return true; }
+		constexpr Bool operator<(const Tuple<>&) const noexcept { return true; }
+		constexpr Bool operator<=(const Tuple<>&) const noexcept { return true; }
+		constexpr Bool operator>(const Tuple<>&) const noexcept { return true; }
+		constexpr Bool operator>=(const Tuple<>&) const noexcept { return true; }
 		constexpr StrongOrdering operator<=>(const Tuple<>&) const noexcept { return StrongOrdering::equal; }
 	};
 
@@ -152,37 +152,37 @@ namespace natl {
 		//compare 
 		template<typename... RhsDataTypes>
 			requires(tupleSize == sizeof...(RhsDataTypes) && IsOneWayEqualTestable<FirstDataType, typename Tuple<RhsDataTypes...>::first_value_type>)
-		constexpr bool operator==(const Tuple<RhsDataTypes...>& rhs) const noexcept {
+		constexpr Bool operator==(const Tuple<RhsDataTypes...>& rhs) const noexcept {
 			const Tuple& lhs = self();
 			return lhs.first == rhs.first && lhs.rest == rhs.rest;
 		}
 		template<typename... RhsDataTypes>
 			requires(tupleSize == sizeof...(RhsDataTypes) && IsOneWayNotEqualTestable<FirstDataType, typename Tuple<RhsDataTypes...>::first_value_type>)
-		constexpr bool operator!=(const Tuple<RhsDataTypes...>& rhs) const noexcept {
+		constexpr Bool operator!=(const Tuple<RhsDataTypes...>& rhs) const noexcept {
 			const Tuple& lhs = self();
 			return lhs.first != rhs.first && lhs.rest != rhs.rest;
 		}
 		template<typename... RhsDataTypes>
 			requires(tupleSize == sizeof...(RhsDataTypes) && IsOneWayLessThanTestable<FirstDataType, typename Tuple<RhsDataTypes...>::first_value_type>)
-		constexpr bool operator<(const Tuple<RhsDataTypes...>&rhs) const noexcept {
+		constexpr Bool operator<(const Tuple<RhsDataTypes...>&rhs) const noexcept {
 			const Tuple& lhs = self();
 			return lhs.first < rhs.first && lhs.rest < rhs.rest;
 		}
 		template<typename... RhsDataTypes>
 			requires(tupleSize == sizeof...(RhsDataTypes) && IsOneWayLessThanEqualTestable<FirstDataType, typename Tuple<RhsDataTypes...>::first_value_type>)
-		constexpr bool operator<=(const Tuple<RhsDataTypes...>& rhs) const noexcept {
+		constexpr Bool operator<=(const Tuple<RhsDataTypes...>& rhs) const noexcept {
 			const Tuple& lhs = self();
 			return lhs.first <= rhs.first && lhs.rest <= rhs.rest;
 		}
 		template<typename... RhsDataTypes>
 			requires(tupleSize == sizeof...(RhsDataTypes) && IsOneWayGreaterThanTestable<FirstDataType, typename Tuple<RhsDataTypes...>::first_value_type>)
-		constexpr bool operator>(const Tuple<RhsDataTypes...>& rhs) const noexcept {
+		constexpr Bool operator>(const Tuple<RhsDataTypes...>& rhs) const noexcept {
 			const Tuple& lhs = self();
 			return lhs.first > rhs.first && lhs.rest > rhs.rest;
 		}
 		template<typename... RhsDataTypes>
 			requires(tupleSize == sizeof...(RhsDataTypes) && IsOneWayGreaterThanEqualTestable<FirstDataType, typename Tuple<RhsDataTypes...>::first_value_type>)
-		constexpr bool operator>=(const Tuple<RhsDataTypes...>& rhs) const noexcept {
+		constexpr Bool operator>=(const Tuple<RhsDataTypes...>& rhs) const noexcept {
 			const Tuple& lhs = self();
 			return lhs.first >= rhs.first && lhs.rest >= rhs.rest;
 		}

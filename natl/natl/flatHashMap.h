@@ -63,18 +63,18 @@ namespace natl {
 		constexpr iterator operator--(int) noexcept { iterator tempIt = getSelf(); --getSelf().dataPtr; return tempIt; }
 
 
-		constexpr bool operator== (const iterator rhs) const noexcept { return dataPtr == rhs.dataPtr; }
-		constexpr bool operator!= (const iterator rhs) const noexcept { return dataPtr != rhs.dataPtr; }
-		constexpr bool operator<(const iterator rhs) const noexcept { return dataPtr < rhs.dataPtr; }
-		constexpr bool operator>(const iterator rhs) const noexcept { return dataPtr > rhs.dataPtr; }
-		constexpr bool operator<=(const iterator rhs) const noexcept { return dataPtr <= rhs.dataPtr; }
-		constexpr bool operator>=(const iterator rhs) const noexcept { return dataPtr >= rhs.dataPtr; }
+		constexpr Bool operator== (const iterator rhs) const noexcept { return dataPtr == rhs.dataPtr; }
+		constexpr Bool operator!= (const iterator rhs) const noexcept { return dataPtr != rhs.dataPtr; }
+		constexpr Bool operator<(const iterator rhs) const noexcept { return dataPtr < rhs.dataPtr; }
+		constexpr Bool operator>(const iterator rhs) const noexcept { return dataPtr > rhs.dataPtr; }
+		constexpr Bool operator<=(const iterator rhs) const noexcept { return dataPtr <= rhs.dataPtr; }
+		constexpr Bool operator>=(const iterator rhs) const noexcept { return dataPtr >= rhs.dataPtr; }
 	};
 
 	template<class DataType>
 	class FlatMapHashCompare {
 	public:
-		constexpr static bool compare(const DataType& lhs, const DataType& rhs) {
+		constexpr static Bool compare(const DataType& lhs, const DataType& rhs) {
 			return lhs == rhs;
 		}
 	};
@@ -85,10 +85,10 @@ namespace natl {
 		Key key;
 		DataType data;
 	private:
-		bool used;
+		Bool used;
 	public:
 		constexpr FlatHashMapEntry() : key(), data(), used(false) {};
-		constexpr FlatHashMapEntry(const Key& keyIn, const DataType& dataIn, const bool usedIn)
+		constexpr FlatHashMapEntry(const Key& keyIn, const DataType& dataIn, const Bool usedIn)
 			: key(keyIn), data(dataIn), used(usedIn) {}
 		constexpr ~FlatHashMapEntry() {}
 
@@ -123,7 +123,7 @@ namespace natl {
 
 		constexpr void setAsUsed() { used = true; }
 		constexpr void setAsNotUsed() { used = false; }
-		constexpr bool isUsed() const { return used; }
+		constexpr Bool isUsed() const { return used; }
 	};
 
 	template<
@@ -160,12 +160,12 @@ namespace natl {
 		static constexpr f64 load_factor = 0.7;
 
 		//movement info 
-		constexpr static bool triviallyRelocatable = true;
-		constexpr static bool triviallyDefaultConstructible = true;
-		constexpr static bool triviallyCompareable = false;
-		constexpr static bool triviallyDestructible = false;
-		constexpr static bool triviallyConstRefConstructedable = false;
-		constexpr static bool triviallyMoveConstructedable = false;
+		constexpr static Bool triviallyRelocatable = true;
+		constexpr static Bool triviallyDefaultConstructible = true;
+		constexpr static Bool triviallyCompareable = false;
+		constexpr static Bool triviallyDestructible = false;
+		constexpr static Bool triviallyConstRefConstructedable = false;
+		constexpr static Bool triviallyMoveConstructedable = false;
 	private:
 		size_type inSize;
 		DynamicArrayType table;
@@ -186,9 +186,9 @@ namespace natl {
 		constexpr size_type count() const noexcept { return inSize; }
 		constexpr size_type capacity() const noexcept { return table.size(); }
 
-		constexpr bool isEmpty() const noexcept { return !bool(size()); }
-		constexpr bool isNotEmpty() const noexcept { return bool(size()); }
-		constexpr operator bool() const noexcept { return isNotEmpty(); }
+		constexpr Bool isEmpty() const noexcept { return !Bool(size()); }
+		constexpr Bool isNotEmpty() const noexcept { return Bool(size()); }
+		constexpr operator Bool() const noexcept { return isNotEmpty(); }
 
 	private:
 		constexpr pointer beginPtr() noexcept requires(IsNotConstV<DataType>) { return table.data(); }
@@ -330,7 +330,7 @@ namespace natl {
 			return optional_const_pointer();
 		}
 
-		bool contains(const Key& key) const noexcept {
+		Bool contains(const Key& key) const noexcept {
 			return find(key).hasValue();
 		}
 		constexpr void resizeAndRehash() noexcept {

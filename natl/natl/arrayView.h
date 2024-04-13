@@ -44,10 +44,10 @@ namespace natl {
 		using const_reverse_iterator = ReverseRandomAccessIterator<const DataType>;
 
 		//movement info 
-		constexpr static bool triviallyRelocatable = true;
-		constexpr static bool triviallyDefaultConstructible = true;
-		constexpr static bool triviallyCompareable = false;
-		constexpr static bool triviallyDestructible = true;
+		constexpr static Bool triviallyRelocatable = true;
+		constexpr static Bool triviallyDefaultConstructible = true;
+		constexpr static Bool triviallyCompareable = false;
+		constexpr static Bool triviallyDestructible = true;
 	private:
 		pointer dataPtr;
 		Size arraySize;
@@ -128,10 +128,10 @@ namespace natl {
 		constexpr size_type size() const noexcept { return arraySize; }
 		constexpr size_type size_bytes() const noexcept { return arraySize * sizeof(DataType); }
 
-		constexpr bool empty() const noexcept { return arraySize == 0 || dataPtr == nullptr; }
-		constexpr bool isEmpty() const noexcept { return empty(); }
-		constexpr bool isNotEmpty() const noexcept { return arraySize != 0 && dataPtr != nullptr; }
-		constexpr operator bool() const noexcept { return isNotEmpty(); }
+		constexpr Bool empty() const noexcept { return arraySize == 0 || dataPtr == nullptr; }
+		constexpr Bool isEmpty() const noexcept { return empty(); }
+		constexpr Bool isNotEmpty() const noexcept { return arraySize != 0 && dataPtr != nullptr; }
+		constexpr operator Bool() const noexcept { return isNotEmpty(); }
 
 		//subviews
 		constexpr ArrayView first(const size_type count) noexcept requires(IsNotConstV<DataType>) {
@@ -191,8 +191,8 @@ namespace natl {
 		optional_pointer optionalBack() { return optionalAt(backIndex()); }
 		optional_const_pointer optionalBack() const { return optionalAt(backIndex()); }
 
-		constexpr bool has(const size_type index) const noexcept { return index < arraySize; }
-		constexpr bool notHave(const size_type index) const noexcept { return index >= arraySize; }
+		constexpr Bool has(const size_type index) const noexcept { return index < arraySize; }
+		constexpr Bool notHave(const size_type index) const noexcept { return index >= arraySize; }
 
 		//operations
 		constexpr void fill(const DataType& value) noexcept requires(IsNotConstV<DataType>) {
@@ -203,141 +203,141 @@ namespace natl {
 		}
 
 		//compare operators 
-		friend constexpr bool operator==(const ArrayView& lhs, const ArrayView& rhs) noexcept {
+		friend constexpr Bool operator==(const ArrayView& lhs, const ArrayView& rhs) noexcept {
 			return lexicographicalCompareEqual<const DataType*, const DataType*>(lhs.data(), lhs.size(), rhs.data(), rhs.size());
 		}
-		friend constexpr bool operator==(const ArrayView& lhs, const ArrayView<const DataType>& rhs) noexcept requires(IsNotConstV<DataType>) {
+		friend constexpr Bool operator==(const ArrayView& lhs, const ArrayView<const DataType>& rhs) noexcept requires(IsNotConstV<DataType>) {
 			return lexicographicalCompareEqual<const DataType*, const DataType*>(lhs.data(), lhs.size(), rhs.data(), rhs.size());
 		}
-		friend constexpr bool operator==(const ArrayView& lhs, const DataType rhs) noexcept {
+		friend constexpr Bool operator==(const ArrayView& lhs, const DataType rhs) noexcept {
 			return lhs == ArrayView<const DataType>(&rhs, 1);
 		}
 		template<class ArrayViewLike>
 			requires(IsArrayViewLike<ArrayViewLike, const DataType>)
-		friend constexpr bool operator==(const ArrayView& lhs, const ArrayViewLike& rhs) noexcept {
+		friend constexpr Bool operator==(const ArrayView& lhs, const ArrayViewLike& rhs) noexcept {
 			return lhs == ArrayView<const DataType>(rhs.data(), rhs.size());
 		}
 		template<class ArrayViewLike>
 			requires(std::is_convertible_v<ArrayViewLike, ArrayView<const DataType>> && !IsArrayViewLike<ArrayViewLike, const DataType>)
-		friend constexpr bool operator==(const ArrayView& lhs, const ArrayViewLike& rhs) noexcept {
+		friend constexpr Bool operator==(const ArrayView& lhs, const ArrayViewLike& rhs) noexcept {
 			return lhs == static_cast<const ArrayView<DataType>>(rhs);
 		}
-		friend constexpr bool operator==(const ArrayView& lhs, std::initializer_list<DataType> rhs) noexcept {
+		friend constexpr Bool operator==(const ArrayView& lhs, std::initializer_list<DataType> rhs) noexcept {
 			return lhs == ArrayView<const DataType>(rhs.begin(), rhs.size());
 		}
 
-		friend constexpr bool operator!=(const ArrayView& lhs, const ArrayView& rhs) noexcept {
+		friend constexpr Bool operator!=(const ArrayView& lhs, const ArrayView& rhs) noexcept {
 			return lexicographicalCompareNotEqual<const DataType*, const DataType*>(lhs.data(), lhs.size(), rhs.data(), rhs.size());
 		}
-		friend constexpr bool operator!=(const ArrayView& lhs, const ArrayView<const DataType>& rhs) noexcept requires(IsNotConstV<DataType>) {
+		friend constexpr Bool operator!=(const ArrayView& lhs, const ArrayView<const DataType>& rhs) noexcept requires(IsNotConstV<DataType>) {
 			return lexicographicalCompareNotEqual<const DataType*, const DataType*>(lhs.data(), lhs.size(), rhs.data(), rhs.size());
 		}
-		friend constexpr bool operator!=(const ArrayView& lhs, const DataType rhs) noexcept {
+		friend constexpr Bool operator!=(const ArrayView& lhs, const DataType rhs) noexcept {
 			return lhs != ArrayView<const DataType>(&rhs, 1);
 		}
 		template<class ArrayViewLike>
 			requires(IsArrayViewLike<ArrayViewLike, const DataType>)
-		friend constexpr bool operator!=(const ArrayView& lhs, const ArrayViewLike& rhs) noexcept {
+		friend constexpr Bool operator!=(const ArrayView& lhs, const ArrayViewLike& rhs) noexcept {
 			return lhs != ArrayView<const DataType>(rhs.data(), rhs.size());
 		}
 		template<class ArrayViewLike>
 			requires(std::is_convertible_v<ArrayViewLike, ArrayView<const DataType>> && !IsArrayViewLike<ArrayViewLike, const DataType>)
-		friend constexpr bool operator!=(const ArrayView& lhs, const ArrayViewLike& rhs) noexcept {
+		friend constexpr Bool operator!=(const ArrayView& lhs, const ArrayViewLike& rhs) noexcept {
 			return lhs != static_cast<const ArrayView<DataType>>(rhs);
 		}
-		friend constexpr bool operator!=(const ArrayView& lhs, std::initializer_list<DataType> rhs) noexcept {
+		friend constexpr Bool operator!=(const ArrayView& lhs, std::initializer_list<DataType> rhs) noexcept {
 			return lhs != ArrayView<const DataType>(rhs.begin(), rhs.size());
 		}
 
-		friend constexpr bool operator<(const ArrayView& lhs, const ArrayView& rhs) noexcept {
+		friend constexpr Bool operator<(const ArrayView& lhs, const ArrayView& rhs) noexcept {
 			return lexicographicalCompareLessThan<const DataType*, const DataType*>(lhs.data(), lhs.size(), rhs.data(), rhs.size());
 		}
-		friend constexpr bool operator<(const ArrayView& lhs, const ArrayView<const DataType>& rhs) noexcept requires(IsNotConstV<DataType>) {
+		friend constexpr Bool operator<(const ArrayView& lhs, const ArrayView<const DataType>& rhs) noexcept requires(IsNotConstV<DataType>) {
 			return lexicographicalCompareLessThan<const DataType*, const DataType*>(lhs.data(), lhs.size(), rhs.data(), rhs.size());
 		}
-		friend constexpr bool operator<(const ArrayView& lhs, const DataType rhs) noexcept {
+		friend constexpr Bool operator<(const ArrayView& lhs, const DataType rhs) noexcept {
 			return lhs < ArrayView<const DataType>(&rhs, 1);
 		}
 		template<class ArrayViewLike>
 			requires(IsArrayViewLike<ArrayViewLike, const DataType>)
-		friend constexpr bool operator<(const ArrayView& lhs, const ArrayViewLike& rhs) noexcept {
+		friend constexpr Bool operator<(const ArrayView& lhs, const ArrayViewLike& rhs) noexcept {
 			return lhs < ArrayView<const DataType>(rhs.data(), rhs.size());
 		}
 		template<class ArrayViewLike>
 			requires(std::is_convertible_v<ArrayViewLike, ArrayView<const DataType>> && !IsArrayViewLike<ArrayViewLike, const DataType>)
-		friend constexpr bool operator<(const ArrayView& lhs, const ArrayViewLike& rhs) noexcept {
+		friend constexpr Bool operator<(const ArrayView& lhs, const ArrayViewLike& rhs) noexcept {
 			return lhs < static_cast<const ArrayView<DataType>>(rhs);
 		}
-		friend constexpr bool operator<(const ArrayView& lhs, std::initializer_list<DataType> rhs) noexcept {
+		friend constexpr Bool operator<(const ArrayView& lhs, std::initializer_list<DataType> rhs) noexcept {
 			return lhs < ArrayView<const DataType>(rhs.begin(), rhs.size());
 		}
 
-		friend constexpr bool operator<=(const ArrayView& lhs, const ArrayView& rhs) noexcept {
+		friend constexpr Bool operator<=(const ArrayView& lhs, const ArrayView& rhs) noexcept {
 			return lexicographicalCompareLessThanEqual<const DataType*, const DataType*>(lhs.data(), lhs.size(), rhs.data(), rhs.size());
 		}
-		friend constexpr bool operator<=(const ArrayView& lhs, const ArrayView<const DataType>& rhs) noexcept requires(IsNotConstV<DataType>) {
+		friend constexpr Bool operator<=(const ArrayView& lhs, const ArrayView<const DataType>& rhs) noexcept requires(IsNotConstV<DataType>) {
 			return lexicographicalCompareLessThanEqual<const DataType*, const DataType*>(lhs.data(), lhs.size(), rhs.data(), rhs.size());
 		}
-		friend constexpr bool operator<=(const ArrayView& lhs, const DataType rhs) noexcept {
+		friend constexpr Bool operator<=(const ArrayView& lhs, const DataType rhs) noexcept {
 			return lhs <= ArrayView<const DataType>(&rhs, 1);
 		}
 		template<class ArrayViewLike>
 			requires(IsArrayViewLike<ArrayViewLike, const DataType>)
-		friend constexpr bool operator<=(const ArrayView& lhs, const ArrayViewLike& rhs) noexcept {
+		friend constexpr Bool operator<=(const ArrayView& lhs, const ArrayViewLike& rhs) noexcept {
 			return lhs <= ArrayView<const DataType>(rhs.data(), rhs.size());
 		}
 		template<class ArrayViewLike>
 			requires(std::is_convertible_v<ArrayViewLike, ArrayView<const DataType>> && !IsArrayViewLike<ArrayViewLike, const DataType>)
-		friend constexpr bool operator<=(const ArrayView& lhs, const ArrayViewLike& rhs) noexcept {
+		friend constexpr Bool operator<=(const ArrayView& lhs, const ArrayViewLike& rhs) noexcept {
 			return lhs <= static_cast<const ArrayView<DataType>>(rhs);
 		}
-		friend constexpr bool operator<=(const ArrayView& lhs, std::initializer_list<DataType> rhs) noexcept {
+		friend constexpr Bool operator<=(const ArrayView& lhs, std::initializer_list<DataType> rhs) noexcept {
 			return lhs <= ArrayView<const DataType>(rhs.begin(), rhs.size());
 		}
 
-		friend constexpr bool operator>(const ArrayView& lhs, const ArrayView& rhs) noexcept {
+		friend constexpr Bool operator>(const ArrayView& lhs, const ArrayView& rhs) noexcept {
 			return lexicographicalCompareGreaterThan<const DataType*, const DataType*>(lhs.data(), lhs.size(), rhs.data(), rhs.size());
 		}
-		friend constexpr bool operator>(const ArrayView& lhs, const ArrayView<const DataType>& rhs) noexcept requires(IsNotConstV<DataType>) {
+		friend constexpr Bool operator>(const ArrayView& lhs, const ArrayView<const DataType>& rhs) noexcept requires(IsNotConstV<DataType>) {
 			return lexicographicalCompareGreaterThan<const DataType*, const DataType*>(lhs.data(), lhs.size(), rhs.data(), rhs.size());
 		}
-		friend constexpr bool operator>(const ArrayView& lhs, const DataType rhs) noexcept {
+		friend constexpr Bool operator>(const ArrayView& lhs, const DataType rhs) noexcept {
 			return lhs > ArrayView<const DataType>(&rhs, 1);
 		}
 		template<class ArrayViewLike>
 			requires(IsArrayViewLike<ArrayViewLike, const DataType>)
-		friend constexpr bool operator>(const ArrayView& lhs, const ArrayViewLike& rhs) noexcept {
+		friend constexpr Bool operator>(const ArrayView& lhs, const ArrayViewLike& rhs) noexcept {
 			return lhs > ArrayView<const DataType>(rhs.data(), rhs.size());
 		}
 		template<class ArrayViewLike>
 			requires(std::is_convertible_v<ArrayViewLike, ArrayView<const DataType>> && !IsArrayViewLike<ArrayViewLike, const DataType>)
-		friend constexpr bool operator>(const ArrayView& lhs, const ArrayViewLike& rhs) noexcept {
+		friend constexpr Bool operator>(const ArrayView& lhs, const ArrayViewLike& rhs) noexcept {
 			return lhs > static_cast<const ArrayView<DataType>>(rhs);
 		}
-		friend constexpr bool operator>(const ArrayView& lhs, std::initializer_list<DataType> rhs) noexcept {
+		friend constexpr Bool operator>(const ArrayView& lhs, std::initializer_list<DataType> rhs) noexcept {
 			return lhs > ArrayView<const DataType>(rhs.begin(), rhs.size());
 		}
 
-		friend constexpr bool operator>=(const ArrayView& lhs, const ArrayView& rhs) noexcept {
+		friend constexpr Bool operator>=(const ArrayView& lhs, const ArrayView& rhs) noexcept {
 			return lexicographicalCompareGreaterThanEqual<const DataType*, const DataType*>(lhs.data(), lhs.size(), rhs.data(), rhs.size());
 		}
-		friend constexpr bool operator>=(const ArrayView& lhs, const ArrayView<const DataType>& rhs) noexcept requires(IsNotConstV<DataType>) {
+		friend constexpr Bool operator>=(const ArrayView& lhs, const ArrayView<const DataType>& rhs) noexcept requires(IsNotConstV<DataType>) {
 			return lexicographicalCompareGreaterThanEqual<const DataType*, const DataType*>(lhs.data(), lhs.size(), rhs.data(), rhs.size());
 		}
-		friend constexpr bool operator>=(const ArrayView& lhs, const DataType rhs) noexcept {
+		friend constexpr Bool operator>=(const ArrayView& lhs, const DataType rhs) noexcept {
 			return lhs >= ArrayView<const DataType>(&rhs, 1);
 		}
 		template<class ArrayViewLike>
 			requires(IsArrayViewLike<ArrayViewLike, const DataType>)
-		friend constexpr bool operator>=(const ArrayView& lhs, const ArrayViewLike& rhs) noexcept {
+		friend constexpr Bool operator>=(const ArrayView& lhs, const ArrayViewLike& rhs) noexcept {
 			return lhs >= ArrayView<const DataType>(rhs.data(), rhs.size());
 		}
 		template<class ArrayViewLike>
 			requires(std::is_convertible_v<ArrayViewLike, ArrayView<const DataType>> && !IsArrayViewLike<ArrayViewLike, const DataType>)
-		friend constexpr bool operator>=(const ArrayView& lhs, const ArrayViewLike& rhs) noexcept {
+		friend constexpr Bool operator>=(const ArrayView& lhs, const ArrayViewLike& rhs) noexcept {
 			return lhs >= static_cast<const ArrayView<DataType>>(rhs);
 		}
-		friend constexpr bool operator>=(const ArrayView& lhs, std::initializer_list<DataType> rhs) noexcept {
+		friend constexpr Bool operator>=(const ArrayView& lhs, std::initializer_list<DataType> rhs) noexcept {
 			return lhs >= ArrayView<const DataType>(rhs.begin(), rhs.size());
 		}
 
@@ -360,7 +360,7 @@ namespace natl {
 		friend constexpr StrongOrdering operator<=>(const ArrayView& lhs, const ArrayViewLike& rhs) noexcept {
 			return lhs <=> static_cast<const ArrayView<DataType>>(rhs);
 		}
-		friend constexpr bool operator<=>(const ArrayView& lhs, std::initializer_list<DataType> rhs) noexcept {
+		friend constexpr Bool operator<=>(const ArrayView& lhs, std::initializer_list<DataType> rhs) noexcept {
 			return lhs <=> ArrayView<const DataType>(rhs.begin(), rhs.size());
 		}
 	};
@@ -412,10 +412,10 @@ namespace natl {
 			using size_type = Size;
 
 			//movement info  
-			constexpr static bool triviallyRelocatable = IsTriviallyRelocatable<DataType>;
-			constexpr static bool triviallyDefaultConstructible = IsTriviallyDefaultConstructible<DataType>;
-			constexpr static bool triviallyCompareable = IsTriviallyCompareable<DataType>;
-			constexpr static bool triviallyDestructible = IsTriviallyDestructible<DataType>;
+			constexpr static Bool triviallyRelocatable = IsTriviallyRelocatable<DataType>;
+			constexpr static Bool triviallyDefaultConstructible = IsTriviallyDefaultConstructible<DataType>;
+			constexpr static Bool triviallyCompareable = IsTriviallyCompareable<DataType>;
+			constexpr static Bool triviallyDestructible = IsTriviallyDestructible<DataType>;
 
 			using BaseArrayView = ArrayView<DataType>;
 		private:
@@ -484,9 +484,9 @@ namespace natl {
 			constexpr const_pointer data() const noexcept { return dataPtr; };
 
 			//capacity 
-			constexpr bool isEmpty() const noexcept { return !dataPtr; }
-			constexpr bool isNotEmpty() const noexcept { return !isEmpty(); }
-			constexpr operator bool() const noexcept { return isNotEmpty(); }
+			constexpr Bool isEmpty() const noexcept { return !dataPtr; }
+			constexpr Bool isNotEmpty() const noexcept { return !isEmpty(); }
+			constexpr operator Bool() const noexcept { return isNotEmpty(); }
 
 			consteval static Size numberOfDimension() noexcept {
 				return sizeof...(Dimensions);
@@ -565,10 +565,10 @@ namespace natl {
 			using size_type = Size;
 
 			//movement info  
-			constexpr static bool triviallyRelocatable = true;
-			constexpr static bool triviallyDefaultConstructible = true;
-			constexpr static bool triviallyCompareable = false;
-			constexpr static bool triviallyDestructible = true;
+			constexpr static Bool triviallyRelocatable = true;
+			constexpr static Bool triviallyDefaultConstructible = true;
+			constexpr static Bool triviallyCompareable = false;
+			constexpr static Bool triviallyDestructible = true;
 
 			using BaseArrayView = ArrayView<DataType>;
 		private:
@@ -637,9 +637,9 @@ namespace natl {
 			constexpr const_pointer data() const noexcept { return dataPtr; };
 
 			//capacity 
-			constexpr bool isEmpty() const noexcept { return !dataPtr; }
-			constexpr bool isNotEmpty() const noexcept { return !isEmpty(); }
-			constexpr operator bool() const noexcept { return isNotEmpty(); }
+			constexpr Bool isEmpty() const noexcept { return !dataPtr; }
+			constexpr Bool isNotEmpty() const noexcept { return !isEmpty(); }
+			constexpr operator Bool() const noexcept { return isNotEmpty(); }
 
 			consteval static Size numberOfDimension() noexcept {
 				return sizeof...(Dimensions);
@@ -702,10 +702,10 @@ namespace natl {
 		using BaseArrayView = OffsetsMDArrayViewImplType::BaseArrayView;
 	public:
 		//movement info  
-		constexpr static bool triviallyRelocatable = true;
-		constexpr static bool triviallyDefaultConstructible = true;
-		constexpr static bool triviallyCompareable = false;
-		constexpr static bool triviallyDestructible = true;
+		constexpr static Bool triviallyRelocatable = true;
+		constexpr static Bool triviallyDefaultConstructible = true;
+		constexpr static Bool triviallyCompareable = false;
+		constexpr static Bool triviallyDestructible = true;
 
 		//constructor
 		constexpr OffsetsMDArrayView() noexcept = default;
@@ -741,10 +741,10 @@ namespace natl {
 		using BaseArrayView = MDArrayViewImplType::BaseArrayView;
 	public:
 		//movement info  
-		constexpr static bool triviallyRelocatable = true;
-		constexpr static bool triviallyDefaultConstructible = true;
-		constexpr static bool triviallyCompareable = false;
-		constexpr static bool triviallyDestructible = true;
+		constexpr static Bool triviallyRelocatable = true;
+		constexpr static Bool triviallyDefaultConstructible = true;
+		constexpr static Bool triviallyCompareable = false;
+		constexpr static Bool triviallyDestructible = true;
 
 		//constructor
 		constexpr MDArrayView() noexcept = default;

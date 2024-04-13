@@ -37,11 +37,11 @@ namespace natl {
 	constexpr ui64 convertDecimalCharacterToNumber(const char& character) noexcept {
 		return static_cast<ui64>(character) - ui64(48);
 	}
-	constexpr bool checkIfStringConvertInRange(const bool hardEnd, const bool softEnd, const ui64 maxEndingPosValue,
+	constexpr Bool checkIfStringConvertInRange(const Bool hardEnd, const Bool softEnd, const ui64 maxEndingPosValue,
 		const ui64 maxTrailingValue, const ui64 number, const ui64 value) noexcept {
 		return hardEnd || (number > maxEndingPosValue && softEnd) || (static_cast<ui64>(number) == maxEndingPosValue && value > maxTrailingValue);
 	}
-	constexpr bool isCharacterDecimalDigit(const char character) noexcept {
+	constexpr Bool isCharacterDecimalDigit(const char character) noexcept {
 		switch (character) {
 		case '0': case '1': case '2': case '3': case '4':
 		case '5':case '6': case '7': case '8': case '9':
@@ -146,7 +146,7 @@ namespace natl {
 		}
 	}
 
-	constexpr bool isCharacterHexadecimalDigit(const char character) noexcept {
+	constexpr Bool isCharacterHexadecimalDigit(const char character) noexcept {
 		switch (character) {
 		case '0': case '1': case '2': case '3': case '4':
 		case '5':case '6': case '7': case '8': case '9':
@@ -235,7 +235,7 @@ namespace natl {
 		}
 	}
 
-	constexpr bool isCharacterBinaryDigit(const char character) noexcept {
+	constexpr Bool isCharacterBinaryDigit(const char character) noexcept {
 		switch (character) {
 		case '0': case '1':
 			return true;
@@ -316,8 +316,8 @@ namespace natl {
 
 		const Size length = string.length();
 		Float result = 0.0f; 
-		bool isNegative = false;
-		bool decimalFound = false;
+		Bool isNegative = false;
+		Bool decimalFound = false;
 		Float decimalMul = 10.0f;
 		Size index = 0;
 
@@ -407,7 +407,7 @@ namespace natl {
 			return;
 		}
 
-		bool isNegative = false;
+		Bool isNegative = false;
 
 		if constexpr (std::is_signed_v<Interger>) {
 			if (number < 0) {
@@ -446,7 +446,7 @@ namespace natl {
 
 	template<class DynStringContainer, typename Interger>
 		requires(IsConvertDynStringContainer<DynStringContainer>)
-	constexpr void intToStringHexadecimalStringType(DynStringContainer& output, Interger number, const bool addPrefix) noexcept {
+	constexpr void intToStringHexadecimalStringType(DynStringContainer& output, Interger number, const Bool addPrefix) noexcept {
 		if (number == 0) {
 			if (addPrefix) {
 				output.append("0x0", 3);
@@ -483,7 +483,7 @@ namespace natl {
 	}
 
 	template<typename Interger>
-	constexpr String intToStringHexadecimalType(Interger number, const bool addPrefix) noexcept {
+	constexpr String intToStringHexadecimalType(Interger number, const Bool addPrefix) noexcept {
 		String result{};
 		intToStringHexadecimalStringType<String, Interger>(result, number, addPrefix);
 		return result;

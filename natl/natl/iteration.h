@@ -34,12 +34,12 @@ namespace natl {
         constexpr reference operator[](const size_type index) = delete;
 
         //compare
-        constexpr bool operator==(const RepeatIterator rhs) const noexcept { return index == rhs.index; }
-        constexpr bool operator!=(const RepeatIterator rhs) const noexcept { return index != rhs.index; }
-        constexpr bool operator<(const RepeatIterator rhs) const noexcept { return index < rhs.index; }
-        constexpr bool operator>(const RepeatIterator rhs) const noexcept { return index > rhs.index; }
-        constexpr bool operator<=(const RepeatIterator rhs) const noexcept { return index <= rhs.index; }
-        constexpr bool operator>=(const RepeatIterator rhs) const noexcept { return index >= rhs.index; }
+        constexpr Bool operator==(const RepeatIterator rhs) const noexcept { return index == rhs.index; }
+        constexpr Bool operator!=(const RepeatIterator rhs) const noexcept { return index != rhs.index; }
+        constexpr Bool operator<(const RepeatIterator rhs) const noexcept { return index < rhs.index; }
+        constexpr Bool operator>(const RepeatIterator rhs) const noexcept { return index > rhs.index; }
+        constexpr Bool operator<=(const RepeatIterator rhs) const noexcept { return index <= rhs.index; }
+        constexpr Bool operator>=(const RepeatIterator rhs) const noexcept { return index >= rhs.index; }
 
 
         //iterator operations 
@@ -241,12 +241,12 @@ namespace natl {
         }
 
         //compare
-        constexpr bool operator==(const CombinedIterationIterator& rhs) const noexcept { return iterators == rhs.iterators; }
-        constexpr bool operator!=(const CombinedIterationIterator& rhs) const noexcept { return iterators != rhs.iterators; }
-        constexpr bool operator<(const CombinedIterationIterator& rhs) const noexcept { return iterators < rhs.iterators; }
-        constexpr bool operator>(const CombinedIterationIterator& rhs) const noexcept { return iterators > rhs.iterators; }
-        constexpr bool operator<=(const CombinedIterationIterator& rhs) const noexcept { return iterators <= rhs.iterators; }
-        constexpr bool operator>=(const CombinedIterationIterator& rhs) const noexcept { return iterators >= rhs.iterators; }
+        constexpr Bool operator==(const CombinedIterationIterator& rhs) const noexcept { return iterators == rhs.iterators; }
+        constexpr Bool operator!=(const CombinedIterationIterator& rhs) const noexcept { return iterators != rhs.iterators; }
+        constexpr Bool operator<(const CombinedIterationIterator& rhs) const noexcept { return iterators < rhs.iterators; }
+        constexpr Bool operator>(const CombinedIterationIterator& rhs) const noexcept { return iterators > rhs.iterators; }
+        constexpr Bool operator<=(const CombinedIterationIterator& rhs) const noexcept { return iterators <= rhs.iterators; }
+        constexpr Bool operator>=(const CombinedIterationIterator& rhs) const noexcept { return iterators >= rhs.iterators; }
 
         //iterator operations
         constexpr CombinedIterationIterator& operator++() noexcept {

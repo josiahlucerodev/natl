@@ -34,14 +34,14 @@ namespace natl {
 		using allocation_move_adapater = AllocationMoveAdapater<value_type, Alloc>;
 
 		//movement info 
-		constexpr static bool triviallyRelocatable = true;
-		constexpr static bool triviallyDefaultConstructible = true;
-		constexpr static bool triviallyCompareable = false;
-		constexpr static bool triviallyDestructible = false;
-		constexpr static bool triviallyConstRefConstructedable = false;
-		constexpr static bool triviallyMoveConstructedable = false;
+		constexpr static Bool triviallyRelocatable = true;
+		constexpr static Bool triviallyDefaultConstructible = true;
+		constexpr static Bool triviallyCompareable = false;
+		constexpr static Bool triviallyDestructible = false;
+		constexpr static Bool triviallyConstRefConstructedable = false;
+		constexpr static Bool triviallyMoveConstructedable = false;
 
-		constexpr static bool enableSmallArray = true;
+		constexpr static Bool enableSmallArray = true;
 	private:
 		size_type arraySizeAndSmallArrayFlag;
 		pointer arrayDataPtr;
@@ -78,14 +78,14 @@ namespace natl {
 			arraySizeAndSmallArrayFlag = (arraySizeAndSmallArrayFlag & ~getMask()) | newSize;
 		}
 	public:
-		constexpr bool isSmallArray() const noexcept {
+		constexpr Bool isSmallArray() const noexcept {
 			if (!enableSmallArray) {
 				return false;
 			} else {
 				return !(arraySizeAndSmallArrayFlag & ~getMask());
 			}
 		}
-		constexpr bool isNotSmallArray() const noexcept {
+		constexpr Bool isNotSmallArray() const noexcept {
 			return !isSmallArray();
 		}
 		constexpr static size_type smallArrayCapacity() noexcept {
@@ -455,7 +455,7 @@ namespace natl {
 
 		//strongly linked methods 
 		[[nodiscard]] constexpr allocation_move_adapater getAlloctionMoveAdapater() noexcept {
-			const bool arrayIsSmallBuffer = isSmallArray();
+			const Bool arrayIsSmallBuffer = isSmallArray();
 			AllocationMoveAdapaterRequireCopy requireCopy = arrayIsSmallBuffer ? AllocationMoveAdapaterRequireCopy::True : AllocationMoveAdapaterRequireCopy::False;
 			AllocationMoveAdapaterCanDealloc canBeDealloc = arrayIsSmallBuffer ? AllocationMoveAdapaterCanDealloc::False : AllocationMoveAdapaterCanDealloc::True;
 			allocation_move_adapater allocationMoveAdapater(data(), size(), capacity(), requireCopy, canBeDealloc);
@@ -493,7 +493,7 @@ namespace natl {
 			}
 		}
 	private:
-		constexpr bool reserveTest(const size_type newCapacity) noexcept {
+		constexpr Bool reserveTest(const size_type newCapacity) noexcept {
 			if (newCapacity <= capacity()) {
 				return true;
 			} else if (newCapacity <= smallArrayCapacity()) {
@@ -543,8 +543,8 @@ namespace natl {
 
 		constexpr void shrink_to_fit() noexcept {
 			const size_type newCapacity = size();
-			const bool sameSize = newCapacity == capacity();
-			const bool canBeSmallArray = newCapacity <= smallArrayCapacity();
+			const Bool sameSize = newCapacity == capacity();
+			const Bool canBeSmallArray = newCapacity <= smallArrayCapacity();
 
 			if (isSmallArray()) {
 				return;
@@ -661,8 +661,8 @@ namespace natl {
 		optional_pointer optionalBack() { return optionalAt(backIndex()); }
 		optional_const_pointer optionalBack() const { return optionalAt(backIndex()); }
 
-		constexpr bool has(const size_type index) const noexcept { return index < size(); }
-		constexpr bool notHave(const size_type index) const noexcept { return index >= size(); }
+		constexpr Bool has(const size_type index) const noexcept { return index < size(); }
+		constexpr Bool notHave(const size_type index) const noexcept { return index >= size(); }
 
 
 		//iterators 
@@ -686,9 +686,9 @@ namespace natl {
 
 		//capacity 
 	public:
-		constexpr bool empty() const noexcept { return size() == 0; }
-		constexpr bool isEmpty() const noexcept { return empty(); }
-		constexpr bool isNotEmpty() const noexcept { return !empty(); }
+		constexpr Bool empty() const noexcept { return size() == 0; }
+		constexpr Bool isEmpty() const noexcept { return empty(); }
+		constexpr Bool isNotEmpty() const noexcept { return !empty(); }
 
 		//modifiers
 	private:
@@ -1054,123 +1054,123 @@ namespace natl {
 		}
 	public:
 		//compare operators 
-		friend constexpr bool operator==(const SmallDynArray& lhs, const SmallDynArray& rhs) noexcept {
+		friend constexpr Bool operator==(const SmallDynArray& lhs, const SmallDynArray& rhs) noexcept {
 			return lhs.toArrayView() == rhs.toArrayView();
 		}
-		friend constexpr bool operator==(const SmallDynArray& lhs, const value_type rhs) noexcept {
+		friend constexpr Bool operator==(const SmallDynArray& lhs, const value_type rhs) noexcept {
 			return lhs.toArrayView() == rhs;
 		}
 		template<class ArrayViewLike>
 			requires(IsArrayViewLike<ArrayViewLike, const value_type>)
-		friend constexpr bool operator==(const SmallDynArray& lhs, const ArrayViewLike& rhs) noexcept {
+		friend constexpr Bool operator==(const SmallDynArray& lhs, const ArrayViewLike& rhs) noexcept {
 			return lhs.toArrayView() == rhs;
 		}
 		template<class ArrayViewLike>
 			requires(std::is_convertible_v<ArrayViewLike, ArrayView<const value_type>> && !IsArrayViewLike<ArrayViewLike, const value_type>)
-		friend constexpr bool operator==(const SmallDynArray& lhs, const ArrayViewLike& rhs) noexcept {
+		friend constexpr Bool operator==(const SmallDynArray& lhs, const ArrayViewLike& rhs) noexcept {
 			return lhs.toArrayView() == rhs;
 		}
-		friend constexpr bool operator==(const SmallDynArray& lhs, std::initializer_list<value_type> rhs) noexcept {
+		friend constexpr Bool operator==(const SmallDynArray& lhs, std::initializer_list<value_type> rhs) noexcept {
 			return lhs.toArrayView() == rhs;
 		}
 
-		friend constexpr bool operator!=(const SmallDynArray& lhs, const SmallDynArray& rhs) noexcept {
+		friend constexpr Bool operator!=(const SmallDynArray& lhs, const SmallDynArray& rhs) noexcept {
 			return lhs.toArrayView() != rhs.toArrayView();
 		}
-		friend constexpr bool operator!=(const SmallDynArray& lhs, const value_type rhs) noexcept {
+		friend constexpr Bool operator!=(const SmallDynArray& lhs, const value_type rhs) noexcept {
 			return lhs.toArrayView() != rhs;
 		}
 		template<class ArrayViewLike>
 			requires(IsArrayViewLike<ArrayViewLike, const value_type>)
-		friend constexpr bool operator!=(const SmallDynArray& lhs, const ArrayViewLike& rhs) noexcept {
+		friend constexpr Bool operator!=(const SmallDynArray& lhs, const ArrayViewLike& rhs) noexcept {
 			return lhs.toArrayView() != rhs;
 		}
 		template<class ArrayViewLike>
 			requires(std::is_convertible_v<ArrayViewLike, ArrayView<const value_type>> && !IsArrayViewLike<ArrayViewLike, const value_type>)
-		friend constexpr bool operator!=(const SmallDynArray& lhs, const ArrayViewLike& rhs) noexcept {
+		friend constexpr Bool operator!=(const SmallDynArray& lhs, const ArrayViewLike& rhs) noexcept {
 			return lhs.toArrayView() != rhs;
 		}
-		friend constexpr bool operator!=(const SmallDynArray& lhs, std::initializer_list<value_type> rhs) noexcept {
+		friend constexpr Bool operator!=(const SmallDynArray& lhs, std::initializer_list<value_type> rhs) noexcept {
 			return lhs.toArrayView() != rhs;
 		}
 
-		friend constexpr bool operator<(const SmallDynArray& lhs, const SmallDynArray& rhs) noexcept {
+		friend constexpr Bool operator<(const SmallDynArray& lhs, const SmallDynArray& rhs) noexcept {
 			return lhs.toArrayView() < rhs.toArrayView();
 		}
-		friend constexpr bool operator<(const SmallDynArray& lhs, const value_type rhs) noexcept {
+		friend constexpr Bool operator<(const SmallDynArray& lhs, const value_type rhs) noexcept {
 			return lhs.toArrayView() < rhs;
 		}
 		template<class ArrayViewLike>
 			requires(IsArrayViewLike<ArrayViewLike, const value_type>)
-		friend constexpr bool operator<(const SmallDynArray& lhs, const ArrayViewLike& rhs) noexcept {
+		friend constexpr Bool operator<(const SmallDynArray& lhs, const ArrayViewLike& rhs) noexcept {
 			return lhs.toArrayView() < rhs;
 		}
 		template<class ArrayViewLike>
 			requires(std::is_convertible_v<ArrayViewLike, ArrayView<const value_type>> && !IsArrayViewLike<ArrayViewLike, const value_type>)
-		friend constexpr bool operator<(const SmallDynArray& lhs, const ArrayViewLike& rhs) noexcept {
+		friend constexpr Bool operator<(const SmallDynArray& lhs, const ArrayViewLike& rhs) noexcept {
 			return lhs.toArrayView() < rhs;
 		}
-		friend constexpr bool operator<(const SmallDynArray& lhs, std::initializer_list<value_type> rhs) noexcept {
+		friend constexpr Bool operator<(const SmallDynArray& lhs, std::initializer_list<value_type> rhs) noexcept {
 			return lhs.toArrayView() < rhs;
 		}
 
-		friend constexpr bool operator<=(const SmallDynArray& lhs, const SmallDynArray& rhs) noexcept {
+		friend constexpr Bool operator<=(const SmallDynArray& lhs, const SmallDynArray& rhs) noexcept {
 			return lhs.toArrayView() <= rhs.toArrayView();
 		}
-		friend constexpr bool operator<=(const SmallDynArray& lhs, const value_type rhs) noexcept {
+		friend constexpr Bool operator<=(const SmallDynArray& lhs, const value_type rhs) noexcept {
 			return lhs.toArrayView() <= rhs;
 		}
 		template<class ArrayViewLike>
 			requires(IsArrayViewLike<ArrayViewLike, const value_type>)
-		friend constexpr bool operator<=(const SmallDynArray& lhs, const ArrayViewLike& rhs) noexcept {
+		friend constexpr Bool operator<=(const SmallDynArray& lhs, const ArrayViewLike& rhs) noexcept {
 			return lhs.toArrayView() <= rhs;
 		}
 		template<class ArrayViewLike>
 			requires(std::is_convertible_v<ArrayViewLike, ArrayView<const value_type>> && !IsArrayViewLike<ArrayViewLike, const value_type>)
-		friend constexpr bool operator<=(const SmallDynArray& lhs, const ArrayViewLike& rhs) noexcept {
+		friend constexpr Bool operator<=(const SmallDynArray& lhs, const ArrayViewLike& rhs) noexcept {
 			return lhs.toArrayView() <= rhs;
 		}
-		friend constexpr bool operator<=(const SmallDynArray& lhs, std::initializer_list<value_type> rhs) noexcept {
+		friend constexpr Bool operator<=(const SmallDynArray& lhs, std::initializer_list<value_type> rhs) noexcept {
 			return lhs.toArrayView() <= rhs;
 		}
 
-		friend constexpr bool operator>(const SmallDynArray& lhs, const SmallDynArray& rhs) noexcept {
+		friend constexpr Bool operator>(const SmallDynArray& lhs, const SmallDynArray& rhs) noexcept {
 			return lhs.toArrayView() > rhs.toArrayView();
 		}
-		friend constexpr bool operator>(const SmallDynArray& lhs, const value_type rhs) noexcept {
+		friend constexpr Bool operator>(const SmallDynArray& lhs, const value_type rhs) noexcept {
 			return lhs.toArrayView() > rhs;
 		}
 		template<class ArrayViewLike>
 			requires(IsArrayViewLike<ArrayViewLike, const value_type>)
-		friend constexpr bool operator>(const SmallDynArray& lhs, const ArrayViewLike& rhs) noexcept {
+		friend constexpr Bool operator>(const SmallDynArray& lhs, const ArrayViewLike& rhs) noexcept {
 			return lhs.toArrayView() > rhs;
 		}
 		template<class ArrayViewLike>
 			requires(std::is_convertible_v<ArrayViewLike, ArrayView<const value_type>> && !IsArrayViewLike<ArrayViewLike, const value_type>)
-		friend constexpr bool operator>(const SmallDynArray& lhs, const ArrayViewLike& rhs) noexcept {
+		friend constexpr Bool operator>(const SmallDynArray& lhs, const ArrayViewLike& rhs) noexcept {
 			return lhs.toArrayView() > rhs;
 		}
-		friend constexpr bool operator>(const SmallDynArray& lhs, std::initializer_list<value_type> rhs) noexcept {
+		friend constexpr Bool operator>(const SmallDynArray& lhs, std::initializer_list<value_type> rhs) noexcept {
 			return lhs.toArrayView() > rhs;
 		}
 
-		friend constexpr bool operator>=(const SmallDynArray& lhs, const SmallDynArray& rhs) noexcept {
+		friend constexpr Bool operator>=(const SmallDynArray& lhs, const SmallDynArray& rhs) noexcept {
 			return lhs.toArrayView() >= rhs.toArrayView();
 		}
-		friend constexpr bool operator>=(const SmallDynArray& lhs, const value_type rhs) noexcept {
+		friend constexpr Bool operator>=(const SmallDynArray& lhs, const value_type rhs) noexcept {
 			return lhs.toArrayView() >= rhs;
 		}
 		template<class ArrayViewLike>
 			requires(IsArrayViewLike<ArrayViewLike, const value_type>)
-		friend constexpr bool operator>=(const SmallDynArray& lhs, const ArrayViewLike& rhs) noexcept {
+		friend constexpr Bool operator>=(const SmallDynArray& lhs, const ArrayViewLike& rhs) noexcept {
 			return lhs.toArrayView() >= rhs;
 		}
 		template<class ArrayViewLike>
 			requires(std::is_convertible_v<ArrayViewLike, ArrayView<const value_type>> && !IsArrayViewLike<ArrayViewLike, const value_type>)
-		friend constexpr bool operator>=(const SmallDynArray& lhs, const ArrayViewLike& rhs) noexcept {
+		friend constexpr Bool operator>=(const SmallDynArray& lhs, const ArrayViewLike& rhs) noexcept {
 			return lhs.toArrayView() >= rhs;
 		}
-		friend constexpr bool operator>=(const SmallDynArray& lhs, std::initializer_list<value_type> rhs) noexcept {
+		friend constexpr Bool operator>=(const SmallDynArray& lhs, std::initializer_list<value_type> rhs) noexcept {
 			return lhs.toArrayView() >= rhs;
 		}
 
@@ -1190,7 +1190,7 @@ namespace natl {
 		friend constexpr StrongOrdering operator<=>(const SmallDynArray& lhs, const ArrayViewLike& rhs) noexcept {
 			return lhs.toArrayView() <=> rhs;
 		}
-		friend constexpr bool operator<=>(const SmallDynArray& lhs, std::initializer_list<value_type> rhs) noexcept {
+		friend constexpr Bool operator<=>(const SmallDynArray& lhs, std::initializer_list<value_type> rhs) noexcept {
 			return lhs.toArrayView() <=> rhs;
 		}
 

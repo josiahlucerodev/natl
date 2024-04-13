@@ -146,12 +146,12 @@ namespace natl {
         }
 
         //compare 
-        NATL_FORCE_INLINE constexpr bool operator==(const UnitValue& other) const noexcept { return value == other.value; }
-        NATL_FORCE_INLINE constexpr bool operator!=(const UnitValue& other) const noexcept { return value != other.value; }
-        NATL_FORCE_INLINE constexpr bool operator<(const UnitValue& other) const noexcept { return value < other.value; }
-        NATL_FORCE_INLINE constexpr bool operator>(const UnitValue& other) const noexcept { return value > other.value; }
-        NATL_FORCE_INLINE constexpr bool operator<=(const UnitValue& other) const noexcept { return value <= other.value; }
-        NATL_FORCE_INLINE constexpr bool operator>=(const UnitValue& other) const noexcept { return value >= other.value; }
+        NATL_FORCE_INLINE constexpr Bool operator==(const UnitValue& other) const noexcept { return value == other.value; }
+        NATL_FORCE_INLINE constexpr Bool operator!=(const UnitValue& other) const noexcept { return value != other.value; }
+        NATL_FORCE_INLINE constexpr Bool operator<(const UnitValue& other) const noexcept { return value < other.value; }
+        NATL_FORCE_INLINE constexpr Bool operator>(const UnitValue& other) const noexcept { return value > other.value; }
+        NATL_FORCE_INLINE constexpr Bool operator<=(const UnitValue& other) const noexcept { return value <= other.value; }
+        NATL_FORCE_INLINE constexpr Bool operator>=(const UnitValue& other) const noexcept { return value >= other.value; }
         NATL_FORCE_INLINE constexpr auto operator<=>(const UnitValue& other) const noexcept { return value <=> other.value; }
 
     private:
@@ -164,7 +164,7 @@ namespace natl {
 
         template<typename LhsUnit, typename RhsUnit>
         struct StructSameUnitGroupError {
-            constexpr static bool value = !(!std::is_same_v<typename LhsUnit::unit_tag, typename RhsUnit::unit_tag> &&
+            constexpr static Bool value = !(!std::is_same_v<typename LhsUnit::unit_tag, typename RhsUnit::unit_tag> &&
                 std::is_same_v<typename LhsUnit::unit_tag::tag_group, typename RhsUnit::unit_tag::tag_group>);
         };
 
@@ -201,12 +201,12 @@ namespace natl {
         struct UnitCompare {
             static_assert(StructSameUnitGroupError<LhsUnit, RhsUnit>::value,
                 "natl: Unit mul - doing an operation with a unit form the same group but of differnt type. Requires conversion");
-            constexpr static bool value = std::is_same_v<typename LhsUnit::unit_tag, typename RhsUnit::unit_tag>;
+            constexpr static Bool value = std::is_same_v<typename LhsUnit::unit_tag, typename RhsUnit::unit_tag>;
         };
 
         template<typename TestUnit>
         struct UnitRemoveIfZero {
-            constexpr static bool value = TestUnit::magnitude == 0;
+            constexpr static Bool value = TestUnit::magnitude == 0;
         };
 
 
@@ -219,7 +219,7 @@ namespace natl {
 
         template<typename LhsUnit, typename RhsUnit>
         struct UnitGroupUnitCategoryCompare {
-            constexpr static bool value =  std::is_same_v<typename LhsUnit::unit_tag::tag_group::unit_category, typename RhsUnit::unit_tag::tag_group::unit_category>;
+            constexpr static Bool value =  std::is_same_v<typename LhsUnit::unit_tag::tag_group::unit_category, typename RhsUnit::unit_tag::tag_group::unit_category>;
         };
 
         template<typename TransfromUnit, typename UnitTypePack>
@@ -240,7 +240,7 @@ namespace natl {
         struct UnitValueGroupCompare {
             using LhsUnitTag = LhsUnit::unit_tag;
             using RhsUnitTag = RhsUnit::unit_tag;
-            constexpr static bool value = std::is_same_v<typename LhsUnitTag::tag_group, typename RhsUnitTag::tag_group>;
+            constexpr static Bool value = std::is_same_v<typename LhsUnitTag::tag_group, typename RhsUnitTag::tag_group>;
         };
     public:
         template<typename TransfromUnit, typename UnitTypePack>

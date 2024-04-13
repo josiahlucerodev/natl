@@ -34,10 +34,10 @@ namespace natl {
 		using const_reverse_iterator = ReverseRandomAccessIterator<const DataType>;
 
 		//movement info  
-		constexpr static bool triviallyRelocatable = IsTriviallyRelocatable<DataType>;
-		constexpr static bool triviallyDefaultConstructible = IsTriviallyDefaultConstructible<DataType>;
-		constexpr static bool triviallyCompareable = IsTriviallyCompareable<DataType>;
-		constexpr static bool triviallyDestructible = IsTriviallyDestructible<DataType>;
+		constexpr static Bool triviallyRelocatable = IsTriviallyRelocatable<DataType>;
+		constexpr static Bool triviallyDefaultConstructible = IsTriviallyDefaultConstructible<DataType>;
+		constexpr static Bool triviallyCompareable = IsTriviallyCompareable<DataType>;
+		constexpr static Bool triviallyDestructible = IsTriviallyDestructible<DataType>;
 	private:
 		DataType dataStorage[Number];
 	public:
@@ -106,9 +106,9 @@ namespace natl {
 		constexpr const_reverse_iterator crend() const noexcept { return const_reverse_iterator(beginPtr()); }
 
 		//capacity
-		constexpr bool isEmpty() const noexcept { return !bool(Number); }
-		constexpr bool isNotEmpty() const noexcept { return !isEmpty(); }
-		constexpr operator bool() const noexcept { return isNotEmpty(); }
+		constexpr Bool isEmpty() const noexcept { return !Bool(Number); }
+		constexpr Bool isNotEmpty() const noexcept { return !isEmpty(); }
+		constexpr operator Bool() const noexcept { return isNotEmpty(); }
 
 		consteval static Size size() noexcept { return Number; }
 		consteval static size_type max_size() noexcept { return size(); }
@@ -135,10 +135,10 @@ namespace natl {
 		using size_type = Size;
 
 		//movement info  
-		constexpr static bool triviallyRelocatable = IsTriviallyRelocatable<DataType>;
-		constexpr static bool triviallyDefaultConstructible = IsTriviallyDefaultConstructible<DataType>;
-		constexpr static bool triviallyCompareable = IsTriviallyCompareable<DataType>;
-		constexpr static bool triviallyDestructible = IsTriviallyDestructible<DataType>;
+		constexpr static Bool triviallyRelocatable = IsTriviallyRelocatable<DataType>;
+		constexpr static Bool triviallyDefaultConstructible = IsTriviallyDefaultConstructible<DataType>;
+		constexpr static Bool triviallyCompareable = IsTriviallyCompareable<DataType>;
+		constexpr static Bool triviallyDestructible = IsTriviallyDestructible<DataType>;
 	private:
 		using BaseArray = Array<DataType, multiplySizes(Dimensions...)>;
 		BaseArray dataArray;
@@ -203,9 +203,9 @@ namespace natl {
 		constexpr const_pointer data() const noexcept {  return asArray().data(); };
 
 		//capacity 
-		constexpr bool isEmpty() const noexcept { return !bool(BaseArray::size()); }
-		constexpr bool isNotEmpty() const noexcept { return !isEmpty(); }
-		constexpr operator bool() const noexcept { return isNotEmpty(); }
+		constexpr Bool isEmpty() const noexcept { return !Bool(BaseArray::size()); }
+		constexpr Bool isNotEmpty() const noexcept { return !isEmpty(); }
+		constexpr operator Bool() const noexcept { return isNotEmpty(); }
 
 		consteval static Size numberOfDimension() noexcept {
 			return sizeof...(Dimensions);

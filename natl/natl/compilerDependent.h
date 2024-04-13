@@ -120,7 +120,7 @@ namespace natl {
 #endif
     }
 
-    consteval bool natlInDebug() noexcept {
+    consteval Bool natlInDebug() noexcept {
 #ifdef NATL_IN_DEBUG
         return true;
 #else

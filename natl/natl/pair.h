@@ -11,12 +11,12 @@ namespace natl {
 	struct Pair {
 	public:
 		//movement info 
-		constexpr static bool triviallyRelocatable = IsTriviallyRelocatable<DataTypeFirst> && IsTriviallyRelocatable<DataTypeSecond>;
-		constexpr static bool triviallyDefaultConstructible = IsTriviallyDefaultConstructible<DataTypeFirst> && IsTriviallyDefaultConstructible<DataTypeSecond>;
-		constexpr static bool triviallyCompareable = IsTriviallyCompareable<DataTypeFirst> && IsTriviallyCompareable<DataTypeSecond>;
-		constexpr static bool triviallyDestructible = IsTriviallyDestructible<DataTypeFirst> && IsTriviallyDestructible<DataTypeSecond>;
-		constexpr static bool triviallyConstRefConstructedable = IsTriviallyConstRefConstructible<DataTypeFirst> && IsTriviallyConstRefConstructible<DataTypeSecond>;
-		constexpr static bool triviallyMoveConstructedable = IsTriviallyMoveConstructible<DataTypeFirst> && IsTriviallyMoveConstructible<DataTypeSecond>;
+		constexpr static Bool triviallyRelocatable = IsTriviallyRelocatable<DataTypeFirst> && IsTriviallyRelocatable<DataTypeSecond>;
+		constexpr static Bool triviallyDefaultConstructible = IsTriviallyDefaultConstructible<DataTypeFirst> && IsTriviallyDefaultConstructible<DataTypeSecond>;
+		constexpr static Bool triviallyCompareable = IsTriviallyCompareable<DataTypeFirst> && IsTriviallyCompareable<DataTypeSecond>;
+		constexpr static Bool triviallyDestructible = IsTriviallyDestructible<DataTypeFirst> && IsTriviallyDestructible<DataTypeSecond>;
+		constexpr static Bool triviallyConstRefConstructedable = IsTriviallyConstRefConstructible<DataTypeFirst> && IsTriviallyConstRefConstructible<DataTypeSecond>;
+		constexpr static Bool triviallyMoveConstructedable = IsTriviallyMoveConstructible<DataTypeFirst> && IsTriviallyMoveConstructible<DataTypeSecond>;
 	public:
 		DataTypeFirst first;
 		DataTypeFirst second;
@@ -54,27 +54,27 @@ namespace natl {
 
 	//compare 
 	template<class T1, class T2, class U1, class U2>
-	constexpr bool operator==(const Pair<T1, T2>& lhs, const Pair<U1, U2>& rhs) noexcept {
+	constexpr Bool operator==(const Pair<T1, T2>& lhs, const Pair<U1, U2>& rhs) noexcept {
 		return (lhs.first == rhs.first) && (lhs.second == rhs.second);
 	}
 	template<class T1, class T2, class U1, class U2>
-	constexpr bool operator!=(const Pair<T1, T2>& lhs, const Pair<U1, U2>& rhs) noexcept {
+	constexpr Bool operator!=(const Pair<T1, T2>& lhs, const Pair<U1, U2>& rhs) noexcept {
 		return (lhs.first != rhs.first) && (lhs.second != rhs.second);
 	}
 	template<class T1, class T2, class U1, class U2>
-	constexpr bool operator<(const Pair<T1, T2>& lhs, const Pair<U1, U2>& rhs) noexcept {
+	constexpr Bool operator<(const Pair<T1, T2>& lhs, const Pair<U1, U2>& rhs) noexcept {
 		return !(rhs < lhs);
 	}
 	template<class T1, class T2, class U1, class U2>
-	constexpr bool operator<=(const Pair<T1, T2>& lhs, const Pair<U1, U2>& rhs) noexcept {
+	constexpr Bool operator<=(const Pair<T1, T2>& lhs, const Pair<U1, U2>& rhs) noexcept {
 		return !(rhs < lhs);
 	}
 	template<class T1, class T2, class U1, class U2>
-	constexpr bool operator>(const Pair<T1, T2>& lhs, const Pair<U1, U2>& rhs) noexcept {
+	constexpr Bool operator>(const Pair<T1, T2>& lhs, const Pair<U1, U2>& rhs) noexcept {
 		return rhs < lhs;
 	}
 	template<class T1, class T2, class U1, class U2>
-	constexpr bool operator>=(const Pair<T1, T2>& lhs, const Pair<U1, U2>& rhs) noexcept {
+	constexpr Bool operator>=(const Pair<T1, T2>& lhs, const Pair<U1, U2>& rhs) noexcept {
 		return !(lhs < rhs);
 	}
 	template< class T1, class T2, class U1, class U2 >
@@ -96,12 +96,12 @@ namespace natl {
 	struct CompressedPair {
 	public:
 		//movement info 
-		constexpr static bool triviallyRelocatable = IsTriviallyRelocatable<DataTypeFirst> && IsTriviallyRelocatable<DataTypeSecond>;
-		constexpr static bool triviallyDefaultConstructible = IsTriviallyDefaultConstructible<DataTypeFirst> && IsTriviallyDefaultConstructible<DataTypeSecond>;
-		constexpr static bool triviallyCompareable = IsTriviallyCompareable<DataTypeFirst> && IsTriviallyCompareable<DataTypeSecond>;
-		constexpr static bool triviallyDestructible = IsTriviallyDestructible<DataTypeFirst> && IsTriviallyDestructible<DataTypeSecond>;
-		constexpr static bool triviallyConstRefConstructedable = IsTriviallyConstRefConstructible<DataTypeFirst> && IsTriviallyConstRefConstructible<DataTypeSecond>;
-		constexpr static bool triviallyMoveConstructedable = IsTriviallyMoveConstructible<DataTypeFirst> && IsTriviallyMoveConstructible<DataTypeSecond>;
+		constexpr static Bool triviallyRelocatable = IsTriviallyRelocatable<DataTypeFirst> && IsTriviallyRelocatable<DataTypeSecond>;
+		constexpr static Bool triviallyDefaultConstructible = IsTriviallyDefaultConstructible<DataTypeFirst> && IsTriviallyDefaultConstructible<DataTypeSecond>;
+		constexpr static Bool triviallyCompareable = IsTriviallyCompareable<DataTypeFirst> && IsTriviallyCompareable<DataTypeSecond>;
+		constexpr static Bool triviallyDestructible = IsTriviallyDestructible<DataTypeFirst> && IsTriviallyDestructible<DataTypeSecond>;
+		constexpr static Bool triviallyConstRefConstructedable = IsTriviallyConstRefConstructible<DataTypeFirst> && IsTriviallyConstRefConstructible<DataTypeSecond>;
+		constexpr static Bool triviallyMoveConstructedable = IsTriviallyMoveConstructible<DataTypeFirst> && IsTriviallyMoveConstructible<DataTypeSecond>;
 	public:
 		[[no_unique_address]] DataTypeFirst first;
 		[[no_unique_address]] DataTypeFirst second;
@@ -139,27 +139,27 @@ namespace natl {
 
 	//compare 
 	template<class T1, class T2, class U1, class U2>
-	constexpr bool operator==(const CompressedPair<T1, T2>& lhs, const CompressedPair<U1, U2>& rhs) noexcept {
+	constexpr Bool operator==(const CompressedPair<T1, T2>& lhs, const CompressedPair<U1, U2>& rhs) noexcept {
 		return (lhs.first == rhs.first) && (lhs.second == rhs.second);
 	}
 	template<class T1, class T2, class U1, class U2>
-	constexpr bool operator!=(const CompressedPair<T1, T2>& lhs, const CompressedPair<U1, U2>& rhs) noexcept {
+	constexpr Bool operator!=(const CompressedPair<T1, T2>& lhs, const CompressedPair<U1, U2>& rhs) noexcept {
 		return (lhs.first != rhs.first) && (lhs.second != rhs.second);
 	}
 	template<class T1, class T2, class U1, class U2>
-	constexpr bool operator<(const CompressedPair<T1, T2>& lhs, const CompressedPair<U1, U2>& rhs) noexcept {
+	constexpr Bool operator<(const CompressedPair<T1, T2>& lhs, const CompressedPair<U1, U2>& rhs) noexcept {
 		return !(rhs < lhs);
 	}
 	template<class T1, class T2, class U1, class U2>
-	constexpr bool operator<=(const CompressedPair<T1, T2>& lhs, const CompressedPair<U1, U2>& rhs) noexcept {
+	constexpr Bool operator<=(const CompressedPair<T1, T2>& lhs, const CompressedPair<U1, U2>& rhs) noexcept {
 		return !(rhs < lhs);
 	}
 	template<class T1, class T2, class U1, class U2>
-	constexpr bool operator>(const CompressedPair<T1, T2>& lhs, const CompressedPair<U1, U2>& rhs) noexcept {
+	constexpr Bool operator>(const CompressedPair<T1, T2>& lhs, const CompressedPair<U1, U2>& rhs) noexcept {
 		return rhs < lhs;
 	}
 	template<class T1, class T2, class U1, class U2>
-	constexpr bool operator>=(const CompressedPair<T1, T2>& lhs, const CompressedPair<U1, U2>& rhs) noexcept {
+	constexpr Bool operator>=(const CompressedPair<T1, T2>& lhs, const CompressedPair<U1, U2>& rhs) noexcept {
 		return !(lhs < rhs);
 	}
 	template< class T1, class T2, class U1, class U2 >

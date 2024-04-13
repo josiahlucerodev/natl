@@ -58,7 +58,7 @@ namespace natl {
 			using value_type = DataType;
 			using atomic_value_type = std::atomic<DataType>;
 
-			static constexpr bool is_always_lock_free = atomic_value_type::is_always_lock_free;
+			static constexpr Bool is_always_lock_free = atomic_value_type::is_always_lock_free;
 		protected:
 			union {
 				value_type value;
@@ -104,14 +104,14 @@ namespace natl {
 			constexpr AtomicBase& operator=(const AtomicBase&) = delete;
 			constexpr AtomicBase& operator=(const AtomicBase&) volatile = delete;
 
-			constexpr bool is_lock_free() const noexcept {
+			constexpr Bool is_lock_free() const noexcept {
 				if (isConstantEvaluated()) {
 					return false;
 				} else {
 					return atomicValue.is_lock_free();
 				}
 			}
-			constexpr bool is_lock_free() const volatile  noexcept {
+			constexpr Bool is_lock_free() const volatile  noexcept {
 				if (isConstantEvaluated()) {
 					return false;
 				} else {
@@ -167,7 +167,7 @@ namespace natl {
 					return atomicValue.exchange(desired, convertToStdMemoryOrder(order));
 				}
 			}
-			constexpr bool compare_exchange_weak(value_type& expected, value_type desired, MemoryOrder success, MemoryOrder failure) noexcept {
+			constexpr Bool compare_exchange_weak(value_type& expected, value_type desired, MemoryOrder success, MemoryOrder failure) noexcept {
 				if (isConstantEvaluated()) {
 					if (value == expected) {
 						value = desired;
@@ -180,7 +180,7 @@ namespace natl {
 					return atomicValue.compare_exchange_weak(expected, desired, convertToStdMemoryOrder(success), convertToStdMemoryOrder(failure));
 				}
 			}
-			constexpr bool compare_exchange_weak(value_type& expected, value_type desired, MemoryOrder success, MemoryOrder failure) volatile noexcept {
+			constexpr Bool compare_exchange_weak(value_type& expected, value_type desired, MemoryOrder success, MemoryOrder failure) volatile noexcept {
 				if (isConstantEvaluated()) {
 					if (value == expected) {
 						value = desired;
@@ -193,7 +193,7 @@ namespace natl {
 					return atomicValue.compare_exchange_weak(expected, desired, convertToStdMemoryOrder(success), convertToStdMemoryOrder(failure));
 				}
 			}
-			constexpr bool compare_exchange_weak(value_type& expected, value_type desired, MemoryOrder order = memory_order_seq_cst) noexcept {
+			constexpr Bool compare_exchange_weak(value_type& expected, value_type desired, MemoryOrder order = memory_order_seq_cst) noexcept {
 				if (isConstantEvaluated()) {
 					if (value == expected) {
 						value = desired;
@@ -206,7 +206,7 @@ namespace natl {
 					return atomicValue.compare_exchange_weak(expected, desired, convertToStdMemoryOrder(order));
 				}
 			}
-			constexpr bool compare_exchange_weak(value_type& expected, value_type desired, MemoryOrder order = memory_order_seq_cst) volatile noexcept {
+			constexpr Bool compare_exchange_weak(value_type& expected, value_type desired, MemoryOrder order = memory_order_seq_cst) volatile noexcept {
 				if (isConstantEvaluated()) {
 					if (value == expected) {
 						value = desired;
@@ -220,7 +220,7 @@ namespace natl {
 				}
 			}
 
-			constexpr bool compare_exchange_strong(value_type& expected, value_type desired, MemoryOrder success, MemoryOrder failure) noexcept {
+			constexpr Bool compare_exchange_strong(value_type& expected, value_type desired, MemoryOrder success, MemoryOrder failure) noexcept {
 				if (isConstantEvaluated()) {
 					if (value == expected) {
 						value = desired;
@@ -233,7 +233,7 @@ namespace natl {
 					return atomicValue.compare_exchange_strong(expected, desired, success, failure);
 				}
 			}
-			constexpr bool compare_exchange_strong(value_type& expected, value_type desired, MemoryOrder success, MemoryOrder failure) volatile noexcept {
+			constexpr Bool compare_exchange_strong(value_type& expected, value_type desired, MemoryOrder success, MemoryOrder failure) volatile noexcept {
 				if (isConstantEvaluated()) {
 					if (value == expected) {
 						value = desired;
@@ -246,7 +246,7 @@ namespace natl {
 					return atomicValue.compare_exchange_strong(expected, desired, convertToStdMemoryOrder(success), convertToStdMemoryOrder(failure));
 				}
 			}
-			constexpr bool compare_exchange_strong(value_type& expected, value_type desired, MemoryOrder order = memory_order_seq_cst) noexcept {
+			constexpr Bool compare_exchange_strong(value_type& expected, value_type desired, MemoryOrder order = memory_order_seq_cst) noexcept {
 				if (isConstantEvaluated()) {
 					if (value == expected) {
 						value = desired;
@@ -259,7 +259,7 @@ namespace natl {
 					return atomicValue.compare_exchange_strong(expected, desired, convertToStdMemoryOrder(order));
 				}
 			}
-			constexpr bool compare_exchange_strong(value_type& expected, value_type desired, MemoryOrder order = memory_order_seq_cst) volatile noexcept {
+			constexpr Bool compare_exchange_strong(value_type& expected, value_type desired, MemoryOrder order = memory_order_seq_cst) volatile noexcept {
 				if (isConstantEvaluated()) {
 					if (value == expected) {
 						value = desired;
@@ -300,7 +300,7 @@ namespace natl {
 		using value_type = DataType;
 		using atomic_value_type = std::atomic<DataType>;
 
-		static constexpr bool is_always_lock_free = atomic_value_type::is_always_lock_free;
+		static constexpr Bool is_always_lock_free = atomic_value_type::is_always_lock_free;
 	public:
 		using impl::AtomicBase<DataType>::AtomicBase;
 
@@ -476,7 +476,7 @@ namespace natl {
 		using value_type = DataType;
 		using atomic_value_type = std::atomic<DataType>;
 
-		static constexpr bool is_always_lock_free = atomic_value_type::is_always_lock_free;
+		static constexpr Bool is_always_lock_free = atomic_value_type::is_always_lock_free;
 	public:
 		using impl::AtomicBase<DataType>::AtomicBase;
 
@@ -552,7 +552,7 @@ namespace natl {
 		using value_type = DataType;
 		using atomic_value_type = std::atomic<DataType>;
 
-		static constexpr bool is_always_lock_free = atomic_value_type::is_always_lock_free;
+		static constexpr Bool is_always_lock_free = atomic_value_type::is_always_lock_free;
 	public:
 		using impl::AtomicBase<DataType>::AtomicBase;
 
@@ -646,7 +646,7 @@ namespace natl {
 			return fetch_sub(arg) - arg;
 		}
 	};
-	using AtomicBool = Atomic<bool>;
+	using AtomicBool = Atomic<Bool>;
 
 	using AtomicI8 = Atomic<i8>;
 	using AtomicI16 = Atomic<i16>;

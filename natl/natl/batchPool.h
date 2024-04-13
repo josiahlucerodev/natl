@@ -36,7 +36,7 @@ namespace natl {
 				activeBatch = &batchs.back();
 				activeBatch->reserve(BatchSize);
 			}
-			constexpr inline bool needNewBatch() noexcept {
+			constexpr inline Bool needNewBatch() noexcept {
 				return activeBatch ? activeBatch->size() == activeBatch->capacity() : true;
 			}
 		};
@@ -50,7 +50,7 @@ namespace natl {
 			constexpr BatchHeapBase() : pool(), freeSlots() {}
 		private:
 
-			constexpr bool isFreeSlotsEmpty() noexcept {
+			constexpr Bool isFreeSlotsEmpty() noexcept {
 				return freeSlots.isEmpty();
 			}
 			constexpr inline void allocNewElements() {

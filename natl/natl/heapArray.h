@@ -32,12 +32,12 @@ namespace natl {
 		using allocation_move_adapater = AllocationMoveAdapater<value_type, Alloc>;
 
 		//movement info  
-		constexpr static bool triviallyRelocatable = true;
-		constexpr static bool triviallyDefaultConstructible = true;
-		constexpr static bool triviallyCompareable = true;
-		constexpr static bool triviallyDestructible = false;
-		constexpr static bool triviallyConstRefConstructedable = false;
-		constexpr static bool triviallyMoveConstructedable = false;
+		constexpr static Bool triviallyRelocatable = true;
+		constexpr static Bool triviallyDefaultConstructible = true;
+		constexpr static Bool triviallyCompareable = true;
+		constexpr static Bool triviallyDestructible = false;
+		constexpr static Bool triviallyConstRefConstructedable = false;
+		constexpr static Bool triviallyMoveConstructedable = false;
 
 	private:
 		pointer arrayDataPtr;
@@ -143,9 +143,9 @@ namespace natl {
 		}
 
 		//capacity 
-		constexpr bool empty() const noexcept { return size() == 0; }
-		constexpr bool isEmpty() const noexcept { return empty(); }
-		constexpr bool isNotEmpty() const noexcept { return !empty(); }
+		constexpr Bool empty() const noexcept { return size() == 0; }
+		constexpr Bool isEmpty() const noexcept { return empty(); }
+		constexpr Bool isNotEmpty() const noexcept { return !empty(); }
 
 		constexpr size_type size() const noexcept { return arraySize; }
 
@@ -207,8 +207,8 @@ namespace natl {
 		constexpr optional_pointer optionalBack() noexcept { return optionalAt(backIndex()); }
 		constexpr optional_const_pointer optionalBack() const noexcept { return optionalAt(backIndex()); }
 
-		constexpr bool has(const size_type index) const noexcept { return index < size(); }
-		constexpr bool notHave(const size_type index) const noexcept { return index >= size(); }
+		constexpr Bool has(const size_type index) const noexcept { return index < size(); }
+		constexpr Bool notHave(const size_type index) const noexcept { return index >= size(); }
 
 		//allocation 
 		constexpr void deallocate() noexcept {
