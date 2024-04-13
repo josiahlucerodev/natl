@@ -93,6 +93,8 @@
 #define NATL_UNIX_PLATFORM
 #elif defined(_WIN32) || defined(WIN32)
 #define NATL_WINDOWS_PLATFORM
+#elif defined(NATL_COMPILER_EMSCRIPTEN)
+define NATL_WEB_PLATFORM
 #else 
 static_assert(false, "natl: platform type not supported");
 #endif

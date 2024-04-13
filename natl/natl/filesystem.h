@@ -18,8 +18,13 @@
 //system 
 #ifdef NATL_WINDOWS_PLATFORM
 #include <Windows.h>
-#endif // NATL_WINDOWS_PLATFORM
-#include <Windows.h>
+#endif // NATL_WINDOWS_PLATFORM 
+#ifdef NATL_UNIX_PLATFORM
+#include <unistd.h>
+#include <fcntl.h>
+#include <sys/stat.h>
+#include <limits.h>
+#endif // NATL_UNIX_PLATFORM
 
 //interface
 namespace natl {
@@ -145,8 +150,8 @@ namespace natl {
 			constexpr bool isEmpty() const noexcept { return pathStringView.isEmpty(); }
 			constexpr bool isNotEmpty() const noexcept { return pathStringView.isNotEmpty(); }
 
-			friend class path_view_type;
-			friend class const_path_view_type;
+			friend class BasePathView<Assci>;
+			friend class BasePathView<const Assci>;
 
 			//compare
 			constexpr bool operator==(const path_view_type& rhs) const noexcept {
@@ -314,7 +319,7 @@ namespace natl {
 			constexpr path_view_type stem() noexcept requires(IsNotConstV<CharType>) {
 				if (isEmpty()) { return{}; }
 
-				const size_type extensionSize = 0;
+				size_type extensionSize = 0;
 				for (const Assci& character : makeReverseIteration(pathStringView)) {
 					extensionSize++;
 					if (character == '.') {
@@ -332,7 +337,7 @@ namespace natl {
 					return path_view_type(pathStringView.substr(pathStringView.size() - extensionSize));
 				}
 
-				const size_type stemSize = 0;
+				size_type stemSize = 0;
 				for (; stemIter < rend(); ++stemIter) {
 					stemSize++;
 					if (isPlatformPathSeparator(*stemIter)) {
@@ -344,7 +349,7 @@ namespace natl {
 			}
 
 			constexpr path_view_type extension() noexcept requires(IsNotConstV<CharType>) {
-				const size_type extensionSize = 0;
+				size_type extensionSize = 0;
 				for (const Assci& character : makeReverseIteration(pathStringView)) {
 					extensionSize++;
 					if (character == '.') {
@@ -449,7 +454,7 @@ namespace natl {
 			constexpr const_path_view_type stem() const noexcept {
 				if (isEmpty()) { return{}; }
 
-				const size_type extensionSize = 0;
+				size_type extensionSize = 0;
 				for (const Assci& character : makeReverseIteration(pathStringView)) {
 					extensionSize++;
 					if (character == '.') {
@@ -467,7 +472,7 @@ namespace natl {
 					return const_path_view_type(pathStringView.substr(pathStringView.size() - extensionSize));
 				}
 
-				const size_type stemSize = 0;
+				size_type stemSize = 0;
 				for (; stemIter < rend(); ++stemIter) {
 					stemSize++;
 					if (isPlatformPathSeparator(*stemIter)) {
@@ -479,7 +484,7 @@ namespace natl {
 			}
 
 			constexpr const_path_view_type extension() const noexcept {
-				const size_type extensionSize = 0;
+				size_type extensionSize = 0;
 				for (const Assci& character : makeReverseIteration(pathStringView)) {
 					extensionSize++;
 					if (character == '.') {
@@ -1121,8 +1126,8 @@ namespace natl {
 		return successfulCloseFile;
 	}
 
-	inline bool readFile(const FileHandle& file, const FileOffset offset, const FileCount count, Byte* dst) noexcept {
-		if (file.isHandleNotOpen() || dst == nullptr) { return false; }
+	inline Option<Size> readFile(const FileHandle& file, const FileOffset offset, const FileCount count, Byte* dst) noexcept {
+		if (file.isHandleNotOpen() || dst == nullptr) { return {}; }
 		
 		LARGE_INTEGER  distanceToMove;
 		distanceToMove.QuadPart = offset.value();
@@ -1130,36 +1135,37 @@ namespace natl {
 		const bool successfulMoveFilePointer = SetFilePointerEx(file.nativeHandle(), distanceToMove, &newFilePointer, FILE_BEGIN);
 
 		if (successfulMoveFilePointer == false) {
-			return false;
+			return {};
 		}
 
 		DWORD numberOfBytesRead = 0;
 		const bool successfulFileRead = ReadFile(file.nativeHandle(), dst, static_cast<DWORD>(count.value()), &numberOfBytesRead, NULL);
 
-		if (successfulFileRead == false) {
-			if (numberOfBytesRead != 0) {
-				natl::fill<Byte*, Byte>(dst, dst + numberOfBytesRead, Byte(0));
-			}
-			return false;
+		if (successfulFileRead == false && numberOfBytesRead == 0) {
+			return {};
 		}
 
-		return true;
+		return static_cast<Size>(numberOfBytesRead);
 	}
 
-	inline bool writeFile(const FileHandle& file, const FileOffset offset, const FileCount count, const Byte* src) noexcept {
-		if (file.isHandleNotOpen() || src == nullptr) { return false; }
+	inline Option<Size> writeFile(const FileHandle& file, const FileOffset offset, const FileCount count, const Byte* src) noexcept {
+		if (file.isHandleNotOpen() || src == nullptr) { return {}; }
 
 		LARGE_INTEGER  distanceToMove;
 		distanceToMove.QuadPart = offset.value();
 		LARGE_INTEGER newFilePointer;
 		const bool successfulMoveFilePointer = SetFilePointerEx(file.nativeHandle(), distanceToMove, &newFilePointer, FILE_BEGIN);
 		if (successfulMoveFilePointer == false) {
-			return false;
+			return {};
 		}
 
 		DWORD bytesWritten;
 		const bool successfulWriteFile = WriteFile(file.nativeHandle(), src, static_cast<DWORD>(count.value()), &bytesWritten, NULL);
-		return successfulWriteFile;
+		if (successfulWriteFile == false && bytesWritten == 0) {
+			return {};
+		}
+
+		return static_cast<Size>(bytesWritten);
 	}
 
 	template<typename PathLike>
@@ -1253,6 +1259,192 @@ namespace natl {
 
 #ifdef NATL_UNIX_PLATFORM
 
+	using UnixNativeFileHandle = GenericInt;
+	constexpr inline UnixNativeFileHandle unixFileOpFailValue = -1;
+
+	class FileHandle {
+	private:
+		mutable UnixNativeFileHandle fileHandle;
+	public:
+		//constructor 
+		constexpr FileHandle() noexcept : fileHandle(unixFileOpFailValue) {}
+		constexpr FileHandle(UnixNativeFileHandle fileHandleIn) noexcept : fileHandle(fileHandleIn) {}
+
+		//destructor 
+		constexpr ~FileHandle() noexcept = default;
+
+		//observers 
+		constexpr bool isHandleOpen() const noexcept { return fileHandle != unixFileOpFailValue; }
+		constexpr bool isHandleNotOpen() const noexcept { return !isHandleOpen(); }
+
+		//access 
+		constexpr UnixNativeFileHandle nativeHandle() const noexcept { return fileHandle; }
+
+		//modifiers 
+		constexpr void setHandleNull() noexcept { fileHandle = unixFileOpFailValue; }
+	};
+
+	inline Option<Size> getFileSize(const FileHandle& file) noexcept {
+		struct stat64 fileStat;
+		if (fstat64(file.nativeHandle(), &fileStat) == unixFileOpFailValue) {
+			return false;
+		} else {
+			return static_cast<Size>(fileStat.st_size);
+		}
+	}
+
+	inline FileHandle openFile(const Assci* filePath, const FileOpenMode openMode) noexcept {
+		GenericInt fileOpenFlags;
+
+		switch (openMode) {
+		case FileOpenMode::readStart:
+			fileOpenFlags = O_RDONLY;
+			break;
+		case FileOpenMode::writeDestroy:
+			fileOpenFlags = O_WRONLY | O_CREAT | O_TRUNC;
+			break;
+		case FileOpenMode::readWriteStart:
+			fileOpenFlags = O_RDWR | O_CREAT;
+			break;
+		case FileOpenMode::readWriteDestory:
+			fileOpenFlags = O_RDWR | O_CREAT | O_TRUNC;
+			break;
+		default:
+			return{};
+		}
+
+		const GenericInt fileOpenResult = open64(filePath, fileOpenFlags);
+		if (fileOpenResult == unixFileOpFailValue) {
+			return false;
+		} else {
+			return fileOpenResult;
+		}
+	}
+
+	inline bool closeFile(FileHandle& file) noexcept {
+		if (file.isHandleNotOpen()) { return false; }
+		const GenericInt closeFileResult = close(file.nativeHandle());
+		file.setHandleNull();
+		return closeFileResult != unixFileOpFailValue;
+	}
+
+	inline Option<Size> readFile(const FileHandle& file, const FileOffset offset, const FileCount count, Byte* dst) noexcept {
+		if (file.isHandleNotOpen() || dst == nullptr) { return false; }
+
+		const i64 fileLseekResult = lseek64(file.nativeHandle(), static_cast<long int>(offset.value()), SEEK_SET);
+		if (fileLseekResult == unixFileOpFailValue) {
+			return {};
+		}
+
+		const i64 fileReadResult = read(file.nativeHandle(), reinterpret_cast<void*>(dst), count.value());
+		if (fileReadResult == unixFileOpFailValue) {
+			return {};
+		}
+
+		return static_cast<Size>(fileReadResult);
+	}
+
+	inline Option<Size> writeFile(const FileHandle& file, const FileOffset offset, const FileCount count, const Byte* src) noexcept {
+		if (file.isHandleNotOpen() || src == nullptr) { return false; }
+
+		const i64 fileLseekResult = lseek64(file.nativeHandle(), static_cast<long int>(offset.value()), SEEK_SET);
+		if (fileLseekResult == unixFileOpFailValue) {
+			return false;
+		}
+
+		const i64 fileWriteResult = write(file.nativeHandle(), reinterpret_cast<const void*>(src), count.value());
+		if (fileWriteResult == unixFileOpFailValue) {
+			return false;
+		}
+
+		return static_cast<Size>(fileWriteResult);
+	}
+
+	template<typename PathLike>
+		requires(IsDynamicArrayLike<PathLike, Assci>)
+	inline PathLike getWorkingDirectory() noexcept {
+		Assci tempWorkingDirectoryPathStorage[PATH_MAX];
+		Assci* workingDirectoryPath = getcwd(tempWorkingDirectoryPathStorage, PATH_MAX);
+
+		if (workingDirectoryPath == nullptr) {
+			return PathLike{};
+		}
+
+		Size workingDirectoryPathSize = cstringLength(workingDirectoryPath);
+
+		PathLike path;
+		path.reserve(workingDirectoryPathSize);
+		path.resize(workingDirectoryPathSize - 1);
+
+		natl::copyNoOverlap<const Assci*, Assci*>(workingDirectoryPath, workingDirectoryPath + workingDirectoryPathSize, path.data());
+
+		return path;
+	}
+
+	inline bool doesFileExist(const Assci* fileName) noexcept {
+		struct stat64 fileStat;
+		return stat64(fileName, &fileStat) != unixFileOpFailValue;
+	}
+
+	inline bool isBlockFile(const Assci* fileName) noexcept {
+		struct stat64 fileStat;
+		if (stat64(fileName, &fileStat) == unixFileOpFailValue) {
+			return false;
+		}
+		return S_ISBLK(fileStat.st_mode);
+	}
+	inline bool isDirectory(const Assci* fileName) noexcept {
+		struct stat64 fileStat;
+		if (stat64(fileName, &fileStat) == unixFileOpFailValue) {
+			return false;
+		}
+		return S_ISDIR(fileStat.st_mode);
+	}
+	inline bool isFifo(const Assci* fileName) noexcept {
+		struct stat64 fileStat;
+		if (stat64(fileName, &fileStat) == unixFileOpFailValue) {
+			return false;
+		}
+		return S_ISFIFO(fileStat.st_mode);
+	}
+	inline bool isRegularFile(const Assci* fileName) noexcept {
+		struct stat64 fileStat;
+		if (stat64(fileName, &fileStat) == unixFileOpFailValue) {
+			return false;
+		}
+		return S_ISREG(fileStat.st_mode);
+	}
+	inline bool isSymbolicLink(const Assci* fileName) noexcept {
+		struct stat64 fileStat;
+		if (stat64(fileName, &fileStat) == unixFileOpFailValue) {
+			return false;
+		}
+		return S_ISLNK(fileStat.st_mode);
+	}
+
+	inline FileType getFileType(const Assci* fileName) noexcept {
+		struct stat64 fileStat;
+		if (stat64(fileName, &fileStat) == unixFileOpFailValue) {
+			return FileType::notFound;
+		}
+		if (S_ISREG(fileStat.st_mode)) {
+			return FileType::regular;
+		}
+		if (S_ISDIR(fileStat.st_mode)) {
+			return FileType::directory;
+		}
+		if (S_ISBLK(fileStat.st_mode)) {
+			return FileType::block;
+		}
+		if (S_ISLNK(fileStat.st_mode)) {
+			return FileType::symbolicLink;
+		}
+		if (S_ISFIFO(fileStat.st_mode)) {
+			return FileType::fifo;
+		}
+		return FileType::unknown;
+	}
+
 #endif // NATL_UNIX_PLATFORM
 
 
@@ -1314,16 +1506,16 @@ namespace natl {
 		bool close() noexcept {
 			return closeFile(fileHandle);
 		}
-		bool read(const FileOffset offset, const FileCount count, Byte* dst) const noexcept {
+		Option<Size> read(const FileOffset offset, const FileCount count, Byte* dst) const noexcept {
 			return readFile(fileHandle, offset, count, dst);
 		}
-		bool read(const FileCount count, Byte* dst) const noexcept {
+		Option<Size> read(const FileCount count, Byte* dst) const noexcept {
 			return readFile(fileHandle, FileOffset(0), count, dst);
 		}
-		bool write(const FileOffset offset, const FileCount count, const Byte* src) noexcept {
+		Option<Size> write(const FileOffset offset, const FileCount count, const Byte* src) noexcept {
 			return writeFile(fileHandle, offset, count, src);
 		}
-		bool write(const FileCount count, const Byte* src) noexcept {
+		Option<Size> write(const FileCount count, const Byte* src) noexcept {
 			return writeFile(fileHandle, FileOffset(0), count, src);
 		}
 	};
@@ -1361,8 +1553,8 @@ namespace natl {
 
 		dstArray.resize(dstArray.size() + fileSize.value());
 		Byte* dst = reinterpret_cast<Byte*>(dstArray.data());
-		bool fileReadSuccessful = readFile(file, FileOffset(0), FileCount(fileSize.value()), dst);
-		if (!fileReadSuccessful) { return LoadAllFileContentError::fileReadFailed; }
+		Option<Size> fileReadSuccessful = readFile(file, FileOffset(0), FileCount(fileSize.value()), dst);
+		if (!fileReadSuccessful || fileReadSuccessful.value() != fileSize.value()) { return LoadAllFileContentError::fileReadFailed; }
 
 		return LoadAllFileContentError::none;
 	}
