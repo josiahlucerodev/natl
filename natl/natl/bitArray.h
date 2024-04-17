@@ -12,7 +12,7 @@ namespace natl {
 		Size index;
 		constexpr BitIndex() = default;
 		constexpr ~BitIndex() = default;
-		constexpr BitIndex(const Size index) : index(index) {}
+		constexpr BitIndex(const Size indexIn) : index(indexIn) {}
 	};
 
 	template<class BitStorageType, Size bitCountT>
@@ -28,8 +28,8 @@ namespace natl {
 			Size index;
 		public:
 			constexpr reference() : bitArrayPtr(nullptr), index(0) {}
-			constexpr reference(BitArrayBitStorageType* const bitArrayPtr, const Size index) noexcept : 
-				bitArrayPtr(bitArrayPtr), index(index) {}
+			constexpr reference(BitArrayBitStorageType* const bitArrayPtrIn, const Size indexIn) noexcept : 
+				bitArrayPtr(bitArrayPtrIn), index(indexIn) {}
 			constexpr ~reference() = default;
 
 			constexpr reference& operator=(const Bool value) noexcept {
@@ -95,7 +95,7 @@ namespace natl {
 		constexpr BitArrayBitStorageType& set() noexcept {
 			if (isConstantEvaluated()) {
 				for (Size i = 0; i < wordCount; i++) {
-					bitsArray[i] = ~(BitStorageType)(0);
+					bitsArray[i] = ~BitStorageType(0);
 				}
 			} else {
 				std::memset(&bitsArray, 0xFF, sizeof(bitsArray));
@@ -171,9 +171,6 @@ namespace natl {
 
 		constexpr reference operator[] (const Size index) const noexcept {
 			return reference(&self(), index);
-		}
-		constexpr Bool operator[] (const Size index) const noexcept {
-			return test(index);
 		}
 
 		constexpr Bool operator==(const BitArrayBitStorageType& rhs) const noexcept {

@@ -257,6 +257,12 @@ namespace natl {
 		static_assert(!IsLValueReferenceV<DataType>, "natl: template argument substituting DataType is an lvalue reference type");
 		return static_cast<DataType&&>(arg);
 	}
+	template <typename DataType>
+	constexpr void swap(DataType& a, DataType& b) noexcept {
+		DataType temp = move(a);
+		a = move(b);
+		b = move(temp);
+	}
 
 	template<class DataType> struct RemoveExtentType { using type = DataType; };
 	template<class DataType> struct RemoveExtentType<DataType[]> { using type = DataType; };

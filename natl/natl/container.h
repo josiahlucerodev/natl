@@ -83,12 +83,6 @@ namespace natl {
 	}
 
 	template <typename DataType>
-	constexpr void swap(DataType& a, DataType& b) noexcept {
-		DataType temp = move(a);
-		a = move(b);
-		b = move(temp);
-	}
-	template <typename DataType>
 	constexpr void exchange(DataType& a, DataType& b) noexcept {
 		DataType temp = move(a);
 		a = move(b);

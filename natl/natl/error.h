@@ -18,22 +18,6 @@
 
 //interface
 namespace natl {
-    [[noreturn]] NATL_FORCE_INLINE constexpr void natlTerminate() noexcept {
-        if (isConstantEvaluated()) {
-            constantEvaluatedError();
-
-#ifdef NATL_COMPILER_GCC
-            std::abort();
-#endif // NATL_COMPILER_GCC
-
-        } else {
-#ifdef NATL_IN_DEBUG
-            natlDebugBreak();
-#endif // NATL_IN_DEBUG
-            std::abort();
-        }
-    }
-
     constexpr void fatalError(const StringView message) noexcept {
         if (isConstantEvaluated()) {
             natlTerminate();

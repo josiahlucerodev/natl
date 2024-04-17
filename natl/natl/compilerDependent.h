@@ -99,6 +99,9 @@ define NATL_WEB_PLATFORM
 static_assert(false, "natl: platform type not supported");
 #endif
 
+//c
+#include  <stdlib.h>
+
 //own
 #include "utility.h"
 
@@ -135,6 +138,7 @@ namespace natl {
         }
     }
 
+
     NATL_FORCE_INLINE constexpr void natlDebugBreak() noexcept {
 #ifdef NATL_IN_DEBUG
         if (isConstantEvaluated()) {
@@ -160,6 +164,22 @@ namespace natl {
 
         }
 #endif
+    }
+
+    [[noreturn]] NATL_FORCE_INLINE constexpr void natlTerminate() noexcept {
+        if (isConstantEvaluated()) {
+            constantEvaluatedError();
+
+#ifdef NATL_COMPILER_GCC
+            abort();
+#endif // NATL_COMPILER_GCC
+
+        } else {
+#ifdef NATL_IN_DEBUG
+            natlDebugBreak();
+#endif // NATL_IN_DEBUG
+            abort();
+        }
     }
 
 	[[noreturn]] inline void unreachable() noexcept {

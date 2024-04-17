@@ -17,7 +17,7 @@ namespace natl {
 		Iter endIter;
 	public:
 		constexpr View() : beginIter(), endIter() {}
-		constexpr View(const Iter beginIter, const Iter endIter) : beginIter(beginIter), endIter(endIter) {}
+		constexpr View(const Iter beginIterIn, const Iter endIterIn) : beginIter(beginIterIn), endIter(endIterIn) {}
 	public:
 		constexpr Iter begin() noexcept { return beginIter; }
 		constexpr Iter end() const noexcept { return endIter; }

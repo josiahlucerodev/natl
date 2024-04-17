@@ -112,12 +112,27 @@ namespace natl {
 		constexpr TypePackNthElement<Index, value_types>& get() noexcept {
 			return internalGet<Index, TypePackNthElement<Index, value_types>>();
 		}
-
 		template<Size Index>
 			requires(Index < value_types::size)
 		constexpr const TypePackNthElement<Index, value_types>& get() const noexcept {
 			return internalGet<Index, TypePackNthElement<Index, value_types>>();
 		}
+
+		constexpr TypePackNthElement<0, value_types>& getFirst() noexcept {
+			return internalGet<0, TypePackNthElement<0, value_types>>();
+		}
+		constexpr const TypePackNthElement<0, value_types>& getFirst() const noexcept {
+			return internalGet<0, TypePackNthElement<0, value_types>>();
+		}
+		constexpr TypePackNthElement<tupleSize - 1, value_types>& getLast() noexcept {
+			return internalGet<tupleSize - 1, TypePackNthElement<tupleSize - 1, value_types>>();
+		}
+		constexpr const TypePackNthElement<tupleSize - 1, value_types>& getLast() const noexcept {
+			return internalGet<tupleSize - 1, TypePackNthElement<tupleSize - 1, value_types>>();
+		}
+
+		constexpr rest_tuple_type& getRestTuple() noexcept { return rest; }
+		constexpr const rest_tuple_type& getRestTuple() const noexcept { return rest; }
 
 		constexpr Size size() const noexcept { return tupleSize; }
 

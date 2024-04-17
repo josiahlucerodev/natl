@@ -327,12 +327,12 @@ namespace natl {
 
 		//assignment 
 		constexpr Colony& operator=(const Colony& other) noexcept {
-			defaultDeconstruct<Colony>(&self());
+			deconstruct<Colony>(&self());
 			std::construct_at(&self(), other);
 			return self();
 		}
 		constexpr Colony& operator=(Colony&& other) noexcept {
-			defaultDeconstruct<Colony>(&self());
+			deconstruct<Colony>(&self());
 			std::construct_at(&self(), natl::move(other));
 			return self();
 		}
@@ -674,12 +674,12 @@ namespace natl {
 			++iter;
 
 			if (typeHasToBeDestructed<DataType>()) {
-				natl::defaultDeconstruct<DataType>(previous.getAddress());
+				natl::deconstruct<DataType>(previous.getAddress());
 			}
 
 			for (; iter < endIter; ++iter) {
 				if (typeHasToBeDestructed<DataType>()) {
-					natl::defaultDeconstruct<DataType>(iter.getAddress());
+					natl::deconstruct<DataType>(iter.getAddress());
 				}
 				if constexpr (ClearSkipFeild) {
 					previous.skipFieldPos->setSkipCount(0);

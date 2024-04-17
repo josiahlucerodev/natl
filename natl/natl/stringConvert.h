@@ -8,6 +8,7 @@
 #include "stringView.h"
 #include "expect.h"
 #include "string.h"
+#include "limits.h"
 
 //interface
 namespace natl {
@@ -82,13 +83,13 @@ namespace natl {
 			if constexpr (std::same_as<i64, Interger>) { //9223372036854775807
 				if (checkIfStringConvertInRange(pos > 18, pos == 18, 9, 223372036854775807, number, static_cast<ui64>(value))) {
 					convertError = StringNumericConvertError::valueExceedsLimits;
-					return string.c_str()[0] == '-' ? std::numeric_limits<i64>::min() : std::numeric_limits<i64>::max();
+					return string.c_str()[0] == '-' ? Limits<i64>::min() : Limits<i64>::max();
 				}
 			}
 			else if constexpr (std::same_as<ui64, Interger>) { //18,446,744,073,709,551,615
 				if (checkIfStringConvertInRange(pos > 19, pos == 19, 1, 8446744073709551615, number, static_cast<ui64>(value))) {
 					convertError = StringNumericConvertError::valueExceedsLimits;
-					return std::numeric_limits<ui64>::max();
+					return Limits<ui64>::max();
 				}
 			}
 
@@ -97,9 +98,9 @@ namespace natl {
 			pos += 1;
 
 			if constexpr (!std::same_as<i64, Interger> && !std::same_as<ui64, Interger>) {
-				if (value > std::numeric_limits<Interger>::max()) {
+				if (value > Limits<Interger>::max()) {
 					convertError = StringNumericConvertError::valueExceedsLimits;
-					return std::numeric_limits<Interger>::max();
+					return Limits<Interger>::max();
 				}
 			}
 		}
@@ -191,7 +192,7 @@ namespace natl {
 			if constexpr (std::same_as<ui64, Interger>) { //0xFFFFFFFFFFFFFFFF
 				if (pos > 15) {
 					convertError = StringNumericConvertError::valueExceedsLimits;
-					return std::numeric_limits<ui64>::max();
+					return Limits<ui64>::max();
 				}
 			}
 
@@ -200,9 +201,9 @@ namespace natl {
 			pos += 1;
 
 			if constexpr (!std::same_as<ui64, Interger>) {
-				if (value > std::numeric_limits<Interger>::max()) {
+				if (value > Limits<Interger>::max()) {
 					convertError = StringNumericConvertError::valueExceedsLimits;
-					return std::numeric_limits<Interger>::max();
+					return Limits<Interger>::max();
 				}
 			}
 		}
@@ -270,7 +271,7 @@ namespace natl {
 			if constexpr (std::same_as<ui64, Interger>) { //1111111111111111111111111111111111111111111111111111111111111111
 				if (pos > 63) {
 					convertError = StringNumericConvertError::valueExceedsLimits;
-					return std::numeric_limits<ui64>::max();
+					return Limits<ui64>::max();
 				}
 			}
 
@@ -279,9 +280,9 @@ namespace natl {
 			pos += 1;
 
 			if constexpr (!std::same_as<ui64, Interger>) {
-				if (value > std::numeric_limits<Interger>::max()) {
+				if (value > Limits<Interger>::max()) {
 					convertError = StringNumericConvertError::valueExceedsLimits;
-					return std::numeric_limits<Interger>::max();
+					return Limits<Interger>::max();
 				}
 			}
 		}
@@ -359,12 +360,12 @@ namespace natl {
 			}
 		}
 
-		if (result > std::numeric_limits<Float>::max() && !isNegative) {
+		if (result > Limits<Float>::max() && !isNegative) {
 			convertError = StringNumericConvertError::valueExceedsLimits;
-			return std::numeric_limits<Float>::max();
-		} else if (result < std::numeric_limits<Float>::lowest() && isNegative) {
+			return Limits<Float>::max();
+		} else if (result < Limits<Float>::lowest() && isNegative) {
 			convertError = StringNumericConvertError::valueExceedsLimits;
-			return std::numeric_limits<Float>::lowest();
+			return Limits<Float>::lowest();
 		}
 
 		convertError = StringNumericConvertError::none;

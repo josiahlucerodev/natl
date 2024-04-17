@@ -133,7 +133,7 @@ namespace natl {
 			constexpr destory_callable_function_type getDestoryFunction() const noexcept override {
 				return [](constexpr_callable_base* callableBase) noexcept -> void {
 					ConstexprCallable* constexprCallable = static_cast<ConstexprCallable*>(callableBase);
-					natl::defaultDeconstruct(constexprCallable);
+					natl::deconstruct(constexprCallable);
 					natl::DefaultAllocator<ConstexprCallable>::deallocate(constexprCallable, 1);
 				};
 			}
@@ -915,7 +915,7 @@ namespace natl {
 			constexpr virtual destory_function_type getDestroyFunction() const noexcept override {
 				return [](constexpr_callable_ref_base* callableRefBase) noexcept -> ReturnType {
 					ConstexprCallableRef* callableRef = static_cast<ConstexprCallableRef*>(callableRefBase);
-					natl::defaultDeconstruct(callableRef);
+					natl::deconstruct(callableRef);
 					natl::DefaultAllocator<ConstexprCallableRef>::deallocate(callableRef, 1);
 				};
 			}
@@ -1092,7 +1092,7 @@ namespace natl {
 			template<class Functor>
 				requires(HasFunctionSignature<Functor, ReturnType, ArgTypes...>)
 			constexpr FunctionRefBase& assign(Functor& functor) noexcept {
-				if constexpr(std::is_convertible_v<Functor, ReturnType(ArgTypes...)>) {
+				if constexpr(std::is_convertible_v<Functor, ReturnType(*)(ArgTypes...)>) {
 					functionPtr = functor;
 					functionRefStorageType = FunctionRefStorageType::functionPtr;
 					return self();
@@ -1426,7 +1426,9 @@ namespace natl {
 		auto tryInvoke(Functor&& functor, ArgTypes&&... args) -> decltype(natl::forward<Functor>(functor)(natl::forward<ArgTypes>(args)...)) {}
 	}
 
-	template<typename...> struct InvokeResultType;
+	template<typename...> struct InvokeResultType {
+		using type = void;
+	};
 	template<typename Functor, typename... ArgTypes>
 	struct InvokeResultType<Functor(ArgTypes...)> {
 		using type = decltype(impl::tryInvoke(declval<Functor>(), declval<ArgTypes>()...));
@@ -1439,10 +1441,66 @@ namespace natl {
 	};
 	template<typename Functor, typename... ArgTypes> using InvokeResultWithArgs = typename InvokeResultWithArgsType<Functor, ArgTypes...>::type;
 	
+	template<typename Functor> struct ResultOf;
+	template<typename Functor, typename... ArgTypes>
+	struct ResultOf<Functor(ArgTypes...)> {
+		using type = decltype(impl::tryInvoke(declval<Functor>(), declval<ArgTypes>()...));
+	};
+	template<typename ReturnType, typename... ArgTypes>
+	struct ResultOf<ReturnType(*)(ArgTypes...)> {
+		using type = ReturnType;
+	};
+	template<typename ReturnType, typename... ArgTypes>
+	struct ResultOf<ReturnType(*)(ArgTypes...) noexcept> {
+		using type = ReturnType;
+	};
+	template<typename ReturnType, typename... ArgTypes>
+	struct ResultOf<ReturnType(&)(ArgTypes...)> {
+		using type = ReturnType;
+	};
+	template<typename ReturnType, typename... ArgTypes>
+	struct ResultOf<ReturnType(&)(ArgTypes...) noexcept> {
+		using type = ReturnType;
+	};
+
+	template<typename Functor> 
+	using ResultOfT = ResultOf<Functor>::type;
+
+	template<typename Functor>
+	struct FunctorBaseStorage {};
+
+
+	template<typename ReturnType, typename... ArgTypes>
+	struct FunctorBaseStorage<ReturnType(*)(ArgTypes...)> {
+		using type = ReturnType(*)(ArgTypes...) noexcept;
+	};
+	template<typename ReturnType, typename... ArgTypes>
+	struct FunctorBaseStorage<ReturnType(*)(ArgTypes...) noexcept> {
+		using type = ReturnType(*)(ArgTypes...) noexcept;
+	};
+	template<typename ReturnType, typename... ArgTypes>
+	struct FunctorBaseStorage<ReturnType(&)(ArgTypes...)> {
+		using type = ReturnType(*)(ArgTypes...) noexcept;
+	};
+	template<typename ReturnType, typename... ArgTypes>
+	struct FunctorBaseStorage<ReturnType(&)(ArgTypes...) noexcept> {
+		using type = ReturnType(*)(ArgTypes...) noexcept;
+	};
+
+	template<typename Functor, typename... ArgTypes>
+	struct FunctorBaseStorage<Functor(ArgTypes...)> {
+		using ReturnType = ResultOfT<Functor(ArgTypes...)>;
+		using type = ConditionalT<ConvertibleTo<RemoveReferenceT<Functor>, ReturnType(*)(ArgTypes...) noexcept>, ReturnType(*)(ArgTypes...) noexcept, Functor>;
+	};
+
+	template<typename Functor>
+	using FunctorBaseStorageT = FunctorBaseStorage<Functor>::type;
+
 	template<class Functor, typename... ArgTypes>
 	constexpr InvokeResultWithArgs<Functor, ArgTypes...> invokeFunction(Functor&& functor, ArgTypes&&... args) noexcept {
 		return natl::forward<Functor>(functor)(natl::forward<ArgTypes>(args)...);
 	}
+
 
 
 	template<class Type>

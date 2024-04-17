@@ -12,7 +12,7 @@
 
 //interface
 namespace natl {
-    template<class DataType>
+    template<typename DataType>
     constexpr DataType* addressof(DataType& val) noexcept {
         return std::addressof<DataType>(val);
     }
@@ -349,8 +349,16 @@ namespace natl {
         return true;
     }
 
+    template<typename DataType, typename... ConstructArgTypes>
+    constexpr DataType* construct(DataType* location, ConstructArgTypes&&... constructArgs) noexcept {
+        if (!isConstantEvaluated()) {
+            return ::new (static_cast<void*>(location)) DataType(natl::forward<ConstructArgTypes>(constructArgs)...);
+        } else {
+            return std::construct_at<DataType, ConstructArgTypes...>(location, natl::forward<ConstructArgTypes>(constructArgs)...);
+        }
+    }
 
-    template<class DataType>
+    template<typename DataType>
     constexpr void defaultConstructAll(DataType* dataPtr, const Size count) 
         noexcept(std::is_nothrow_constructible_v<DataType>) {
 
@@ -366,8 +374,8 @@ namespace natl {
         }
     }
 
-    template<class DataType>
-    constexpr void defaultDeconstructAll(DataType* dataPtr, const Size count) 
+    template<typename DataType>
+    constexpr void deconstructAll(DataType* dataPtr, const Size count) 
         noexcept(std::is_nothrow_destructible_v<DataType>) {
         if (!isConstantEvaluated()) {
             if constexpr (IsTriviallyDestructible<DataType>) {
@@ -381,10 +389,10 @@ namespace natl {
         }
     }
 
-    template<class DataType>
-    constexpr void defaultDeconstruct(DataType* dataPtr)
+    template<typename DataType>
+    constexpr void deconstruct(DataType* dataPtr)
         noexcept(std::is_nothrow_destructible_v<DataType>) {
-        defaultDeconstructAll<DataType>(dataPtr, 1);
+        deconstructAll<DataType>(dataPtr, 1);
     }
 
     template<typename DataType>
@@ -536,7 +544,7 @@ namespace natl {
                 }
             }
             if (isNotEmpty()) {
-                defaultDeconstructAll(arrayDataPtr, size());
+                deconstructAll(arrayDataPtr, size());
             }
         }
         constexpr void release() noexcept {

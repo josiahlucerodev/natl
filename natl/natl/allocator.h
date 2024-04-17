@@ -51,6 +51,12 @@ namespace natl {
 	};
 	extern TrackerAllocatorData trackerAllocatorData;
 
+
+#ifdef NATL_COMPILER_MSVC
+#pragma warning(push)
+#pragma warning(disable : 4180)
+#endif // NATL_COMPILER_MSVC
+
 	template<class DataType>
 	class TrackerAllocator {
 	public:
@@ -163,6 +169,9 @@ namespace natl {
 		}
 	};
 
+#ifdef NATL_COMPILER_MSVC
+#pragma warning(pop)
+#endif // NATL_COMPILER_MSVC
 
 	template<class DataType>
 	using DefaultAllocator = Allocator<DataType>;

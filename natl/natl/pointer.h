@@ -1509,7 +1509,7 @@ namespace natl {
 			using control_block_seperate_data_constexpr_alloc = Alloc::template rebind_alloc<SharedPtrControlBlockSeperateConstexprType>;
 			typename SharedPtrControlBlockSeperateConstexprType::control_block_deleter_function_type controlBlockDeleter =
 				[](SharedPtrControlBlockSeperateConstexprType* controlBlockPtr) {
-				natl::defaultDeconstruct(controlBlockPtr);
+				natl::deconstruct(controlBlockPtr);
 				control_block_seperate_data_constexpr_alloc::deallocate(controlBlockPtr, 1);
 			};
 

@@ -17,8 +17,10 @@
 
 //system 
 #ifdef NATL_WINDOWS_PLATFORM
+#define NOMINMAX
 #include <Windows.h>
 #endif // NATL_WINDOWS_PLATFORM 
+
 #ifdef NATL_UNIX_PLATFORM
 #include <unistd.h>
 #include <fcntl.h>

@@ -256,7 +256,7 @@ namespace natl {
 			}
 
 			if (isNotEmpty()) {
-				defaultDeconstructAll(arrayDataPtr, size());
+				deconstructAll(arrayDataPtr, size());
 			}
 		}
 	public:
