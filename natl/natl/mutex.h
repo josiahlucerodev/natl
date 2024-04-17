@@ -10,9 +10,9 @@
 #include <Windows.h>
 #endif // NATL_WINDOWS_PLATFORM 
 
-#ifdef NATL_UNIX_PLATFORM
+#if defined(NATL_UNIX_PLATFORM) || defined(NATL_WEB_PLATFORM)
 #include <pthread.h>
-#endif // NATL_UNIX_PLATFORM
+#endif // NATL_UNIX_PLATFORM || NATL_WEB_PLATFORM
 
 //interface
 namespace natl {
@@ -78,7 +78,7 @@ namespace natl {
 	};
 #endif // NATL_WINDOWS_PLATFORM 
 
-#ifdef NATL_UNIX_PLATFORM
+#if defined(NATL_UNIX_PLATFORM) || defined(NATL_WEB_PLATFORM)
 	class Mutex {
 	public:
 		using native_handle_type = pthread_mutex_t;
@@ -129,7 +129,7 @@ namespace natl {
 		//observers 
 		constexpr native_handle_type nativeHandle() noexcept { return mutexHandle; };
 	};
-#endif // NATL_UNIX_PLATFORM
+#endif // NATL_UNIX_PLATFORM || NATL_WEB_PLATFORM
 
 	class RecursiveMutex {
 	public:
@@ -177,6 +177,7 @@ namespace natl {
 					currentLockingThread = curretThreadId;
 					lockLevel = 1;
 				}
+				return lockResult;
 			} else {
 				return true;
 			}

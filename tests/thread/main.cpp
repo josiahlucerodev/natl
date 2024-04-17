@@ -14,11 +14,6 @@ void work (natl::ThreadStopAlert stopControl) noexcept {
 	return;
 }
 
-template<typename Functor, typename... Args>
-consteval natl::Bool test(Functor&& functor, Args&&... args) {
-	return natl::impl::DoesFunctorTakeSmartThreadStopAlert<Functor, Args...>;
-}
-
 constexpr int compileTimeTest() {
 	return 0;
 }

@@ -21,17 +21,16 @@
 #include <Windows.h>
 #endif // NATL_WINDOWS_PLATFORM 
 
-#ifdef NATL_UNIX_PLATFORM
+#if defined(NATL_UNIX_PLATFORM) || defined(NATL_WEB_PLATFORM)
 #include <unistd.h>
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <limits.h>
-#endif // NATL_UNIX_PLATFORM
+#endif // NATL_UNIX_PLATFORM || NATL_WEB_PLATFORM
 
 //interface
 namespace natl {
 	consteval Assci getPlatformPreferredPathSeparator() noexcept {
-		static_assert(!(getPlatformType() == ProgramPlatformType::unknownPlatform), "natl: getPlatformPreferredPathSeparator() error - not a supported platform");
 		if constexpr (getPlatformType() == ProgramPlatformType::unixPlatform) {
 			return '/';
 		} else if constexpr (getPlatformType() == ProgramPlatformType::windowsPlatform) {
@@ -1259,7 +1258,7 @@ namespace natl {
 
 #endif // NATL_WINDOWS_PLATFORM
 
-#ifdef NATL_UNIX_PLATFORM
+#if defined(NATL_UNIX_PLATFORM) || defined(NATL_WEB_PLATFORM)
 
 	using UnixNativeFileHandle = GenericInt;
 	constexpr inline UnixNativeFileHandle unixFileOpFailValue = -1;
@@ -1447,7 +1446,7 @@ namespace natl {
 		return FileType::unknown;
 	}
 
-#endif // NATL_UNIX_PLATFORM
+#endif // NATL_UNIX_PLATFORM || NATL_WEB_PLATFORM
 
 
 	class File {

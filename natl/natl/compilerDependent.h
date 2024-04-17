@@ -111,6 +111,7 @@ namespace natl {
         unknownPlatform,
         unixPlatform, 
         windowsPlatform,
+        webPlatform
     };
 
     consteval ProgramPlatformType getPlatformType() noexcept {
@@ -118,6 +119,8 @@ namespace natl {
         return ProgramPlatformType::unixPlatform;
 #elif defined(NATL_WINDOWS_PLATFORM)
         return ProgramPlatformType::windowsPlatform;
+#elif defined(NATL_WEB_PLATFORM)
+        return ProgramPlatformType::webPlatform;
 #else
         return ProgramPlatformType::unknownPlatform;
 #endif
@@ -207,6 +210,25 @@ namespace natl {
 #define NATL_UNREACHABLE_DEFINE
 #endif // NATL_COMPILER_MSVC
 	}
+
+    constexpr const Assci* platformTypeToString(const ProgramPlatformType platformType) noexcept {
+        switch (platformType) {
+        case ProgramPlatformType::unixPlatform:
+            return "unix";
+        case ProgramPlatformType::windowsPlatform:
+            return "windows";
+        case ProgramPlatformType::webPlatform:
+            return "web";
+        case ProgramPlatformType::unknownPlatform:
+            return "unknown";
+        default:
+            unreachable();
+        }
+    }
+
+    consteval const Assci* getPlatformName() noexcept {
+        return platformTypeToString(getPlatformType());
+    }
 }
 
 

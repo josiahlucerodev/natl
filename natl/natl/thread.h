@@ -15,10 +15,10 @@
 #include <Windows.h>
 #endif // NATL_WINDOWS_PLATFORM 
 
-#ifdef NATL_UNIX_PLATFORM
+#if defined(NATL_UNIX_PLATFORM) || defined(NATL_WEB_PLATFORM)
 #include <pthread.h>
 #include <unistd.h>
-#endif // NATL_UNIX_PLATFORM
+#endif // NATL_UNIX_PLATFORM || NATL_WEB_PLATFORM
 
 //interface
 namespace natl {
@@ -177,7 +177,7 @@ namespace natl {
 	};
 #endif // NATL_WINDOWS_PLATFORM
 
-#ifdef NATL_UNIX_PLATFORM
+#if defined(NATL_UNIX_PLATFORM) || defined(NATL_WEB_PLATFORM)
 	constexpr ThreadId getCurrentThreadId() noexcept {
 		if (isConstantEvaluated()) {
 			return ThreadId();
@@ -306,6 +306,6 @@ namespace natl {
 		}
 	};
 
-#endif // NATL_UNIX_PLATFORM
+#endif // NATL_UNIX_PLATFORM || NATL_WEB_PLATFORM
 
 }
