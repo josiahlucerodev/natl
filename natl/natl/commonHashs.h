@@ -8,7 +8,7 @@ namespace natl {
 	//fnv1a
 	constexpr inline Size fnv1aOffsetBasis = Size(14695981039346656037ULL);
 	constexpr inline Size fnv1aPrime = Size(1099511628211ULL);
-	constexpr Size fnv1aHashCstr(const Assci* strPtr, Size hash = fnv1aOffsetBasis) noexcept {
+	constexpr Size fnv1aHashCstr(const Ascii* strPtr, Size hash = fnv1aOffsetBasis) noexcept {
 		while (*strPtr != '\0') {
 			hash ^= static_cast<Size>(*strPtr++);
 			hash *= fnv1aPrime;
@@ -23,8 +23,8 @@ namespace natl {
 		return hash;
 	}
 
-	constexpr Size fnv1aHash(const Assci* strPtr, const Size size, Size hash = fnv1aOffsetBasis) noexcept {
-		const Assci* endPtr = strPtr + size;
+	constexpr Size fnv1aHash(const Ascii* strPtr, const Size size, Size hash = fnv1aOffsetBasis) noexcept {
+		const Ascii* endPtr = strPtr + size;
 		for (; strPtr < endPtr; strPtr++) {
 			hash ^= static_cast<Size>(*strPtr);
 			hash *= fnv1aPrime;

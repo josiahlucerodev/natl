@@ -30,7 +30,7 @@
 
 //interface
 namespace natl {
-	consteval Assci getPlatformPreferredPathSeparator() noexcept {
+	consteval Ascii getPlatformPreferredPathSeparator() noexcept {
 		if constexpr (getPlatformType() == ProgramPlatformType::unixPlatform) {
 			return '/';
 		} else if constexpr (getPlatformType() == ProgramPlatformType::windowsPlatform) {
@@ -40,7 +40,7 @@ namespace natl {
 		}
 	}
 
-	constexpr Bool isPlatformPathSeparator(const Assci character) noexcept {
+	constexpr Bool isPlatformPathSeparator(const Ascii character) noexcept {
 		return character == '\\' || character == '/';
 	}
 
@@ -49,12 +49,12 @@ namespace natl {
 		class BasePathView {
 		public:
 
-			using path_view_type = BasePathView<Assci>;
-			using const_path_view_type = BasePathView<const Assci>;
-			using string_view_type = BaseStringView<Assci>;
-			using const_string_view_type = BaseStringView<const Assci>;
-			using array_view_type = ArrayView<Assci>;
-			using const_array_view_type = ArrayView<const Assci>;
+			using path_view_type = BasePathView<Ascii>;
+			using const_path_view_type = BasePathView<const Ascii>;
+			using string_view_type = BaseStringView<Ascii>;
+			using const_string_view_type = BaseStringView<const Ascii>;
+			using array_view_type = ArrayView<Ascii>;
+			using const_array_view_type = ArrayView<const Ascii>;
 
 			using string_view_storage_type = ConditionalT<IsNotConstV<CharType>, string_view_type, const_string_view_type>;
 
@@ -79,10 +79,10 @@ namespace natl {
 			constexpr BasePathView() noexcept = default;
 			constexpr BasePathView(const path_view_type& other) noexcept : pathStringView(other) {}
 			constexpr BasePathView(const const_path_view_type& other) noexcept requires(IsConstV<CharType>) : pathStringView(other) {}
-			constexpr BasePathView(Assci* stringPtr, const size_type length) noexcept : pathStringView(stringPtr, length) {}
-			constexpr BasePathView(const Assci* stringPtr, const size_type length) noexcept requires(IsConstV<CharType>) : pathStringView(stringPtr, length) {}
-			explicit constexpr BasePathView(Assci* str) noexcept : pathStringView(str) {}
-			explicit constexpr BasePathView(const Assci* str) noexcept requires(IsConstV<CharType>) : pathStringView(str) {}
+			constexpr BasePathView(Ascii* stringPtr, const size_type length) noexcept : pathStringView(stringPtr, length) {}
+			constexpr BasePathView(const Ascii* stringPtr, const size_type length) noexcept requires(IsConstV<CharType>) : pathStringView(stringPtr, length) {}
+			explicit constexpr BasePathView(Ascii* str) noexcept : pathStringView(str) {}
+			explicit constexpr BasePathView(const Ascii* str) noexcept requires(IsConstV<CharType>) : pathStringView(str) {}
 			explicit constexpr BasePathView(const string_view_type& str) noexcept : pathStringView(str) {}
 			explicit constexpr BasePathView(const const_string_view_type& str) noexcept requires(IsConstV<CharType>) : pathStringView(str) {}
 
@@ -151,8 +151,8 @@ namespace natl {
 			constexpr Bool isEmpty() const noexcept { return pathStringView.isEmpty(); }
 			constexpr Bool isNotEmpty() const noexcept { return pathStringView.isNotEmpty(); }
 
-			friend class BasePathView<Assci>;
-			friend class BasePathView<const Assci>;
+			friend class BasePathView<Ascii>;
+			friend class BasePathView<const Ascii>;
 
 			//compare
 			constexpr Bool operator==(const path_view_type& rhs) const noexcept {
@@ -307,7 +307,7 @@ namespace natl {
 				if (isEmpty()) { return{}; }
 
 				size_type filenameSize = 0;
-				for (const Assci& character : makeReverseIteration(pathStringView)) {
+				for (const Ascii& character : makeReverseIteration(pathStringView)) {
 					filenameSize++;
 					if (isPlatformPathSeparator(character)) {
 						break;
@@ -321,7 +321,7 @@ namespace natl {
 				if (isEmpty()) { return{}; }
 
 				size_type extensionSize = 0;
-				for (const Assci& character : makeReverseIteration(pathStringView)) {
+				for (const Ascii& character : makeReverseIteration(pathStringView)) {
 					extensionSize++;
 					if (character == '.') {
 						break;
@@ -351,7 +351,7 @@ namespace natl {
 
 			constexpr path_view_type extension() noexcept requires(IsNotConstV<CharType>) {
 				size_type extensionSize = 0;
-				for (const Assci& character : makeReverseIteration(pathStringView)) {
+				for (const Ascii& character : makeReverseIteration(pathStringView)) {
 					extensionSize++;
 					if (character == '.') {
 						return path_view_type(pathStringView.substr(pathStringView.size() - extensionSize));
@@ -442,7 +442,7 @@ namespace natl {
 				if (isEmpty()) { return{}; }
 
 				size_type filenameSize = 0;
-				for (const Assci& character : makeReverseIteration(pathStringView)) {
+				for (const Ascii& character : makeReverseIteration(pathStringView)) {
 					filenameSize++;
 					if (isPlatformPathSeparator(character)) {
 						break;
@@ -456,7 +456,7 @@ namespace natl {
 				if (isEmpty()) { return{}; }
 
 				size_type extensionSize = 0;
-				for (const Assci& character : makeReverseIteration(pathStringView)) {
+				for (const Ascii& character : makeReverseIteration(pathStringView)) {
 					extensionSize++;
 					if (character == '.') {
 						break;
@@ -486,7 +486,7 @@ namespace natl {
 
 			constexpr const_path_view_type extension() const noexcept {
 				size_type extensionSize = 0;
-				for (const Assci& character : makeReverseIteration(pathStringView)) {
+				for (const Ascii& character : makeReverseIteration(pathStringView)) {
 					extensionSize++;
 					if (character == '.') {
 						return const_path_view_type(pathStringView.substr(pathStringView.size() - extensionSize));
@@ -524,8 +524,8 @@ namespace natl {
 		};
 	}
 
-	using PathView = impl::BasePathView<Assci>;
-	using ConstPathView = impl::BasePathView<const Assci>;
+	using PathView = impl::BasePathView<Ascii>;
+	using ConstPathView = impl::BasePathView<const Ascii>;
 
 	enum class PathFormat {
 		nativeFormat,
@@ -533,19 +533,19 @@ namespace natl {
 		defaultFormat = genericFormat,
 	};
 
-	template<Size BufferSize = (128 - sizeof(BaseStringBaseMembersRef<Assci>)), class Alloc = DefaultAllocator<Assci>>
+	template<Size BufferSize = (128 - sizeof(BaseStringBaseMembersRef<Ascii>)), class Alloc = DefaultAllocator<Ascii>>
 		requires(IsAllocator<Alloc>)
 	class BasePath {
 	public:
 		using allocator_type = Alloc;
-		using string_type = BaseString<Assci, BufferSize, Alloc>;
+		using string_type = BaseString<Ascii, BufferSize, Alloc>;
 
 		using path_view_type = PathView;
 		using const_path_view_type = ConstPathView;
-		using string_view_type = BaseStringView<Assci>;
-		using const_string_view_type = BaseStringView<const Assci>;
-		using array_view_type = ArrayView<Assci>;
-		using const_array_view_type = ArrayView<const Assci>;
+		using string_view_type = BaseStringView<Ascii>;
+		using const_string_view_type = BaseStringView<const Ascii>;
+		using array_view_type = ArrayView<Ascii>;
+		using const_array_view_type = ArrayView<const Ascii>;
 
 		using value_type = string_type::value_type;
 		using reference = string_type::reference;
@@ -588,12 +588,12 @@ namespace natl {
 		constexpr BasePath(string_type&& source, const PathFormat format = autoFormat) noexcept : pathStorage(natl::move(source)) {
 			formatPath(format);
 		}
-		constexpr BasePath(const Assci* source, const PathFormat format = autoFormat) noexcept : pathStorage(source) {
+		constexpr BasePath(const Ascii* source, const PathFormat format = autoFormat) noexcept : pathStorage(source) {
 			formatPath(format);
 		}
 
 		template<class StringViewLike>
-			requires(IsStringViewLike<StringViewLike, const Assci>)
+			requires(IsStringViewLike<StringViewLike, const Ascii>)
 		constexpr BasePath(const StringViewLike& source, const PathFormat format = autoFormat) noexcept 
 			: pathStorage(source.data(), source.size()) {
 			formatPath(format);
@@ -653,13 +653,13 @@ namespace natl {
 			formatPath();
 			return self();
 		}
-		constexpr BasePath& operator=(const Assci* source) noexcept {
+		constexpr BasePath& operator=(const Ascii* source) noexcept {
 			pathStorage = source;
 			formatPath();
 			return self();
 		}
 		template<class StringViewLike>
-			requires(IsStringViewLike<StringViewLike, const Assci>)
+			requires(IsStringViewLike<StringViewLike, const Ascii>)
 		constexpr BasePath& operator=(const StringViewLike& source) noexcept {
 			pathStorage = source;
 			formatPath();
@@ -675,12 +675,12 @@ namespace natl {
 		constexpr BasePath& assign(string_type&& source) noexcept {
 			return self() = natl::move(source);
 		}
-		constexpr BasePath& assign(const Assci* source) noexcept {
+		constexpr BasePath& assign(const Ascii* source) noexcept {
 			return self() = source;
 		}
 
 		template<class StringViewLike>
-			requires(IsStringViewLike<StringViewLike, const Assci>)
+			requires(IsStringViewLike<StringViewLike, const Ascii>)
 		constexpr BasePath& assign(const StringViewLike& source) noexcept {
 			return self() = source;
 		}
@@ -692,7 +692,7 @@ namespace natl {
 		constexpr BasePath& formatPath(const PathFormat format = autoFormat) noexcept {
 			if constexpr (getPlatformType() == ProgramPlatformType::windowsPlatform) {
 				if (format == PathFormat::nativeFormat) {
-					for (Assci& character : pathStorage) {
+					for (Ascii& character : pathStorage) {
 						if (character == '/') {
 							character = '\\';
 						}
@@ -701,7 +701,7 @@ namespace natl {
 				}
 			}
 
-			for (Assci& character : pathStorage) {
+			for (Ascii& character : pathStorage) {
 				if (character == '\\') {
 					character = '/';
 				}
@@ -732,11 +732,11 @@ namespace natl {
 			return self() /= other.toPathView();
 		}
 		template<class StringViewLike>
-			requires(IsStringViewLike<StringViewLike, const Assci>)
+			requires(IsStringViewLike<StringViewLike, const Ascii>)
 		constexpr BasePath& operator/=(const StringViewLike& source) noexcept {
 			return self() /= BasePath(source);
 		}
-		constexpr BasePath& operator/=(const Assci* other) noexcept {
+		constexpr BasePath& operator/=(const Ascii* other) noexcept {
 			return self() /= const_string_view_type(other);
 		}
 
@@ -748,11 +748,11 @@ namespace natl {
 			return self() /= other;
 		}
 		template<class StringViewLike>
-			requires(IsStringViewLike<StringViewLike, const Assci>)
+			requires(IsStringViewLike<StringViewLike, const Ascii>)
 		constexpr BasePath& append(const StringViewLike& source) noexcept {
 			return self() /= source;
 		}
-		constexpr BasePath& append(const Assci* other) noexcept {
+		constexpr BasePath& append(const Ascii* other) noexcept {
 			return self() /= other;
 		}
 
@@ -855,7 +855,7 @@ namespace natl {
 			return self() /= replacement;
 		}
 		template<class StringViewLike>
-			requires(IsStringViewLike<StringViewLike, const Assci>)
+			requires(IsStringViewLike<StringViewLike, const Ascii>)
 		constexpr BasePath& replaceFilename(const StringViewLike& replacement) noexcept {
 			removeFilename();
 			return self() /= replacement;
@@ -874,7 +874,7 @@ namespace natl {
 			return replaceExtension(replacement.toPathView());
 		}
 		template<class StringViewLike>
-			requires(IsStringViewLike<StringViewLike, const Assci>)
+			requires(IsStringViewLike<StringViewLike, const Ascii>)
 		constexpr BasePath& replaceExtension(const StringViewLike& replacement) noexcept {
 			return replaceFilename(BasePath(replacement));
 		}
@@ -946,9 +946,9 @@ namespace natl {
 		}
 	};
 
-	template<Size ByteSize, typename Alloc = DefaultAllocator<Assci>>
+	template<Size ByteSize, typename Alloc = DefaultAllocator<Ascii>>
 		requires(ByteSize >= 32 && IsAllocator<Alloc>)
-	using PathByteSize = BasePath<ByteSize - sizeof(BaseStringBaseMembersRef<Assci>), Alloc>;
+	using PathByteSize = BasePath<ByteSize - sizeof(BaseStringBaseMembersRef<Ascii>), Alloc>;
 
 	using Path = PathByteSize<128>;
 
@@ -982,7 +982,7 @@ namespace natl {
 		//appendEndReadWrite //always appends to end
 	};
 
-	constexpr const Assci* fileOpenModeToString(const FileOpenMode openMode) noexcept {
+	constexpr const Ascii* fileOpenModeToString(const FileOpenMode openMode) noexcept {
 		switch (openMode) {
 		case FileOpenMode::readStart:
 			return "read start";
@@ -1009,7 +1009,7 @@ namespace natl {
 		unknown,
 	};
 
-	constexpr const Assci* fileTypeToString(const FileType fileType) noexcept {
+	constexpr const Ascii* fileTypeToString(const FileType fileType) noexcept {
 		switch (fileType) {
 		case FileType::none:
 			return "none";
@@ -1077,7 +1077,7 @@ namespace natl {
 		}
 	}
 
-	inline FileHandle openFile(const Assci* filePath, const FileOpenMode openMode) noexcept {
+	inline FileHandle openFile(const Ascii* filePath, const FileOpenMode openMode) noexcept {
 		DWORD desiredAccess;
 		DWORD shareMode;
 		DWORD creationDisposition;
@@ -1170,7 +1170,7 @@ namespace natl {
 	}
 
 	template<typename PathLike>
-		requires(IsDynamicArrayLike<PathLike, Assci>)
+		requires(IsDynamicArrayLike<PathLike, Ascii>)
 	inline PathLike getWorkingDirectory() noexcept {
 		DWORD workingDirectorySize = GetCurrentDirectoryA(MAX_PATH, NULL);
 
@@ -1182,7 +1182,7 @@ namespace natl {
 		path.reserve(workingDirectorySize);
 		path.resize(workingDirectorySize - 1);
 
-		DWORD result = GetCurrentDirectoryA(workingDirectorySize, static_cast<Assci*>(path.data()));
+		DWORD result = GetCurrentDirectoryA(workingDirectorySize, static_cast<Ascii*>(path.data()));
 		if (result == 0) {
 			return PathLike{};
 		} 
@@ -1190,29 +1190,29 @@ namespace natl {
 		return path;
 	}
 
-	inline Bool doesFileExist(const Assci* fileName) noexcept {
+	inline Bool doesFileExist(const Ascii* fileName) noexcept {
 		DWORD fileAttributes = GetFileAttributesA(fileName);
 		return (fileAttributes != INVALID_FILE_ATTRIBUTES);
 	}
 
 	namespace impl {
-		inline Bool doesFileHaveAttributes(const Assci* fileName, const DWORD attributes) noexcept {
+		inline Bool doesFileHaveAttributes(const Ascii* fileName, const DWORD attributes) noexcept {
 			DWORD fileAttributes = GetFileAttributesA(fileName);
 			return (fileAttributes != INVALID_FILE_ATTRIBUTES) && ((fileAttributes & attributes) != 0);
 		}
-		inline Bool doesFileNotHaveAttributes(const Assci* fileName, const DWORD attributes) noexcept {
+		inline Bool doesFileNotHaveAttributes(const Ascii* fileName, const DWORD attributes) noexcept {
 			DWORD fileAttributes = GetFileAttributesA(fileName);
 			return (fileAttributes != INVALID_FILE_ATTRIBUTES) && ((fileAttributes & attributes) == 0);
 		}
 	}
 
-	inline Bool isBlockFile(const Assci* fileName) noexcept {
+	inline Bool isBlockFile(const Ascii* fileName) noexcept {
 		return impl::doesFileHaveAttributes(fileName, FILE_ATTRIBUTE_DEVICE);
 	}
-	inline Bool isDirectory(const Assci* fileName) noexcept {
+	inline Bool isDirectory(const Ascii* fileName) noexcept {
 		return impl::doesFileHaveAttributes(fileName, FILE_ATTRIBUTE_DIRECTORY);
 	}
-	inline Bool isFifo(const Assci* fileName) noexcept {
+	inline Bool isFifo(const Ascii* fileName) noexcept {
 		HANDLE namedPipe = CreateNamedPipeA(fileName, PIPE_ACCESS_DUPLEX, PIPE_TYPE_BYTE | PIPE_READMODE_BYTE | PIPE_WAIT, 1, 0, 0, 0, NULL);
 		if (namedPipe != INVALID_HANDLE_VALUE) {
 			CloseHandle(namedPipe);
@@ -1221,14 +1221,14 @@ namespace natl {
 			return false;
 		}
 	}
-	inline Bool isRegularFile(const Assci* fileName) noexcept {
+	inline Bool isRegularFile(const Ascii* fileName) noexcept {
 		return impl::doesFileNotHaveAttributes(fileName, FILE_ATTRIBUTE_DEVICE | FILE_ATTRIBUTE_DIRECTORY | FILE_ATTRIBUTE_VIRTUAL);
 	}
-	inline Bool isSymbolicLink(const Assci* fileName) noexcept {
+	inline Bool isSymbolicLink(const Ascii* fileName) noexcept {
 		return impl::doesFileHaveAttributes(fileName, FILE_ATTRIBUTE_REPARSE_POINT);
 	}
 
-	inline FileType getFileType(const Assci* fileName) noexcept {
+	inline FileType getFileType(const Ascii* fileName) noexcept {
 		DWORD fileAttributes = GetFileAttributesA(fileName);
 
 		if (fileAttributes == INVALID_FILE_ATTRIBUTES) {
@@ -1294,7 +1294,7 @@ namespace natl {
 		}
 	}
 
-	inline FileHandle openFile(const Assci* filePath, const FileOpenMode openMode) noexcept {
+	inline FileHandle openFile(const Ascii* filePath, const FileOpenMode openMode) noexcept {
 		GenericInt fileOpenFlags;
 
 		switch (openMode) {
@@ -1362,10 +1362,10 @@ namespace natl {
 	}
 
 	template<typename PathLike>
-		requires(IsDynamicArrayLike<PathLike, Assci>)
+		requires(IsDynamicArrayLike<PathLike, Ascii>)
 	inline PathLike getWorkingDirectory() noexcept {
-		Assci tempWorkingDirectoryPathStorage[PATH_MAX];
-		Assci* workingDirectoryPath = getcwd(tempWorkingDirectoryPathStorage, PATH_MAX);
+		Ascii tempWorkingDirectoryPathStorage[PATH_MAX];
+		Ascii* workingDirectoryPath = getcwd(tempWorkingDirectoryPathStorage, PATH_MAX);
 
 		if (workingDirectoryPath == nullptr) {
 			return PathLike{};
@@ -1377,45 +1377,45 @@ namespace natl {
 		path.reserve(workingDirectoryPathSize);
 		path.resize(workingDirectoryPathSize - 1);
 
-		natl::copyNoOverlap<const Assci*, Assci*>(workingDirectoryPath, workingDirectoryPath + workingDirectoryPathSize, path.data());
+		natl::copyNoOverlap<const Ascii*, Ascii*>(workingDirectoryPath, workingDirectoryPath + workingDirectoryPathSize, path.data());
 
 		return path;
 	}
 
-	inline Bool doesFileExist(const Assci* fileName) noexcept {
+	inline Bool doesFileExist(const Ascii* fileName) noexcept {
 		struct stat64 fileStat;
 		return stat64(fileName, &fileStat) != unixFileOpFailValue;
 	}
 
-	inline Bool isBlockFile(const Assci* fileName) noexcept {
+	inline Bool isBlockFile(const Ascii* fileName) noexcept {
 		struct stat64 fileStat;
 		if (stat64(fileName, &fileStat) == unixFileOpFailValue) {
 			return false;
 		}
 		return S_ISBLK(fileStat.st_mode);
 	}
-	inline Bool isDirectory(const Assci* fileName) noexcept {
+	inline Bool isDirectory(const Ascii* fileName) noexcept {
 		struct stat64 fileStat;
 		if (stat64(fileName, &fileStat) == unixFileOpFailValue) {
 			return false;
 		}
 		return S_ISDIR(fileStat.st_mode);
 	}
-	inline Bool isFifo(const Assci* fileName) noexcept {
+	inline Bool isFifo(const Ascii* fileName) noexcept {
 		struct stat64 fileStat;
 		if (stat64(fileName, &fileStat) == unixFileOpFailValue) {
 			return false;
 		}
 		return S_ISFIFO(fileStat.st_mode);
 	}
-	inline Bool isRegularFile(const Assci* fileName) noexcept {
+	inline Bool isRegularFile(const Ascii* fileName) noexcept {
 		struct stat64 fileStat;
 		if (stat64(fileName, &fileStat) == unixFileOpFailValue) {
 			return false;
 		}
 		return S_ISREG(fileStat.st_mode);
 	}
-	inline Bool isSymbolicLink(const Assci* fileName) noexcept {
+	inline Bool isSymbolicLink(const Ascii* fileName) noexcept {
 		struct stat64 fileStat;
 		if (stat64(fileName, &fileStat) == unixFileOpFailValue) {
 			return false;
@@ -1423,7 +1423,7 @@ namespace natl {
 		return S_ISLNK(fileStat.st_mode);
 	}
 
-	inline FileType getFileType(const Assci* fileName) noexcept {
+	inline FileType getFileType(const Ascii* fileName) noexcept {
 		struct stat64 fileStat;
 		if (stat64(fileName, &fileStat) == unixFileOpFailValue) {
 			return FileType::notFound;
@@ -1461,7 +1461,7 @@ namespace natl {
 		constexpr File(File&& other) noexcept : fileHandle(natl::move(other.fileHandle)) {
 			other.fileHandle.setHandleNull();
 		}
-		File(const Assci* path, const FileOpenMode openMode) noexcept {
+		File(const Ascii* path, const FileOpenMode openMode) noexcept {
 			open(path, openMode);
 		}
 
@@ -1500,7 +1500,7 @@ namespace natl {
 		constexpr const FileHandle handle() const noexcept { return fileHandle; }
 		
 		//file operations 
-		Bool open(const Assci* path, const FileOpenMode openMode) noexcept {
+		Bool open(const Ascii* path, const FileOpenMode openMode) noexcept {
 			fileHandle = openFile(path, openMode);
 			return fileHandle.isHandleOpen();
 		}
@@ -1528,7 +1528,7 @@ namespace natl {
 		none,
 	};
 
-	constexpr const Assci* loadAllFileContentErrorToString(const LoadAllFileContentError error) noexcept {
+	constexpr const Ascii* loadAllFileContentErrorToString(const LoadAllFileContentError error) noexcept {
 		switch (error) {
 		case LoadAllFileContentError::fileNotOpen:
 			return "file not open";

@@ -11,18 +11,18 @@
 //interface 
 namespace natl {
 	struct BaseNamedElement {};
-	template<StringLiteral InputName, class DataType>
+	template<TemplateStringLiteral InputName, class DataType>
 	struct NamedElement {
-		constexpr static StringLiteral name = InputName;
+		constexpr static TemplateStringLiteral name = InputName;
 		using NameType = decltype(name);
 		using value_type = DataType;
 		constexpr operator BaseNamedElement() const noexcept { return BaseNamedElement(); };
 	};
 
 	class BaseVariantAssign {};
-	template<StringLiteral InputName, class DataType>
+	template<TemplateStringLiteral InputName, class DataType>
 	struct VariantAssign {
-		constexpr static StringLiteral name = InputName;
+		constexpr static TemplateStringLiteral name = InputName;
 		using NameType = decltype(name);
 		using value_type = DataType;
 		const DataType& data;
@@ -31,9 +31,9 @@ namespace natl {
 	};
 
 	class BaseVariantAssignMove {};
-	template<StringLiteral InputName, class DataType>
+	template<TemplateStringLiteral InputName, class DataType>
 	struct VariantAssignMove {
-		constexpr static StringLiteral name = InputName;
+		constexpr static TemplateStringLiteral name = InputName;
 		using NameType = decltype(name);
 		using value_type = DataType;
 		DataType&& data;
@@ -42,9 +42,9 @@ namespace natl {
 	};
 
 	template <
-		StringLiteral Name1 = "", class DataType1 = i8,
-		StringLiteral Name2 = "", class DataType2 = i8,
-		StringLiteral Name3 = "", class DataType3 = i8>
+		TemplateStringLiteral Name1 = "", class DataType1 = i8,
+		TemplateStringLiteral Name2 = "", class DataType2 = i8,
+		TemplateStringLiteral Name3 = "", class DataType3 = i8>
 	class VariantT {
 		union {
 			DataType1 value1;
@@ -58,6 +58,21 @@ namespace natl {
 		//this is need for the other function to parse
 		template<Size Index, class ReturnType> constexpr ReturnType& getRef() = delete;
 	};
+
+	namespace impl {
+		template<typename LhsStringLiteralType, typename RhsStringLiteralType>
+		struct StringLiteralCompare {
+			constexpr static Bool value = ConstAsciiStringView(LhsStringLiteralType::c_str()) == ConstAsciiStringView(RhsStringLiteralType::c_str());
+		};
+
+		template<typename StringLiteralFindType, typename... SearchStringLiteralTypes>
+		using FindIndexofStringLiteral =
+			TemplatePackFindIndexOfTypeCompare<
+			StringLiteralCompare,
+			StringLiteralFindType,
+			SearchStringLiteralTypes...
+		>;
+	}
 
 #ifdef _MSC_VER
 #pragma warning(disable: 4624)
@@ -122,7 +137,7 @@ namespace natl {
 	private:
 		Size variantIndex;
 
-		constexpr static Size byteStorageSize = ParameterPackMaxSizeOfTypes<typename Elements::value_type...>::value;
+		constexpr static Size byteStorageSize = TemplatePackMaxSizeOfTypes<typename Elements::value_type...>::value;
 		union {
 			alignas(Elements...) Byte byteStorage[byteStorageSize];
 			VariantStorage<typename Elements::value_type...> recursiveStorage;
@@ -148,7 +163,7 @@ namespace natl {
 		template<Size Index>
 		constexpr VariantCopyConstructFunction getCopyConstructFunction() noexcept {
 			return [](Variant& variant, const Variant& other) {
-				using ElementType = typename ParameterPackNthElement<Index, Elements...>::type::value_type;
+				using ElementType = typename TemplatePackNthElement<Index, Elements...>::type::value_type;
 
 				if (!isConstantEvaluated()) {
 					if constexpr (IsTriviallyConstRefConstructible<ElementType>) {
@@ -169,7 +184,7 @@ namespace natl {
 		template<Size Index>
 		constexpr VariantMoveConstructFunction getMoveConstructFunction() noexcept {
 			return [](Variant& variant, Variant&& other) {
-				using ElementType = typename ParameterPackNthElement<Index, Elements...>::type::value_type;
+				using ElementType = typename TemplatePackNthElement<Index, Elements...>::type::value_type;
 
 				if (!isConstantEvaluated()) {
 					if constexpr (IsTriviallyMoveConstructible<ElementType>) {
@@ -188,7 +203,7 @@ namespace natl {
 		constexpr void constRefConstruct(const Variant& other) {
 			variantIndex = other.variantIndex;
 
-			VariantCopyConstructFunction copyFunctions[numberOfVariants] = { getCopyConstructFunction<ParameterPackFindIndexOfType<Elements, Elements...>::value>()... };
+			VariantCopyConstructFunction copyFunctions[numberOfVariants] = { getCopyConstructFunction<TemplatePackFindIndexOfType<Elements, Elements...>::value>()... };
 			VariantCopyConstructFunction& copyFunction = copyFunctions[other.getIndex() - 1];
 
 			if (isConstantEvaluated()) {
@@ -207,7 +222,7 @@ namespace natl {
 		constexpr void moveConstruct(Variant&& other) noexcept {
 			variantIndex = other.variantIndex;
 
-			VariantMoveConstructFunction moveFunctions[numberOfVariants] = { getMoveConstructFunction<ParameterPackFindIndexOfType<Elements, Elements...>::value>()... };
+			VariantMoveConstructFunction moveFunctions[numberOfVariants] = { getMoveConstructFunction<TemplatePackFindIndexOfType<Elements, Elements...>::value>()... };
 			VariantMoveConstructFunction& moveFunction = moveFunctions[other.getIndex() - 1];
 
 			if (isConstantEvaluated()) {
@@ -252,7 +267,7 @@ namespace natl {
 		template<Size Index>
 		constexpr VariantDestructFunction getDestructionFunction() noexcept {
 			return [](Variant& variant) {
-				using ElementType = typename ParameterPackNthElement<Index, Elements...>::type::value_type;
+				using ElementType = typename TemplatePackNthElement<Index, Elements...>::type::value_type;
 
 				if (!isConstantEvaluated()) {
 					if constexpr (IsTriviallyDestructible<ElementType>) {
@@ -264,7 +279,7 @@ namespace natl {
 			};
 		}
 		constexpr void actuallyDestoryValue() noexcept {
-			VariantDestructFunction destructFunctions[numberOfVariants] = { getDestructionFunction<ParameterPackFindIndexOfType<Elements, Elements...>::value>()... };
+			VariantDestructFunction destructFunctions[numberOfVariants] = { getDestructionFunction<TemplatePackFindIndexOfType<Elements, Elements...>::value>()... };
 			if (variantIndex != emptyVariantValue) [[likely]] {
 				VariantDestructFunction& destructFunction = destructFunctions[variantIndex - 1];
 				destructFunction(self());
@@ -275,17 +290,18 @@ namespace natl {
 				actuallyDestoryValue();
 			}
 		}
+
 	public:
-		template<StringLiteral FindName> 
+		template<TemplateStringLiteral FindName> 
 		constexpr static Size getIndexOf() noexcept {
-			constexpr Size index = ParameterPackStringLiteralFindIndex<StringLiteralType<FindName>, StringLiteralType<Elements::name>...>::value;
+			constexpr Size index = impl::FindIndexofStringLiteral<StringLiteral<FindName>, StringLiteral<Elements::name>...>::value;
 			static_assert(index != IndexNotFound::value, "natl: variant error - getIndex() - could not find varaint element with name");
 			return index + 1;
 		}
 
-		template<StringLiteral FindName>
+		template<TemplateStringLiteral FindName>
 		constexpr Size getIndexOf_NotStatic() const noexcept {
-			constexpr Size index = ParameterPackStringLiteralFindIndex<StringLiteralType<FindName>, StringLiteralType<Elements::name>...>::value;
+			constexpr Size index = impl::FindIndexofStringLiteral<StringLiteral<FindName>, StringLiteral<Elements::name>...>::value;
 			static_assert(index != IndexNotFound::value, "natl: variant error - getIndex() - could not find varaint element with name");
 			return index + 1;
 		}
@@ -297,7 +313,7 @@ namespace natl {
 		template<Size Index>
 		constexpr VariantCopyFunction getCopyFunction() noexcept {
 			return [](Variant& variant, const Variant& other) {
-				using ElementType = typename ParameterPackNthElement<Index, Elements...>::type::value_type;
+				using ElementType = typename TemplatePackNthElement<Index, Elements...>::type::value_type;
 
 				if (!isConstantEvaluated()) {
 					if constexpr (IsTriviallyConstRefAssignable<ElementType>) {
@@ -314,7 +330,7 @@ namespace natl {
 		template<Size Index>
 		constexpr VariantMoveFunction getMoveFunction() noexcept {
 			return [](Variant& variant, Variant&& other) {
-				using ElementType = typename ParameterPackNthElement<Index, Elements...>::type::value_type;
+				using ElementType = typename TemplatePackNthElement<Index, Elements...>::type::value_type;
 
 				if (!isConstantEvaluated()) {
 					if constexpr (IsTriviallyMoveAssignable<ElementType>) {
@@ -333,7 +349,7 @@ namespace natl {
 				destoryValue();
 				other.variantIndex = 0;
 			} else if (other.variantIndex == other.variantIndex) {
-				VariantCopyFunction copyFunctions[numberOfVariants] = { getCopyFunction<ParameterPackFindIndexOfType<Elements, Elements...>::value>()... };
+				VariantCopyFunction copyFunctions[numberOfVariants] = { getCopyFunction<TemplatePackFindIndexOfType<Elements, Elements...>::value>()... };
 				VariantCopyFunction& copyFunction = copyFunctions[other.getIndex() - 1];
 
 				if (isConstantEvaluated()) {
@@ -358,7 +374,7 @@ namespace natl {
 				destoryValue();
 				other.variantIndex = 0;
 			} else if (other.variantIndex == other.variantIndex) {
-				VariantMoveFunction moveFunctions[numberOfVariants] = { getMoveFunction<ParameterPackFindIndexOfType<Elements, Elements...>::value>()... };
+				VariantMoveFunction moveFunctions[numberOfVariants] = { getMoveFunction<TemplatePackFindIndexOfType<Elements, Elements...>::value>()... };
 				VariantMoveFunction& moveFunction = moveFunctions[other.getIndex() - 1];
 
 				if (isConstantEvaluated()) {
@@ -377,11 +393,11 @@ namespace natl {
 			return self();
 		}
 
-		template<StringLiteral name, typename DataType>
+		template<TemplateStringLiteral name, typename DataType>
 		constexpr Variant& assign(DataType&& value) noexcept {
-			constexpr Size index = ParameterPackStringLiteralFindIndex<StringLiteralType<name>, StringLiteralType<Elements::name>...>::value;
+			constexpr Size index = impl::FindIndexofStringLiteral<StringLiteral<name>, StringLiteral<Elements::name>...>::value;
 			if constexpr (index != IndexNotFound::value) {
-				using VariantTypeAtIndex = typename ParameterPackNthElement<index, Elements...>::type::value_type;
+				using VariantTypeAtIndex = typename TemplatePackNthElement<index, Elements...>::type::value_type;
 
 				if constexpr (std::is_constructible_v<VariantTypeAtIndex, DataType>) {
 					if (variantIndex == index) {
@@ -419,11 +435,11 @@ namespace natl {
 				return self();
 			}
 		}
-		template<StringLiteral name, typename DataType>
+		template<TemplateStringLiteral name, typename DataType>
 		constexpr Variant& assign(const DataType& value) noexcept {
-			constexpr Size index = ParameterPackStringLiteralFindIndex<StringLiteralType<name>, StringLiteralType<Elements::name>...>::value;
+			constexpr Size index = impl::FindIndexofStringLiteral<StringLiteral<name>, StringLiteral<Elements::name>...>::value;
 			if constexpr (index != IndexNotFound::value) {
-				using VariantTypeAtIndex = typename ParameterPackNthElement<index, Elements...>::type::value_type;
+				using VariantTypeAtIndex = typename TemplatePackNthElement<index, Elements...>::type::value_type;
 
 				if constexpr (std::is_constructible_v<VariantTypeAtIndex, DataType>) {
 					if (variantIndex == index) {
@@ -463,8 +479,8 @@ namespace natl {
 			return self();
 		}
 		private:
-		template<StringLiteral name>
-		using TypeAtIndexOfName = typename ParameterPackNthElement<getIndexOf<name>() - 1, Elements...>::type::value_type;
+		template<TemplateStringLiteral name>
+		using TypeAtIndexOfName = typename TemplatePackNthElement<getIndexOf<name>() - 1, Elements...>::type::value_type;
 		
 		template<Size Index>
 		constexpr void testValidIndex() const noexcept {
@@ -476,15 +492,15 @@ namespace natl {
 
 		public:
 
-		template<StringLiteral name>
+		template<TemplateStringLiteral name>
 		constexpr auto& get() noexcept {
-			constexpr Size index = ParameterPackStringLiteralFindIndex<StringLiteralType<name>, StringLiteralType<Elements::name>...>::value;
+			constexpr Size index = impl::FindIndexofStringLiteral<StringLiteral<name>, StringLiteral<Elements::name>...>::value;
 			static_assert(index != IndexNotFound::value, "natl: variant error - get() - could not find varaint element with name");
 
 			if constexpr (index != IndexNotFound::value) {
 				testValidIndex<index>();
 
-				using VariantTypeAtIndex = typename ParameterPackNthElement<index, Elements...>::type::value_type;
+				using VariantTypeAtIndex = typename TemplatePackNthElement<index, Elements...>::type::value_type;
 				if (isConstantEvaluated()) {
 					return recursiveStorage.template getRef<index, VariantTypeAtIndex>();
 				} else {
@@ -493,15 +509,15 @@ namespace natl {
 			}
 		}
 
-		template<StringLiteral name>
+		template<TemplateStringLiteral name>
 		constexpr const auto& get() const noexcept {
-			constexpr Size index = ParameterPackStringLiteralFindIndex<StringLiteralType<name>, StringLiteralType<Elements::name>...>::value;
+			constexpr Size index = impl::FindIndexofStringLiteral<StringLiteral<name>, StringLiteral<Elements::name>...>::value;
 			static_assert(index != IndexNotFound::value, "natl: variant error - get() - could not find varaint element with name");
 
 			if constexpr (index != IndexNotFound::value) {
 				testValidIndex<index>();
 
-				using VariantTypeAtIndex = typename ParameterPackNthElement<index, Elements...>::type::value_type;
+				using VariantTypeAtIndex = typename TemplatePackNthElement<index, Elements...>::type::value_type;
 				if (isConstantEvaluated()) {
 					return recursiveStorage.template getRef<index, VariantTypeAtIndex>();
 				} else {
@@ -509,9 +525,9 @@ namespace natl {
 				}
 			}
 		}
-		template<StringLiteral name>
+		template<TemplateStringLiteral name>
 		constexpr static Size getIndexFunction() noexcept {
-			constexpr Size index = ParameterPackStringLiteralFindIndex<StringLiteralType<name>, StringLiteralType<Elements::name>...>::value;
+			constexpr Size index = impl::FindIndexofStringLiteral<StringLiteral<name>, StringLiteral<Elements::name>...>::value;
 			static_assert(index != IndexNotFound::value, "natl: variant error - get() - could not find varaint element with name");
 			return index;
 		}
@@ -526,7 +542,7 @@ namespace natl {
 			return variantIndex;
 		}
 
-		template<StringLiteral name>
+		template<TemplateStringLiteral name>
 		constexpr Bool isValue() const noexcept {
 			return variantIndex == getIndexOf<name>();
 		}

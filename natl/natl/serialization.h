@@ -298,7 +298,7 @@ namespace natl {
 
 		using SerializationArrayData = SmallDynArray<SerializationElement*, ((commonByteSize - 24) / sizeof(SerializationElement*))>;
 		using SerializationDicData = SmallDynArray<SerializationElement*, ((commonByteSize - 24) / sizeof(SerializationElement*))>;
-		using SerializationAssicStringData = BaseStringByteSize<Assci, commonByteSize >;
+		using SerializationAssicStringData = BaseStringByteSize<Ascii, commonByteSize >;
 		using SerializationStructData = SmallDynArray<SerializationElement*, ((commonByteSize - 24) / sizeof(SerializationElement*))>;
 		using SerializationTStructData = SmallDynArray<SerializationElement*, ((commonByteSize - 24) / sizeof(SerializationElement*))>;
 

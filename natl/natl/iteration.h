@@ -3,6 +3,7 @@
 //own
 #include "basicTypes.h"
 #include "tuple.h"
+#include "dataMovement.h"
 
 //interface
 namespace natl {
@@ -414,4 +415,289 @@ namespace natl {
     constexpr ReverseIteration<IterationRange> makeReverseIteration(IterationRange& iterationRange) noexcept {
         return ReverseIteration<IterationRange>(iterationRange);
     }
+
+    template<typename Container>
+    concept BackInsertIteratorContainerHasReserve =
+        requires(Container & container, const Size newCapacity) {
+            { container.reserve(newCapacity) };
+    };
+
+    template<typename Container>
+    class BackInsertIterator {
+    public:
+        using allocator_type = Container::allocator_type;
+
+        using value_type = typename allocator_type::value_type;
+        using reference = typename allocator_type::reference;
+        using const_reference = typename allocator_type::const_reference;
+        using pointer = typename allocator_type::pointer;
+        using const_pointer = typename allocator_type::const_pointer;
+        using difference_type = typename allocator_type::difference_type;
+        using size_type = typename allocator_type::size_type;
+
+        using iterator_category = std::output_iterator_tag;
+    private:
+        Container* container;
+    public:
+        //constructor
+        explicit constexpr BackInsertIterator(Container& containerIn) noexcept : container(&containerIn) {}
+        explicit constexpr BackInsertIterator(Container* containerIn) noexcept : container(containerIn) {}
+
+        //destructor 
+        constexpr ~BackInsertIterator() noexcept = default;
+
+        //util 
+        constexpr BackInsertIterator& self() { return *this; }
+        constexpr const BackInsertIterator& self() const { return *this; }
+
+        //modifiers 
+        constexpr void reserve(const size_type newCapacity) noexcept {
+            if constexpr (BackInsertIteratorContainerHasReserve<Container>) {
+                container->reserve(newCapacity);
+            }
+        }
+
+        //iterator operation 
+        constexpr BackInsertIterator& operator=(const value_type& value) noexcept {
+            container->push_back(value);
+            return self();
+        }
+        constexpr BackInsertIterator& operator=(value_type&& value) noexcept {
+            container->push_back(natl::move(value));
+            return self();
+        }
+
+        //no op 
+        constexpr BackInsertIterator& operator*() noexcept { return self(); }
+        constexpr BackInsertIterator& operator++() noexcept { return self(); };
+        constexpr BackInsertIterator& operator++(int) noexcept { return self(); };
+    };
+
+    template<typename Container>
+    constexpr BackInsertIterator<Container> backInserter(Container& container) noexcept {
+        return BackInsertIterator<Container>(&container);
+    }
+    
+
+    namespace impl {
+        template<typename DataType>
+        class TypeErasedBackInsertIteratorData {
+        public:
+            using reserve_function_type = void(*)(void*, const Size) noexcept;
+            using push_back_function_type = void(*)(void*, const DataType&) noexcept;
+            using push_back_move_function_type = void(*)(void*, DataType&&) noexcept;
+
+            void* container;
+            push_back_function_type pushBackFunction;
+            push_back_move_function_type pushBackMoveFunction;
+            reserve_function_type reserveFunction;
+        };
+
+        template<typename DataType, typename Container>
+        void populateTypeErasedBackInsertIteratorData(TypeErasedBackInsertIteratorData<DataType>& dataDst, Container* container) noexcept {
+            dataDst.container = reinterpret_cast<void*>(container);
+            dataDst.pushBackFunction = [](void* containerTypeErasedPtr, const DataType& value) noexcept -> void {
+                Container* container = reinterpret_cast<Container*>(containerTypeErasedPtr);
+                container->push_back(value);
+            };
+            dataDst.pushBackMoveFunction = [](void* containerTypeErasedPtr, DataType&& value) noexcept -> void {
+                Container* container = reinterpret_cast<Container*>(containerTypeErasedPtr);
+                container->push_back(natl::move(value));
+            };
+            dataDst.reserveFunction = [](void* containerTypeErasedPtr, const Size newCapacity) noexcept -> void {
+                Container* container = reinterpret_cast<Container*>(containerTypeErasedPtr);
+                if (BackInsertIteratorContainerHasReserve<DataType>) {
+                    container->reserve(newCapacity);
+                }
+            };
+        }
+
+
+        template <typename DataType>
+        class TypeErasedBackInsertIteratorDataConstexprPolymorphic {
+        public:
+            using reserve_function_type = void(*)(TypeErasedBackInsertIteratorDataConstexprPolymorphic*, const Size);
+            using push_back_function_type = void(*)(TypeErasedBackInsertIteratorDataConstexprPolymorphic*, const DataType&);
+            using push_back_move_function_type = void(*)(TypeErasedBackInsertIteratorDataConstexprPolymorphic*, DataType&&);
+            using copy_function_type = TypeErasedBackInsertIteratorDataConstexprPolymorphic * (*)(TypeErasedBackInsertIteratorDataConstexprPolymorphic*);
+            using destory_function_type = void(*)(TypeErasedBackInsertIteratorDataConstexprPolymorphic*);
+
+            constexpr virtual reserve_function_type getReserveFunction() noexcept = 0;
+            constexpr virtual push_back_function_type getPushBackFunction() noexcept = 0;
+            constexpr virtual push_back_move_function_type getPushBackMoveFunction() noexcept = 0;
+            constexpr virtual copy_function_type getCopyFunction() noexcept = 0;
+            constexpr virtual destory_function_type getDestoryFunction() noexcept = 0;
+        };
+
+        template<typename DataType, typename Container>
+        class TypeErasedBackInsertIteratorDataConstexpr : public TypeErasedBackInsertIteratorDataConstexprPolymorphic<DataType> {
+        public:
+            using allocator_type = DefaultAllocator<TypeErasedBackInsertIteratorDataConstexpr>;
+            using data_constexpr_polymorphic = TypeErasedBackInsertIteratorDataConstexprPolymorphic<DataType>;
+            using reserve_function_type = data_constexpr_polymorphic::reserve_function_type;
+            using push_back_function_type = data_constexpr_polymorphic::push_back_function_type;
+            using push_back_move_function_type = data_constexpr_polymorphic::push_back_move_function_type;
+            using copy_function_type = data_constexpr_polymorphic::copy_function_type;
+            using destory_function_type = data_constexpr_polymorphic::destory_function_type;
+
+            Container* container;
+
+            constexpr TypeErasedBackInsertIteratorDataConstexpr(Container* containerIn) noexcept : container(containerIn) {}
+
+            constexpr static data_constexpr_polymorphic* createNew(Container* newContainer) noexcept {
+                TypeErasedBackInsertIteratorDataConstexpr* newData = allocator_type::allocate(1);
+                construct(newData, newContainer);
+                return static_cast<data_constexpr_polymorphic*>(newData);;
+            }
+            constexpr reserve_function_type getReserveFunction() noexcept override {
+                return [](data_constexpr_polymorphic* dataPolymorphic, const Size newCapacity) noexcept -> void {
+                    TypeErasedBackInsertIteratorDataConstexpr* data = static_cast<TypeErasedBackInsertIteratorDataConstexpr*>(dataPolymorphic);
+                    if constexpr (BackInsertIteratorContainerHasReserve<Container>) {
+                        data->container->reserve(newCapacity);
+                    }
+                };
+            };
+            constexpr push_back_function_type getPushBackFunction() noexcept override {
+                return [](data_constexpr_polymorphic* dataPolymorphic, const DataType& value) noexcept -> void {
+                    TypeErasedBackInsertIteratorDataConstexpr* data = static_cast<TypeErasedBackInsertIteratorDataConstexpr*>(dataPolymorphic);
+                    data->container->push_back(value);
+                };
+            };
+            constexpr push_back_move_function_type getPushBackMoveFunction() noexcept override {
+                return [](data_constexpr_polymorphic* dataPolymorphic, DataType&& value) noexcept -> void {
+                    TypeErasedBackInsertIteratorDataConstexpr* data = static_cast<TypeErasedBackInsertIteratorDataConstexpr*>(dataPolymorphic);
+                    data->container->push_back(natl::move(value));
+                };
+            };
+            constexpr copy_function_type getCopyFunction() noexcept override {
+                return [](data_constexpr_polymorphic* dataPolymorphic) noexcept -> data_constexpr_polymorphic* {
+                    TypeErasedBackInsertIteratorDataConstexpr* data = static_cast<TypeErasedBackInsertIteratorDataConstexpr*>(dataPolymorphic);
+                    return createNew(data->container);
+                };
+            };
+            constexpr destory_function_type getDestoryFunction() noexcept {
+                return [](data_constexpr_polymorphic* dataPolymorphic) noexcept -> void {
+                    TypeErasedBackInsertIteratorDataConstexpr* data = static_cast<TypeErasedBackInsertIteratorDataConstexpr*>(dataPolymorphic);
+                    allocator_type::deallocate(data, 1);
+                    deconstruct(data);
+                };
+            }
+        };
+
+        template<typename DataType, typename Container>
+        constexpr void populateTypeErasedBackInsertIteratorDataConstexpr(
+            TypeErasedBackInsertIteratorDataConstexprPolymorphic<DataType>*& dataPtrDst,
+            Container* container) noexcept {
+            using iterator_data_constexpr = TypeErasedBackInsertIteratorDataConstexpr<DataType, Container>;
+            dataPtrDst = iterator_data_constexpr::createNew(container);
+        }
+
+    }
+
+
+    template<typename DataType>
+    class TypeErasedBackInsertIterator {
+    public:
+        using value_type = DataType;
+        using reference = DataType&;
+        using const_reference = const DataType&;
+        using pointer = DataType*;
+        using const_pointer = const DataType*;
+        using difference_type = PtrDiff;
+        using size_type = Size;
+
+        using iterator_category = std::output_iterator_tag;
+
+        using iterator_data = impl::TypeErasedBackInsertIteratorData<DataType>;
+        using iterator_data_constexpr_polymorphic = impl::TypeErasedBackInsertIteratorDataConstexprPolymorphic<DataType>;
+    private:
+        union {
+            iterator_data data;
+            iterator_data_constexpr_polymorphic* dataConstexprPolymorphic;
+        };
+    public:
+        //constructor
+        constexpr TypeErasedBackInsertIterator() noexcept {
+            if (isConstantEvaluated()) {
+                construct(dataConstexprPolymorphic);
+            } else {
+                construct(data);
+            }
+        }
+        constexpr TypeErasedBackInsertIterator(const TypeErasedBackInsertIterator& other) noexcept {
+            if (isConstantEvaluated()) {
+                dataConstexprPolymorphic = other.dataConstexprPolymorphic->getCopyFunction()(other.dataConstexprPolymorphic);
+            } else {
+                data = other.data;
+            }
+        }
+        constexpr TypeErasedBackInsertIterator(TypeErasedBackInsertIterator&& other) noexcept {
+            if (isConstantEvaluated()) {
+                dataConstexprPolymorphic = other.dataConstexprPolymorphic;
+                other.dataConstexprPolymorphic = nullptr;
+            } else {
+                data = other.data;
+                other.data = iterator_data();
+            }
+        }
+
+        template<typename Container>
+        explicit constexpr TypeErasedBackInsertIterator(Container* container) noexcept {
+            if (isConstantEvaluated()) {
+                populateTypeErasedBackInsertIteratorDataConstexpr<DataType, Container>(dataConstexprPolymorphic, container);
+            } else {
+                populateTypeErasedBackInsertIteratorData<DataType, Container>(data, container);
+            }
+        }
+        template<typename Container>
+        explicit constexpr TypeErasedBackInsertIterator(Container& container) noexcept :
+            TypeErasedBackInsertIterator(&container) {}
+
+        //destructor 
+        constexpr ~TypeErasedBackInsertIterator() noexcept {
+            if (isConstantEvaluated()) {
+                if (dataConstexprPolymorphic != nullptr) {
+                    dataConstexprPolymorphic->getDestoryFunction()(dataConstexprPolymorphic);
+                }
+            } else {
+                deconstruct(&data);
+            }
+        }
+
+        //util 
+        constexpr TypeErasedBackInsertIterator& self() { return *this; }
+        constexpr const TypeErasedBackInsertIterator& self() const { return *this; }
+
+        //modifiers 
+        constexpr void reserve(const size_type newCapacity) noexcept {
+            if (isConstantEvaluated()) {
+                dataConstexprPolymorphic->getReserveFunction()(dataConstexprPolymorphic, newCapacity);
+            } else {
+                data.reserveFunction(data.container, newCapacity);
+            }
+        }
+
+        //iterator operation 
+        constexpr TypeErasedBackInsertIterator& operator=(const value_type& value) noexcept {
+            if (isConstantEvaluated()) {
+                dataConstexprPolymorphic->getPushBackFunction()(dataConstexprPolymorphic, value);
+            } else {
+                data.pushBackFunction(data.container, value);
+            }
+            return self();
+        }
+        constexpr TypeErasedBackInsertIterator& operator=(value_type&& value) noexcept {
+            if (isConstantEvaluated()) {
+                dataConstexprPolymorphic->getPushBackMoveFunction()(dataConstexprPolymorphic, natl::move(value));
+            } else {
+                data.pushBackMoveFunction(data.container, natl::move(value));
+            }
+            return self();
+        }
+
+        //no op 
+        constexpr TypeErasedBackInsertIterator& operator*() noexcept { return self(); }
+        constexpr TypeErasedBackInsertIterator& operator++() noexcept { return self(); };
+        constexpr TypeErasedBackInsertIterator& operator++(int) noexcept { return self(); };
+    };
 }

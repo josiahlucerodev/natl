@@ -590,6 +590,10 @@ namespace natl {
 	constexpr Expect<i64, StringNumericConvertError> stringDecimalToIntExpect(const ConstStringView& stringView) noexcept {
 		return stringDecimalToIntExpect<i64>(stringView);
 	}
+	constexpr Expect<ui64, StringNumericConvertError> stringDecimalToUintExpect(const ConstStringView& stringView) noexcept {
+		return stringDecimalToIntExpect<ui64>(stringView);
+	}
+
 	constexpr Expect<ui64, StringNumericConvertError> stringHexadecimalToIntExpect(const ConstStringView& stringView) noexcept {
 		return stringHexadecimalToIntExpect<ui64>(stringView);
 	}

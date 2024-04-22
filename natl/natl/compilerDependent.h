@@ -211,7 +211,7 @@ namespace natl {
 #endif // NATL_COMPILER_MSVC
 	}
 
-    constexpr const Assci* platformTypeToString(const ProgramPlatformType platformType) noexcept {
+    constexpr const Ascii* platformTypeToString(const ProgramPlatformType platformType) noexcept {
         switch (platformType) {
         case ProgramPlatformType::unixPlatform:
             return "unix";
@@ -226,7 +226,7 @@ namespace natl {
         }
     }
 
-    consteval const Assci* getPlatformName() noexcept {
+    consteval const Ascii* getPlatformName() noexcept {
         return platformTypeToString(getPlatformType());
     }
 }

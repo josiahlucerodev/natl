@@ -31,105 +31,75 @@ namespace natl {
     template <class NumberType, NumberType, class Type> using CustomAlwaysType = Type;
 
     template <class... Ts>
-    struct ParameterPackMaxSizeOfTypes;
+    struct TemplatePackMaxSizeOfTypes;
 
     template <class T>
-    struct ParameterPackMaxSizeOfTypes<T> {
+    struct TemplatePackMaxSizeOfTypes<T> {
         constexpr static Size value = sizeof(T);
     };
 
     template <class T, class... Ts>
-    struct ParameterPackMaxSizeOfTypes<T, Ts...> {
-        constexpr static Size value = sizeof(T) > ParameterPackMaxSizeOfTypes<Ts...>::value ? sizeof(T) : ParameterPackMaxSizeOfTypes<Ts...>::value;
+    struct TemplatePackMaxSizeOfTypes<T, Ts...> {
+        constexpr static Size value = sizeof(T) > TemplatePackMaxSizeOfTypes<Ts...>::value ? sizeof(T) : TemplatePackMaxSizeOfTypes<Ts...>::value;
     };
 
 
     template <Size Index, class... Types>
-    struct ParameterPackNthElement {};
+    struct TemplatePackNthElement {};
     template<Size Index>
-    struct ParameterPackNthElement<Index> {
-        // static_assert(false, "natl: ParameterPackNthElement could not find element because the index is out of range");
+    struct TemplatePackNthElement<Index> {
+        // static_assert(false, "natl: TemplatePackNthElement could not find element because the index is out of range");
     };
 
     template <class NthType, class... Types>
-    struct ParameterPackNthElement<0, NthType, Types...> {
+    struct TemplatePackNthElement<0, NthType, Types...> {
         using type = NthType;
     };
 
     template <Size Index, class NotType, class... Types>
-    struct ParameterPackNthElement<Index, NotType, Types...> {
-        using type = ParameterPackNthElement<Index - 1, Types...>::type;
+    struct TemplatePackNthElement<Index, NotType, Types...> {
+        using type = TemplatePackNthElement<Index - 1, Types...>::type;
     };
 
     template <Size Index, class FindType, class... Types>
-    struct ParameterPackFindIndexOfTypeImpl {
+    struct TemplatePackFindIndexOfTypeImpl {
         constexpr static Size value = Limits<Size>::max();
     };
 
     template <Size Index, class FindType, class TestType, class... Types>
-    struct ParameterPackFindIndexOfTypeImpl<Index, FindType, TestType, Types...> {
-        constexpr static Size value = std::is_same_v<FindType, TestType> ? Index : ParameterPackFindIndexOfTypeImpl<Index + 1, FindType, Types...>::value;
+    struct TemplatePackFindIndexOfTypeImpl<Index, FindType, TestType, Types...> {
+        constexpr static Size value = std::is_same_v<FindType, TestType> ? Index : TemplatePackFindIndexOfTypeImpl<Index + 1, FindType, Types...>::value;
     };
 
     template <class FindType, class... Types>
-    struct ParameterPackFindIndexOfType {
-        constexpr static Size value = ParameterPackFindIndexOfTypeImpl<0, FindType, Types...>::value;
+    struct TemplatePackFindIndexOfType {
+        constexpr static Size value = TemplatePackFindIndexOfTypeImpl<0, FindType, Types...>::value;
     };
     struct IndexNotFound {
         constexpr static Size value = Limits<Size>::max();
     };
 
-    constexpr Bool findImplCompareStrings(const char a[], const char b[]) {
-        const char* aPtr = a;
-        const char *bPtr = b;
-        while (*aPtr != '\0' && *bPtr != '\0' && *aPtr == *bPtr) {
-            ++aPtr;
-            ++bPtr;
-        }
-        return *aPtr == *bPtr;
-
-    }
-
-    template <Size Index, class FindType, class... Types>
-    struct ParameterPackStringLiteralFindImpl {
-        constexpr static Size value = Limits<Size>::max();
-    };
-
-    template <Size Index, class FindType, class TestType, class... Types>
-    struct ParameterPackStringLiteralFindImpl<Index, FindType, TestType, Types...> {
-        constexpr static Size value = (std::is_same_v<FindType, TestType> && findImplCompareStrings(FindType::name, TestType::name))? Index : ParameterPackStringLiteralFindImpl<Index + 1, FindType, Types...>::value;
-    };
-
-    struct ParameterPackIndexNotFound {
-        constexpr static Size value = Limits<Size>::max();
-    };
-
-    template <class FindType, class... Types>
-    struct ParameterPackStringLiteralFindIndex {
-        constexpr static Size value = ParameterPackStringLiteralFindImpl<0, FindType, Types...>::value;
-    };
-
     template <template<typename, typename> typename TypeCompare, Size Index, class FindType, class... Types>
-    struct  ParameterPackFindIndexOfTypeCompareImpl {
-        constexpr static Size value = ParameterPackIndexNotFound::value;
+    struct  TemplatePackFindIndexOfTypeCompareImpl {
+        constexpr static Size value = IndexNotFound::value;
     };
     template <template<typename, typename> typename TypeCompare, Size Index, class FindType, class TestType, class... Types>
-    struct  ParameterPackFindIndexOfTypeCompareImpl<TypeCompare, Index, FindType, TestType, Types...> {
-        constexpr static Size value = TypeCompare<FindType, TestType>::value ? Index : ParameterPackFindIndexOfTypeCompareImpl<TypeCompare, Index + 1, FindType, Types...>::value;
+    struct  TemplatePackFindIndexOfTypeCompareImpl<TypeCompare, Index, FindType, TestType, Types...> {
+        constexpr static Size value = TypeCompare<FindType, TestType>::value ? Index : TemplatePackFindIndexOfTypeCompareImpl<TypeCompare, Index + 1, FindType, Types...>::value;
     };
 
     template <template<typename, typename> typename TypeCompare, class FindType, class... Types>
-    struct  ParameterPackFindIndexOfTypeCompare {
-        constexpr static Size value = ParameterPackFindIndexOfTypeCompareImpl<TypeCompare, 0, FindType, Types...>::value;
+    struct  TemplatePackFindIndexOfTypeCompare {
+        constexpr static Size value = TemplatePackFindIndexOfTypeCompareImpl<TypeCompare, 0, FindType, Types...>::value;
     };
 
     namespace impl {
-        //ParameterPackOpFoldWithIndexImpl
+        //TemplatePackOpFoldWithIndexImpl
         template <typename DataType, Size Index,
             template<typename, Size> typename ValuePredicate,
             template<DataType, DataType> typename OpPredicate,
             typename... ArgTypes>
-        struct ParameterPackOpFoldWithIndexImpl {
+        struct TemplatePackOpFoldWithIndexImpl {
             //constexpr static Size value = Limits<Size>::max();
         };
 
@@ -138,11 +108,11 @@ namespace natl {
             template<DataType, DataType> typename OpPredicate,
             typename ArgType,
             typename... RemainingArgTypes>
-        struct ParameterPackOpFoldWithIndexImpl<DataType, Index, ValuePredicate, OpPredicate, ArgType, RemainingArgTypes...> {
+        struct TemplatePackOpFoldWithIndexImpl<DataType, Index, ValuePredicate, OpPredicate, ArgType, RemainingArgTypes...> {
             constexpr static DataType value =
                 OpPredicate<
                 ValuePredicate<ArgType, Index>::value,
-                ParameterPackOpFoldWithIndexImpl<DataType, Index + 1, ValuePredicate, OpPredicate, RemainingArgTypes...>::value
+                TemplatePackOpFoldWithIndexImpl<DataType, Index + 1, ValuePredicate, OpPredicate, RemainingArgTypes...>::value
                 >::value;
         };
 
@@ -151,7 +121,7 @@ namespace natl {
             template<DataType, DataType> typename OpPredicate,
             typename ArgType,
             typename LastArgType>
-        struct ParameterPackOpFoldWithIndexImpl<DataType, Index, ValuePredicate, OpPredicate, ArgType, LastArgType> {
+        struct TemplatePackOpFoldWithIndexImpl<DataType, Index, ValuePredicate, OpPredicate, ArgType, LastArgType> {
             constexpr static DataType value =
                 OpPredicate<
                 ValuePredicate<ArgType, Index>::value,
@@ -163,23 +133,23 @@ namespace natl {
             template<typename, Size> typename ValuePredicate,
             template<DataType, DataType> typename OpPredicate,
             typename LastArgType>
-        struct ParameterPackOpFoldWithIndexImpl<DataType, Index, ValuePredicate, OpPredicate, LastArgType> {
+        struct TemplatePackOpFoldWithIndexImpl<DataType, Index, ValuePredicate, OpPredicate, LastArgType> {
             constexpr static DataType value = ValuePredicate<LastArgType, Index>::value;
         };
 
         template <typename DataType, Size Index,
             template<typename, Size> typename ValuePredicate,
             template<DataType, DataType> typename OpPredicate>
-        struct ParameterPackOpFoldWithIndexImpl<DataType, Index, ValuePredicate, OpPredicate> {
-            // static_assert(false, "natl: ParameterPackOpFoldWithIndex - no ArgTypes passed");
+        struct TemplatePackOpFoldWithIndexImpl<DataType, Index, ValuePredicate, OpPredicate> {
+            // static_assert(false, "natl: TemplatePackOpFoldWithIndex - no ArgTypes passed");
         };
 
-        //ParameterPackOpFoldWithIndexAndArgImpl
+        //TemplatePackOpFoldWithIndexAndArgImpl
         template <typename DataType, Size Index, typename ValuePredicateArg,
             template<typename, Size, typename> typename ValuePredicate,
             template<DataType, DataType> typename OpPredicate,
             typename... ArgTypes>
-        struct ParameterPackOpFoldWithIndexAndArgImpl {
+        struct TemplatePackOpFoldWithIndexAndArgImpl {
             constexpr static DataType value = Limits<Size>::max();
         };
 
@@ -188,11 +158,11 @@ namespace natl {
             template<DataType, DataType> typename OpPredicate,
             typename ArgType,
             typename... RemainingArgTypes>
-        struct ParameterPackOpFoldWithIndexAndArgImpl<DataType, Index, ValuePredicateArg, ValuePredicate, OpPredicate, ArgType, RemainingArgTypes...> {
+        struct TemplatePackOpFoldWithIndexAndArgImpl<DataType, Index, ValuePredicateArg, ValuePredicate, OpPredicate, ArgType, RemainingArgTypes...> {
             constexpr static DataType value =
                 OpPredicate<
                 ValuePredicate<ArgType, Index, ValuePredicateArg>::value,
-                ParameterPackOpFoldWithIndexAndArgImpl<DataType, Index + 1, ValuePredicateArg, ValuePredicate, OpPredicate, RemainingArgTypes...>::value
+                TemplatePackOpFoldWithIndexAndArgImpl<DataType, Index + 1, ValuePredicateArg, ValuePredicate, OpPredicate, RemainingArgTypes...>::value
                 >::value;
         };
 
@@ -201,7 +171,7 @@ namespace natl {
             template<DataType, DataType> typename OpPredicate,
             typename ArgType,
             typename LastArgType>
-        struct ParameterPackOpFoldWithIndexAndArgImpl<DataType, Index, ValuePredicateArg, ValuePredicate, OpPredicate, ArgType, LastArgType> {
+        struct TemplatePackOpFoldWithIndexAndArgImpl<DataType, Index, ValuePredicateArg, ValuePredicate, OpPredicate, ArgType, LastArgType> {
             constexpr static DataType value =
                 OpPredicate<
                 ValuePredicate<ArgType, Index, ValuePredicateArg>::value,
@@ -213,15 +183,15 @@ namespace natl {
             template<typename, Size, typename  ValuePredicateArgType> typename ValuePredicate,
             template<DataType, DataType> typename OpPredicate,
             typename LastArgType>
-        struct ParameterPackOpFoldWithIndexAndArgImpl<DataType, Index, ValuePredicateArg, ValuePredicate, OpPredicate, LastArgType> {
+        struct TemplatePackOpFoldWithIndexAndArgImpl<DataType, Index, ValuePredicateArg, ValuePredicate, OpPredicate, LastArgType> {
             constexpr static DataType value = ValuePredicate<LastArgType, Index, ValuePredicateArg>::value;
         };
 
         template <typename DataType, Size Index, typename ValuePredicateArg,
             template<typename, Size, typename  ValuePredicateArgType> typename ValuePredicate,
             template<DataType, DataType> typename OpPredicate>
-        struct ParameterPackOpFoldWithIndexAndArgImpl<DataType, Index, ValuePredicateArg, ValuePredicate, OpPredicate> {
-            // static_assert(false, "natl: ParameterPackOpFoldWithIndexAndArg - no ArgTypes passed");
+        struct TemplatePackOpFoldWithIndexAndArgImpl<DataType, Index, ValuePredicateArg, ValuePredicate, OpPredicate> {
+            // static_assert(false, "natl: TemplatePackOpFoldWithIndexAndArg - no ArgTypes passed");
         };
     }
 
@@ -229,13 +199,13 @@ namespace natl {
         template<typename, Size> typename ValuePredicate,
         template<DataType, DataType> typename OpPredicate,
         typename... ArgTypes>
-    constexpr DataType ParameterPackOpFoldWithIndexValue = impl::ParameterPackOpFoldWithIndexImpl<DataType, 0, ValuePredicate, OpPredicate, ArgTypes...>::value;
+    constexpr DataType TemplatePackOpFoldWithIndexValue = impl::TemplatePackOpFoldWithIndexImpl<DataType, 0, ValuePredicate, OpPredicate, ArgTypes...>::value;
 
     template<typename DataType, typename ValuePredicateArg,
         template<typename, Size, typename  ValuePredicateArgType> typename ValuePredicate,
         template<DataType, DataType> typename OpPredicate,
         typename... ArgTypes>
-    constexpr DataType ParameterPackOpFoldWithIndexAndArgValue = impl::ParameterPackOpFoldWithIndexAndArgImpl<DataType, 0, ValuePredicateArg, ValuePredicate, OpPredicate, ArgTypes...>::value;
+    constexpr DataType TemplatePackOpFoldWithIndexAndArgValue = impl::TemplatePackOpFoldWithIndexAndArgImpl<DataType, 0, ValuePredicateArg, ValuePredicate, OpPredicate, ArgTypes...>::value;
 
 
     template<typename... Elements>
@@ -251,10 +221,6 @@ namespace natl {
     struct TypeValue {
         using value_type = decltype(Value);
         constexpr static value_type value = Value;
-    };
-
-    struct TypePackIndexNotFound {
-        constexpr static Size value = ParameterPackIndexNotFound::value;
     };
 
     namespace impl {
@@ -351,7 +317,7 @@ namespace natl {
 
         template<template<typename, typename> typename TypeCompare, typename FindType, typename... TypePackElements>
         struct TypePackFindIndexOfTypeCompareImpl<TypeCompare, FindType, TypePack<TypePackElements...>> {
-            constexpr static Size value = ParameterPackFindIndexOfTypeCompare<TypeCompare, FindType, TypePackElements...>::value;
+            constexpr static Size value = TemplatePackFindIndexOfTypeCompare<TypeCompare, FindType, TypePackElements...>::value;
         };
 
         //TypePackFindIndexOfTypeCompareImpl
@@ -360,7 +326,7 @@ namespace natl {
 
         template<Size Index, class... TypePackElements>
         struct TypePackNthElementImpl<Index, TypePack<TypePackElements...>> {
-            using type = ParameterPackNthElement<Index, TypePackElements...>::type;
+            using type = TemplatePackNthElement<Index, TypePackElements...>::type;
         };
 
         //TypePackOpFoldWithIndexImpl
@@ -375,7 +341,7 @@ namespace natl {
             template<DataType, DataType> typename OpPredicate,
             typename... TypePackElements>
         struct TypePackOpFoldWithIndexImpl<DataType, ValuePredicate, OpPredicate, TypePack<TypePackElements...>> {
-            constexpr static DataType value = ParameterPackOpFoldWithIndexImpl<DataType, 0, ValuePredicate, OpPredicate, TypePackElements...>::type;
+            constexpr static DataType value = TemplatePackOpFoldWithIndexImpl<DataType, 0, ValuePredicate, OpPredicate, TypePackElements...>::type;
         };
 
         //TypePackOpFoldWithIndexAndArgImpl
@@ -390,7 +356,7 @@ namespace natl {
             template<DataType, DataType> typename OpPredicate,
             typename... TypePackElements>
         struct TypePackOpFoldWithIndexAndArgImpl<DataType, ValuePredicateArg, ValuePredicate, OpPredicate, TypePack<TypePackElements...>> {
-            constexpr static DataType value = ParameterPackOpFoldWithIndexAndArgImpl<DataType, 0, ValuePredicateArg, ValuePredicate, OpPredicate, TypePackElements...>::value;
+            constexpr static DataType value = TemplatePackOpFoldWithIndexAndArgImpl<DataType, 0, ValuePredicateArg, ValuePredicate, OpPredicate, TypePackElements...>::value;
         };
     }
 

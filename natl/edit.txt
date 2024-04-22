@@ -77,7 +77,7 @@
 				if (isEmpty()) { return{}; }
 
 				size_type filenameSize = 0;
-				for (const Assci& character : makeReverseIteration(pathStringView)) {
+				for (const Ascii& character : makeReverseIteration(pathStringView)) {
 					filenameSize++;
 					if (isPlatformPathSeparator(character)) {
 						break;
@@ -91,7 +91,7 @@
 				if (isEmpty()) { return{}; }
 
 				const size_type extensionSize = 0;
-				for (const Assci& character : makeReverseIteration(pathStringView)) {
+				for (const Ascii& character : makeReverseIteration(pathStringView)) {
 					extensionSize++;
 					if (character == '.') {
 						break;
@@ -121,7 +121,7 @@
 
 			constexpr const_path_view_type extension() const noexcept {
 				const size_type extensionSize = 0;
-				for (const Assci& character : makeReverseIteration(pathStringView)) {
+				for (const Ascii& character : makeReverseIteration(pathStringView)) {
 					extensionSize++;
 					if (character == '.') {
 						return const_path_view_type(pathStringView.substr(pathStringView.size() - extensionSize));

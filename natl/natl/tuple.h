@@ -104,6 +104,19 @@ namespace natl {
 				}
 			}
 		}
+
+		template<Size Index>
+		constexpr static Size internalGetOffsetOf() noexcept {
+			if constexpr (Index == 0) {
+				return 0;
+			} else {
+				if constexpr (sizeof...(RestDataTypes) > 0) {
+					using ThisType = decltype(*this);
+					const Size offsetofRest = offsetof(ThisType, rest);
+					return offsetofRest + decltype(rest)::template internalGetOffsetOf<Index - 1>();
+				}
+			}
+		}
 	public:
 
 		//element access 
@@ -129,6 +142,17 @@ namespace natl {
 		}
 		constexpr const TypePackNthElement<tupleSize - 1, value_types>& getLast() const noexcept {
 			return internalGet<tupleSize - 1, TypePackNthElement<tupleSize - 1, value_types>>();
+		}
+
+		template<Size Index>
+			requires(Index < value_types::size)
+		constexpr const Size getOffsetOf() const noexcept {
+			return internalGetOffsetOf<Index>();
+		}
+		template<Size Index>
+			requires(Index < value_types::size)
+		constexpr static const Size staticGetOffsetOf() noexcept {
+			return internalGetOffsetOf<Index>();
 		}
 
 		constexpr rest_tuple_type& getRestTuple() noexcept { return rest; }

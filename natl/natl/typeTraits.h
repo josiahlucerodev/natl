@@ -412,7 +412,7 @@ namespace natl {
 
 	namespace impl {
 		template<typename Type> struct IsFundamentalCharacter : FalseType {};
-		template<> struct IsFundamentalCharacter<Assci> : TrueType {};
+		template<> struct IsFundamentalCharacter<Ascii> : TrueType {};
 		template<> struct IsFundamentalCharacter<Utf8> : TrueType {};
 		template<> struct IsFundamentalCharacter<Utf16> : TrueType {};
 		template<> struct IsFundamentalCharacter<Utf32> : TrueType {};

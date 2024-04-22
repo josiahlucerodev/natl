@@ -43,6 +43,8 @@ namespace natl {
 	concept MemcopyConstructibleIter =
 		IsIterPtr<SrcIter> &&
 		IsIterPtr<DstIter> &&
+		IsSameV<typename SrcIter::iterator_catagory, std::random_access_iterator_tag> &&
+		IsSameV<typename DstIter::iterator_catagory, std::random_access_iterator_tag> &&
 		MemcopyConstructibleSrcDst<
 		typename IterPtrTraits<SrcIter>::value_type,
 		typename IterPtrTraits<DstIter>::value_type,
@@ -438,4 +440,12 @@ namespace natl {
 
 	template<typename DataType, typename Alloc>
 	using ReverseConstRandomAccessIteratorAlloc = ReverseIterator<ConstRandomAccessIteratorAlloc<DataType, typename Alloc::template rebind_alloc<const DataType>>>;
+
+
+	template<typename OutputIter>
+	constexpr void callReserveOnOutputIterator(const OutputIter& outputIter, const Size newCapacity) noexcept {
+		if constexpr (requires(OutputIter outputIter) { {outputIter.reserve(Size()) }; }) {
+			outputIter.reserve(newCapacity);
+		}
+	}
 }

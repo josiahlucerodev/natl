@@ -1,6 +1,28 @@
 
 //natl
 #include <natl/iteration.h>
+#include <natl/string.h>
+
+constexpr natl::String testBackInsertIterator() noexcept{
+	natl::String output;
+
+	natl::BackInsertIterator<natl::String> outputIter(output);
+	outputIter = 'h';
+	outputIter = 'e';
+	outputIter = 'l';
+	outputIter = 'l';
+	outputIter = 'o';
+	outputIter = ' ';
+
+	natl::TypeErasedBackInsertIterator<natl::Ascii> typeErasedOutputIter(output);
+	typeErasedOutputIter = 'w';
+	typeErasedOutputIter = 'o';
+	typeErasedOutputIter = 'r';
+	typeErasedOutputIter = 'l';
+	typeErasedOutputIter = 'd';
+	typeErasedOutputIter = '!';
+	return output;
+}
 
 constexpr natl::Size compileTimeTest() {
 	natl::Size sum = 0;
@@ -14,6 +36,5 @@ constexpr natl::Size compileTimeTest() {
 int main() {
 	[[maybe_unused]] constexpr natl::Size number = compileTimeTest();
 	[[maybe_unused]] natl::Size number2 = compileTimeTest();
-
-	
+	static_assert(testBackInsertIterator() == "hello world!");
 }

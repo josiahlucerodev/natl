@@ -225,7 +225,7 @@ namespace natl {
         template<typename TransfromUnit, typename UnitTypePack>
         struct UnitConvertTransformUnitCategoryTransform {
             constexpr static Size index = TypePackFindIndexOfTypeCompareValue<UnitGroupUnitCategoryCompare, TransfromUnit, UnitTypePack>;
-            static_assert(index == TypePackIndexNotFound::value, "natl: Unit convert - unsupport conversion - could not find matching tag_group or unit_category");
+            static_assert(index == IndexNotFound::value, "natl: Unit convert - unsupport conversion - could not find matching tag_group or unit_category");
             using NewUnit = typename UnitConvertUnitTest<TransfromUnit, TypePackNthElement<index, UnitTypePack>>::type;
             using type = NewUnit;
         };
@@ -247,7 +247,7 @@ namespace natl {
         struct UnitConvertTransform {
             constexpr static Size index = TypePackFindIndexOfTypeCompareValue<UnitValueGroupCompare, TransfromUnit, UnitTypePack>;
             constexpr static auto chooseConvertTypeFunc() noexcept {
-                if constexpr (index != TypePackIndexNotFound::value) {
+                if constexpr (index != IndexNotFound::value) {
                     return TypePackNthElement<index, UnitTypePack>();
                 } else {
                     using CovertType = typename UnitConvertUnitTest<
