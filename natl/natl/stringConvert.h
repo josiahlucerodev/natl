@@ -105,8 +105,10 @@ namespace natl {
 			}
 		}
 
-		if (string.c_str()[0] == '-') {
-			value *= -1;
+		if constexpr (std::is_signed_v<Interger>) {
+			if (string.c_str()[0] == '-') {
+				value *= -1;
+			}
 		}
 
 		convertError = StringNumericConvertError::none;

@@ -3,33 +3,47 @@
 //own
 #include "compilerDependent.h"
 #include "thread.h"
-
-//system 
-#ifdef NATL_WINDOWS_PLATFORM
-#define NOMINMAX
-#include <Windows.h>
-#endif // NATL_WINDOWS_PLATFORM 
-
-#if defined(NATL_UNIX_PLATFORM) || defined(NATL_WEB_PLATFORM)
-#include <pthread.h>
-#endif // NATL_UNIX_PLATFORM || NATL_WEB_PLATFORM
+#include "option.h"
+#include "array.h"
 
 //interface
 namespace natl {
+
 #ifdef NATL_WINDOWS_PLATFORM
+	using MutexHandle = void*;
+#define NATL_NATIVE_INVALID_MUTEX_HANDEL_VALUE 0
+#endif // NATL_WINDOWS_PLATFORM 
+
+#if defined(NATL_UNIX_PLATFORM) || defined(NATL_WEB_PLATFORM)
+	using MutexHandle = natl::Option<Array<AlignedType<natl::Byte, 8>, 40>>;
+#define NATL_NATIVE_INVALID_MUTEX_HANDEL_VALUE MutexHandle();
+#endif // NATL_UNIX_PLATFORM || NATL_WEB_PLATFORM
+
+	natl::Option<MutexHandle> createMutex() noexcept;
+	Bool destroyMutex(MutexHandle mutex) noexcept;
+	Bool lockMutex(MutexHandle mutex) noexcept;
+	struct MutexTryLockResult {
+		Bool successful;
+		Bool locked;
+	};
+	MutexTryLockResult trylockMutex(MutexHandle mutex) noexcept;
+	Bool unlockMutex(MutexHandle mutex) noexcept;
+
+
 	class Mutex {
 	public:
-		using native_handle_type = HANDLE;
+		using native_handle_type = MutexHandle;
 	private:
 		native_handle_type mutexHandle;
 	public:
 		//constructor 
 		constexpr Mutex() noexcept {
 			if (!isConstantEvaluated()) {
-				mutexHandle = CreateMutexA(NULL, FALSE, NULL);
-				if (mutexHandle == NULL) {
+				natl::Option<MutexHandle> mutexHandleOption = createMutex();
+				if (mutexHandleOption.doesNotHaveValue()) {
 					natlTerminate();
 				}
+				mutexHandle = mutexHandleOption.value();
 			}
 		}
 		constexpr Mutex(const Mutex&) noexcept = delete;
@@ -37,7 +51,7 @@ namespace natl {
 		//destructor 
 		constexpr ~Mutex() noexcept {
 			if (!isConstantEvaluated()) {
-				CloseHandle(mutexHandle);
+				destroyMutex(mutexHandle);
 			}
 		}
 
@@ -48,88 +62,31 @@ namespace natl {
 		//locking
 		constexpr void lock() noexcept {
 			if (!isConstantEvaluated()) {
-				DWORD result = WaitForSingleObject(mutexHandle, INFINITE);
-				if (result != WAIT_OBJECT_0) {
+				if (lockMutex(mutexHandle) == false) {
 					natlTerminate();
 				}
 			}
 		}
 		constexpr Bool tryLock() noexcept {
 			if (!isConstantEvaluated()) {
-				DWORD result = WaitForSingleObject(mutexHandle, 0);
-				if (result == WAIT_OBJECT_0) {
-					return true;
-				} else if (result == WAIT_TIMEOUT) {
-					return false;
-				} else {
+				MutexTryLockResult tryLockResult = trylockMutex(mutexHandle);
+				if (tryLockResult.successful == false) {
 					natlTerminate();
 				}
+
+				return tryLockResult.locked;
 			}
 			return true;
 		}
 		constexpr void unlock() noexcept {
 			if (!isConstantEvaluated()) {
-				ReleaseMutex(mutexHandle);
+				unlockMutex(mutexHandle);
 			}
 		}
 		
 		//observers 
 		constexpr native_handle_type nativeHandle() noexcept { return mutexHandle; };
 	};
-#endif // NATL_WINDOWS_PLATFORM 
-
-#if defined(NATL_UNIX_PLATFORM) || defined(NATL_WEB_PLATFORM)
-	class Mutex {
-	public:
-		using native_handle_type = pthread_mutex_t;
-	private:
-		native_handle_type mutexHandle;
-	public:
-		//constructor 
-		constexpr Mutex() noexcept {
-			if (!isConstantEvaluated()) {
-				if (pthread_mutex_init(&mutexHandle, nullptr) != 0) {
-					natlTerminate();
-				}
-			}
-		}
-		constexpr Mutex(const Mutex&) noexcept = delete;
-
-		//destructor 
-		constexpr ~Mutex() noexcept {
-			if (!isConstantEvaluated()) {
-				pthread_mutex_destroy(&mutexHandle);
-			}
-		}
-
-		//util 
-		constexpr Mutex& self() noexcept { return *this; }
-		constexpr const Mutex& self() const noexcept { return *this; }
-
-		//locking
-		constexpr void lock() noexcept {
-			if (!isConstantEvaluated()) {
-				if (pthread_mutex_lock(&mutexHandle) != 0) {
-					natlTerminate();
-				}
-			}
-		}
-		constexpr Bool tryLock() noexcept {
-			if (!isConstantEvaluated()) {
-				return pthread_mutex_trylock(&mutexHandle) == 0;
-			}
-			return true;
-		}
-		constexpr void unlock() noexcept {
-			if (!isConstantEvaluated()) {
-				pthread_mutex_unlock(&mutexHandle);
-			}
-		}
-
-		//observers 
-		constexpr native_handle_type nativeHandle() noexcept { return mutexHandle; };
-	};
-#endif // NATL_UNIX_PLATFORM || NATL_WEB_PLATFORM
 
 	class RecursiveMutex {
 	public:

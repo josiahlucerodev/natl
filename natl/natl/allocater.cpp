@@ -1,7 +1,7 @@
-//own
+//interface
 #include "allocator.h"
 
-//interface
+//implementation
 namespace natl {
 	TrackerAllocatorData trackerAllocatorData = TrackerAllocatorData();
 }

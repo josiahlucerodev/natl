@@ -18,3 +18,6 @@ endif()
 
 #OUTPUT
 SET_STANDARD_OUTPUT(natl)
+
+#BUILD 
+set_target_properties(natl PROPERTIES UNITY_BUILD ON)

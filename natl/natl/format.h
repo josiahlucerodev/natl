@@ -135,42 +135,39 @@ namespace natl {
 			using value_type = InteagerType;
 
 			template<typename OutputIter>
-			constexpr static OutputIter formatHexadecimal(OutputIter& outputIter, const value_type number) noexcept {
+			constexpr static void formatHexadecimal(OutputIter& outputIter, const value_type number) noexcept {
 				natl::String numberAsString = intToStringHexadecimal(number);
-				copyNoOverlap<natl::String::const_iterator, OutputIter>(
+				outputIter = copyNoOverlap<natl::String::const_iterator, OutputIter>(
 					numberAsString.cbegin(),
 					numberAsString.cend(),
 					outputIter);
-				return outputIter;
 			}
 			template<typename OutputIter>
-			constexpr static OutputIter formatBinary(OutputIter& outputIter, const value_type number) noexcept {
+			constexpr static void formatBinary(OutputIter& outputIter, const value_type number) noexcept {
 				natl::String numberAsString = intToStringBinary(number);
-				copyNoOverlap<natl::String::const_iterator, OutputIter>(
+				outputIter = copyNoOverlap<natl::String::const_iterator, OutputIter>(
 					numberAsString.cbegin(),
 					numberAsString.cend(),
 					outputIter);
-				return outputIter;
 			}
 			template<typename OutputIter>
-			constexpr static OutputIter formatDecimal(OutputIter& outputIter, const value_type number) noexcept {
+			constexpr static void formatDecimal(OutputIter& outputIter, const value_type number) noexcept {
 				natl::String numberAsString = intToStringDecimal(number);
-				copyNoOverlap<natl::String::const_iterator, OutputIter>(
+				outputIter = copyNoOverlap<natl::String::const_iterator, OutputIter>(
 					numberAsString.cbegin(),
 					numberAsString.cend(),
 					outputIter);
-				return outputIter;
 			}
 
 			template<typename OutputIter>
-			constexpr static OutputIter formatWithFlag(OutputIter& outputIter, const value_type number, const FormatIntFlag flag) noexcept {
+			constexpr static void formatWithFlag(OutputIter& outputIter, const value_type number, const FormatIntFlag flag) noexcept {
 				switch (flag) {
 				case FormatIntFlag::hexadecimal:
-					return formatHexadecimal<OutputIter>(outputIter, number);
+					formatHexadecimal<OutputIter>(outputIter, number);
 				case FormatIntFlag::binary:
-					return formatBinary<OutputIter>(outputIter, number);
+					formatBinary<OutputIter>(outputIter, number);
 				case FormatIntFlag::decimal:
-					return formatDecimal<OutputIter>(outputIter, number);
+					formatDecimal<OutputIter>(outputIter, number);
 				default:
 					unreachable();
 				}
@@ -182,33 +179,31 @@ namespace natl {
 				constexpr static Size reserveAmount = 32;
 
 				template<typename OutputIter, typename TemplateFlag, typename... RestTemplateFlags>
-				constexpr static OutputIter handelFlags(OutputIter outputIter, const value_type number) noexcept {
+				constexpr static void handelFlags(OutputIter& outputIter, const value_type number) noexcept {
 					if constexpr (IsStringLiteralV<TemplateFlag>) {
 						constexpr ConstAsciiStringView tflagName = TemplateFlag::toStringView();
 
 						if constexpr (tflagName == "hexadecimal" || tflagName == "hex") {
-							return formatHexadecimal<OutputIter>(outputIter, number);
+							formatHexadecimal<OutputIter>(outputIter, number);
 						} else if constexpr (tflagName == "binary", tflagName == "bin") {
-							return formatBinary<OutputIter>(outputIter, number);
+							formatBinary<OutputIter>(outputIter, number);
 						} else if constexpr (tflagName == "decimal", tflagName == "dec") {
-							return formatDecimal<OutputIter>(outputIter, number);
+							formatDecimal<OutputIter>(outputIter, number);
 						} else {
 							unreachable();
-							return outputIter;
 						}
 					}
 
 					if constexpr (sizeof...(RestTemplateFlags) != 0) {
 						handelFlags<OutputIter, RestTemplateFlags...>(outputIter, number);
-					} else {
-						return outputIter;
 					}
 				}
 
 			public:
 				template<typename OutputIter>
 				constexpr static OutputIter format(OutputIter outputIter, const value_type number) noexcept {
-					return handelFlags<OutputIter, TemplateFlags...>(outputIter, number);
+					handelFlags<OutputIter, TemplateFlags...>(outputIter, number);
+					return outputIter;
 				}
 			};
 

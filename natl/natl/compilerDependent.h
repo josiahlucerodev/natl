@@ -190,7 +190,6 @@ namespace natl {
             natlDebugBreak();
         }
 
-
 #ifdef NATL_COMPILER_EMSCRIPTEN
         __builtin_unreachable();
 #endif //  NATL_COMPILER_EMSCRIPTEN
@@ -201,13 +200,10 @@ namespace natl {
 
 #ifdef NATL_COMPILER_GCC
         __builtin_unreachable();
-#define NATL_UNREACHABLE_DEFINE
 #endif // NATL_COMPILER_GCC
-
 
 #ifdef NATL_COMPILER_MSVC
 		__assume(false);
-#define NATL_UNREACHABLE_DEFINE
 #endif // NATL_COMPILER_MSVC
 	}
 

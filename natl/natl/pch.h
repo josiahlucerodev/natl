@@ -1,3 +1,5 @@
+#pragma once
+
 //C
 #include <assert.h>
 #include <ctype.h>

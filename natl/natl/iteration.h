@@ -494,20 +494,20 @@ namespace natl {
         };
 
         template<typename DataType, typename Container>
-        void populateTypeErasedBackInsertIteratorData(TypeErasedBackInsertIteratorData<DataType>& dataDst, Container* container) noexcept {
-            dataDst.container = reinterpret_cast<void*>(container);
+        void populateTypeErasedBackInsertIteratorData(TypeErasedBackInsertIteratorData<DataType>& dataDst, Container* containerIn) noexcept {
+            dataDst.container = reinterpret_cast<void*>(containerIn);
             dataDst.pushBackFunction = [](void* containerTypeErasedPtr, const DataType& value) noexcept -> void {
-                Container* container = reinterpret_cast<Container*>(containerTypeErasedPtr);
-                container->push_back(value);
+                Container* containerPtr = reinterpret_cast<Container*>(containerTypeErasedPtr);
+                containerPtr->push_back(value);
             };
             dataDst.pushBackMoveFunction = [](void* containerTypeErasedPtr, DataType&& value) noexcept -> void {
-                Container* container = reinterpret_cast<Container*>(containerTypeErasedPtr);
-                container->push_back(natl::move(value));
+                Container* containerPtr = reinterpret_cast<Container*>(containerTypeErasedPtr);
+                containerPtr->push_back(natl::move(value));
             };
             dataDst.reserveFunction = [](void* containerTypeErasedPtr, const Size newCapacity) noexcept -> void {
-                Container* container = reinterpret_cast<Container*>(containerTypeErasedPtr);
+                Container* containerPtr = reinterpret_cast<Container*>(containerTypeErasedPtr);
                 if (BackInsertIteratorContainerHasReserve<DataType>) {
-                    container->reserve(newCapacity);
+                    containerPtr->reserve(newCapacity);
                 }
             };
         }
@@ -575,7 +575,7 @@ namespace natl {
                     return createNew(data->container);
                 };
             };
-            constexpr destory_function_type getDestoryFunction() noexcept {
+            constexpr destory_function_type getDestoryFunction() noexcept override {
                 return [](data_constexpr_polymorphic* dataPolymorphic) noexcept -> void {
                     TypeErasedBackInsertIteratorDataConstexpr* data = static_cast<TypeErasedBackInsertIteratorDataConstexpr*>(dataPolymorphic);
                     allocator_type::deallocate(data, 1);

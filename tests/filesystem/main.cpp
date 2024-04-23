@@ -17,4 +17,5 @@ int main() {
 	} else {
 		std::cout << "file contents: " << fileContents << "\n";
 	}
+	std::cout << "working dir: " << natl::getWorkingDirectoryIn<natl::String>() << "\n";
 }

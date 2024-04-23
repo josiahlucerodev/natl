@@ -15,19 +15,6 @@
 #include "option.h"
 #include "expect.h"
 
-//system 
-#ifdef NATL_WINDOWS_PLATFORM
-#define NOMINMAX
-#include <Windows.h>
-#endif // NATL_WINDOWS_PLATFORM 
-
-#if defined(NATL_UNIX_PLATFORM) || defined(NATL_WEB_PLATFORM)
-#include <unistd.h>
-#include <fcntl.h>
-#include <sys/stat.h>
-#include <limits.h>
-#endif // NATL_UNIX_PLATFORM || NATL_WEB_PLATFORM
-
 //interface
 namespace natl {
 	consteval Ascii getPlatformPreferredPathSeparator() noexcept {
@@ -1034,6 +1021,41 @@ namespace natl {
 		}
 	}
 
+	//system 
+#ifdef NATL_WINDOWS_PLATFORM
+	using NativeFileHandle = void*;
+#define NATL_NATIVE_INVALID_FILE_HANDEL_VALUE ((NativeFileHandle)(long long*) - 1)
+#endif // NATL_WINDOWS_PLATFORM
+
+#if defined(NATL_UNIX_PLATFORM) || defined(NATL_WEB_PLATFORM)
+	using NativeFileHandle = GenericInt;
+#define NATL_NATIVE_INVALID_FILE_HANDEL_VALUE GenericInt(-1);
+#endif // NATL_UNIX_PLATFORM || NATL_WEB_PLATFORM
+
+	class FileHandle {
+	public:
+		using native_handle_type = NativeFileHandle;
+	private:
+		mutable NativeFileHandle fileHandle;
+	public:
+		//constructor 
+		constexpr FileHandle() noexcept : fileHandle() {}
+		constexpr FileHandle(NativeFileHandle fileHandleIn) noexcept : fileHandle(fileHandleIn) {}
+
+		//destructor 
+		constexpr ~FileHandle() noexcept = default;
+
+		//observers 
+		constexpr Bool isHandleOpen() const noexcept { return fileHandle != NATL_NATIVE_INVALID_FILE_HANDEL_VALUE; }
+		constexpr Bool isHandleNotOpen() const noexcept { return !isHandleOpen(); }
+
+		//access 
+		constexpr NativeFileHandle nativeHandle() const noexcept { return fileHandle; }
+
+		//modifiers 
+		constexpr void setHandleNull() noexcept { fileHandle = NATL_NATIVE_INVALID_FILE_HANDEL_VALUE; }
+	};
+
 	namespace impl {
 		struct FileOffsetTag {};
 		struct FileCountTag {};
@@ -1041,417 +1063,46 @@ namespace natl {
 	using FileOffset = StrongType<Size, impl::FileOffsetTag>;
 	using FileCount = StrongType<Size, impl::FileCountTag>;
 
-#ifdef NATL_WINDOWS_PLATFORM
-	class FileHandle {
-	private:
-		mutable HANDLE fileHandle;
-	public:
-		//constructor 
-		constexpr FileHandle() noexcept : fileHandle(INVALID_HANDLE_VALUE) {}
-		constexpr FileHandle(HANDLE fileHandleIn) noexcept : fileHandle(fileHandleIn) {}
+	Option<Size> getFileSize(const FileHandle& file) noexcept;
+	FileHandle openFile(const Ascii* filePath, const FileOpenMode openMode) noexcept;
+	Bool closeFile(FileHandle& file) noexcept;
+	Option<Size> readFile(const FileHandle& file, const FileOffset offset, const FileCount count, Byte* dst) noexcept;
+	Option<Size> writeFile(const FileHandle& file, const FileOffset offset, const FileCount count, const Byte* src) noexcept;
+	Bool doesFileExist(const Ascii* fileName) noexcept;
+	Bool isBlockFile(const Ascii* fileName) noexcept;
+	Bool isDirectory(const Ascii* fileName) noexcept;
+	Bool isFifo(const Ascii* fileName) noexcept;
+	Bool isRegularFile(const Ascii* fileName) noexcept;
+	Bool isSymbolicLink(const Ascii* fileName) noexcept;
+	FileType getFileType(const Ascii* fileName) noexcept;
 
-		//destructor 
-		constexpr ~FileHandle() noexcept = default;
-		
-		//observers 
-		constexpr Bool isHandleOpen() const noexcept { return fileHandle != INVALID_HANDLE_VALUE; }
-		constexpr Bool isHandleNotOpen() const noexcept { return !isHandleOpen(); }
-
-		//access 
-		constexpr HANDLE nativeHandle() const noexcept { return fileHandle; }
-
-		//modifiers 
-		constexpr void setHandleNull() noexcept { fileHandle = INVALID_HANDLE_VALUE; }
-	};
-
-	inline Option<Size> getFileSize(const FileHandle& file) noexcept {
-		if (file.isHandleNotOpen()) { return OptionEmpty(); }
-
-		LARGE_INTEGER newFilePointer;
-		const Bool successfulGetFileSize = GetFileSizeEx(file.nativeHandle(), &newFilePointer);
-
-		if (successfulGetFileSize == true) {
-			return newFilePointer.QuadPart;
-		} else {
-			return OptionEmpty();
-		}
-	}
-
-	inline FileHandle openFile(const Ascii* filePath, const FileOpenMode openMode) noexcept {
-		DWORD desiredAccess;
-		DWORD shareMode;
-		DWORD creationDisposition;
-
-		switch (openMode) {
-		case FileOpenMode::readStart:
-			desiredAccess = GENERIC_READ;
-			shareMode = FILE_SHARE_READ;
-			creationDisposition = OPEN_EXISTING;
-			break;
-		case FileOpenMode::writeDestroy:
-			desiredAccess = GENERIC_WRITE;
-			shareMode = 0;
-			creationDisposition = CREATE_ALWAYS;
-			break;
-		case FileOpenMode::readWriteStart:
-			desiredAccess = (GENERIC_READ | GENERIC_WRITE);
-			shareMode = 0;
-			creationDisposition = OPEN_ALWAYS;
-			break;
-		case FileOpenMode::readWriteDestory:
-			desiredAccess = (GENERIC_READ | GENERIC_WRITE);
-			shareMode = 0;
-			creationDisposition = CREATE_ALWAYS;
-			break;
-		default:
-			return{};
-		}
-
-		SECURITY_ATTRIBUTES securityAttributes;
-		securityAttributes.nLength = sizeof(SECURITY_ATTRIBUTES);
-		securityAttributes.lpSecurityDescriptor = NULL;
-		securityAttributes.bInheritHandle = TRUE;
-
-		HANDLE fileHandle = CreateFileA(filePath, desiredAccess, shareMode, &securityAttributes, creationDisposition, FILE_ATTRIBUTE_NORMAL, NULL);
-
-		if (fileHandle == INVALID_HANDLE_VALUE) {
-			return {};
-		} else {
-			return FileHandle(fileHandle);
-		}
-	}
-	inline Bool closeFile(FileHandle& file) noexcept {
-		if (file.isHandleNotOpen()) { return false; }
-		const Bool successfulCloseFile = CloseHandle(file.nativeHandle());
-		file.setHandleNull();
-		return successfulCloseFile;
-	}
-
-	inline Option<Size> readFile(const FileHandle& file, const FileOffset offset, const FileCount count, Byte* dst) noexcept {
-		if (file.isHandleNotOpen() || dst == nullptr) { return {}; }
-		
-		LARGE_INTEGER  distanceToMove;
-		distanceToMove.QuadPart = offset.value();
-		LARGE_INTEGER newFilePointer;
-		const Bool successfulMoveFilePointer = SetFilePointerEx(file.nativeHandle(), distanceToMove, &newFilePointer, FILE_BEGIN);
-
-		if (successfulMoveFilePointer == false) {
-			return {};
-		}
-
-		DWORD numberOfBytesRead = 0;
-		const Bool successfulFileRead = ReadFile(file.nativeHandle(), dst, static_cast<DWORD>(count.value()), &numberOfBytesRead, NULL);
-
-		if (successfulFileRead == false && numberOfBytesRead == 0) {
-			return {};
-		}
-
-		return static_cast<Size>(numberOfBytesRead);
-	}
-
-	inline Option<Size> writeFile(const FileHandle& file, const FileOffset offset, const FileCount count, const Byte* src) noexcept {
-		if (file.isHandleNotOpen() || src == nullptr) { return {}; }
-
-		LARGE_INTEGER  distanceToMove;
-		distanceToMove.QuadPart = offset.value();
-		LARGE_INTEGER newFilePointer;
-		const Bool successfulMoveFilePointer = SetFilePointerEx(file.nativeHandle(), distanceToMove, &newFilePointer, FILE_BEGIN);
-		if (successfulMoveFilePointer == false) {
-			return {};
-		}
-
-		DWORD bytesWritten;
-		const Bool successfulWriteFile = WriteFile(file.nativeHandle(), src, static_cast<DWORD>(count.value()), &bytesWritten, NULL);
-		if (successfulWriteFile == false && bytesWritten == 0) {
-			return {};
-		}
-
-		return static_cast<Size>(bytesWritten);
-	}
+	Option<Size> getWorkingDirectorySize() noexcept;
+	Bool getWorkingDirectory(Ascii* dst, const Size dstSize) noexcept;
 
 	template<typename PathLike>
 		requires(IsDynamicArrayLike<PathLike, Ascii>)
-	inline PathLike getWorkingDirectory() noexcept {
-		DWORD workingDirectorySize = GetCurrentDirectoryA(MAX_PATH, NULL);
+	PathLike getWorkingDirectoryIn() noexcept {
+		Option<Size> workingDirectorySize = getWorkingDirectorySize();
 
-		if (workingDirectorySize == 0) {
+		if (workingDirectorySize.doesNotHaveValue()) {
 			return PathLike{};
 		}
 
 		PathLike path;
-		path.reserve(workingDirectorySize);
-		path.resize(workingDirectorySize - 1);
+		path.reserve(workingDirectorySize.value());
+		path.resize(workingDirectorySize.value() - 1);
 
-		DWORD result = GetCurrentDirectoryA(workingDirectorySize, static_cast<Ascii*>(path.data()));
-		if (result == 0) {
-			return PathLike{};
-		} 
-
-		return path;
-	}
-
-	inline Bool doesFileExist(const Ascii* fileName) noexcept {
-		DWORD fileAttributes = GetFileAttributesA(fileName);
-		return (fileAttributes != INVALID_FILE_ATTRIBUTES);
-	}
-
-	namespace impl {
-		inline Bool doesFileHaveAttributes(const Ascii* fileName, const DWORD attributes) noexcept {
-			DWORD fileAttributes = GetFileAttributesA(fileName);
-			return (fileAttributes != INVALID_FILE_ATTRIBUTES) && ((fileAttributes & attributes) != 0);
-		}
-		inline Bool doesFileNotHaveAttributes(const Ascii* fileName, const DWORD attributes) noexcept {
-			DWORD fileAttributes = GetFileAttributesA(fileName);
-			return (fileAttributes != INVALID_FILE_ATTRIBUTES) && ((fileAttributes & attributes) == 0);
-		}
-	}
-
-	inline Bool isBlockFile(const Ascii* fileName) noexcept {
-		return impl::doesFileHaveAttributes(fileName, FILE_ATTRIBUTE_DEVICE);
-	}
-	inline Bool isDirectory(const Ascii* fileName) noexcept {
-		return impl::doesFileHaveAttributes(fileName, FILE_ATTRIBUTE_DIRECTORY);
-	}
-	inline Bool isFifo(const Ascii* fileName) noexcept {
-		HANDLE namedPipe = CreateNamedPipeA(fileName, PIPE_ACCESS_DUPLEX, PIPE_TYPE_BYTE | PIPE_READMODE_BYTE | PIPE_WAIT, 1, 0, 0, 0, NULL);
-		if (namedPipe != INVALID_HANDLE_VALUE) {
-			CloseHandle(namedPipe);
-			return true;
-		} else {
-			return false;
-		}
-	}
-	inline Bool isRegularFile(const Ascii* fileName) noexcept {
-		return impl::doesFileNotHaveAttributes(fileName, FILE_ATTRIBUTE_DEVICE | FILE_ATTRIBUTE_DIRECTORY | FILE_ATTRIBUTE_VIRTUAL);
-	}
-	inline Bool isSymbolicLink(const Ascii* fileName) noexcept {
-		return impl::doesFileHaveAttributes(fileName, FILE_ATTRIBUTE_REPARSE_POINT);
-	}
-
-	inline FileType getFileType(const Ascii* fileName) noexcept {
-		DWORD fileAttributes = GetFileAttributesA(fileName);
-
-		if (fileAttributes == INVALID_FILE_ATTRIBUTES) {
-			return FileType::notFound;
-		}
-
-		if ((fileAttributes & FILE_ATTRIBUTE_DIRECTORY)) {
-			return FileType::directory;
-		}
-
-		if ((fileAttributes & FILE_ATTRIBUTE_DEVICE)) {
-			return FileType::block;
-		}
-
-		if ((fileAttributes & FILE_ATTRIBUTE_REPARSE_POINT)) {
-			return FileType::symbolicLink;
-		}
-
-		HANDLE namedPipe = CreateNamedPipeA(fileName, PIPE_ACCESS_DUPLEX, PIPE_TYPE_BYTE | PIPE_READMODE_BYTE | PIPE_WAIT, 1, 0, 0, 0, NULL);
-		if (namedPipe != INVALID_HANDLE_VALUE) {
-			CloseHandle(namedPipe);
-			return FileType::fifo;
-		}
-
-		return FileType::unknown;
-	}
-
-#endif // NATL_WINDOWS_PLATFORM
-
-#if defined(NATL_UNIX_PLATFORM) || defined(NATL_WEB_PLATFORM)
-
-	using UnixNativeFileHandle = GenericInt;
-	constexpr inline UnixNativeFileHandle unixFileOpFailValue = -1;
-
-	class FileHandle {
-	private:
-		mutable UnixNativeFileHandle fileHandle;
-	public:
-		//constructor 
-		constexpr FileHandle() noexcept : fileHandle(unixFileOpFailValue) {}
-		constexpr FileHandle(UnixNativeFileHandle fileHandleIn) noexcept : fileHandle(fileHandleIn) {}
-
-		//destructor 
-		constexpr ~FileHandle() noexcept = default;
-
-		//observers 
-		constexpr Bool isHandleOpen() const noexcept { return fileHandle != unixFileOpFailValue; }
-		constexpr Bool isHandleNotOpen() const noexcept { return !isHandleOpen(); }
-
-		//access 
-		constexpr UnixNativeFileHandle nativeHandle() const noexcept { return fileHandle; }
-
-		//modifiers 
-		constexpr void setHandleNull() noexcept { fileHandle = unixFileOpFailValue; }
-	};
-
-	inline Option<Size> getFileSize(const FileHandle& file) noexcept {
-		struct stat64 fileStat;
-		if (fstat64(file.nativeHandle(), &fileStat) == unixFileOpFailValue) {
-			return false;
-		} else {
-			return static_cast<Size>(fileStat.st_size);
-		}
-	}
-
-	inline FileHandle openFile(const Ascii* filePath, const FileOpenMode openMode) noexcept {
-		GenericInt fileOpenFlags;
-
-		switch (openMode) {
-		case FileOpenMode::readStart:
-			fileOpenFlags = O_RDONLY;
-			break;
-		case FileOpenMode::writeDestroy:
-			fileOpenFlags = O_WRONLY | O_CREAT | O_TRUNC;
-			break;
-		case FileOpenMode::readWriteStart:
-			fileOpenFlags = O_RDWR | O_CREAT;
-			break;
-		case FileOpenMode::readWriteDestory:
-			fileOpenFlags = O_RDWR | O_CREAT | O_TRUNC;
-			break;
-		default:
-			return{};
-		}
-
-		const GenericInt fileOpenResult = open64(filePath, fileOpenFlags);
-		if (fileOpenResult == unixFileOpFailValue) {
-			return false;
-		} else {
-			return fileOpenResult;
-		}
-	}
-
-	inline Bool closeFile(FileHandle& file) noexcept {
-		if (file.isHandleNotOpen()) { return false; }
-		const GenericInt closeFileResult = close(file.nativeHandle());
-		file.setHandleNull();
-		return closeFileResult != unixFileOpFailValue;
-	}
-
-	inline Option<Size> readFile(const FileHandle& file, const FileOffset offset, const FileCount count, Byte* dst) noexcept {
-		if (file.isHandleNotOpen() || dst == nullptr) { return false; }
-
-		const i64 fileLseekResult = lseek64(file.nativeHandle(), static_cast<long int>(offset.value()), SEEK_SET);
-		if (fileLseekResult == unixFileOpFailValue) {
-			return {};
-		}
-
-		const i64 fileReadResult = read(file.nativeHandle(), reinterpret_cast<void*>(dst), count.value());
-		if (fileReadResult == unixFileOpFailValue) {
-			return {};
-		}
-
-		return static_cast<Size>(fileReadResult);
-	}
-
-	inline Option<Size> writeFile(const FileHandle& file, const FileOffset offset, const FileCount count, const Byte* src) noexcept {
-		if (file.isHandleNotOpen() || src == nullptr) { return false; }
-
-		const i64 fileLseekResult = lseek64(file.nativeHandle(), static_cast<long int>(offset.value()), SEEK_SET);
-		if (fileLseekResult == unixFileOpFailValue) {
-			return false;
-		}
-
-		const i64 fileWriteResult = write(file.nativeHandle(), reinterpret_cast<const void*>(src), count.value());
-		if (fileWriteResult == unixFileOpFailValue) {
-			return false;
-		}
-
-		return static_cast<Size>(fileWriteResult);
-	}
-
-	template<typename PathLike>
-		requires(IsDynamicArrayLike<PathLike, Ascii>)
-	inline PathLike getWorkingDirectory() noexcept {
-		Ascii tempWorkingDirectoryPathStorage[PATH_MAX];
-		Ascii* workingDirectoryPath = getcwd(tempWorkingDirectoryPathStorage, PATH_MAX);
-
-		if (workingDirectoryPath == nullptr) {
+		Bool result = getWorkingDirectory(static_cast<Ascii*>(path.data()), workingDirectorySize.value());
+		if (result == false) {
 			return PathLike{};
 		}
 
-		Size workingDirectoryPathSize = cstringLength(workingDirectoryPath);
-
-		PathLike path;
-		path.reserve(workingDirectoryPathSize);
-		path.resize(workingDirectoryPathSize - 1);
-
-		natl::copyNoOverlap<const Ascii*, Ascii*>(workingDirectoryPath, workingDirectoryPath + workingDirectoryPathSize, path.data());
-
 		return path;
 	}
-
-	inline Bool doesFileExist(const Ascii* fileName) noexcept {
-		struct stat64 fileStat;
-		return stat64(fileName, &fileStat) != unixFileOpFailValue;
-	}
-
-	inline Bool isBlockFile(const Ascii* fileName) noexcept {
-		struct stat64 fileStat;
-		if (stat64(fileName, &fileStat) == unixFileOpFailValue) {
-			return false;
-		}
-		return S_ISBLK(fileStat.st_mode);
-	}
-	inline Bool isDirectory(const Ascii* fileName) noexcept {
-		struct stat64 fileStat;
-		if (stat64(fileName, &fileStat) == unixFileOpFailValue) {
-			return false;
-		}
-		return S_ISDIR(fileStat.st_mode);
-	}
-	inline Bool isFifo(const Ascii* fileName) noexcept {
-		struct stat64 fileStat;
-		if (stat64(fileName, &fileStat) == unixFileOpFailValue) {
-			return false;
-		}
-		return S_ISFIFO(fileStat.st_mode);
-	}
-	inline Bool isRegularFile(const Ascii* fileName) noexcept {
-		struct stat64 fileStat;
-		if (stat64(fileName, &fileStat) == unixFileOpFailValue) {
-			return false;
-		}
-		return S_ISREG(fileStat.st_mode);
-	}
-	inline Bool isSymbolicLink(const Ascii* fileName) noexcept {
-		struct stat64 fileStat;
-		if (stat64(fileName, &fileStat) == unixFileOpFailValue) {
-			return false;
-		}
-		return S_ISLNK(fileStat.st_mode);
-	}
-
-	inline FileType getFileType(const Ascii* fileName) noexcept {
-		struct stat64 fileStat;
-		if (stat64(fileName, &fileStat) == unixFileOpFailValue) {
-			return FileType::notFound;
-		}
-		if (S_ISREG(fileStat.st_mode)) {
-			return FileType::regular;
-		}
-		if (S_ISDIR(fileStat.st_mode)) {
-			return FileType::directory;
-		}
-		if (S_ISBLK(fileStat.st_mode)) {
-			return FileType::block;
-		}
-		if (S_ISLNK(fileStat.st_mode)) {
-			return FileType::symbolicLink;
-		}
-		if (S_ISFIFO(fileStat.st_mode)) {
-			return FileType::fifo;
-		}
-		return FileType::unknown;
-	}
-
-#endif // NATL_UNIX_PLATFORM || NATL_WEB_PLATFORM
-
 
 	class File {
 	public:
-		using file_handle_type = FileHandle;
+		using native_handle_type = NativeFileHandle;
 	private:
 		FileHandle fileHandle;
 	public:

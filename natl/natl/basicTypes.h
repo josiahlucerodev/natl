@@ -55,6 +55,8 @@ namespace natl {
 
 	template<typename DataType, Size Alignment>
 	class alignas(Alignment) AlignedType {
+	public:
+		using value_type = DataType;
 	private:
 		DataType internalValue;
 	public:

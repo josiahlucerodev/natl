@@ -49,8 +49,8 @@ namespace natl {
 			}
 		}
 	};
-	extern TrackerAllocatorData trackerAllocatorData;
 
+	extern TrackerAllocatorData trackerAllocatorData;
 
 #ifdef NATL_COMPILER_MSVC
 #pragma warning(push)

@@ -74,7 +74,7 @@ namespace natl {
     }
 
 
-	void runTest(Bool(*func)(int), const std::string& testName) {
+	inline void runTest(Bool(*func)(int), const std::string& testName) noexcept {
 		std::cout << "Natl Test: " << testName << "\n";
 		func(rand());
 	}

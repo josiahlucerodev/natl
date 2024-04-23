@@ -21,6 +21,7 @@ natl/error.h
 natl/expect.h
 natl/filesystem.h
 natl/flatHashMap.h
+natl/format.h
 natl/functional.h
 natl/functionCache.h
 natl/generator.h
@@ -32,26 +33,32 @@ natl/lexicographicalCompare.h
 natl/limits.h
 natl/math.h
 natl/memory.h
+natl/mutex.h
 natl/natl.h
 natl/numerics.h
 natl/option.h
 natl/pair.h
 natl/partitioner.h
 natl/pointer.h
+natl/print.h
 natl/priorityQueue.h
 natl/serialization.h
 natl/smallDynArray.h
+natl/smartThread.h
 natl/string.h
 natl/stringConvert.h
 natl/stringLiteral.h
+natl/stringOperations.h
 natl/stringView.h
 natl/strongType.h
 natl/test.h
+natl/thread.h
 natl/timer.h
 natl/tuple.h
 natl/typeinfo.h
 natl/typePack.h
 natl/typeTraits.h
+natl/uninitialized.h
 natl/units.h
 natl/utility.h
 natl/variant.h
@@ -59,7 +66,12 @@ natl/view.h
 )
 
 set(SOURCE_FILES
-natl/allocator.cpp
+natl/allocater.cpp
+natl/filesystem.cpp
+natl/mutex.cpp
+natl/natl.cpp
+natl/print.cpp
+natl/thread.cpp
 )
 
 foreach(target_header IN LISTS HEADER_FILES)

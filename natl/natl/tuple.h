@@ -111,7 +111,7 @@ namespace natl {
 				return 0;
 			} else {
 				if constexpr (sizeof...(RestDataTypes) > 0) {
-					using ThisType = decltype(*this);
+					using ThisType = Tuple;
 					const Size offsetofRest = offsetof(ThisType, rest);
 					return offsetofRest + decltype(rest)::template internalGetOffsetOf<Index - 1>();
 				}
@@ -146,12 +146,12 @@ namespace natl {
 
 		template<Size Index>
 			requires(Index < value_types::size)
-		constexpr const Size getOffsetOf() const noexcept {
+		constexpr Size getOffsetOf() const noexcept {
 			return internalGetOffsetOf<Index>();
 		}
 		template<Size Index>
 			requires(Index < value_types::size)
-		constexpr static const Size staticGetOffsetOf() noexcept {
+		constexpr static Size staticGetOffsetOf() noexcept {
 			return internalGetOffsetOf<Index>();
 		}
 

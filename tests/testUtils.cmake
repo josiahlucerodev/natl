@@ -22,8 +22,7 @@ endif()
 
 
 #LINK
-target_link_libraries(${NatlTestName} 
-	PRIVATE 
+target_link_libraries(${NatlTestName}  
 	natl)
 
 target_include_directories(${NatlTestName}  
