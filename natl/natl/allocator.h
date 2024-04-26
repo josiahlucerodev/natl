@@ -169,11 +169,18 @@ namespace natl {
 		}
 	};
 
+	template<class DataType>
+	using DefaultAllocator = Allocator<DataType>;
+	using DefaultAllocatorByte = DefaultAllocator<natl::Byte>;
+
+	template<typename Alloc>
+		requires(IsAllocator<Alloc>)
+	class AllocatorArg {};
+
+	using DefaultAllocatorArgByte = AllocatorArg<DefaultAllocatorByte>;
+
 #ifdef NATL_COMPILER_MSVC
 #pragma warning(pop)
 #endif // NATL_COMPILER_MSVC
 
-	template<class DataType>
-	using DefaultAllocator = Allocator<DataType>;
-	using DefaultAllocatorByte = DefaultAllocator<natl::Byte>;
 }

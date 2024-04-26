@@ -10,6 +10,9 @@
 
 //interface
 namespace natl {
+	template<typename Type>
+	struct TypeArg {};
+
 	//constant 
 	template<typename DataType, DataType Value>
 	struct IntegralConstant {
