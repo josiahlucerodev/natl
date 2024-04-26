@@ -10,40 +10,39 @@
 namespace natl {
 
 #ifdef NATL_WINDOWS_PLATFORM
-	using MutexHandle = void*;
+	using NativeMutex = void*;
 #define NATL_NATIVE_INVALID_MUTEX_HANDEL_VALUE 0
 #endif // NATL_WINDOWS_PLATFORM 
 
 #if defined(NATL_UNIX_PLATFORM) || defined(NATL_WEB_PLATFORM)
-	using MutexHandle = natl::Option<Array<AlignedType<natl::Byte, 8>, 40>>;
-#define NATL_NATIVE_INVALID_MUTEX_HANDEL_VALUE MutexHandle();
+	using NativeMutex = natl::Option<Array<AlignedType<natl::Byte, 8>, 40>>;
+#define NATL_NATIVE_INVALID_MUTEX_HANDEL_VALUE NativeMutex();
 #endif // NATL_UNIX_PLATFORM || NATL_WEB_PLATFORM
 
-	natl::Option<MutexHandle> createMutex() noexcept;
-	Bool destroyMutex(MutexHandle mutex) noexcept;
-	Bool lockMutex(MutexHandle mutex) noexcept;
+	Bool createMutex(NativeMutex& mutexDst) noexcept;
+	Bool destroyMutex(NativeMutex& mutex) noexcept;
+	Bool lockMutex(NativeMutex& mutex) noexcept;
 	struct MutexTryLockResult {
 		Bool successful;
 		Bool locked;
 	};
-	MutexTryLockResult trylockMutex(MutexHandle mutex) noexcept;
-	Bool unlockMutex(MutexHandle mutex) noexcept;
+	MutexTryLockResult trylockMutex(NativeMutex& mutex) noexcept;
+	Bool unlockMutex(NativeMutex& mutex) noexcept;
 
 
 	class Mutex {
 	public:
-		using native_handle_type = MutexHandle;
+		using native_type = NativeMutex;
 	private:
-		native_handle_type mutexHandle;
+		native_type mutex;
 	public:
 		//constructor 
 		constexpr Mutex() noexcept {
 			if (!isConstantEvaluated()) {
-				natl::Option<MutexHandle> mutexHandleOption = createMutex();
-				if (mutexHandleOption.doesNotHaveValue()) {
+				const Bool mutexCreated = createMutex(mutex);
+				if (mutexCreated != true) {
 					natlTerminate();
 				}
-				mutexHandle = mutexHandleOption.value();
 			}
 		}
 		constexpr Mutex(const Mutex&) noexcept = delete;
@@ -51,7 +50,7 @@ namespace natl {
 		//destructor 
 		constexpr ~Mutex() noexcept {
 			if (!isConstantEvaluated()) {
-				destroyMutex(mutexHandle);
+				destroyMutex(mutex);
 			}
 		}
 
@@ -62,14 +61,14 @@ namespace natl {
 		//locking
 		constexpr void lock() noexcept {
 			if (!isConstantEvaluated()) {
-				if (lockMutex(mutexHandle) == false) {
+				if (lockMutex(mutex) == false) {
 					natlTerminate();
 				}
 			}
 		}
 		constexpr Bool tryLock() noexcept {
 			if (!isConstantEvaluated()) {
-				MutexTryLockResult tryLockResult = trylockMutex(mutexHandle);
+				MutexTryLockResult tryLockResult = trylockMutex(mutex);
 				if (tryLockResult.successful == false) {
 					natlTerminate();
 				}
@@ -80,17 +79,17 @@ namespace natl {
 		}
 		constexpr void unlock() noexcept {
 			if (!isConstantEvaluated()) {
-				unlockMutex(mutexHandle);
+				unlockMutex(mutex);
 			}
 		}
 		
 		//observers 
-		constexpr native_handle_type nativeHandle() noexcept { return mutexHandle; };
+		constexpr native_type& native() noexcept { return mutex; };
 	};
 
 	class RecursiveMutex {
 	public:
-		using native_handle_type = Mutex::native_handle_type;
+		using native_type = Mutex::native_type;
 	private:
 		Mutex mutex;
 		ThreadId currentLockingThread;
@@ -155,7 +154,7 @@ namespace natl {
 		}
 
 		//observers 
-		constexpr native_handle_type nativeHandle() noexcept { return mutex.nativeHandle(); };
+		constexpr native_type& native() noexcept { return mutex.native(); };
 	};
 
 	struct AdoptLockFlag {};

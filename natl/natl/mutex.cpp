@@ -14,19 +14,20 @@
 //implementation 
 namespace natl {
 #ifdef NATL_WINDOWS_PLATFORM
-	natl::Option<MutexHandle> createMutex() noexcept {
-		MutexHandle mutexHandle = CreateMutexA(NULL, FALSE, NULL);
+	Bool createMutex(NativeMutex& mutexDst) noexcept {
+		NativeMutex mutexHandle = CreateMutexA(NULL, FALSE, NULL);
 		if (mutexHandle == NULL) {
-			return OptionEmpty{};
+			return false;
 		}
-		return mutexHandle;
+		mutexDst = mutexHandle;
+		return true;
 	}
 
-	Bool destroyMutex(MutexHandle mutex) noexcept {
+	Bool destroyMutex(NativeMutex& mutex) noexcept {
 		return CloseHandle(mutex);
 	}
 
-	Bool lockMutex(MutexHandle mutex) noexcept {
+	Bool lockMutex(NativeMutex& mutex) noexcept {
 		DWORD result = WaitForSingleObject(mutex, INFINITE);
 		if (result != WAIT_OBJECT_0) {
 			return false;
@@ -34,7 +35,7 @@ namespace natl {
 		return true;
 	}
 
-	MutexTryLockResult trylockMutex(MutexHandle mutex) noexcept {
+	MutexTryLockResult trylockMutex(NativeMutex& mutex) noexcept {
 		MutexTryLockResult tryLockResult{};
 		tryLockResult.successful = true;
 		tryLockResult.locked = false;
@@ -51,7 +52,7 @@ namespace natl {
 		return tryLockResult;
 	}
 
-	Bool unlockMutex(MutexHandle mutex) noexcept {
+	Bool unlockMutex(NativeMutex& mutex) noexcept {
 		return ReleaseMutex(mutex);
 	}
 
@@ -59,34 +60,28 @@ namespace natl {
 
 #if defined(NATL_UNIX_PLATFORM) || defined(NATL_WEB_PLATFORM)
 	
-	pthread_mutex_t* castMutexHandleToPthreadMutexPtr(MutexHandle& mutex) noexcept {
+	pthread_mutex_t* castNativeMutexToPthreadMutexPtr(NativeMutex& mutex) noexcept {
 		return &punCast<pthread_mutex_t>(*mutex.value().data());
 	}
 
-	natl::Option<MutexHandle> createMutex() noexcept {
-		MutexHandle mutex{};
-		using MutexHandleValueType = typename MutexHandle::value_type;
-		mutex = MutexHandleValueType();
-
-		if (pthread_mutex_init(castMutexHandleToPthreadMutexPtr(mutex), nullptr) != 0) {
-			return OptionEmpty{};
-		}
-
-		return mutex;
+	Bool createMutex(NativeMutex& mutexDst) noexcept {
+		using native_mutex_value_type = NativeMutex::value_type;
+		mutexDst = native_mutex_value_type{};
+		return pthread_mutex_init(castNativeMutexToPthreadMutexPtr(mutexDst), nullptr) == 0;
 	}
-	Bool destroyMutex(MutexHandle mutex) noexcept {
+	Bool destroyMutex(NativeMutex& mutex) noexcept {
 		if (mutex.doesNotHaveValue()) {
 			return false;
 		}
-		return pthread_mutex_destroy(castMutexHandleToPthreadMutexPtr(mutex)) == 0;
+		return pthread_mutex_destroy(castNativeMutexToPthreadMutexPtr(mutex)) == 0;
 	}
-	Bool lockMutex(MutexHandle mutex) noexcept {
+	Bool lockMutex(NativeMutex& mutex) noexcept {
 		if (mutex.doesNotHaveValue()) {
 			return false;
 		}
-		return pthread_mutex_lock(castMutexHandleToPthreadMutexPtr(mutex)) == 0;
+		return pthread_mutex_lock(castNativeMutexToPthreadMutexPtr(mutex)) == 0;
 	}
-	MutexTryLockResult trylockMutex(MutexHandle mutex) noexcept {
+	MutexTryLockResult trylockMutex(NativeMutex& mutex) noexcept {
 		MutexTryLockResult tryLockResult{};
 		if (mutex.doesNotHaveValue()) {
 			tryLockResult.successful = false;
@@ -94,14 +89,14 @@ namespace natl {
 		}
 
 		tryLockResult.successful = true;
-		tryLockResult.locked = pthread_mutex_trylock(castMutexHandleToPthreadMutexPtr(mutex)) == 0;
+		tryLockResult.locked = pthread_mutex_trylock(castNativeMutexToPthreadMutexPtr(mutex)) == 0;
 		return tryLockResult;
 	}
-	Bool unlockMutex(MutexHandle mutex) noexcept {
+	Bool unlockMutex(NativeMutex& mutex) noexcept {
 		if (mutex.doesNotHaveValue()) {
 			return false;
 		}
-		return pthread_mutex_unlock(castMutexHandleToPthreadMutexPtr(mutex));;
+		return pthread_mutex_unlock(castNativeMutexToPthreadMutexPtr(mutex));;
 	}
 #endif // NATL_UNIX_PLATFORM || NATL_WEB_PLATFORM
 }
