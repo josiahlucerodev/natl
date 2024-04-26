@@ -26,7 +26,7 @@ namespace natl {
 		Size stringCapacity;
 	};
 
-	template<class CharType, Size bufferSize, class Alloc = DefaultAllocator<CharType>>
+	template<class CharType, Size bufferSize, class Alloc = DefaultAllocator<CharType>, Bool EnableDynAllocation = true>
 		requires(IsAllocator<Alloc>)
 	class BaseString {
 	public:
@@ -253,8 +253,10 @@ namespace natl {
 
 		//destructor
 		constexpr ~BaseString() {
-			if (isNotSmallString() && stringPtr) {
-				Alloc::deallocate(stringPtr, capacity());
+			if constexpr (EnableDynAllocation) {
+				if (isNotSmallString() && stringPtr) {
+					Alloc::deallocate(stringPtr, capacity());
+				}
 			}
 		}
 
@@ -842,45 +844,49 @@ namespace natl {
 		}
 
 		constexpr void reserveExact(size_type newCapacity) noexcept {
-			if (reserveTest(newCapacity)) { return; }
-			newCapacity += 1;
+			if constexpr (EnableDynAllocation) {
+				if (reserveTest(newCapacity)) { return; }
+				newCapacity += 1;
 
-			pointer newStringPtr = Alloc::allocate(newCapacity);
+				pointer newStringPtr = Alloc::allocate(newCapacity);
 
-			const_pointer srcStringPtrFirst = data();
-			const_pointer srcStringPtrLast = srcStringPtrFirst + size();
-			uninitializedCopyNoOverlap<const_pointer, pointer>(srcStringPtrFirst, srcStringPtrLast, newStringPtr);
+				const_pointer srcStringPtrFirst = data();
+				const_pointer srcStringPtrLast = srcStringPtrFirst + size();
+				uninitializedCopyNoOverlap<const_pointer, pointer>(srcStringPtrFirst, srcStringPtrLast, newStringPtr);
 
-			if (isNotSmallString() && stringPtr) {
-				Alloc::deallocate(stringPtr, capacity());
-			} 
+				if (isNotSmallString() && stringPtr) {
+					Alloc::deallocate(stringPtr, capacity());
+				} 
 
-			stringPtr = newStringPtr;
-			stringCapacity = newCapacity;
+				stringPtr = newStringPtr;
+				stringCapacity = newCapacity;
 
-			if constexpr (enableIncreasedSmallBufferSize && sizeof(CharType) == 1) {
-				/*
-				for increased small buffer size, setAsNotSmallString() no longer maintains size 
-				in stringSizeAndSmallStringFlag as there is a difference in format to increase size 
+				if constexpr (enableIncreasedSmallBufferSize && sizeof(CharType) == 1) {
+					/*
+					for increased small buffer size, setAsNotSmallString() no longer maintains size 
+					in stringSizeAndSmallStringFlag as there is a difference in format to increase size 
 				 
-				in increased small buffer state
-					if is samllString()
-						stringSizeAndSmallStringFlag format is 
-						1 bit small string flag | 7 bits size storage | (sizeof(size_type) * 8) - 8 bits additional small buffer storage 
-					else  
-						stringSizeAndSmallStringFlag format is
-						1 bit small string flag | (sizeof(size_type) * 8) - 1 bits is size storage 
+					in increased small buffer state
+						if is samllString()
+							stringSizeAndSmallStringFlag format is 
+							1 bit small string flag | 7 bits size storage | (sizeof(size_type) * 8) - 8 bits additional small buffer storage 
+						else  
+							stringSizeAndSmallStringFlag format is
+							1 bit small string flag | (sizeof(size_type) * 8) - 1 bits is size storage 
 				
-				not in increased small buffer state 
-					stringSizeAndSmallStringFlag format is
-						1 bit small string flag | (sizeof(size_type) * 8) - 1 bits is size storage 
-				*/
+					not in increased small buffer state 
+						stringSizeAndSmallStringFlag format is
+							1 bit small string flag | (sizeof(size_type) * 8) - 1 bits is size storage 
+					*/
 
-				const size_type oldSize = size();
-				setAsNotSmallString();
-				setSize(oldSize);
+					const size_type oldSize = size();
+					setAsNotSmallString();
+					setSize(oldSize);
+				} else {
+					setAsNotSmallString();
+				}
 			} else {
-				setAsNotSmallString();
+				setAsSmallString();
 			}
 		}
 

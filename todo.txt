@@ -1,0 +1,2 @@
+add synchronized_value
+add byte sized member to function
