@@ -37,6 +37,8 @@ namespace natl {
 	using Utf16 = char16_t;
 	using Utf32 = char32_t;
 
+	using NullptrType = decltype(nullptr);
+
 	template<typename DataType, typename TypeToAlignTo>
 	class alignas(TypeToAlignTo) AlignToType {
 	private:

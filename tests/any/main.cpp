@@ -1,16 +1,26 @@
 
 //natl
 #include <natl/any.h>
-#include <natl/array.h>
+#include <natl/test.h>
+#include <natl/string.h>
 
-constexpr natl::Size compileTimeTest() noexcept {
-	natl::Any any = natl::makeAny<natl::Byte>();
-	return 3;
+constexpr natl::Bool constructionTest() noexcept {
+	using namespace natl::literals;
+	natl::Any number1 = natl::makeAny<natl::Size>(1_natl_size);
+	natl::Any number2 = natl::makeAny<natl::Size>(2_natl_size);
+
+
+	return number1.getAs<natl::Size>().value() == 1_natl_size 
+		&& number2.getAs<natl::String>().doesNotHaveValue();
 }
 
-using LargeType = natl::Array<natl::Byte, 40>;
+static_assert(constructionTest());
 
-int main() {
-	static_assert(compileTimeTest() == 3);
-	natl::AnyByteSize<64> any = natl::makeAnyByteSize<64, LargeType>();
+natl::Bool tests() noexcept {
+	NATL_TEST_ASSERT("NatlAnyTest", constructionTest(), "construction test failed")
+	return true;
+}
+
+int main() noexcept {
+	tests();
 }

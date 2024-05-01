@@ -60,7 +60,7 @@
 #include "thread.h"
 #include "timer.h"
 #include "tuple.h"
-#include "typeinfo.h"
+#include "typeInfo.h"
 #include "typePack.h"
 #include "typeTraits.h"
 #include "uninitialized.h"

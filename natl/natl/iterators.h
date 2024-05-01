@@ -444,7 +444,7 @@ namespace natl {
 
 	template<typename OutputIter>
 	constexpr void callReserveOnOutputIterator(const OutputIter& outputIter, const Size newCapacity) noexcept {
-		if constexpr (requires(OutputIter outputIter) { {outputIter.reserve(Size()) }; }) {
+		if constexpr (requires(OutputIter testOutputIter) { { testOutputIter.reserve(Size()) }; }) {
 			outputIter.reserve(newCapacity);
 		}
 	}

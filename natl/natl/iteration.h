@@ -530,7 +530,7 @@ namespace natl {
         };
 
         template<typename DataType, typename Container>
-        class TypeErasedBackInsertIteratorDataConstexpr : public TypeErasedBackInsertIteratorDataConstexprPolymorphic<DataType> {
+        class TypeErasedBackInsertIteratorDataConstexpr final : public TypeErasedBackInsertIteratorDataConstexprPolymorphic<DataType> {
         public:
             using allocator_type = DefaultAllocator<TypeErasedBackInsertIteratorDataConstexpr>;
             using data_constexpr_polymorphic = TypeErasedBackInsertIteratorDataConstexprPolymorphic<DataType>;
@@ -578,8 +578,8 @@ namespace natl {
             constexpr destory_function_type getDestoryFunction() noexcept override {
                 return [](data_constexpr_polymorphic* dataPolymorphic) noexcept -> void {
                     TypeErasedBackInsertIteratorDataConstexpr* data = static_cast<TypeErasedBackInsertIteratorDataConstexpr*>(dataPolymorphic);
-                    allocator_type::deallocate(data, 1);
                     deconstruct(data);
+                    allocator_type::deallocate(data, 1);
                 };
             }
         };
@@ -644,6 +644,7 @@ namespace natl {
         template<typename Container>
         explicit constexpr TypeErasedBackInsertIterator(Container* container) noexcept {
             if (isConstantEvaluated()) {
+                construct<iterator_data_constexpr_polymorphic*>(&dataConstexprPolymorphic);
                 populateTypeErasedBackInsertIteratorDataConstexpr<DataType, Container>(dataConstexprPolymorphic, container);
             } else {
                 populateTypeErasedBackInsertIteratorData<DataType, Container>(data, container);

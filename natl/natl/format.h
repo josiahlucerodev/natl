@@ -11,7 +11,7 @@
 //interface
 namespace natl {
 	template<typename Type, typename CharType = Ascii>
-	class Formatter;
+	struct  Formatter;
 
 	template<typename ArgType, 
 		typename TemplateFlagsTypePack, 
@@ -185,9 +185,9 @@ namespace natl {
 
 						if constexpr (tflagName == "hexadecimal" || tflagName == "hex") {
 							formatHexadecimal<OutputIter>(outputIter, number);
-						} else if constexpr (tflagName == "binary", tflagName == "bin") {
+						} else if constexpr (tflagName == "binary" || tflagName == "bin") {
 							formatBinary<OutputIter>(outputIter, number);
-						} else if constexpr (tflagName == "decimal", tflagName == "dec") {
+						} else if constexpr (tflagName == "decimal" || tflagName == "dec") {
 							formatDecimal<OutputIter>(outputIter, number);
 						} else {
 							unreachable();

@@ -56,7 +56,7 @@ natl/test.h
 natl/thread.h
 natl/timer.h
 natl/tuple.h
-natl/typeinfo.h
+natl/typeInfo.h
 natl/typePack.h
 natl/typeTraits.h
 natl/uninitialized.h
