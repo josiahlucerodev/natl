@@ -178,6 +178,7 @@ namespace natl {
 			friend struct FunctionRefBase;
 		private:
 			impl::FunctionStorageType functionStorageType;
+			natl::Size numberOfBytesUsed;
 			union {
 				callable_base* heapCallable;
 				function_ptr_type functionPtr;
@@ -186,25 +187,31 @@ namespace natl {
 			};
 		public:
 			//constructor 
-			constexpr FunctionBase() noexcept : functionStorageType(impl::FunctionStorageType::functionPtr), functionPtr(nullptr) {}
+			constexpr FunctionBase() noexcept : 
+				functionStorageType(impl::FunctionStorageType::functionPtr),
+				numberOfBytesUsed(0),
+				functionPtr(nullptr) {}
 
 			template<Size OtherCap>
 			constexpr FunctionBase(const FunctionBase<ReturnType(ArgTypes...), OtherCap, MoveOnly, Alloc>& other) noexcept requires(!MoveOnly) {
+				numberOfBytesUsed = 0;
 				assign<OtherCap>(other);
 			}
 			template<Size OtherCap>
 			constexpr FunctionBase(FunctionBase<ReturnType(ArgTypes...), OtherCap, MoveOnly, Alloc>&& other) noexcept {
+				numberOfBytesUsed = 0;
 				assign<OtherCap>(natl::forward<decltype(other)>(other));
 			}
 
 			template<class Functor>
 				requires(HasFunctionSignature<Functor, ReturnType, ArgTypes...>)
 			constexpr FunctionBase(Functor&& functor) noexcept {
+				numberOfBytesUsed = 0;
 				assign<Functor>(natl::move(functor));
 			}
 
 			//destructors
-			constexpr void destruct() noexcept {
+			constexpr void internalDeconstruct() noexcept {
 				switch (functionStorageType) {
 				case impl::FunctionStorageType::smallCallable:
 					std::destroy_at<callable_base>(reinterpret_cast<callable_base*>(smallCallableStorage));
@@ -227,7 +234,7 @@ namespace natl {
 			}
 
 			constexpr ~FunctionBase() noexcept {
-				destruct();
+				internalDeconstruct();
 			}
 
 			//util 
@@ -237,18 +244,18 @@ namespace natl {
 			//assignment 
 			template<Size OtherCap>
 			constexpr FunctionBase& operator=(const FunctionBase<ReturnType(ArgTypes...), OtherCap, MoveOnly, Alloc>& other) noexcept requires(!MoveOnly) {
-				destruct();
+				internalDeconstruct();
 				return assign<OtherCap>(other);
 			}
 			template<Size OtherCap>
 			constexpr FunctionBase& operator=(FunctionBase<ReturnType(ArgTypes...), OtherCap, MoveOnly, Alloc>&& other) noexcept {
-				destruct();
+				internalDeconstruct();
 				return assign<OtherCap>(natl::forward<decltype(other)>(other));
 			}
 			template<class Functor>
 				requires(HasFunctionSignature<Functor, ReturnType, ArgTypes...>)
 			constexpr FunctionBase& operator=(Functor&& functor) noexcept {
-				destruct();
+				internalDeconstruct();
 				return assign(natl::move(functor));
 			}
 
@@ -264,8 +271,9 @@ namespace natl {
 						functionPtr = other.functionPtr;
 						break;
 					case impl::FunctionStorageType::smallCallable:
-						if constexpr (Capacity >= OtherCap) {
+						if (Capacity >= other.numberOfBytesUsed) {
 							reinterpret_cast<callable_base*>(other.smallCallableStorage)->copyCallable(reinterpret_cast<callable_base*>(smallCallableStorage));
+							numberOfBytesUsed = other.numberOfBytesUsed;
 						} else {
 							functionStorageType = impl::FunctionStorageType::heapCallable;
 							heapCallable = reinterpret_cast<callable_base*>(other.smallCallableStorage)->copyCallable(nullptr);
@@ -300,8 +308,9 @@ namespace natl {
 						functionPtr = other.functionPtr;
 						break;
 					case impl::FunctionStorageType::smallCallable:
-						if constexpr (Capacity >= OtherCap) {
+						if (Capacity >= other.numberOfBytesUsed) {
 							reinterpret_cast<callable_base*>(other.smallCallableStorage)->moveCallable(reinterpret_cast<callable_base*>(smallCallableStorage));
+							numberOfBytesUsed = other.numberOfBytesUsed;
 						} else {
 							functionStorageType = impl::FunctionStorageType::heapCallable;
 							heapCallable = reinterpret_cast<callable_base*>(other.smallCallableStorage)->moveCallable(nullptr);
@@ -347,6 +356,7 @@ namespace natl {
 							static_cast<constexpr_callable_base*>(newConstexprCallable));
 					} else {
 						if constexpr (sizeof(FunctorCallableType) <= smallBufferSize) {
+							numberOfBytesUsed = TypeByteSize<FunctorCallableType>;
 							functionStorageType = impl::FunctionStorageType::smallCallable;
 							std::construct_at<FunctorCallableType, Functor>(reinterpret_cast<FunctorCallableType*>(smallCallableStorage), forward<Functor>(functor));
 						} else {
