@@ -178,7 +178,7 @@ namespace natl {
 			friend struct FunctionRefBase;
 		private:
 			impl::FunctionStorageType functionStorageType;
-			natl::Size numberOfBytesUsed;
+			natl::ui32 numberOfBytesUsed;
 			union {
 				callable_base* heapCallable;
 				function_ptr_type functionPtr;
@@ -271,16 +271,22 @@ namespace natl {
 						functionPtr = other.functionPtr;
 						break;
 					case impl::FunctionStorageType::smallCallable:
-						if (Capacity >= other.numberOfBytesUsed) {
+						numberOfBytesUsed = other.numberOfBytesUsed;
+						if (other.numberOfBytesUsed <= Capacity) {
 							reinterpret_cast<callable_base*>(other.smallCallableStorage)->copyCallable(reinterpret_cast<callable_base*>(smallCallableStorage));
-							numberOfBytesUsed = other.numberOfBytesUsed;
 						} else {
 							functionStorageType = impl::FunctionStorageType::heapCallable;
 							heapCallable = reinterpret_cast<callable_base*>(other.smallCallableStorage)->copyCallable(nullptr);
 						}
 						break;
 					case impl::FunctionStorageType::heapCallable:
-						heapCallable = other.heapCallable->copyCallable(nullptr);
+						numberOfBytesUsed = other.numberOfBytesUsed;
+						if (other.numberOfBytesUsed <= Capacity) {
+							functionStorageType = impl::FunctionStorageType::smallCallable;
+							other.heapCallable->copyCallable(reinterpret_cast<callable_base*>(smallCallableStorage));
+						} else {
+							heapCallable = other.heapCallable->copyCallable(nullptr);
+						}
 						break;
 					case impl::FunctionStorageType::constexprCallable:
 						if (isConstantEvaluated()) {
@@ -308,16 +314,22 @@ namespace natl {
 						functionPtr = other.functionPtr;
 						break;
 					case impl::FunctionStorageType::smallCallable:
-						if (Capacity >= other.numberOfBytesUsed) {
+						numberOfBytesUsed = other.numberOfBytesUsed;
+						if (other.numberOfBytesUsed <= Capacity) {
 							reinterpret_cast<callable_base*>(other.smallCallableStorage)->moveCallable(reinterpret_cast<callable_base*>(smallCallableStorage));
-							numberOfBytesUsed = other.numberOfBytesUsed;
 						} else {
 							functionStorageType = impl::FunctionStorageType::heapCallable;
 							heapCallable = reinterpret_cast<callable_base*>(other.smallCallableStorage)->moveCallable(nullptr);
 						}
 						break;
 					case impl::FunctionStorageType::heapCallable:
-						heapCallable = other.heapCallable;
+						numberOfBytesUsed = other.numberOfBytesUsed;
+						if (other.numberOfBytesUsed <= Capacity) {
+							functionStorageType = impl::FunctionStorageType::smallCallable;
+							heapCallable->moveCallable(reinterpret_cast<callable_base*>(smallCallableStorage));
+						} else {
+							heapCallable = other.heapCallable;
+						}
 						break;
 					case impl::FunctionStorageType::constexprCallable:
 						if (isConstantEvaluated()) {
@@ -360,6 +372,7 @@ namespace natl {
 							functionStorageType = impl::FunctionStorageType::smallCallable;
 							std::construct_at<FunctorCallableType, Functor>(reinterpret_cast<FunctorCallableType*>(smallCallableStorage), forward<Functor>(functor));
 						} else {
+							numberOfBytesUsed = TypeByteSize<FunctorCallableType>;
 							functionStorageType = impl::FunctionStorageType::heapCallable;
 							FunctorCallableType* functorCallable = Alloc::template rebind_alloc<FunctorCallableType>::allocate(1);
 							std::construct_at<FunctorCallableType>(functorCallable, natl::move(functor));
@@ -417,6 +430,8 @@ namespace natl {
 		};
 	}
 
+
+	//main types 
 	template<class Signature, Size Capacity = 32 - alignof(char*), typename Alloc = DefaultAllocatorByte>
 	class MoveOnlyFunction {
 		template<typename>
@@ -425,6 +440,44 @@ namespace natl {
 		template<typename, Size, typename>
 		friend class Function;
 	};
+
+	template<class Signature, Size Capacity = 32 - alignof(char*), typename Alloc = DefaultAllocatorByte>
+	class Function {
+	public:
+		template<typename>
+		friend class FunctionRef;
+	};
+
+	template<typename Signature>
+	class FunctionRef {};
+
+	namespace impl {
+		template<typename Functor>
+		struct IsNotNatlFunction : TrueType {};
+		template<typename ReturnType, typename... ArgTypes, Size Capacity, typename Alloc>
+		struct IsNotNatlFunction<Function<ReturnType(ArgTypes...), Capacity, Alloc>> : FalseType {};
+		template<typename ReturnType, typename... ArgTypes, Size Capacity, typename Alloc>
+		struct IsNotNatlFunction<Function<ReturnType(ArgTypes...) const, Capacity, Alloc>> : FalseType {};
+		template<typename Functor>
+		constexpr inline Bool IsNotNatlFunctionV = IsNotNatlFunction<Functor>::value;
+
+		template<typename Functor>
+		struct IsNotNatlMoveOnlyFunction : TrueType {};
+		template<typename ReturnType, typename... ArgTypes, Size Capacity, typename Alloc>
+		struct IsNotNatlMoveOnlyFunction<MoveOnlyFunction<ReturnType(ArgTypes...), Capacity, Alloc>> : FalseType {};
+		template<typename ReturnType, typename... ArgTypes, Size Capacity, typename Alloc>
+		struct IsNotNatlMoveOnlyFunction<MoveOnlyFunction<ReturnType(ArgTypes...) const, Capacity, Alloc>> : FalseType {};
+		template<typename Functor>
+		constexpr inline Bool IsNotNatlMoveOnlyFunctionV = IsNotNatlMoveOnlyFunction<Functor>::value;
+
+		template<typename Functor>
+		struct IsNotNatlFunctionRef : TrueType {};
+		template<typename Signature>
+		struct IsNotNatlFunctionRef<FunctionRef<Signature>> : FalseType {};
+		template<typename Functor>
+		constexpr inline Bool IsNotNatlFunctionRefV = FunctionRef<Functor>::value;
+	}
+
 
 	template<typename ReturnType, typename... ArgTypes, Size Capacity, typename Alloc>
 	class MoveOnlyFunction<ReturnType(ArgTypes...), Capacity, Alloc> final {
@@ -624,13 +677,6 @@ namespace natl {
 	template<class Signature, typename Alloc = DefaultAllocatorByte>
 	using MoveOnlyFunctionAlloc = MoveOnlyFunctionByteSize<Signature, 32, Alloc>;
 
-	template<class Signature, Size Capacity = 32 - alignof(char*), typename Alloc = DefaultAllocatorByte>
-	class Function {
-	public:
-		template<typename>
-		friend class FunctionRef;
-	};
-
 	template<typename ReturnType, typename... ArgTypes, Size Capacity, typename Alloc>
 	class Function<ReturnType(ArgTypes...), Capacity, Alloc> final {
 	public:
@@ -679,7 +725,10 @@ namespace natl {
 			functionBase(natl::forward<decltype(other.functionBase)>(other.functionBase)) {}
 
 		template<class Functor>
-			requires(HasFunctionSignature<Functor, ReturnType, ArgTypes...> && IsCopyConstructible<Functor>)
+			requires(
+			HasFunctionSignature<Functor, ReturnType, ArgTypes...> 
+			&& IsCopyConstructible<Functor>
+			&& impl::IsNotNatlFunctionV<DecayT<Functor>>)
 		constexpr Function(Functor&& functor) noexcept : functionBase(natl::move(functor)) {}
 
 		//destructor
@@ -1204,9 +1253,6 @@ namespace natl {
 			}
 		};
 	}
-
-	template<class Signature>
-	class FunctionRef {};
 
 	template<typename ReturnType, typename... ArgTypes>
 	class FunctionRef<ReturnType(ArgTypes...)> final {
