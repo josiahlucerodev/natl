@@ -586,4 +586,97 @@ namespace natl {
 		{ lhs >= rhs } -> ConvertibleTo<Bool>; 
 		{ rhs >= lhs } -> ConvertibleTo<Bool>;
 	};
+
+	//function 
+	template <typename Functor, typename ReturnType, typename... ArgTypes>
+	concept HasFunctionSignature = requires(Functor functor, ArgTypes... args) {
+		{ functor(natl::forward<ArgTypes>(args)...) } -> std::same_as<ReturnType>;
+	};
+
+	template<typename Functor, typename ReturnType, typename... ArgTypes>
+	concept IsConstCallable = HasFunctionSignature<Functor, ReturnType, ArgTypes...>&&
+		requires(const Functor functor, ArgTypes... args) {
+			{ functor(natl::forward<ArgTypes>(args)...) } -> std::same_as<ReturnType>;
+	};
+
+	namespace impl {
+		template<typename Functor, typename... ArgTypes>
+		auto tryInvoke(Functor&& functor, ArgTypes&&... args) -> decltype(natl::forward<Functor>(functor)(natl::forward<ArgTypes>(args)...)) {}
+	}
+
+	template<typename...> struct InvokeResultType {
+		using type = void;
+	};
+	template<typename Functor, typename... ArgTypes>
+	struct InvokeResultType<Functor(ArgTypes...)> {
+		using type = decltype(impl::tryInvoke(declval<Functor>(), declval<ArgTypes>()...));
+	};
+	template<typename Functor> using InvokeResult = typename InvokeResultType<Functor>::type;
+
+	template<typename Functor, typename... ArgTypes>
+	struct InvokeResultWithArgsType {
+		using type = decltype(impl::tryInvoke(declval<Functor>(), declval<ArgTypes>()...));
+	};
+	template<typename Functor, typename... ArgTypes> using InvokeResultWithArgs = typename InvokeResultWithArgsType<Functor, ArgTypes...>::type;
+
+	template<typename Functor> struct ResultOf;
+
+	template<typename Functor, typename... ArgTypes>
+	struct ResultOf<Functor(ArgTypes...)> {
+		using type = decltype(impl::tryInvoke(declval<Functor>(), declval<ArgTypes>()...));
+	};
+	template<typename ReturnType, typename... ArgTypes>
+	struct ResultOf<ReturnType(*)(ArgTypes...)> {
+		using type = ReturnType;
+	};
+	template<typename ReturnType, typename... ArgTypes>
+	struct ResultOf<ReturnType(*)(ArgTypes...) noexcept> {
+		using type = ReturnType;
+	};
+	template<typename ReturnType, typename... ArgTypes>
+	struct ResultOf<ReturnType(&)(ArgTypes...)> {
+		using type = ReturnType;
+	};
+	template<typename ReturnType, typename... ArgTypes>
+	struct ResultOf<ReturnType(&)(ArgTypes...) noexcept> {
+		using type = ReturnType;
+	};
+
+	template<typename Functor>
+	using ResultOfT = ResultOf<Functor>::type;
+
+	template<typename Functor>
+	struct FunctorBaseStorage {};
+
+
+	template<typename ReturnType, typename... ArgTypes>
+	struct FunctorBaseStorage<ReturnType(*)(ArgTypes...)> {
+		using type = ReturnType(*)(ArgTypes...) noexcept;
+	};
+	template<typename ReturnType, typename... ArgTypes>
+	struct FunctorBaseStorage<ReturnType(*)(ArgTypes...) noexcept> {
+		using type = ReturnType(*)(ArgTypes...) noexcept;
+	};
+	template<typename ReturnType, typename... ArgTypes>
+	struct FunctorBaseStorage<ReturnType(&)(ArgTypes...)> {
+		using type = ReturnType(*)(ArgTypes...) noexcept;
+	};
+	template<typename ReturnType, typename... ArgTypes>
+	struct FunctorBaseStorage<ReturnType(&)(ArgTypes...) noexcept> {
+		using type = ReturnType(*)(ArgTypes...) noexcept;
+	};
+
+	template<typename Functor, typename... ArgTypes>
+	struct FunctorBaseStorage<Functor(ArgTypes...)> {
+		using ReturnType = ResultOfT<Functor(ArgTypes...)>;
+		using type = ConditionalT<ConvertibleTo<RemoveReferenceT<Functor>, ReturnType(*)(ArgTypes...) noexcept>, ReturnType(*)(ArgTypes...) noexcept, Functor>;
+	};
+
+	template<typename Functor>
+	using FunctorBaseStorageT = FunctorBaseStorage<Functor>::type;
+
+	template<class Functor, typename... ArgTypes>
+	constexpr InvokeResultWithArgs<Functor, ArgTypes...> invokeFunction(Functor&& functor, ArgTypes&&... args) noexcept {
+		return natl::forward<Functor>(functor)(natl::forward<ArgTypes>(args)...);
+	}
 }

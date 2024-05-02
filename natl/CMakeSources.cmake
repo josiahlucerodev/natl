@@ -52,6 +52,7 @@ natl/stringLiteral.h
 natl/stringOperations.h
 natl/stringView.h
 natl/strongType.h
+natl/synchronizedValue.h
 natl/test.h
 natl/thread.h
 natl/timer.h

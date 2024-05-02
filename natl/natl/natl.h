@@ -56,6 +56,7 @@
 #include "stringOperations.h"
 #include "stringView.h"
 #include "strongType.h"
+#include "synchronizedValue.h"
 #include "test.h"
 #include "thread.h"
 #include "timer.h"

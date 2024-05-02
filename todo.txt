@@ -1,1 +1,0 @@
-add synchronized_value
