@@ -2,19 +2,15 @@
 //natl
 #include <natl/units.h>
 
-constexpr natl::Meter compileTimeTest() {
-	natl::Meter meter(3);
-	natl::Meter meter2(6);
-	//return meter + meter2;
-	return meter + meter2;
+template<typename UnitType>
+constexpr natl::Bool unitConstructionTest() noexcept {
+	UnitType unit1(4);
+	UnitType unit2(6);
+	return (unit1 + unit2) == UnitType(10);
 }
 
-int main() {
-	[[maybe_unused]] constexpr natl::Meter testValue = compileTimeTest();
-	natl::Meter meter(3);
-	natl::Meter meter2(6);
-	meter = meter + meter2;
+static_assert(unitConstructionTest<natl::Meter<natl::i64>>());
+static_assert(unitConstructionTest<natl::Feet<natl::i64>>());
+static_assert(unitConstructionTest<natl::Gram<natl::i64>>());
 
-	natl::MeterValue<natl::f32> meters(10);
-	[[maybe_unused]] natl::KilometerValue<natl::f32> Kilometer = meters.convertTo<natl::KilometerUnit<1>>();
-}
+int main() noexcept {}

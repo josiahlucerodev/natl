@@ -5,6 +5,7 @@
 #include "typeTraits.h"
 #include "typePack.h"
 #include "compilerDependent.h"
+#include "array.h"
 
 //interface
 namespace natl {
@@ -15,9 +16,9 @@ namespace natl {
         }
 
         template<typename DataType>
-        NATL_FORCE_INLINE constexpr DataType unitPowFn(DataType base, i64 exponent) noexcept {
+        NATL_FORCE_INLINE constexpr DataType unitPowFn(DataType base, SSize exponent) noexcept {
             DataType result = DataType(1);
-            for (i64 i = 0; i64(i) < static_cast<i64>(unitAbsFn<i64>(exponent)); ++i) {
+            for (SSize i = 0; SSize(i) < static_cast<SSize>(unitAbsFn<SSize>(exponent)); ++i) {
                 result *= base;
             }
             return (static_cast<DataType>(exponent) < DataType(0)) ? DataType(1) / result : result;
@@ -25,6 +26,7 @@ namespace natl {
     }
 
     struct StrongUnitGroupTypeMagnitude {};
+    struct StrongUnitGroupTypeTable {};
     struct StrongUnitGroupTypeNone {};
 
     struct LengthUnitCategory {};
@@ -61,28 +63,69 @@ namespace natl {
     template<typename FromTag, typename ToTag, typename ToDataType>
     concept DoesNotUnitConvertRequireFloat = IsFloatingPointV<ToDataType> || DoesNotUnitConvertDown<FromTag, ToTag>;
 
+    //magnitude based conversion
     template <typename FromTag, typename ToTag, typename FromDataType, typename ToDataType>
-        requires(
-            IsUnitTag<FromTag>&&
-            IsUnitTag<ToTag> //&& 
-        //std::is_same_v<typename FromTag::tag_group, typename ToTag::tag_group> &&
-        //IsUnitTagGroup<typename FromTag::tag_group> && 
-        //std::is_same_v<typename FromTag::tag_group, StrongUnitGroupTypeMagnitude>
-        )
+        requires(IsUnitTag<FromTag> 
+            && IsUnitTag<ToTag> 
+            && std::is_same_v<typename FromTag::tag_group, typename ToTag::tag_group>
+            && std::is_same_v<typename FromTag::tag_group::group_type, StrongUnitGroupTypeMagnitude>)
         struct StrongUnitConversionFactor<FromTag, ToTag, FromDataType, ToDataType> {
-        static_assert(IsNotSameV<FromTag, ToTag>, "Unsupported conversion");
+
         static_assert(DoesNotUnitConvertRequireFloat<FromTag, ToTag, ToDataType>, "converting down requires a base float type");
         using tag_group = typename FromTag::tag_group;
         constexpr static ToDataType value = impl::unitPowFn<ToDataType>(tag_group::orderOfMagnitude, FromTag::magnitudeIndex - ToTag::magnitudeIndex);
     };
 
-    template<class UnitTag, i64 Magnitude>
-    struct Unit {
-        using unit_tag = UnitTag;
-        constexpr static i64 magnitude = Magnitude;
+    //table based conversion 
+    template <typename FromTag, typename ToTag, typename FromDataType, typename ToDataType>
+        requires(
+            IsUnitTag<FromTag>
+            && IsUnitTag<ToTag> 
+            && IsSameV<typename FromTag::tag_group, typename ToTag::tag_group>
+            && IsSameV<typename FromTag::tag_group::group_type, StrongUnitGroupTypeTable>)
+        struct StrongUnitConversionFactor<FromTag, ToTag, FromDataType, ToDataType> {
+
+        static_assert(!(!IsFloatingPointV<ToDataType> && (FromTag::tableIndex > ToTag::tableIndex)), "converting down requires a base float type");
+        using tag_group = typename FromTag::tag_group;
+        constexpr static ToDataType value =  
+            static_cast<ToDataType>(tag_group::convertionTable[FromTag::tableIndex]) 
+            / static_cast<ToDataType>(tag_group::convertionTable[ToTag::tableIndex]);
     };
 
-    struct MeterTag;
+    template<typename FromTagGroup, typename ToTagGroup, typename FromTag, typename ToTag, typename FloatDataType>
+    struct UnitCategoryConversionFactor;
+
+    namespace impl {
+        template<typename FloatDataType, FloatDataType defaultUnitsConvertFactor,
+            typename FormDefaultUnitTag, typename ToDefaultUnitTag,
+            typename FromTag, typename ToTag>
+        struct UnitCategoryConversionFactorImpl {
+            constexpr static FloatDataType srcTodefaultUnitConvertFactor = StrongUnitConversionFactor<FromTag, FormDefaultUnitTag, FloatDataType, FloatDataType>::value;
+            constexpr static FloatDataType defaultUnitToDstConvertFactor = StrongUnitConversionFactor<ToDefaultUnitTag, ToTag, FloatDataType, FloatDataType>::value;
+            constexpr static FloatDataType value = srcTodefaultUnitConvertFactor * defaultUnitsConvertFactor * defaultUnitToDstConvertFactor;
+        };
+    }
+
+    //unit category change conversion 
+    template <typename FromTag, typename ToTag, typename FromDataType, typename ToDataType>
+        requires(
+            IsUnitTag<FromTag>
+            && IsUnitTag<ToTag> 
+            && IsNotSameV<typename FromTag::tag_group, typename ToTag::tag_group>
+            && IsSameV<typename FromTag::tag_group::unit_category, typename ToTag::tag_group::unit_category>)
+        struct StrongUnitConversionFactor<FromTag, ToTag, FromDataType, ToDataType> {
+
+        static_assert(IsFloatingPointV<ToDataType>, "converting to different unit group requires a base float type");
+        using from_tag_group = typename FromTag::tag_group;
+        using to_tag_group = typename ToTag::tag_group;
+        constexpr static ToDataType value = UnitCategoryConversionFactor<from_tag_group, to_tag_group, FromTag, ToTag, ToDataType>::value;
+    };
+
+    template<class UnitTag, SSize Magnitude>
+    struct Unit {
+        using unit_tag = UnitTag;
+        constexpr static SSize magnitude = Magnitude;
+    };
 
     template<typename DataType, typename... Units>
     struct UnitValue {
@@ -90,11 +133,11 @@ namespace natl {
         using units_type = TypePack<Units...>;
 
     public:
-        DataType value;
+        DataType data;
     public:
         //constructor
         NATL_FORCE_INLINE constexpr UnitValue() noexcept = default;
-        NATL_FORCE_INLINE constexpr explicit UnitValue(const DataType valueIn) noexcept : value(valueIn) {}
+        NATL_FORCE_INLINE constexpr explicit UnitValue(const DataType dataIn) noexcept : data(dataIn) {}
 
         //destructor
         NATL_FORCE_INLINE constexpr ~UnitValue() noexcept = default;
@@ -107,59 +150,72 @@ namespace natl {
         NATL_FORCE_INLINE constexpr UnitValue& operator=(const UnitValue&) noexcept = default;
 
         //observers 
-        NATL_FORCE_INLINE constexpr DataType& getValue() { return value; }
-        NATL_FORCE_INLINE constexpr const DataType& getValue() const { return value; }
+        NATL_FORCE_INLINE constexpr DataType& value() { return data; }
+        NATL_FORCE_INLINE constexpr const DataType& value() const { return data; }
 
         template<typename Interger>
             requires(IsFundamentalItergerV<Interger>)
-        NATL_FORCE_INLINE constexpr Interger asInt() const noexcept requires(IsFloatingPointV<DataType>) {
-            return static_cast<Interger>(value);
+        NATL_FORCE_INLINE constexpr Interger valueAsInt() const noexcept requires(IsFloatingPointV<DataType>) {
+            return static_cast<Interger>(data);
         }
         template<typename Float>
             requires(IsFloatingPointV<Float>)
-        NATL_FORCE_INLINE constexpr Float asFloat() const noexcept requires(IsFundamentalItergerV<DataType>) {
-            return static_cast<Float>(value);
+        NATL_FORCE_INLINE constexpr Float valueAsFloat() const noexcept requires(IsFundamentalItergerV<DataType>) {
+            return static_cast<Float>(data);
         }
 
+        template<typename Interger>
+            requires(IsFloatingPointV<Interger>)
+        NATL_FORCE_INLINE constexpr UnitValue<Interger, Units...> asInt() const noexcept requires(IsFundamentalItergerV<DataType>) {
+            return UnitValue<Interger, Units...>(static_cast<Interger>(data));
+        }
+        template<typename Float>
+            requires(IsFloatingPointV<Float>)
+        NATL_FORCE_INLINE constexpr UnitValue<Float, Units...> asFloat() const noexcept requires(IsFundamentalItergerV<DataType>) {
+            return UnitValue<Float, Units...>(static_cast<Float>(data));
+        }
+
+
+
         //operator 
-        NATL_FORCE_INLINE constexpr UnitValue operator+(const UnitValue& other) const noexcept { return UnitValue(value + other.value); }
-        NATL_FORCE_INLINE constexpr UnitValue operator-(const UnitValue& other) const noexcept { return UnitValue(value - other.value); }
-        NATL_FORCE_INLINE constexpr UnitValue operator*(const UnitValue& other) const noexcept { return UnitValue(value * other.value); }
-        NATL_FORCE_INLINE constexpr UnitValue operator/(const UnitValue& other) const noexcept { return UnitValue(value / other.value); }
+        NATL_FORCE_INLINE constexpr UnitValue operator+(const UnitValue& other) const noexcept { return UnitValue(data + other.data); }
+        NATL_FORCE_INLINE constexpr UnitValue operator-(const UnitValue& other) const noexcept { return UnitValue(data - other.data); }
+        NATL_FORCE_INLINE constexpr UnitValue operator*(const UnitValue& other) const noexcept { return UnitValue(data * other.data); }
+        NATL_FORCE_INLINE constexpr UnitValue operator/(const UnitValue& other) const noexcept { return UnitValue(data / other.data); }
 
         //operators 
         NATL_FORCE_INLINE constexpr UnitValue& operator+=(const UnitValue& other) noexcept {
-            value += other.value;
+            data += other.data;
             return *this;
         }
         NATL_FORCE_INLINE constexpr UnitValue& operator-=(const UnitValue& other) noexcept {
-            value -= other.value;
+            data -= other.data;
             return *this;
         }
         NATL_FORCE_INLINE constexpr UnitValue& operator*=(const UnitValue& other) noexcept {
-            value *= other.value;
+            data *= other.data;
             return *this;
         }
         NATL_FORCE_INLINE constexpr UnitValue& operator/=(const UnitValue& other) noexcept {
-            value /= other.value;
+            data /= other.data;
             return *this;
         }
 
         //compare 
-        NATL_FORCE_INLINE constexpr Bool operator==(const UnitValue& other) const noexcept { return value == other.value; }
-        NATL_FORCE_INLINE constexpr Bool operator!=(const UnitValue& other) const noexcept { return value != other.value; }
-        NATL_FORCE_INLINE constexpr Bool operator<(const UnitValue& other) const noexcept { return value < other.value; }
-        NATL_FORCE_INLINE constexpr Bool operator>(const UnitValue& other) const noexcept { return value > other.value; }
-        NATL_FORCE_INLINE constexpr Bool operator<=(const UnitValue& other) const noexcept { return value <= other.value; }
-        NATL_FORCE_INLINE constexpr Bool operator>=(const UnitValue& other) const noexcept { return value >= other.value; }
-        NATL_FORCE_INLINE constexpr auto operator<=>(const UnitValue& other) const noexcept { return value <=> other.value; }
+        NATL_FORCE_INLINE constexpr Bool operator==(const UnitValue& other) const noexcept { return data == other.data; }
+        NATL_FORCE_INLINE constexpr Bool operator!=(const UnitValue& other) const noexcept { return data != other.data; }
+        NATL_FORCE_INLINE constexpr Bool operator<(const UnitValue& other) const noexcept { return data < other.data; }
+        NATL_FORCE_INLINE constexpr Bool operator>(const UnitValue& other) const noexcept { return data > other.data; }
+        NATL_FORCE_INLINE constexpr Bool operator<=(const UnitValue& other) const noexcept { return data <= other.data; }
+        NATL_FORCE_INLINE constexpr Bool operator>=(const UnitValue& other) const noexcept { return data >= other.data; }
+        NATL_FORCE_INLINE constexpr auto operator<=>(const UnitValue& other) const noexcept { return data <=> other.data; }
 
     private:
         template <typename... UnitTypes>
         struct CalculateMagnitudeTypePack {};
         template <typename TargetUnit, typename... UnitTypes>
         struct CalculateMagnitudeTypePack<TargetUnit, TypePack<UnitTypes...>> {
-            constexpr static i64 magnitude = TargetUnit::magnitude + ((static_cast<i64>(std::is_same_v<typename TargetUnit::unit_tag, typename UnitTypes::unit_tag>) * UnitTypes::magnitude) + ...);
+            constexpr static SSize magnitude = TargetUnit::magnitude + ((static_cast<SSize>(std::is_same_v<typename TargetUnit::unit_tag, typename UnitTypes::unit_tag>) * UnitTypes::magnitude) + ...);
         };
 
         template<typename LhsUnit, typename RhsUnit>
@@ -175,7 +231,7 @@ namespace natl {
         struct CalculateMagnitudeSubTypePack<TargetUnit, TypePack<UnitTypes...>> {
             static_assert((StructSameUnitGroupError<TargetUnit, UnitTypes>::value || ...),
                 "natl: Unit div - doing an operation with a unit form the same group but of differnt type. Requires conversion");
-            constexpr static i64 magnitude = TargetUnit::magnitude - ((static_cast<i64>(std::is_same_v<typename TargetUnit::unit_tag, typename UnitTypes::unit_tag>) * UnitTypes::magnitude) + ...);
+            constexpr static SSize magnitude = TargetUnit::magnitude - ((static_cast<SSize>(std::is_same_v<typename TargetUnit::unit_tag, typename UnitTypes::unit_tag>) * UnitTypes::magnitude) + ...);
         };
 
         template <typename... UnitTypes>
@@ -184,7 +240,7 @@ namespace natl {
         struct CalculateConversionFactor<TargetUnit, TypePack<UnitTypes...>> {
             static_assert((StructSameUnitGroupError<TargetUnit, UnitTypes>::value || ...),
                 "natl: Unit div - doing an operation with a unit form the same group but of differnt type. Requires conversion");
-            constexpr static i64 magnitude = TargetUnit::magnitude - ((static_cast<i64>(std::is_same_v<typename TargetUnit::unit_tag, typename UnitTypes::unit_tag>) * UnitTypes::magnitude) + ...);
+            constexpr static SSize magnitude = TargetUnit::magnitude - ((static_cast<SSize>(std::is_same_v<typename TargetUnit::unit_tag, typename UnitTypes::unit_tag>) * UnitTypes::magnitude) + ...);
         };
         
         template<typename TransfromUnit, typename UnitTypePack>
@@ -209,8 +265,6 @@ namespace natl {
             constexpr static Bool value = TestUnit::magnitude == 0;
         };
 
-
-
         template<typename TransfromUnit, typename NewUnit> 
         struct UnitConvertUnitTest {
             static_assert(TransfromUnit::magnitude == NewUnit::magnitude, "natl: Unit convert - unsupport conversion - unit magnitudes are different");
@@ -219,13 +273,14 @@ namespace natl {
 
         template<typename LhsUnit, typename RhsUnit>
         struct UnitGroupUnitCategoryCompare {
-            constexpr static Bool value =  std::is_same_v<typename LhsUnit::unit_tag::tag_group::unit_category, typename RhsUnit::unit_tag::tag_group::unit_category>;
+            constexpr static Bool value =  
+                IsSameV<typename LhsUnit::unit_tag::tag_group::unit_category, typename RhsUnit::unit_tag::tag_group::unit_category>;
         };
 
         template<typename TransfromUnit, typename UnitTypePack>
         struct UnitConvertTransformUnitCategoryTransform {
             constexpr static Size index = TypePackFindIndexOfTypeCompareValue<UnitGroupUnitCategoryCompare, TransfromUnit, UnitTypePack>;
-            static_assert(index == IndexNotFound::value, "natl: Unit convert - unsupport conversion - could not find matching tag_group or unit_category");
+            static_assert(!(index == IndexNotFound::value), "natl: Unit convert - unsupport conversion - could not find matching tag_group or unit_category");
             using NewUnit = typename UnitConvertUnitTest<TransfromUnit, TypePackNthElement<index, UnitTypePack>>::type;
             using type = NewUnit;
         };
@@ -264,16 +319,8 @@ namespace natl {
         template<typename UnitType, Size Index, typename TransformedUnitTypePack>
         struct UnitConvertFactorValuePredicate {
             using TransformToType = TypePackNthElement<Index, TransformedUnitTypePack>;
-
-            constexpr static DataType getConvertFactorFunc() noexcept {
-                if constexpr (std::is_same_v<UnitType, TransformToType>) {
-                    return TypeValue<DataType(1)>();
-                } else {
-                    return StrongUnitConversionFactor<typename UnitType::unit_tag, typename TransformToType::unit_tag, DataType, DataType>::value;
-                }
-            }
-
-            constexpr static DataType value = getConvertFactorFunc();
+            constexpr static DataType baseConvertFactor = StrongUnitConversionFactor<typename UnitType::unit_tag, typename TransformToType::unit_tag, DataType, DataType>::value;
+            constexpr static DataType value = impl::unitPowFn<DataType>(baseConvertFactor, UnitType::magnitude);
         };
 
         template<DataType LhsValue, DataType RhsValue>
@@ -294,7 +341,7 @@ namespace natl {
             using UnitValueArgTypePack = typename NewUnitTypePack::template add_new_elements_front<DataType>;
             using NewCreatedUnitValueType = CreateTypeWithTypePack<UnitValue, UnitValueArgTypePack>;
             using NewUnitValueType = NewCreatedUnitValueType;
-            return NewUnitValueType(value * other.value);
+            return NewUnitValueType(data * other.data);
         }
         
 
@@ -305,7 +352,7 @@ namespace natl {
             using UnitValueArgTypePack = typename NewUnitTypePack::template add_new_elements_front<DataType>;
             using NewCreatedUnitValueType = CreateTypeWithTypePack<UnitValue, UnitValueArgTypePack>;
             using NewUnitValueType = NewCreatedUnitValueType;
-            return NewUnitValueType(value / other.value);
+            return NewUnitValueType(data / other.data);
         }
 
         template<typename... OtherUnits>
@@ -315,7 +362,7 @@ namespace natl {
             constexpr DataType convertValue = TypePackOpFoldWithIndexAndArgValue<DataType, TransformedUnitsType,
                 UnitConvertFactorValuePredicate, UnitConvertFactorMultiplyOp, UnitsTypePack>;
             using NewUnitValueType = CreateTypeWithTypePack<ConvertNewUnitType, TransformedUnitsType>::type;
-            const DataType newValue = convertValue * value;
+            const DataType newValue = convertValue * data;
             return NewUnitValueType(newValue);
         }
 
@@ -330,148 +377,197 @@ namespace natl {
     using UnitCubed = Unit<InputUnitTag, 3>;
 
     //metric
+    namespace impl {
+        struct MetricLengthGroupTag {
+            using unit_category = LengthUnitCategory;
+            using group_type = StrongUnitGroupTypeMagnitude;
+            constexpr static SSize orderOfMagnitude = 10;
+        };
+        struct MillimeterTag {
+            using tag_group = MetricLengthGroupTag;
+            constexpr static SSize magnitudeIndex = -3;
+        };
+        struct CentimeterTag {
+            using tag_group = MetricLengthGroupTag;
+            constexpr static SSize magnitudeIndex = -2;
+        };
+        struct DecimeterTag {
+            using tag_group = MetricLengthGroupTag;
+            constexpr static SSize magnitudeIndex = -1;
+        };
+        struct MeterTag {
+            using tag_group = MetricLengthGroupTag;
+            constexpr static SSize magnitudeIndex = 0;
+        };
+        struct DecameterTag {
+            using tag_group = MetricLengthGroupTag;
+            constexpr static SSize magnitudeIndex = 1;
+        };
+        struct HectometerTag {
+            using tag_group = MetricLengthGroupTag;
+            constexpr static SSize magnitudeIndex = 2;
+        };
+        struct KilometerTag {
+            using tag_group = MetricLengthGroupTag;
+            constexpr static SSize magnitudeIndex = 3;
+        };
+    }
 
-    //metric length
-    struct MetricLengthGroupTag {
-        using unit_category = LengthUnitCategory;
-        using group_type = StrongUnitGroupTypeMagnitude;
-        constexpr static i64 orderOfMagnitude = 10;
-    };
+    template<SSize Magnitude>
+    using MillimeterUnit = Unit<impl::MillimeterTag, Magnitude>;
+    template<SSize Magnitude>
+    using CentimeterUnit = Unit<impl::CentimeterTag, Magnitude>;
+    template<SSize Magnitude>
+    using DecimeterUnit = Unit<impl::DecimeterTag, Magnitude>;
+    template<SSize Magnitude>
+    using MeterUnit = Unit<impl::MeterTag, Magnitude>;
+    template<SSize Magnitude>
+    using DecameterUnit = Unit<impl::DecameterTag, Magnitude>;
+    template<SSize Magnitude>
+    using HectometerUnit = Unit<impl::HectometerTag, Magnitude>;
+    template<SSize Magnitude>
+    using KilometerUnit = Unit<impl::KilometerTag, Magnitude>;
 
-    struct MillimeterTag {
-        using tag_group = MetricLengthGroupTag;
-        constexpr static i64 magnitudeIndex = -3;
-    };
-    template<i64 Magnitude>
-    using MillimeterUnit = Unit<MillimeterTag, Magnitude>;
-    template<class DataType> using MillimeterValue = UnitValue<DataType, MillimeterUnit<1>>;
-    using Millimeter = MillimeterValue<i64>;
+    template<typename DataType, SSize Magnitude = 1> 
+    using Millimeter = UnitValue<DataType, MillimeterUnit<Magnitude>>;
+    template<typename DataType, SSize Magnitude = 1> 
+    using Centimeter = UnitValue<DataType, CentimeterUnit<Magnitude>>;
+    template<typename DataType, SSize Magnitude = 1> 
+    using Decimeter = UnitValue<DataType, DecimeterUnit<Magnitude>>;
+    template<typename DataType, SSize Magnitude = 1> 
+    using Meter = UnitValue<DataType, MeterUnit<Magnitude>>;
+    template<typename DataType, SSize Magnitude = 1> 
+    using Decameter = UnitValue<DataType, DecameterUnit<Magnitude>>;
+    template<typename DataType, SSize Magnitude = 1> 
+    using Hectometer = UnitValue<DataType, HectometerUnit<Magnitude>>;
+    template<typename DataType, SSize Magnitude = 1> 
+    using Kilometer = UnitValue<DataType, KilometerUnit<Magnitude>>;
 
-    struct CentimeterTag {
-        using tag_group = MetricLengthGroupTag;
-        constexpr static i64 magnitudeIndex = -2;
-    };
-    template<i64 Magnitude>
-    using CentimeterUnit = Unit<CentimeterTag, Magnitude>;
-    template<class DataType> using CentimeterValue = UnitValue<DataType, CentimeterUnit<1>>;
-    using Centimeter = CentimeterValue<i64>;
+   //metric length
+    namespace impl {
+        struct MetricMassGroupTag {
+            using unit_category = MassUnitCategory;
+            using group_type = StrongUnitGroupTypeMagnitude;
+            constexpr static SSize orderOfMagnitude = 10;
+        };
+        struct MilligramTag {
+            using tag_group = MetricMassGroupTag;
+            constexpr static SSize magnitudeIndex = -3;
+        };
+        struct CentigramTag {
+            using tag_group = MetricMassGroupTag;
+            constexpr static SSize magnitudeIndex = -2;
+        };
+        struct DecigramTag {
+            using tag_group = MetricMassGroupTag;
+            constexpr static SSize magnitudeIndex = -1;
+        };
+        struct GramTag {
+            using tag_group = MetricMassGroupTag;
+            constexpr static SSize magnitudeIndex = 0;
+        };
+        struct DecagramTag {
+            using tag_group = MetricMassGroupTag;
+            constexpr static SSize magnitudeIndex = 1;
+        };
+        struct HectogramTag {
+            using tag_group = MetricMassGroupTag;
+            constexpr static SSize magnitudeIndex = 2;
+        };
+        struct KilogramTag {
+            using tag_group = MetricMassGroupTag;
+            constexpr static SSize magnitudeIndex = 3;
+        };
+    }
 
-    struct DecimeterTag {
-        using tag_group = MetricLengthGroupTag;
-        constexpr static i64 magnitudeIndex = -1;
-    };
-    template<i64 Magnitude>
-    using DecimeterUnit = Unit<DecimeterTag, Magnitude>;
-    template<class DataType> using DecimeterValue = UnitValue<DataType, DecimeterUnit<1>>;
-    using Decimeter = DecimeterValue<i64>;
+    template<SSize Magnitude>
+    using MilligramUnit = Unit<impl::MilligramTag, Magnitude>;
+    template<SSize Magnitude>
+    using CentigramUnit = Unit<impl::CentigramTag, Magnitude>;
+    template<SSize Magnitude>
+    using DecigramUnit = Unit<impl::DecigramTag, Magnitude>;
+    template<SSize Magnitude>
+    using GramUnit = Unit<impl::GramTag, Magnitude>;
+    template<SSize Magnitude>
+    using DecagramUnit = Unit<impl::DecagramTag, Magnitude>;
+    template<SSize Magnitude>
+    using HectogramUnit = Unit<impl::HectogramTag, Magnitude>;
+    template<SSize Magnitude>
+    using KilogramUnit = Unit<impl::KilogramTag, Magnitude>;
 
-    struct MeterTag {
-        using tag_group = MetricLengthGroupTag;
-        constexpr static i64 magnitudeIndex = 0;
-    };
-    template<i64 Magnitude>
-    using MeterUnit = Unit<MeterTag, Magnitude>;
-    template<class DataType> using MeterValue = UnitValue<DataType, MeterUnit<1>>;
-    using Meter = MeterValue<i64>;
-
-    struct DecameterTag {
-        using tag_group = MetricLengthGroupTag;
-        constexpr static i64 magnitudeIndex = 1;
-    };
-    template<i64 Magnitude>
-    using DecameterUnit = Unit<DecameterTag, Magnitude>;
-    template<class DataType> using DecameterValue = UnitValue<DataType, DecameterUnit<1>>;
-    using Decameter = DecameterValue<i64>;
-
-    struct HectometerTag {
-        using tag_group = MetricLengthGroupTag;
-        constexpr static i64 magnitudeIndex = 2;
-    };
-    template<i64 Magnitude>
-    using HectometerUnit = Unit<HectometerTag, Magnitude>;
-    template<class DataType> using HectometerValue = UnitValue<DataType, HectometerUnit<1>>;
-    using Hectometer = HectometerValue<i64>;
-
-    struct KilometerTag {
-        using tag_group = MetricLengthGroupTag;
-        constexpr static i64 magnitudeIndex = 3;
-    };
-    template<i64 Magnitude>
-    using KilometerUnit = Unit<KilometerTag, Magnitude>;
-    template<class DataType> using KilometerValue = UnitValue<DataType, KilometerUnit<1>>;
-    using Kilometer = KilometerValue<i64>;
-
-    //metric length
-    struct MetricMassGroupTag {
-        using unit_category = MassUnitCategory;
-        using group_type = StrongUnitGroupTypeMagnitude;
-        constexpr static i64 orderOfMagnitude = 10;
-    };
-
-    struct MilligramTag {
-        using tag_group = MetricMassGroupTag;
-        constexpr static i64 magnitudeIndex = -3;
-    };
-    template<i64 Magnitude>
-    using MilligramUnit = Unit<MilligramTag, Magnitude>;
-    template<class DataType> using MilligramValue = UnitValue<DataType, MilligramUnit<1>>;
-    using Milligram = MilligramValue<i64>;
-
-    struct CentigramTag {
-        using tag_group = MetricMassGroupTag;
-        constexpr static i64 magnitudeIndex = -2;
-    };
-    template<i64 Magnitude>
-    using CentigramUnit = Unit<CentigramTag, Magnitude>;
-    template<class DataType> using CentigramValue = UnitValue<DataType, CentigramUnit<1>>;
-    using Centigram = CentigramValue<i64>;
-
-    struct DecigramTag {
-        using tag_group = MetricMassGroupTag;
-        constexpr static i64 magnitudeIndex = -1;
-    };
-    template<i64 Magnitude>
-    using DecigramUnit = Unit<DecigramTag, Magnitude>;
-    template<class DataType> using DecigramValue = UnitValue<DataType, DecigramUnit<1>>;
-    using Decigram = DecigramValue<i64>;
-
-    struct GramTag {
-        using tag_group = MetricMassGroupTag;
-        constexpr static i64 magnitudeIndex = 0;
-    };
-    template<i64 Magnitude>
-    using GramUnit = Unit<GramTag, Magnitude>;
-    template<class DataType> using GramValue = UnitValue<DataType, GramUnit<1>>;
-    using Gram = GramValue<i64>;
-
-    struct DecagramTag {
-        using tag_group = MetricMassGroupTag;
-        constexpr static i64 magnitudeIndex = 1;
-    };
-    template<i64 Magnitude>
-    using DecagramUnit = Unit<DecagramTag, Magnitude>;
-    template<class DataType> using DecagramValue = UnitValue<DataType, DecagramUnit<1>>;
-    using Decagram = DecagramValue<i64>;
-
-    struct HectogramTag {
-        using tag_group = MetricMassGroupTag;
-        constexpr static i64 magnitudeIndex = 2;
-    };
-    template<i64 Magnitude>
-    using HectogramUnit = Unit<HectogramTag, Magnitude>;
-    template<class DataType> using HectogramValue = UnitValue<DataType, HectogramUnit<1>>;
-    using Hectogram = HectogramValue<i64>;
-
-    struct KilogramTag {
-        using tag_group = MetricMassGroupTag;
-        constexpr static i64 magnitudeIndex = 3;
-    };
-    template<i64 Magnitude>
-    using KilogramUnit = Unit<KilogramTag, Magnitude>;
-    template<class DataType> using KilogramValue = UnitValue<DataType, KilogramUnit<1>>;
-    using Kilogram = KilogramValue<i64>;
+    template<typename DataType, SSize Magnitude = 0> 
+    using Milligram = UnitValue<DataType, MilligramUnit<Magnitude>>;
+    template<typename DataType, SSize Magnitude = 0> 
+    using Centigram = UnitValue<DataType, CentigramUnit<Magnitude>>;
+    template<typename DataType, SSize Magnitude = 0> 
+    using Decigram = UnitValue<DataType, DecigramUnit<Magnitude>>;
+    template<typename DataType, SSize Magnitude = 0> 
+    using Gram = UnitValue<DataType, GramUnit<Magnitude>>;
+    template<typename DataType, SSize Magnitude = 0> 
+    using Decagram = UnitValue<DataType, DecagramUnit<Magnitude>>;
+    template<typename DataType, SSize Magnitude = 0> 
+    using Hectogram = UnitValue<DataType, HectogramUnit<Magnitude>>;
+    template<typename DataType, SSize Magnitude = 0> 
+    using Kilogram = UnitValue<DataType, KilogramUnit<Magnitude>>;
 
 
+    //Imperial
+
+    //Imperial length
+    namespace impl {
+        struct ImperialLengthGroupTag {
+            using unit_category = LengthUnitCategory;
+            using group_type = StrongUnitGroupTypeTable;
+            constexpr static Array<SSize, 4> convertionTable = { 1, 12, 12 * 3, 12 * 3 * 1760 };
+        };
+        struct InchesTag {
+            using tag_group = ImperialLengthGroupTag;
+            constexpr static Size tableIndex = 0;
+        };
+        struct FeetTag {
+            using tag_group = ImperialLengthGroupTag;
+            constexpr static Size tableIndex = 1;
+        };
+        struct YardsTag {
+            using tag_group = ImperialLengthGroupTag;
+            constexpr static Size tableIndex = 2;
+        };
+        struct MilesTag {
+            using tag_group = ImperialLengthGroupTag;
+            constexpr static Size tableIndex = 3;
+        };
+    }
+
+    template<SSize Magnitude>
+    using InchesUnit = Unit<impl::InchesTag, Magnitude>;
+    template<SSize Magnitude>
+    using FeetUnit = Unit<impl::FeetTag, Magnitude>;
+    template<SSize Magnitude>
+    using YardsUnit = Unit<impl::YardsTag, Magnitude>;
+    template<SSize Magnitude>
+    using MilesUnit = Unit<impl::MilesTag, Magnitude>;
+
+
+    template<typename DataType, SSize Magnitude = 1>
+    using Inches = UnitValue<DataType, InchesUnit<Magnitude>>;
+    template<typename DataType, SSize Magnitude = 1>
+    using Feet = UnitValue<DataType, FeetUnit<Magnitude>>;
+    template<typename DataType, SSize Magnitude = 1>
+    using Yards = UnitValue<DataType, YardsUnit<Magnitude>>;
+    template<typename DataType, SSize Magnitude = 1>
+    using Miles = UnitValue<DataType, MilesUnit<Magnitude>>;
+
+    namespace impl {
+        template<typename FloatDataType, typename FromTag, typename ToTag>
+        struct UnitCategoryConversionFactor<
+            ImperialLengthGroupTag, MetricLengthGroupTag, FromTag, ToTag, FloatDataType> 
+            : public UnitCategoryConversionFactorImpl<FloatDataType, 0.0254, InchesTag, MeterTag, FromTag, ToTag> {
+        };
+        template<typename FloatDataType, typename FromTag, typename ToTag>
+        struct UnitCategoryConversionFactor<
+            MetricLengthGroupTag, ImperialLengthGroupTag, FromTag, ToTag, FloatDataType>
+            : public UnitCategoryConversionFactorImpl<FloatDataType, 39.3701, MeterTag, InchesTag, FromTag, ToTag> {
+        };
+    }
 }
 
-#undef NATL_FORCE_INLINE
