@@ -679,4 +679,13 @@ namespace natl {
 	constexpr InvokeResultWithArgs<Functor, ArgTypes...> invokeFunction(Functor&& functor, ArgTypes&&... args) noexcept {
 		return natl::forward<Functor>(functor)(natl::forward<ArgTypes>(args)...);
 	}
+
+	template<typename Container>
+	concept HasReserve = requires(Container container, const Size newCapacity) {
+		{ container.reserve(newCapacity) };
+	};
+	template<typename Container>
+	concept HasResize = requires(Container container, const Size newCapacity) {
+		{ container.resize(newCapacity) };
+	};
 }

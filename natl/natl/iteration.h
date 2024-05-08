@@ -2,6 +2,7 @@
 
 //own
 #include "basicTypes.h"
+#include "typeTraits.h"
 #include "tuple.h"
 #include "dataMovement.h"
 
@@ -417,12 +418,6 @@ namespace natl {
     }
 
     template<typename Container>
-    concept BackInsertIteratorContainerHasReserve =
-        requires(Container & container, const Size newCapacity) {
-            { container.reserve(newCapacity) };
-    };
-
-    template<typename Container>
     class BackInsertIterator {
     public:
         using allocator_type = Container::allocator_type;
@@ -452,7 +447,7 @@ namespace natl {
 
         //modifiers 
         constexpr void reserve(const size_type newCapacity) noexcept {
-            if constexpr (BackInsertIteratorContainerHasReserve<Container>) {
+            if constexpr (HasReserve<Container>) {
                 container->reserve(newCapacity);
             }
         }
@@ -506,7 +501,7 @@ namespace natl {
             };
             dataDst.reserveFunction = [](void* containerTypeErasedPtr, const Size newCapacity) noexcept -> void {
                 Container* containerPtr = reinterpret_cast<Container*>(containerTypeErasedPtr);
-                if (BackInsertIteratorContainerHasReserve<DataType>) {
+                if (HasReserve<DataType>) {
                     containerPtr->reserve(newCapacity);
                 }
             };
@@ -552,7 +547,7 @@ namespace natl {
             constexpr reserve_function_type getReserveFunction() noexcept override {
                 return [](data_constexpr_polymorphic* dataPolymorphic, const Size newCapacity) noexcept -> void {
                     TypeErasedBackInsertIteratorDataConstexpr* data = static_cast<TypeErasedBackInsertIteratorDataConstexpr*>(dataPolymorphic);
-                    if constexpr (BackInsertIteratorContainerHasReserve<Container>) {
+                    if constexpr (HasReserve<Container>) {
                         data->container->reserve(newCapacity);
                     }
                 };

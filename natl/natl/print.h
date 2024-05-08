@@ -4,6 +4,7 @@
 #include "compilerDependent.h"
 #include "basicTypes.h"
 #include "stringOperations.h"
+#include "typeTraits.h"
 
 //interface
 namespace natl {

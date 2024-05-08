@@ -7,11 +7,76 @@
 #include "typePack.h"
 #include "tuple.h"
 #include "stringConvert.h"
+#include "characterTest.h"
 
 //interface
 namespace natl {
 	template<typename Type, typename CharType = Ascii>
 	struct  Formatter;
+
+	template<typename OutputIter>
+	class FormatOutputIter {
+	public:
+		using value_type = OutputIter::value_type;
+		using reference = OutputIter::reference;
+		using const_reference = OutputIter::const_reference;
+		using pointer = OutputIter::pointer;
+		using const_pointer = OutputIter::const_pointer;
+		using difference_type = OutputIter::difference_type;
+		using size_type = OutputIter::size_type;
+
+		using iterator_category = std::output_iterator_tag;
+	private:
+		OutputIter outputIter;
+		Size internalColumnNumber;
+		Size internalLineNumber;
+	public:
+		//constructor
+		constexpr FormatOutputIter() noexcept {}
+		constexpr FormatOutputIter(OutputIter outputIterIn) noexcept
+			: outputIter(outputIterIn), internalColumnNumber(0), internalLineNumber(0) {}
+
+		//destructor 
+		constexpr ~FormatOutputIter() noexcept = default;
+
+		//util 
+		constexpr FormatOutputIter& self() { return *this; }
+		constexpr const FormatOutputIter& self() const { return *this; }
+
+		//modifiers 
+		constexpr void reserve(const size_type newCapacity) noexcept {
+			if constexpr (HasReserve<OutputIter>) {
+				outputIter.reserve(newCapacity);
+			}
+		}
+
+		//iterator operation 
+		constexpr Size lineNumber() const noexcept {
+			return internalLineNumber;
+		}
+		constexpr Size columnNumber() const noexcept {
+			return internalColumnNumber;
+		}
+		constexpr OutputIter getOutputIter() noexcept {
+			return outputIter;
+		}
+		constexpr FormatOutputIter& operator=(const value_type& value) noexcept {
+			if (value == '\n') {
+				internalLineNumber += 1;
+				internalColumnNumber = 0;
+			} else {
+				internalColumnNumber += 1;
+			}
+
+			outputIter = value;
+			return self();
+		}
+
+		//no op 
+		constexpr FormatOutputIter& operator*() noexcept { return self(); }
+		constexpr FormatOutputIter& operator++() noexcept { return self(); }
+		constexpr FormatOutputIter& operator++(int) noexcept { return self(); }
+	};
 
 	template<typename ArgType, 
 		typename TemplateFlagsTypePack, 
@@ -99,7 +164,7 @@ namespace natl {
 						outputIter, natl::forward<arg_type>(arg.getArg()), natl::forward<arg_flags_storage_tuple>(arg.getArgFlags()));
 			} else {
 				using arg_flags_storage_tuple = Tuple<>;
-				using formatter_type = Formatter<ArgType, CharType>;
+				using formatter_type = Formatter<RemoveReferenceT<ArgType>, CharType>;
 				formatToArgCallFormat<OutputIter, ArgType, formatter_type, arg_flags_storage_tuple, 0>(
 					outputIter, natl::forward<ArgType>(arg), natl::forward<arg_flags_storage_tuple>(arg_flags_storage_tuple()));
 			}
@@ -108,9 +173,61 @@ namespace natl {
 
 	template<typename OutputIter, typename... ArgTypes>
 	constexpr OutputIter formatTo(OutputIter outputIter, ArgTypes&&... args) noexcept {
-		(impl::formatToArgLevel<OutputIter, ArgTypes, Ascii>(outputIter, natl::forward<ArgTypes>(args)), ...);
-		return outputIter;
+		using format_output_iter = FormatOutputIter<OutputIter>;
+		format_output_iter formatOutputIter = format_output_iter(outputIter);
+		(impl::formatToArgLevel<format_output_iter, ArgTypes, Ascii>(formatOutputIter, natl::forward<ArgTypes>(args)), ...);
+		return formatOutputIter.getOutputIter();
 	}
+
+	struct FormatColumn {
+		Size columnNumber;
+		Ascii fillCharacter;
+
+		//constructor
+		constexpr FormatColumn() noexcept : columnNumber(0), fillCharacter() {}
+		constexpr FormatColumn(const Size columnNumberIn, const Ascii fillCharacterIn = ' ') noexcept :
+			columnNumber(columnNumberIn), fillCharacter(fillCharacterIn) {}
+
+		//destructor
+		constexpr ~FormatColumn() noexcept = default;
+	};
+
+
+	template<typename CharType>
+	struct Formatter<FormatColumn, CharType> {
+		template<typename OutputIter>
+		constexpr static OutputIter format(OutputIter outputIter, const FormatColumn formatColumn) noexcept {
+			if (outputIter.columnNumber() < formatColumn.columnNumber) {
+				const Size columnDifference = formatColumn.columnNumber - outputIter.columnNumber();
+				for (Size i = 0; i < columnDifference; i++) {
+					outputIter = formatColumn.fillCharacter;
+				}
+			}
+			return outputIter;
+		}
+	};
+
+	struct FormatNewLine {};
+
+	template<typename CharType>
+	struct Formatter<FormatNewLine, CharType> {
+		template<typename OutputIter>
+		constexpr static OutputIter format(OutputIter outputIter, FormatNewLine) noexcept {
+			outputIter = '\n';
+			return outputIter;
+		}
+	};
+
+	template<Size StringSize>
+	struct Formatter<const Ascii[StringSize], Ascii> {
+		template<typename OutputIter>
+		constexpr static OutputIter format(OutputIter outputIter, const Ascii* str) noexcept {
+			for (Size i = 0; i < StringSize; i++) {
+				outputIter = str[i];
+			}
+			return outputIter;
+		}
+	};
 
 	enum class FormatIntFlag {
 		decimal,
@@ -128,7 +245,6 @@ namespace natl {
 	using FormatIntDecFlag = FormatIntDecimalFlag;
 
 	namespace impl {
-
 		template<typename InteagerType, typename CharType>
 		class IntegerFormatter {
 		public:
