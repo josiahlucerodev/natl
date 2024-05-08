@@ -1,6 +1,7 @@
 //natl
 #include <natl/test.h>
 #include <natl/string.h>
+#include <natl/print.h>
 
 template<class StringType>
 class StringTest {
@@ -170,7 +171,7 @@ public:
         // Test swapping strings
         swap<StringType>(str1, str2);
 
-        NATL_TEST_ASSERT(typeid(StringType).name() , str1 == "Second String" && str2 == "First String", "Swapping strings failed");
+        NATL_TEST_ASSERT(typeid(StringType).name(), str1 == "Second String" && str2 == "First String", "Swapping strings failed");
 
         return true;
     }

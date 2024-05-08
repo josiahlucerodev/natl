@@ -8,6 +8,7 @@
 #include "tuple.h"
 #include "stringConvert.h"
 #include "characterTest.h"
+#include "iteration.h"
 
 //interface
 namespace natl {
@@ -164,7 +165,7 @@ namespace natl {
 						outputIter, natl::forward<arg_type>(arg.getArg()), natl::forward<arg_flags_storage_tuple>(arg.getArgFlags()));
 			} else {
 				using arg_flags_storage_tuple = Tuple<>;
-				using formatter_type = Formatter<RemoveReferenceT<ArgType>, CharType>;
+				using formatter_type = Formatter<RemoveCVT<RemoveReferenceT<ArgType>>, CharType>;
 				formatToArgCallFormat<OutputIter, ArgType, formatter_type, arg_flags_storage_tuple, 0>(
 					outputIter, natl::forward<ArgType>(arg), natl::forward<arg_flags_storage_tuple>(arg_flags_storage_tuple()));
 			}
@@ -177,6 +178,14 @@ namespace natl {
 		format_output_iter formatOutputIter = format_output_iter(outputIter);
 		(impl::formatToArgLevel<format_output_iter, ArgTypes, Ascii>(formatOutputIter, natl::forward<ArgTypes>(args)), ...);
 		return formatOutputIter.getOutputIter();
+	}
+
+	template<typename DynStringType, typename... ArgTypes>
+	constexpr DynStringType format(ArgTypes&&... args) noexcept {
+		DynStringType outputString;
+		natl::BackInsertIterator<DynStringType> outputIter = natl::backInserter(outputString);
+		natl::formatTo<natl::BackInsertIterator<DynStringType>>(outputIter, natl::forward<ArgTypes>(args)...);
+		return outputString;
 	}
 
 	struct FormatColumn {
@@ -219,7 +228,7 @@ namespace natl {
 	};
 
 	template<Size StringSize>
-	struct Formatter<const Ascii[StringSize], Ascii> {
+	struct Formatter<Ascii[StringSize], Ascii> {
 		template<typename OutputIter>
 		constexpr static OutputIter format(OutputIter outputIter, const Ascii* str) noexcept {
 			for (Size i = 0; i < StringSize; i++) {

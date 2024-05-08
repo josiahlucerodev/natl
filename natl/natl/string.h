@@ -60,10 +60,12 @@ namespace natl {
 
 		constexpr static Bool enableSmallString = true;
 	private:
-		constexpr static Bool enableIncreasedSmallBufferSize = sizeof(BaseStringBaseMembersRef<CharType>) + bufferSize <= 64;
+		constexpr static Bool enableIncreasedSmallBufferSize = 
+			sizeof(BaseStringBaseMembersRef<CharType>) + bufferSize <= 64
+			&& TypeByteSize<CharType> == 1;
 		constexpr static Size increasedSmallBufferForCharSize = sizeof(size_type) - sizeof(ui8);
 		constexpr static Size standardSmallBufferSize = sizeof(size_type) - sizeof(ui8);
-		constexpr static Size increasedSizeToSmallBuffer = (enableIncreasedSmallBufferSize && sizeof(CharType) == 1) ? increasedSmallBufferForCharSize : 0;
+		constexpr static Size increasedSizeToSmallBuffer = (enableIncreasedSmallBufferSize) ? increasedSmallBufferForCharSize : 0;
 	public:
 		constexpr static Size smallBufferSize = ((sizeof(CharType*) + sizeof(size_type) + bufferSize) / sizeof(CharType)) + increasedSizeToSmallBuffer;
 
@@ -93,6 +95,24 @@ namespace natl {
 
 		//small string 
 	private:
+		constexpr Bool isConstexprSmallString() const noexcept {
+			if (!isConstantEvaluated()) {
+				if constexpr (enableIncreasedSmallBufferSize) {
+					constexpr size_type increasedBufferMask = ~static_cast<size_type>(0xff);
+					if (isSmallString()
+						&& (stringSizeAndSmallStringFlag & increasedBufferMask) != 0
+						&& *(reinterpret_cast<const char*>(reinterpret_cast<const ui8*>(this) + sizeof(CharType))) == '\0') [[unlikely]] {
+						return true;
+					}
+				} else {
+					if (stringSizeAndSmallStringFlag != 0 
+						&& *(reinterpret_cast<const char*>(reinterpret_cast<const ui8*>(this) + sizeof(stringSizeAndSmallStringFlag))) == '\0') [[unlikely]] {
+						return true;
+					}
+				}
+			} 
+			return false;
+		}
 		constexpr void setAsSmallString() noexcept { 
 			if constexpr (enableSmallString) {
 				stringSizeAndSmallStringFlag = setNthBitToZero<size_type>(stringSizeAndSmallStringFlag, TypeBitSize<size_type> - 1);
@@ -107,7 +127,7 @@ namespace natl {
 			return setNthBitToZero<size_type>(~size_type(0), TypeBitSize<size_type> - 1);
 		}
 		constexpr void setSize(const size_type newSize) noexcept {
-			if constexpr (enableIncreasedSmallBufferSize && TypeByteSize<CharType> == 1) {
+			if constexpr (enableIncreasedSmallBufferSize) {
 				constexpr size_type increasedBufferMask = ~static_cast<size_type>(0xff);
 				constexpr size_type standardMaskInverted = ~getMask();
 				const size_type mask = isSmallString() ? increasedBufferMask : standardMaskInverted;
@@ -127,25 +147,22 @@ namespace natl {
 		constexpr Bool isNotSmallString() const noexcept { 
 			return !isSmallString();
 		}
-		constexpr static size_type smallStringCapacity() noexcept {
+		constexpr size_type smallStringCapacity() const noexcept {
 			if (isConstantEvaluated() || !enableSmallString) {
 				return bufferSize;
 			} else {
-				if constexpr (enableIncreasedSmallBufferSize && TypeByteSize<CharType> == 1) {
-					return bufferSize + sizeof(stringPtr) + sizeof(stringCapacity) + (sizeof(Size) - sizeof(ui8));
+				if constexpr (enableIncreasedSmallBufferSize) {
+					if (isConstexprSmallString()) [[unlikely]] {
+						return bufferSize;
+					} else {
+						return bufferSize + sizeof(stringPtr) + sizeof(stringCapacity) + (sizeof(Size) - sizeof(ui8));
+					}
 				} else {
-					return bufferSize + ((sizeof(stringPtr) + sizeof(stringCapacity)) / sizeof(value_type));
-				}
-			}
-		}
-		constexpr const_pointer smallStringLocation() const noexcept {
-			if (isConstantEvaluated()) {
-				return smallStringStorage;
-			} else {
-				if constexpr (enableIncreasedSmallBufferSize && TypeByteSize<CharType> == 1) {
-					return reinterpret_cast<const_pointer>(reinterpret_cast<const ui8*>(this) + sizeof(CharType));
-				} else {
-					return reinterpret_cast<const_pointer>(reinterpret_cast<const ui8*>(this) + sizeof(stringSizeAndSmallStringFlag));
+					if (isConstexprSmallString()) [[unlikely]] {
+						return bufferSize;
+					} else {
+						return bufferSize + ((sizeof(stringPtr) + sizeof(stringCapacity)) / sizeof(value_type));
+					}
 				}
 			}
 		}
@@ -153,10 +170,37 @@ namespace natl {
 			if (isConstantEvaluated()) {
 				return smallStringStorage;
 			} else {
-				if constexpr (enableIncreasedSmallBufferSize && TypeByteSize<CharType> == 1) {
-					return reinterpret_cast<pointer>(reinterpret_cast<ui8*>(this) + sizeof(CharType));
+				if constexpr (enableIncreasedSmallBufferSize) {
+					if (isConstexprSmallString()) [[unlikely]] {
+						return smallStringStorage;
+					} else {
+						return reinterpret_cast<pointer>(reinterpret_cast<ui8*>(this) + sizeof(CharType));
+					}
 				} else {
-					return reinterpret_cast<pointer>(reinterpret_cast<ui8*>(this) + sizeof(stringSizeAndSmallStringFlag));
+					if (isConstexprSmallString()) [[unlikely]] {
+						return smallStringStorage;
+					} else {
+						return reinterpret_cast<pointer>(reinterpret_cast<ui8*>(this) + sizeof(stringSizeAndSmallStringFlag));
+					}
+				}
+			}
+		}
+		constexpr const_pointer smallStringLocation() const noexcept {
+			if (isConstantEvaluated()) {
+				return smallStringStorage;
+			} else {
+				if constexpr (enableIncreasedSmallBufferSize) {
+					if (isConstexprSmallString()) [[unlikely]] {
+						return smallStringStorage;
+					} else {
+						return reinterpret_cast<const_pointer>(reinterpret_cast<const ui8*>(this) + sizeof(CharType));
+					}
+				} else {
+					if (isConstexprSmallString()) [[unlikely]] {
+						return smallStringStorage;
+					} else {
+						return reinterpret_cast<const_pointer>(reinterpret_cast<const ui8*>(this) + sizeof(stringSizeAndSmallStringFlag));
+					}
 				}
 			}
 		}
@@ -164,7 +208,7 @@ namespace natl {
 		constexpr size_type capacity() const noexcept { return isSmallString() ? smallStringCapacity() : stringCapacity; };
 
 		constexpr size_type size() const noexcept {
-			if constexpr (enableIncreasedSmallBufferSize && TypeByteSize<CharType> == 1) {
+			if constexpr (enableIncreasedSmallBufferSize) {
 				constexpr size_type increasedBufferMask = static_cast<size_type>(0xff);
 				constexpr size_type standardMask = getMask();
 				const size_type mask = isSmallString() ? increasedBufferMask : standardMask;
@@ -196,13 +240,15 @@ namespace natl {
 	public:
 		//constructors 
 		constexpr BaseString() noexcept : stringSizeAndSmallStringFlag(0), stringPtr(0), stringCapacity(0), smallStringStorage{} {}
-		constexpr BaseString(const BaseString& str) noexcept {
+		template<Size OtherBufferSize, Bool OtherEnableDynAllocation>
+		constexpr BaseString(const BaseString<CharType, OtherBufferSize, Alloc, OtherEnableDynAllocation>& other) noexcept {
 			baseConstructorInit();
-			construct(str.data(), str.size());
+			construct(other.data(), other.size());
 		}
-		constexpr BaseString(BaseString&& str) noexcept {
+		template<Size OtherBufferSize, Bool OtherEnableDynAllocation>
+		constexpr BaseString(BaseString<CharType, OtherBufferSize, Alloc, OtherEnableDynAllocation>&& other) noexcept {
 			baseConstructorInit();
-			construct(forward<BaseString>(str));
+			construct(forward<allocation_move_adapater>(other.getAlloctionMoveAdapater()));
 		}
 		constexpr BaseString(const_pointer str) noexcept {
 			baseConstructorInit();
@@ -288,30 +334,6 @@ namespace natl {
 				setSize(newSize);
 				addNullTerminater();
 			}
-
-			return self();
-		}
-		constexpr BaseString& construct(BaseString&& other) noexcept {
-			if (other.isEmpty()) {
-				stringSizeAndSmallStringFlag = other.stringSizeAndSmallStringFlag;
-				stringCapacity = 0;
-				stringPtr = nullptr;
-			} else if (other.isSmallString()) {
-				const_pointer srcDataPtrFirst = other.data();
-				const_pointer srcDataPtrLast = srcDataPtrFirst + other.size();
-				uninitializedCopyNoOverlap<const_pointer, pointer>(srcDataPtrFirst, srcDataPtrLast, smallStringLocation());
-
-				stringSizeAndSmallStringFlag = other.stringSizeAndSmallStringFlag;
-				addNullTerminater();
-			} else {
-				stringSizeAndSmallStringFlag = other.stringSizeAndSmallStringFlag;
-				stringCapacity = other.stringCapacity;
-				stringPtr = other.stringPtr;
-			}
-
-			other.stringSizeAndSmallStringFlag = 0;
-			other.stringCapacity = 0;
-			other.stringPtr = nullptr;
 
 			return self();
 		}
@@ -460,11 +482,13 @@ namespace natl {
 	public:
 
 		//assignment 
-		constexpr BaseString& operator=(const BaseString& str) noexcept {
-			return assign(str);
+		template<Size OtherBufferSize, Bool OtherEnableDynAllocation>
+		constexpr BaseString& operator=(const BaseString<CharType, OtherBufferSize, Alloc, OtherEnableDynAllocation>& other) noexcept {
+			return assign(other);
 		}
-		constexpr BaseString& operator=(BaseString&& str) noexcept {
-			return assign(forward<BaseString>(str));
+		template<Size OtherBufferSize, Bool OtherEnableDynAllocation>
+		constexpr BaseString& operator=(BaseString<CharType, OtherBufferSize, Alloc, OtherEnableDynAllocation>&& other) noexcept {
+			return assign(forward<allocation_move_adapater>(other.getAlloctionMoveAdapater()));
 		}
 		constexpr BaseString& operator=(const_pointer str) noexcept {
 			return assign(str);
@@ -491,49 +515,6 @@ namespace natl {
 			requires(IsStringViewLike<StringViewLike, Ascii>)
 		constexpr BaseString& operator=(const StringViewLike& stringView) noexcept requires(std::is_same_v<std::decay_t<value_type>, Utf32>) {
 			return assign<StringViewLike>(stringView);
-		}
-
-		constexpr BaseString& assign(const BaseString& str) noexcept {
-			if (str.isEmpty()) {
-				release();
-
-				stringSizeAndSmallStringFlag = 0;
-				stringPtr = nullptr;
-				stringCapacity = 0;
-			} else {
-				const size_type newSize = str.size();
-				factorReserve(newSize);
-				uninitializedCopyNoOverlap<const_pointer, pointer>(str.data(), str.data() + newSize, data());
-				setSize(newSize);
-				addNullTerminater();
-			}
-
-			return self();
-		}
-
-		constexpr BaseString& assign(BaseString&& str) noexcept {
-			if (str.isSmallString()) {
-				stringSizeAndSmallStringFlag = str.stringSizeAndSmallStringFlag;
-				const_pointer srcStringPtrFirst = str.smallStringLocation();
-				const_pointer srcStringPtrLast = srcStringPtrFirst + str.size();
-				uninitializedCopyNoOverlap<const_pointer, pointer>(srcStringPtrFirst, srcStringPtrLast, smallStringLocation());
-
-				addNullTerminater();
-
-				str.stringSizeAndSmallStringFlag = 0;
-			} else {
-				release();
-
-				stringSizeAndSmallStringFlag = str.stringSizeAndSmallStringFlag;
-				stringPtr = str.stringPtr;
-				stringCapacity = str.stringCapacity;
-
-				str.stringSizeAndSmallStringFlag = 0;
-				str.stringPtr = nullptr;
-				str.stringCapacity = 0;
-			}
-
-			return self();
 		}
 
 		constexpr BaseString& assign(const_pointer str, const size_type count) noexcept {
@@ -739,7 +720,12 @@ namespace natl {
 			AllocationMoveAdapaterCanDealloc canBeDealloc = stringIsSmallBuffer ? AllocationMoveAdapaterCanDealloc::False : AllocationMoveAdapaterCanDealloc::True;
 			allocation_move_adapater allocationMoveAdapater(data(), size(), capacity(), requireCopy, canBeDealloc);
 			if (stringIsSmallBuffer) {
-				stringSizeAndSmallStringFlag = 0;
+				if constexpr (enableIncreasedSmallBufferSize) {
+					constexpr size_type increasedBufferMask = static_cast<size_type>(0xff);
+					stringSizeAndSmallStringFlag ^= (stringSizeAndSmallStringFlag & increasedBufferMask);
+				} else {
+					stringSizeAndSmallStringFlag = 0;
+				}
 			} else {
 				stringPtr = nullptr;
 				stringSizeAndSmallStringFlag = 0;
@@ -861,7 +847,7 @@ namespace natl {
 				stringPtr = newStringPtr;
 				stringCapacity = newCapacity;
 
-				if constexpr (enableIncreasedSmallBufferSize && sizeof(CharType) == 1) {
+				if constexpr (enableIncreasedSmallBufferSize) {
 					/*
 					for increased small buffer size, setAsNotSmallString() no longer maintains size 
 					in stringSizeAndSmallStringFlag as there is a difference in format to increase size 
