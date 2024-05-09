@@ -10,25 +10,24 @@ namespace natl {
     class StrongType {
     public:
         using value_type = DataType;
-    private:
-        value_type valueStorage;
+        value_type internalValueStorage;
     public:
         //constructor 
         constexpr StrongType() noexcept = default;
-        explicit constexpr StrongType(const value_type& valueIn) noexcept : valueStorage(valueIn) {};
+        explicit constexpr StrongType(const value_type& valueIn) noexcept : internalValueStorage(valueIn) {};
 
         //destructor 
         constexpr ~StrongType() noexcept = default;
 
         //element access 
-        constexpr value_type& value() & noexcept { return valueStorage; }
-        constexpr const value_type& value() const& noexcept { return valueStorage; }
-        constexpr value_type&& value() && noexcept { return natl::move(valueStorage); }
-        constexpr const value_type&& value() const&& noexcept { return natl::move(valueStorage); }
+        constexpr value_type& value() & noexcept { return internalValueStorage; }
+        constexpr const value_type& value() const& noexcept { return internalValueStorage; }
+        constexpr value_type&& value() && noexcept { return natl::move(internalValueStorage); }
+        constexpr const value_type&& value() const&& noexcept { return natl::move(internalValueStorage); }
 
         //modifiers 
-        constexpr void setValue(const value_type& valueIn) noexcept { valueStorage = valueIn; }
-        constexpr void setValue(value_type&& valueIn) noexcept { valueStorage = natl::move(valueIn); }
+        constexpr void setValue(const value_type& valueIn) noexcept { internalValueStorage = valueIn; }
+        constexpr void setValue(value_type&& valueIn) noexcept { internalValueStorage = natl::move(valueIn); }
 
         //compare
 		constexpr Bool operator==(const StrongType& rhs) const noexcept requires(IsOneWayEqualTestable<DataType>) {

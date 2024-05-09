@@ -9,6 +9,7 @@
 #include "stringConvert.h"
 #include "characterTest.h"
 #include "iteration.h"
+#include "strongType.h"
 
 //interface
 namespace natl {
@@ -104,23 +105,38 @@ namespace natl {
 
 	template<typename... FlagTypes>
 	constexpr auto formatArg(auto arg, auto... flagArgs) noexcept {
-		using ArgType = decltype(arg);
-		using ArgFlagsStorageTuple = Tuple<decltype(flagArgs)...>;
-		using FormatArgFlagsType = FormatArgFlags<
-			ArgType,
-			TypePack<FlagTypes...>,
-			TypePack<decltype(flagArgs)...>,
-			ArgFlagsStorageTuple>;
-		return FormatArgFlagsType(natl::forward<ArgType>(arg), natl::forward<ArgFlagsStorageTuple>(ArgFlagsStorageTuple(flagArgs...)));
+		using arg_type = decltype(arg);
+		using arg_flags = Tuple<decltype(flagArgs)...>;
+		using template_flags = Tuple<FlagTypes...>;
+		using arg_flags_storage_tuple = Tuple<decltype(flagArgs)...>;
+
+		using format_arg_flags = FormatArgFlags<
+			arg_type,
+			template_flags,
+			arg_flags,
+			arg_flags_storage_tuple>;
+		return format_arg_flags(
+			natl::forward<arg_type>(arg), 
+			natl::forward<arg_flags_storage_tuple>(arg_flags_storage_tuple(flagArgs...)));
 	}
 
 	template<TemplateStringLiteral textFlag>
 	constexpr auto fromatTextFlag() noexcept { return StringLiteral<textFlag>{}; }
 
 	template<TemplateStringLiteral... textFlags>
-	constexpr auto formatArgText(auto arg) noexcept {
-		using ArgType = decltype(arg);
-		return FormatArgFlags<ArgType, TypePack<StringLiteral<textFlags>...>>(natl::forward<ArgType>(arg));
+	constexpr auto formatArgText(auto arg, auto... flagArgs) noexcept {
+		using arg_type = decltype(arg);
+		using template_flags = TypePack<StringLiteral<textFlags>...>;
+		using arg_flags = TypePack<decltype(flagArgs)...>;
+		using arg_flags_storage_tuple = Tuple<decltype(flagArgs)...>;
+		using format_arg_flags = FormatArgFlags<
+			arg_type,
+			template_flags,
+			arg_flags,
+			arg_flags_storage_tuple>;
+		return format_arg_flags(
+			natl::forward<arg_type>(arg),
+			natl::forward<arg_flags_storage_tuple>(arg_flags_storage_tuple(flagArgs...)));
 	}
 
 	template<typename Type>
@@ -227,6 +243,34 @@ namespace natl {
 		}
 	};
 
+	template<>
+	struct Formatter<Ascii, Ascii> {
+		template<typename OutputIter>
+		constexpr static OutputIter format(OutputIter outputIter, const Ascii character) noexcept {
+			outputIter += character;
+			return outputIter;
+		}
+	};
+
+	template<>
+	struct Formatter<Ascii*, Ascii> {
+		template<typename OutputIter>
+		constexpr static OutputIter format(OutputIter outputIter, const Ascii* str) noexcept {
+			if (str == nullptr) {
+				return outputIter;
+			}
+
+			Ascii character = *str;
+			while (character != '\0') {
+				outputIter += character;
+				str += 1;
+				character = *str;
+			}
+
+			return outputIter;
+		}
+	};
+
 	template<Size StringSize>
 	struct Formatter<Ascii[StringSize], Ascii> {
 		template<typename OutputIter>
@@ -238,11 +282,154 @@ namespace natl {
 		}
 	};
 
-	enum class FormatIntFlag {
+	enum class BoolFormat {
+		fullLowercase,
+		fullFirstUppercase,
+		fullAllUppercase,
+		shorthandLowercase,
+		shorthandUppercase,
+
+		full = fullLowercase,
+		shorthand = shorthandLowercase,
+		standard = full
+	};
+
+	struct FormatBoolFullLowercaseFlag {};
+	struct FormatBoolFullFirstUppercaseFlag {};
+	struct FormatBoolFullAllUppercaseFlag {};
+	struct FormatBoolShorthandLowercaseFlag {};
+	struct FormatBoolShorthandUppercaseFlag {};
+
+	using FormatBoolFullFlag = FormatBoolFullLowercaseFlag;
+	using FormatBoolShorthandFlag = FormatBoolShorthandLowercaseFlag;
+	using FormatBoolStandardFlag = FormatBoolFullFlag;
+
+	template<typename CharType>
+	struct Formatter<Bool, CharType> {
+		using value_type = Bool;
+
+		template<typename OutputIter>
+		constexpr static void univieraslFormat(OutputIter& outputIter, const Bool booleanValue, const BoolFormat boolFormat) noexcept {
+			switch (boolFormat) {
+			case BoolFormat::fullLowercase:
+				if (booleanValue) {
+					outputIter = 't';
+					outputIter = 'r';
+					outputIter = 'u';
+					outputIter = 'e';
+				} else {
+					outputIter = 'f';
+					outputIter = 'a';
+					outputIter = 'l';
+					outputIter = 's';
+					outputIter = 'e';
+				}
+				break;
+			case BoolFormat::fullFirstUppercase:
+				if (booleanValue) {
+					outputIter = 'T';
+					outputIter = 'r';
+					outputIter = 'u';
+					outputIter = 'e';
+				} else {
+					outputIter = 'F';
+					outputIter = 'a';
+					outputIter = 'l';
+					outputIter = 's';
+					outputIter = 'e';
+				}
+				break;
+			case BoolFormat::fullAllUppercase:
+				if (booleanValue) {
+					outputIter = 'T';
+					outputIter = 'R';
+					outputIter = 'U';
+					outputIter = 'E';
+				} else {
+					outputIter = 'F';
+					outputIter = 'A';
+					outputIter = 'L';
+					outputIter = 'S';
+					outputIter = 'E';
+				}
+				break;
+			case BoolFormat::shorthandLowercase:
+				if (booleanValue) {
+					outputIter = 't';
+				} else {
+					outputIter = 'f';
+				}
+				break;
+			case BoolFormat::shorthandUppercase:
+				if (booleanValue) {
+					outputIter = 'T';
+				} else {
+					outputIter = 'F';
+				}
+				break;
+			default:
+				unreachable();
+			}
+		}
+
+		template<typename... TemplateFlags>
+		class WithTemplateFlags {
+		public:
+			template<typename TemplateFlag>
+			constexpr static void handelTemplateFlag(BoolFormat& boolFormat) noexcept {
+				if constexpr (IsStringLiteralV<TemplateFlag>) {
+					constexpr ConstAsciiStringView tflagName = TemplateFlag::toStringView();
+					if constexpr (tflagName == "shorthand") {
+						boolFormat = BoolFormat::shorthand;
+					} else if constexpr (tflagName == "Full") {
+						boolFormat = BoolFormat::fullFirstUppercase;
+					} else if constexpr (tflagName == "FULL") {
+						boolFormat = BoolFormat::fullAllUppercase;
+					} else if constexpr (tflagName == "Shorthand") {
+						boolFormat = BoolFormat::shorthandUppercase;
+					} else if constexpr (tflagName == "full") {
+						boolFormat = BoolFormat::fullLowercase;
+					} else {
+						unreachable();
+					}
+				} else {
+					if constexpr (IsSameV<TemplateFlag, FormatBoolShorthandLowercaseFlag>) {
+						boolFormat = BoolFormat::shorthand;
+					} else if constexpr (IsSameV<TemplateFlag, FormatBoolFullFirstUppercaseFlag>) {
+						boolFormat = BoolFormat::fullFirstUppercase;
+					} else if constexpr (IsSameV<TemplateFlag, FormatBoolFullAllUppercaseFlag>) {
+						boolFormat = BoolFormat::fullAllUppercase;
+					} else if constexpr (IsSameV<TemplateFlag, FormatBoolShorthandUppercaseFlag>) {
+						boolFormat = BoolFormat::shorthandUppercase;
+					} else if constexpr (IsSameV<TemplateFlag, FormatBoolFullLowercaseFlag>) {
+						boolFormat = BoolFormat::fullLowercase;
+					} else {
+						unreachable();
+					}
+				}
+			}
+
+		public:
+			template<typename OutputIter>
+			constexpr static OutputIter format(OutputIter outputIter, const Bool booleanValue, BoolFormat boolFormat = BoolFormat::standard) noexcept {
+				(handelTemplateFlag<TemplateFlags>(boolFormat), ...);
+				univieraslFormat<OutputIter>(outputIter, booleanValue, boolFormat);
+				return outputIter;
+			}
+		};
+
+		template<typename OutputIter>
+		constexpr static OutputIter format(OutputIter outputIter, const Bool booleanValue, BoolFormat boolFormat = BoolFormat::standard) noexcept {
+			univeralFormat<OutputIter>(outputIter, booleanValue, boolFormat);
+			return outputIter;
+		}
+	};
+
+	enum class IntFormat {
 		decimal,
 		hexadecimal,
 		binary,
-		defaultFormat = decimal,
+		standard = decimal,
 	};
 
 	struct FormatIntHexadecimalFlag {};
@@ -255,7 +442,7 @@ namespace natl {
 
 	namespace impl {
 		template<typename InteagerType, typename CharType>
-		class IntegerFormatter {
+		struct IntegerFormatter {
 		public:
 			using value_type = InteagerType;
 
@@ -285,14 +472,17 @@ namespace natl {
 			}
 
 			template<typename OutputIter>
-			constexpr static void formatWithFlag(OutputIter& outputIter, const value_type number, const FormatIntFlag flag) noexcept {
-				switch (flag) {
-				case FormatIntFlag::hexadecimal:
+			constexpr static void univeralFormat(OutputIter& outputIter, const value_type number, const IntFormat intFormat) noexcept {
+				switch (intFormat) {
+				case IntFormat::hexadecimal:
 					formatHexadecimal<OutputIter>(outputIter, number);
-				case FormatIntFlag::binary:
+					break;
+				case IntFormat::binary:
 					formatBinary<OutputIter>(outputIter, number);
-				case FormatIntFlag::decimal:
+					break;
+				case IntFormat::decimal:
 					formatDecimal<OutputIter>(outputIter, number);
+					break;
 				default:
 					unreachable();
 				}
@@ -301,41 +491,48 @@ namespace natl {
 			template<typename... TemplateFlags>
 			class WithTemplateFlags {
 			public:
-				constexpr static Size reserveAmount = 32;
 
-				template<typename OutputIter, typename TemplateFlag, typename... RestTemplateFlags>
-				constexpr static void handelFlags(OutputIter& outputIter, const value_type number) noexcept {
+				template<typename TemplateFlag>
+				constexpr static void handelTemplateFlag(IntFormat& intFormat) noexcept {
 					if constexpr (IsStringLiteralV<TemplateFlag>) {
 						constexpr ConstAsciiStringView tflagName = TemplateFlag::toStringView();
 
 						if constexpr (tflagName == "hexadecimal" || tflagName == "hex") {
-							formatHexadecimal<OutputIter>(outputIter, number);
+							intFormat = IntFormat::hexadecimal;
 						} else if constexpr (tflagName == "binary" || tflagName == "bin") {
-							formatBinary<OutputIter>(outputIter, number);
+							intFormat = IntFormat::binary;
 						} else if constexpr (tflagName == "decimal" || tflagName == "dec") {
-							formatDecimal<OutputIter>(outputIter, number);
+							intFormat = IntFormat::decimal;
 						} else {
 							unreachable();
 						}
-					}
-
-					if constexpr (sizeof...(RestTemplateFlags) != 0) {
-						handelFlags<OutputIter, RestTemplateFlags...>(outputIter, number);
+					} else {
+						if constexpr (IsSameV<TemplateFlag, FormatIntHexadecimalFlag>) {
+							intFormat = IntFormat::hexadecimal;
+						} else if constexpr (IsSameV<TemplateFlag, FormatIntBinaryFlag>) {
+							intFormat = IntFormat::binary;
+						} else if constexpr (IsSameV<TemplateFlag, FormatIntDecimalFlag>) {
+							intFormat = IntFormat::decimal;
+						} else {
+							unreachable();
+						}
 					}
 				}
 
 			public:
 				template<typename OutputIter>
-				constexpr static OutputIter format(OutputIter outputIter, const value_type number) noexcept {
-					handelFlags<OutputIter, TemplateFlags...>(outputIter, number);
+				constexpr static OutputIter format(OutputIter outputIter, const value_type number, IntFormat intFormat = IntFormat::standard) noexcept {
+					(handelTemplateFlag<TemplateFlags>(intFormat), ...);
+					univeralFormat<OutputIter>(outputIter, number, intFormat);
 					return outputIter;
 				}
 			};
 
 		public:
 			template<typename OutputIter>
-			constexpr static OutputIter format(OutputIter outputIter, const value_type number, const FormatIntFlag flag = FormatIntFlag::defaultFormat) noexcept {
-				return formatWithFlag<OutputIter>(outputIter, number, flag);
+			constexpr static OutputIter format(OutputIter outputIter, const value_type number, IntFormat intFormat = IntFormat::standard) noexcept {
+				univeralFormat<OutputIter>(outputIter, number, intFormat);
+				return outputIter;
 			}
 		};
 	}
@@ -357,4 +554,124 @@ namespace natl {
 	struct Formatter<ui32, CharType> : impl::IntegerFormatter<ui32, CharType> {};
 	template<typename CharType>
 	struct Formatter<ui64, CharType> : impl::IntegerFormatter<ui64, CharType> {};
+
+	enum class FloatFormat {
+		standard,
+	};
+
+	struct FormatFloatStandardFlag {};
+	
+	namespace impl {
+		struct FormatFloatPrecisionTag {};
+	}
+	using FormatFloatPrecision = StrongType<Size, impl::FormatFloatPrecisionTag>;
+	template<Size PrecisionValue>
+	using FormatFloatPrecisionType = TypeValue<FormatFloatPrecision(PrecisionValue)>;
+
+	namespace impl {
+		template<typename FormatArgType>
+		concept IsValidFloatFormatArgType =
+			IsSameV<DecayT<FormatArgType>, FloatFormat>
+			|| IsSameV<DecayT<FormatArgType>, FormatFloatPrecision>;
+	}
+
+	namespace impl {
+		template<typename FloatType, typename CharType>
+		struct FloatFormatter {
+		public:
+			using value_type = FloatType;
+
+			
+			template<typename OutputIter>
+			constexpr static void formatStandard(OutputIter& outputIter, 
+				const value_type number, 
+				const Size precision) noexcept {
+				natl::String numberAsString = floatToStringDecimal(number, precision);
+				outputIter = copyNoOverlap<natl::String::const_iterator, OutputIter>(
+					numberAsString.cbegin(),
+					numberAsString.cend(),
+					outputIter);
+			}
+
+			template<typename OutputIter>
+			constexpr static void univieraslFormat(OutputIter& outputIter, 
+				const value_type number, 
+				const Size precision,
+				const FloatFormat floatFormat) noexcept {
+
+				switch (floatFormat) {
+				case FloatFormat::standard:
+					formatStandard(outputIter, number, precision);
+					break;
+				default:
+					unreachable();
+				}
+			}
+
+			template<typename... TemplateFlags>
+			class WithTemplateFlags {
+			public:
+				template<typename TemplateFlag>
+				constexpr static void handelTemplateFlag(Size& precision, FloatFormat& floatFormat) noexcept {
+					if constexpr (IsStringLiteralV<TemplateFlag>) {
+						constexpr ConstAsciiStringView tflagName = TemplateFlag::toStringView();
+
+						if constexpr (tflagName.starts_with("p: ")) {
+							constexpr Size newPrecision = stringDecimalToInt(tflagName.substr(3));
+							precision = newPrecision;
+						} else if constexpr (tflagName == "standard") {
+							floatFormat = FloatFormat::standard;
+						} else {
+							unreachable();
+						}
+					} else {
+						if constexpr (IsSameV<TemplateFlag, FormatFloatStandardFlag>) {
+							floatFormat = FloatFormat::standard;
+						} else {
+							unreachable();
+						}
+					}
+				}
+
+			public:
+
+				template<typename FormatArgType>
+				constexpr static void handelFormatArg(FormatArgType&& formatArg, Size& precision, FloatFormat& floatFormat) noexcept {
+					if constexpr (IsSameV<DecayT<FormatArgType>, FloatFormat>) {
+						floatFormat = formatArg;
+					} else if constexpr(IsSameV<DecayT<FormatArgType>, FormatFloatPrecision>) {
+						precision = formatArg.value();
+					} else {
+						unreachable();
+					}
+				}
+
+				template<typename OutputIter, typename... FormatArgTypes>
+					requires(impl::IsValidFloatFormatArgType<FormatArgTypes> && ...)
+				constexpr static OutputIter format(OutputIter outputIter, const value_type number, FormatArgTypes&&... formatArgs) noexcept {
+					Size precision = Limits<Size>::max();
+					FloatFormat floatFormat = FloatFormat::standard;
+					(handelTemplateFlag<TemplateFlags>(precision, floatFormat), ...);
+					(handelFormatArg<FormatArgTypes>(forward<FormatArgTypes>(formatArgs), precision, floatFormat), ...);
+					univieraslFormat<OutputIter>(outputIter, number, precision, floatFormat);
+					return outputIter;
+				}
+			};
+
+			template<typename OutputIter, typename... FormatArgTypes>
+				requires(impl::IsValidFloatFormatArgType<FormatArgTypes> && ...)
+			constexpr static OutputIter format(OutputIter outputIter, const value_type number, FormatArgTypes&&... formatArgs) noexcept {
+				Size precision = Limits<Size>::max();
+				FloatFormat floatFormat = FloatFormat::standard;
+				(handelFormatArg<FormatArgTypes>(forward<FormatArgTypes>(formatArgs), precision, floatFormat), ...);
+				univieraslFormat<OutputIter>(outputIter, number, precision, floatFormat);
+				return outputIter;
+			}
+		};
+	}
+
+	template<typename CharType>
+	struct Formatter<f32, CharType> : impl::FloatFormatter<f32, CharType> {};
+	template<typename CharType>
+	struct Formatter<f64, CharType> : impl::FloatFormatter<f64, CharType> {};
 }

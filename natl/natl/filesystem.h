@@ -517,7 +517,7 @@ namespace natl {
 	enum class PathFormat {
 		nativeFormat,
 		genericFormat,
-		defaultFormat = genericFormat,
+		standard = genericFormat,
 	};
 
 	template<Size BufferSize = (128 - sizeof(BaseStringBaseMembersRef<Ascii>)), class Alloc = DefaultAllocator<Ascii>>
@@ -558,7 +558,7 @@ namespace natl {
 		constexpr static Bool triviallyMoveConstructedable = string_type::triviallyMoveConstructedable;
 
 		constexpr static value_type pathSeparator = getPlatformPreferredPathSeparator();
-		constexpr static PathFormat autoFormat = PathFormat::defaultFormat;
+		constexpr static PathFormat autoFormat = PathFormat::standard;
 	private:
 		string_type pathStorage;
 	public:

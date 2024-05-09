@@ -26,7 +26,11 @@ namespace natl {
 		Size stringCapacity;
 	};
 
-	template<class CharType, Size bufferSize, class Alloc = DefaultAllocator<CharType>, Bool EnableDynAllocation = true>
+	template<class CharType, 
+		Size bufferSize, 
+		class Alloc = DefaultAllocator<CharType>, 
+		Bool EnableDynAllocation = true, 
+		Bool EnableIncreasedSmallBufferSize = true>
 		requires(IsAllocator<Alloc>)
 	class BaseString {
 	public:
@@ -62,7 +66,8 @@ namespace natl {
 	private:
 		constexpr static Bool enableIncreasedSmallBufferSize = 
 			sizeof(BaseStringBaseMembersRef<CharType>) + bufferSize <= 64
-			&& TypeByteSize<CharType> == 1;
+			&& TypeByteSize<CharType> == 1 &&
+			EnableIncreasedSmallBufferSize;
 		constexpr static Size increasedSmallBufferForCharSize = sizeof(size_type) - sizeof(ui8);
 		constexpr static Size standardSmallBufferSize = sizeof(size_type) - sizeof(ui8);
 		constexpr static Size increasedSizeToSmallBuffer = (enableIncreasedSmallBufferSize) ? increasedSmallBufferForCharSize : 0;
@@ -240,13 +245,13 @@ namespace natl {
 	public:
 		//constructors 
 		constexpr BaseString() noexcept : stringSizeAndSmallStringFlag(0), stringPtr(0), stringCapacity(0), smallStringStorage{} {}
-		template<Size OtherBufferSize, Bool OtherEnableDynAllocation>
-		constexpr BaseString(const BaseString<CharType, OtherBufferSize, Alloc, OtherEnableDynAllocation>& other) noexcept {
+		template<Size OtherBufferSize, Bool OtherEnableDynAllocation, Bool OtherEnableIncreasedSmallBufferSize>
+		constexpr BaseString(const BaseString<CharType, OtherBufferSize, Alloc, OtherEnableDynAllocation, OtherEnableIncreasedSmallBufferSize>& other) noexcept {
 			baseConstructorInit();
 			construct(other.data(), other.size());
 		}
-		template<Size OtherBufferSize, Bool OtherEnableDynAllocation>
-		constexpr BaseString(BaseString<CharType, OtherBufferSize, Alloc, OtherEnableDynAllocation>&& other) noexcept {
+		template<Size OtherBufferSize, Bool OtherEnableDynAllocation, Bool OtherEnableIncreasedSmallBufferSize>
+		constexpr BaseString(BaseString<CharType, OtherBufferSize, Alloc, OtherEnableDynAllocation, OtherEnableIncreasedSmallBufferSize>&& other) noexcept {
 			baseConstructorInit();
 			construct(forward<allocation_move_adapater>(other.getAlloctionMoveAdapater()));
 		}
@@ -482,12 +487,12 @@ namespace natl {
 	public:
 
 		//assignment 
-		template<Size OtherBufferSize, Bool OtherEnableDynAllocation>
+		template<Size OtherBufferSize, Bool OtherEnableDynAllocation, Bool OtherEnableIncreasedSmallBufferSize>
 		constexpr BaseString& operator=(const BaseString<CharType, OtherBufferSize, Alloc, OtherEnableDynAllocation>& other) noexcept {
 			return assign(other);
 		}
-		template<Size OtherBufferSize, Bool OtherEnableDynAllocation>
-		constexpr BaseString& operator=(BaseString<CharType, OtherBufferSize, Alloc, OtherEnableDynAllocation>&& other) noexcept {
+		template<Size OtherBufferSize, Bool OtherEnableDynAllocation, Bool OtherEnableIncreasedSmallBufferSize>
+		constexpr BaseString& operator=(BaseString<CharType, OtherBufferSize, Alloc, OtherEnableDynAllocation, OtherEnableIncreasedSmallBufferSize>&& other) noexcept {
 			return assign(forward<allocation_move_adapater>(other.getAlloctionMoveAdapater()));
 		}
 		constexpr BaseString& operator=(const_pointer str) noexcept {

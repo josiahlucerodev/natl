@@ -536,14 +536,26 @@ namespace natl {
 
 	template<class DynStringContainer, typename Float>
 		requires(IsConvertDynStringContainer<DynStringContainer>)
-	constexpr void floatToStringStringType(DynStringContainer& output, const Float number, const ui64 precision) noexcept {
+	constexpr void floatToStringStringType(DynStringContainer& output, const Float number, Size precision) noexcept {
 		const i64 integerPart = static_cast<i64>(number);
 
 		intToStringDecimalStringType<DynStringContainer, i64>(output, integerPart);
 		output.push_back('.');
 
 		Float fractionalPart = number - static_cast<Float>(static_cast<int>(number));
-		for (Size i = 0; i < precision && fractionalPart < Float(1.0); ++i) {
+		if (fractionalPart <= Float(0.0)) {
+			output.push_back('0');
+			return;
+		}
+
+		if constexpr (sizeof(Float) == 4) {
+			precision = natl::min<Size>(precision, 10);
+		}
+		if constexpr (sizeof(Float) == 8) {
+			precision = natl::min<Size>(precision, 20);
+		}
+
+		for (Size i = 0; i < precision && fractionalPart > Float(0.00001); ++i) {
 			fractionalPart *= 10;
 			const char digitCharacter = '0' + static_cast<char>(static_cast<i64>(fractionalPart));
 			output.push_back(digitCharacter);
@@ -552,7 +564,7 @@ namespace natl {
 	}
 
 	template<typename Float>
-	constexpr String floatToStringType(const Float number, const ui64 precision) noexcept {
+	constexpr String floatToStringType(const Float number, const Size precision) noexcept {
 		String result{};
 		floatToStringStringType<String, Float>(result, number, precision);
 		return result;
@@ -616,8 +628,12 @@ namespace natl {
 	constexpr String intToStringDecimal(const ui32 number) noexcept { return intToStringDecimalType<ui32>(number); };
 	constexpr String intToStringDecimal(const ui64 number) noexcept { return intToStringDecimalType<ui64>(number); };
 
-	constexpr String floatToStringDecimal(const f32 number) noexcept { return floatToStringType<f32>(number); };
-	constexpr String floatToStringDecimal(const f64 number) noexcept { return floatToStringType<f64>(number); };
+	constexpr String floatToStringDecimal(const f32 number, const Size precision = Limits<Size>::max()) noexcept { 
+		return floatToStringType<f32>(number, precision);
+	};
+	constexpr String floatToStringDecimal(const f64 number, const Size precision = Limits<Size>::max()) noexcept { 
+		return floatToStringType<f64>(number, precision);
+	};
 
 	template<class DynStringContainer>
 		requires(IsConvertDynStringContainer<DynStringContainer>)
@@ -714,8 +730,12 @@ namespace natl {
 
 	template<class DynStringContainer>
 		requires(IsConvertDynStringContainer<DynStringContainer>)
-	constexpr void floatToString(DynStringContainer& output, const f32 number) noexcept { floatToStringType<DynStringContainer, f32>(output, number); };
+	constexpr void floatToString(DynStringContainer& output, const f32 number, const Size precision = Limits<Size>::max()) noexcept { 
+		floatToStringType<DynStringContainer, f32>(output, number, precision); 
+	};
 	template<class DynStringContainer>
 		requires(IsConvertDynStringContainer<DynStringContainer>)
-	constexpr void floatToString(DynStringContainer& output, const f64 number) noexcept { floatToStringType<DynStringContainer, f64>(output, number); };
+	constexpr void floatToString(DynStringContainer& output, const f64 number, const Size precision = = Limits<Size>::max()) noexcept {
+		floatToStringType<DynStringContainer, f64>(output, number, precision); 
+	};
 }
