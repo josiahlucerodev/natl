@@ -269,13 +269,13 @@ namespace natl {
 		constexpr void internalAssign(TypeArg<DataType>, AllocatorArg<Alloc>, ArgTypes&&... args) noexcept {
 			if (isConstantEvaluated()) {
 				storageState = impl::AnyStorageState::constexprStorage;
-				using arg_storage_constexpr_type = impl::AnyStorageConstexpr<DecayT<DataType>>;
+				using arg_storage_constexpr_type = impl::AnyStorageConstexpr<Decay<DataType>>;
 				any_storage_constexpr_polymorphic* newConstexprStorage = arg_storage_constexpr_type::createNew(natl::forward<ArgTypes>(args)...);
 				construct(&constexprStorage, newConstexprStorage);
 			} else {
-				typeInfo = getTypeInfoPtr<DecayT<DataType>>();
+				typeInfo = getTypeInfoPtr<Decay<DataType>>();
 				numberOfBytesUsed = TypeByteSize<DataType>;
-				using arg_storage = impl::AnyStorage<DecayT<DataType>, Alloc>;
+				using arg_storage = impl::AnyStorage<Decay<DataType>, Alloc>;
 				if constexpr (impl::BaseAnyDoesDataTypeFitInSmallBuffer<BufferSize, DataType>) {
 					storageState = impl::AnyStorageState::smallBufferStorage;
 					arg_storage::createNewInSmallBuffer(smallBufferStorage, natl::forward<ArgTypes>(args)...);
@@ -412,11 +412,11 @@ namespace natl {
 					return OptionEmpty{};
 				}
 
-				if (constexprStorage->getTypeInfoFunction()() != getTypeInfo<DecayT<DataType>>()) {
+				if (constexprStorage->getTypeInfoFunction()() != getTypeInfo<Decay<DataType>>()) {
 					return OptionEmpty{};
 				}
 
-				using any_storage_type = impl::AnyStorageConstexpr<DecayT<DataType>>;
+				using any_storage_type = impl::AnyStorageConstexpr<Decay<DataType>>;
 				any_storage_type* anyStorage = static_cast<any_storage_type*>(constexprStorage);
 				return anyStorage->getPtr();
 			} else {
@@ -424,20 +424,20 @@ namespace natl {
 				case impl::AnyStorageState::noValue:
 					return OptionEmpty{};
 				case impl::AnyStorageState::smallBufferStorage: {
-					if (*typeInfo != getTypeInfo<DecayT<DataType>>()) {
+					if (*typeInfo != getTypeInfo<Decay<DataType>>()) {
 						return OptionEmpty{};
 					}
 
-					using any_storage_type = impl::AnyStorage<DecayT<DataType>, DefaultAllocatorByte>;
+					using any_storage_type = impl::AnyStorage<Decay<DataType>, DefaultAllocatorByte>;
 					any_storage_type* anyStorage = reinterpret_cast<any_storage_type*>(smallBufferStorage);
 					return anyStorage->getPtr();
 				}
 				case impl::AnyStorageState::heapStorage: {
-					if (*typeInfo != getTypeInfo<DecayT<DataType>>()) {
+					if (*typeInfo != getTypeInfo<Decay<DataType>>()) {
 						return OptionEmpty{};
 					}
 
-					using any_storage_type = impl::AnyStorage<DecayT<DataType>, DefaultAllocatorByte>;
+					using any_storage_type = impl::AnyStorage<Decay<DataType>, DefaultAllocatorByte>;
 					any_storage_type* anyStorage = reinterpret_cast<any_storage_type*>(heapStorage);
 					return anyStorage->getPtr();
 				}

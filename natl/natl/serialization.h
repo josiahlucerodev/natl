@@ -256,7 +256,7 @@ namespace natl {
 		constexpr SerializationStructType() noexcept = default;
 		/*
 		template<typename... SerializationStructTypeElementArgs>
-			requires(IsSameV<SerializationStructTypeElement, SerializationStructTypeElementArgs> && ...)
+			requires(IsSame<SerializationStructTypeElement, SerializationStructTypeElementArgs> && ...)
 		constexpr SerializationStructType(const StringView& name, SerializationStructTypeElementArgs&&... elements) noexcept : name(name), elements(elements...) {};
 		*/
 		constexpr SerializationStructType(const StringView& nameIn, std::initializer_list<SerializationStructTypeElement> elementsIn) noexcept : name(nameIn), elements(elementsIn) {};

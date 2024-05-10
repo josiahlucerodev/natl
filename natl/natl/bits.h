@@ -7,7 +7,7 @@
 //interface 
 namespace natl {
     template<typename Integer>
-        requires(IsFundamentalUnsignedItergerV<Integer>)
+        requires(IsBuiltInUnsignedInteger<Integer>)
     NATL_FORCE_INLINE constexpr Integer setNthBitToZero(const Integer num, const Integer n) noexcept {
         const Integer mask = ~(Integer(1) << n);
         const Integer result = num & mask;
@@ -15,7 +15,7 @@ namespace natl {
     }
 
     template<typename Integer>
-        requires(IsFundamentalUnsignedItergerV<Integer>)
+        requires(IsBuiltInUnsignedInteger<Integer>)
     NATL_FORCE_INLINE constexpr Integer setNthBitToOne(const Integer num, const Integer n) noexcept {
         const Integer mask = Integer(1) << n;
         const Integer result = num | mask;

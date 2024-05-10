@@ -416,7 +416,7 @@ namespace natl {
 
 
     template<typename DataType, typename Alloc = DefaultAllocator<DataType>>
-        requires(IsAllocator<Alloc> && IsNotConstV<DataType>)
+        requires(IsAllocator<Alloc> && IsNotConst<DataType>)
     class AllocationMoveAdapater {
     public:
         using allocator_type = Alloc;
@@ -557,8 +557,8 @@ namespace natl {
 
     template<typename ToDataType, typename FromAllocationMoveAdapaterType>
         requires(
-            IsSpecialization<FromAllocationMoveAdapaterType, AllocationMoveAdapater> &&
-            IsSameByteSizeV<ToDataType, typename FromAllocationMoveAdapaterType::value_type>)
+            IsSpecializationC<FromAllocationMoveAdapaterType, AllocationMoveAdapater> &&
+            IsSameByteSize<ToDataType, typename FromAllocationMoveAdapaterType::value_type>)
         constexpr typename FromAllocationMoveAdapaterType::template rebind_allocation_move_adapater<ToDataType>
         equivalentCastAllocationMoveAdapter(FromAllocationMoveAdapaterType&& allocationMoveAdapter) noexcept {
 
@@ -567,7 +567,7 @@ namespace natl {
         //using FromAlloc = FromAllocationMoveAdapaterType::allocator_type;
         using FromDataType = FromAllocationMoveAdapaterType::value_type;
 
-        if constexpr (IsSameV<ToAllocationMoveAdapterType, FromAllocationMoveAdapaterType>) {
+        if constexpr (IsSame<ToAllocationMoveAdapterType, FromAllocationMoveAdapaterType>) {
             return natl::move(allocationMoveAdapter);
         } else if constexpr (isConstantEvaluated()) {
             ToDataType* newDataPtr = ToAlloc::allocate(allocationMoveAdapter.capacity());

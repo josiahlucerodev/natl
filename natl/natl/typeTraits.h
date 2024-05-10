@@ -31,33 +31,35 @@ namespace natl {
 
 	//composition 
 	template<Bool BoolValue, typename Type, typename OtherType>
-	struct Conditional{ using type = Type; };
+	struct ConditionalT{ using type = Type; };
 	template<typename Type, typename OtherType>
-	struct Conditional<false, Type, OtherType> { using type = OtherType; };
+	struct ConditionalT<false, Type, OtherType> { using type = OtherType; };
 	template<Bool value, typename Type, typename OtherType >
-	using ConditionalT = typename Conditional<value, Type, OtherType>::type;
+	using Conditional = typename ConditionalT<value, Type, OtherType>::type;
 
-	template<typename... Types> struct Conjunction : TrueType {};
-	template<typename Type> struct Conjunction<Type> : Type {};
+	template<typename... Types> struct ConjunctionV : TrueType {};
+	template<typename Type> struct ConjunctionV<Type> : Type {};
 	template<typename Type, typename... OtherTypes> 
-	struct Conjunction<Type, OtherTypes...> : ConditionalT<Bool(Type::value), Conjunction<OtherTypes...>, Type> {};
-	template<typename... Types> constexpr inline Bool ConjunctionV = Conjunction<Types...>::value;
+	struct ConjunctionV<Type, OtherTypes...> : Conditional<Bool(Type::value), ConjunctionV<OtherTypes...>, Type> {};
+	template<typename... Types> constexpr inline Bool Conjunction = ConjunctionV<Types...>::value;
 
-	template<typename... Types> struct Disjunction : FalseType {};
-	template<typename Type> struct Disjunction<Type> : Type {};
+	template<typename... Types> struct DisjunctionV : FalseType {};
+	template<typename Type> struct DisjunctionV<Type> : Type {};
 	template<typename Type, typename... OtherTypes>
-	struct Disjunction<Type, OtherTypes...> : ConditionalT<Bool(Type::value), Type, Disjunction<OtherTypes...>> {};
-	template<typename... Types> constexpr inline Bool DisjunctionV = Disjunction<Types...>::value;
+	struct DisjunctionV<Type, OtherTypes...> : Conditional<Bool(Type::value), Type, DisjunctionV<OtherTypes...>> {};
+	template<typename... Types> constexpr inline Bool Disjunction = DisjunctionV<Types...>::value;
 
-	template<typename Type> struct Negation : BoolConstant<!Bool(Type::value)> {};
-	template<typename Type> constexpr inline Bool NegationV = Negation<Type>::value;
+	template<typename Type> struct NegationV : BoolConstant<!Bool(Type::value)> {};
+	template<typename Type> constexpr inline Bool Negation = NegationV<Type>::value;
 
-	template<typename Type> struct TypeIdentity { using type = Type; };
-	template<typename Type> using TypeIdentityT = typename TypeIdentity<Type>::type;
+	template<typename Type> struct TypeIdentityT { using type = Type; };
+	template<typename Type> using TypeIdentity = typename TypeIdentityT<Type>::type;
 
-	//underlying 
+	//underlying
 	template <typename EnumType>
-	using UnderlyingType = std::underlying_type_t<EnumType>;
+	using UnderlyingTypeT = std::underlying_type<EnumType>;
+	template <typename EnumType>
+	using UnderlyingType = UnderlyingTypeT<EnumType>::type;
 
 	template <typename EnumType>
 	constexpr UnderlyingType<EnumType> toUnderlying(const EnumType value) {
@@ -69,195 +71,212 @@ namespace natl {
 	}
 
 	//primary 
-	template<class Type> struct IsUnion : BoolConstant<std::is_union_v<Type>> {};
-	template<class Type> inline constexpr Bool IsUnionV = IsUnion<Type>::value;
+	template<class Type> struct IsUnionV : BoolConstant<std::is_union_v<Type>> {};
+	template<class Type> inline constexpr Bool IsUnion = IsUnionV<Type>::value;
+	template<class Type> concept IsUnionC = IsUnion<Type>;
 
-	template<class Type> struct IsNotUnion : Negation<IsUnion<Type>> {};
-	template<class Type> inline constexpr Bool IsNotUnionV = IsNotUnion<Type>::value;
-
+	template<class Type> struct IsNotUnionV : NegationV<IsUnionV<Type>> {};
+	template<class Type> inline constexpr Bool IsNotUnion = IsNotUnionV<Type>::value;
+	template<class Type> concept IsNotUnionC = IsNotUnion<Type>;
 
 	namespace impl {
-		template<typename Type> IntegralConstant<Bool, IsNotUnionV<Type>> isClassTest(int Type::*);
+		template<typename Type> IntegralConstant<Bool, IsNotUnion<Type>> isClassTest(int Type::*);
 		template<typename> FalseType isClassTest(...);
 	}
-	template<typename Type> struct IsClass : decltype(impl::isClassTest<Type>(0)) {};
-	template<typename Type> constexpr inline Bool IsClassV = IsClass<Type>::value;
+	template<typename Type> struct IsClassV : decltype(impl::isClassTest<Type>(0)) {};
+	template<typename Type> constexpr inline Bool IsClass = IsClassV<Type>::value;
+	template<typename Type> concept IsClassC = IsClass<Type>;
 
-	template<typename Type> struct IsNotClass : Negation<IsClass<Type>> {};
-	template<typename Type> constexpr inline Bool IsNotClassV = IsNotClass<Type>::value;
+	template<typename Type> struct IsNotClassV : NegationV<IsClassV<Type>> {};
+	template<typename Type> constexpr inline Bool IsNotClass = IsNotClassV<Type>::value;
+	template<typename Type> concept IsNotClassC = IsNotClass<Type>;
 
-	template<typename Type> struct IsEnum : BoolConstant<std::is_enum_v<Type>> {};
-	template<typename Type> inline constexpr Bool IsEnumV = IsEnum<Type>::value;
+	template<typename Type> struct IsEnumV : BoolConstant<std::is_enum_v<Type>> {};
+	template<typename Type> inline constexpr Bool IsEnum = IsEnumV<Type>::value;
+	template<typename Type> concept IsEnumC = IsEnum<Type>;
 
-	template<typename Type> struct IsNotEnum : Negation<IsEnum<Type>> {};
-	template<typename Type> constexpr inline Bool IsNotEnumV = IsNotEnum<Type>::value;
+	template<typename Type> struct IsNotEnumV : NegationV<IsEnumV<Type>> {};
+	template<typename Type> constexpr inline Bool IsNotEnum = IsNotEnumV<Type>::value;
+	template<typename Type> concept IsNotEnumC = IsNotEnum<Type>;
 
-	template<typename FunctionSignature> struct IsFunction : FalseType {};
-	template<typename ReturnType, typename... ArgTypes> struct IsFunction<ReturnType(ArgTypes...)> : TrueType {};
-	template<typename FunctionSignature> constexpr inline Bool IsFunctionV = IsFunction<FunctionSignature>::value;
+	template<typename FunctionSignature> struct IsFunctionV : FalseType {};
+	template<typename ReturnType, typename... ArgTypes> struct IsFunctionV<ReturnType(ArgTypes...)> : TrueType {};
+	template<typename FunctionSignature> constexpr inline Bool IsFunction = IsFunctionV<FunctionSignature>::value;
+	template<typename FunctionSignature> concept IsFunctionC = IsFunction<FunctionSignature>;
 
-	template<typename Type> struct IsPointer: FalseType {};
-	template<typename Type> struct IsPointer<Type*> : TrueType {};
-	template<typename Type> struct IsPointer<Type* const> : TrueType {};
-	template<typename Type> struct IsPointer<Type* volatile> : TrueType {};
-	template<typename Type> struct IsPointer<Type* const volatile> : TrueType {};
-	template<typename Type> constexpr inline Bool IsPointerV = IsPointer<Type>::value;
+	template<typename Type> struct IsPointerV: FalseType {};
+	template<typename Type> struct IsPointerV<Type*> : TrueType {};
+	template<typename Type> struct IsPointerV<Type* const> : TrueType {};
+	template<typename Type> struct IsPointerV<Type* volatile> : TrueType {};
+	template<typename Type> struct IsPointerV<Type* const volatile> : TrueType {};
+	template<typename Type> constexpr inline Bool IsPointer = IsPointerV<Type>::value;
+	template<typename Type> concept IsPointerC = IsPointer<Type>;
 
-	template<class DataType> struct IsArrayType : FalseType {};
-	template<class DataType> struct IsArrayType<DataType[]> : TrueType {};
-	template<class DataType, Size Number> struct IsArrayType<DataType[Number]> : TrueType {};
-	template<class DataType> constexpr inline Bool IsArray = IsArrayType<DataType>::value;
+	template<typename Type> struct IsArrayT : FalseType {};
+	template<typename Type> struct IsArrayT<Type[]> : TrueType {};
+	template<typename Type, Size Number> struct IsArrayT<Type[Number]> : TrueType {};
+	template<typename Type> constexpr inline Bool IsArray = IsArrayT<Type>::value;
+	template<typename Type> concept IsArrayC = IsArray<Type>;
 
 	//relationships
-	template<typename Type, typename OtherType> struct IsSame : FalseType {};
-	template<typename Type> struct IsSame<Type, Type> : TrueType {};
-	template<typename Type, typename OtherType> constexpr inline Bool IsSameV = IsSame<Type, OtherType>::value;
+	template<typename Type, typename OtherType> struct IsSameT : FalseType {};
+	template<typename Type> struct IsSameT<Type, Type> : TrueType {};
+	template<typename Type, typename OtherType> constexpr inline Bool IsSame = IsSameT<Type, OtherType>::value;
+	template<typename Type, typename OtherType> concept IsSameC = IsSame<Type, OtherType>;
 
-	template<typename Type, typename OtherType> struct IsNotSame : TrueType {};
-	template<typename Type> struct IsNotSame<Type, Type> : FalseType {};
-	template<typename Type, typename OtherType> constexpr inline Bool IsNotSameV = IsNotSame<Type, OtherType>::value;
+	template<typename Type, typename OtherType> struct IsNotSameT : TrueType {};
+	template<typename Type> struct IsNotSameT<Type, Type> : FalseType {};
+	template<typename Type, typename OtherType> constexpr inline Bool IsNotSame = IsNotSameT<Type, OtherType>::value;
+	template<typename Type, typename OtherType> concept IsNotSameC = IsNotSame<Type, OtherType>;
 
 	namespace impl {
-		template<class Type, class OtherType> concept SameAsImpl = IsSameV<Type, OtherType>;
+		template<class Type, class OtherType> concept SameAsImpl = IsSame<Type, OtherType>;
 	}
 	template<class Type, class OtherType>
 	concept SameAs = impl::SameAsImpl<Type, OtherType>&& impl::SameAsImpl<Type, OtherType>;
 
-	template<typename... Types> struct IsSameByteSize : BoolConstant<(sizeof(Types) == ...)> {};
-	template<typename... Types> constexpr inline Bool IsSameByteSizeV = IsSameByteSize<Types...>::value;
+	template<typename... Types> struct IsSameByteSizeV : BoolConstant<(sizeof(Types) == ...)> {};
+	template<typename... Types> constexpr inline Bool IsSameByteSize = IsSameByteSizeV<Types...>::value;
+	template<typename... Types> concept IsSameByteSizeC = IsSameByteSize<Types...>;
 
 	//basic type properties
-	template<typename Type> struct IsConst : FalseType {};
-	template<typename Type> struct IsConst<const Type> : TrueType {};
-	template<typename Type> constexpr inline Bool IsConstV = IsConst<Type>::value;
+	template<typename Type> struct IsConstV : FalseType {};
+	template<typename Type> struct IsConstV<const Type> : TrueType {};
+	template<typename Type> constexpr inline Bool IsConst = IsConstV<Type>::value;
+	template<typename Type> concept IsConstC = IsConst<Type>;
 
-	template<typename Type> struct IsNotConst : TrueType {};
-	template<typename Type> struct IsNotConst<const Type> : FalseType {};
-	template<typename Type> constexpr inline Bool IsNotConstV = IsNotConst<Type>::value;
+	template<typename Type> struct IsNotConstV : TrueType {};
+	template<typename Type> struct IsNotConstV<const Type> : FalseType {};
+	template<typename Type> constexpr inline Bool IsNotConst = IsNotConstV<Type>::value;
+	template<typename Type> concept IsNotConstC = IsNotConst<Type>;
 
-	template<typename DataType> struct RemoveConst { using type = DataType; };
-	template<typename DataType> struct RemoveConst<const DataType> { using type = DataType; };
-	template<typename DataType> using RemoveConstT = typename RemoveConst<DataType>::type;
+	template<typename DataType> struct RemoveConstT { using type = DataType; };
+	template<typename DataType> struct RemoveConstT<const DataType> { using type = DataType; };
+	template<typename DataType> using RemoveConst = typename RemoveConstT<DataType>::type;
 
-	template<typename DataType> struct AddConst { using type = const DataType; };
-	template<typename DataType> using AddConstT = AddConst<DataType>::type;
+	template<typename DataType> struct AddConstT { using type = const DataType; };
+	template<typename DataType> using AddConst = AddConstT<DataType>::type;
 
-	template<typename DataType> struct IsVolatile : FalseType {};
-	template<typename DataType> struct IsVolatile<volatile  DataType> : TrueType {};
-	template<typename DataType> constexpr inline Bool IsVolatileV = IsVolatile<DataType>::value;
+	template<typename DataType> struct IsVolatileV : FalseType {};
+	template<typename DataType> struct IsVolatileV<volatile  DataType> : TrueType {};
+	template<typename DataType> constexpr inline Bool IsVolatile = IsVolatileV<DataType>::value;
+	template<typename DataType> concept IsVolatileC = IsVolatile<DataType>;
 
-	template<typename DataType> struct RemoveVolatile { using type = DataType; };
-	template<typename DataType> struct RemoveVolatile<volatile DataType> { using type = DataType; };
-	template<typename DataType> using RemoveVolatileT = typename RemoveVolatile<DataType>::type;
+	template<typename DataType> struct RemoveVolatileT { using type = DataType; };
+	template<typename DataType> struct RemoveVolatileT<volatile DataType> { using type = DataType; };
+	template<typename DataType> using RemoveVolatile = typename RemoveVolatileT<DataType>::type;
 
-	template<typename DataType> struct AddVolatile { using type = volatile DataType; };
-	template<typename DataType> using AddVolatileT = AddVolatile<DataType>::type;
+	template<typename DataType> struct AddVolatileT { using type = volatile DataType; };
+	template<typename DataType> using AddVolatile = AddVolatileT<DataType>::type;
 
-	template<typename DataType> struct RemoveCV { using type = DataType; };
-	template<typename DataType> struct RemoveCV<const DataType> { using type = DataType; };
-	template<typename DataType> struct RemoveCV<volatile DataType> { using type = DataType; };
-	template<typename DataType> struct RemoveCV<const volatile DataType> { using type = DataType; };
-	template<typename DataType> using RemoveCVT = typename RemoveCV<DataType>::type;
+	template<typename DataType> struct RemoveConctVolatileT { using type = DataType; };
+	template<typename DataType> struct RemoveConctVolatileT<const DataType> { using type = DataType; };
+	template<typename DataType> struct RemoveConctVolatileT<volatile DataType> { using type = DataType; };
+	template<typename DataType> struct RemoveConctVolatileT<const volatile DataType> { using type = DataType; };
+	template<typename DataType> using RemoveConctVolatile = typename RemoveConctVolatileT<DataType>::type;
 
-	template<typename DataType> struct AddCV { using type = const volatile DataType; };
-	template<typename DataType> using AddCVT = AddCV<DataType>::type;
+	template<typename DataType> struct AddConctVolatileT { using type = const volatile DataType; };
+	template<typename DataType> using AddConctVolatile = AddConctVolatileT<DataType>::type;
 
-	template<typename Type> struct IsEmpty { constexpr static Bool value = std::is_empty_v<Type>; };
-	template<typename Type> constexpr inline Bool IsEmptyV = IsEmpty<Type>::value;
-	template<typename Type> struct IsNotEmpty { constexpr static Bool value = !IsEmptyV<Type>; };
-	template<typename Type> constexpr inline Bool IsNotEmptyV = IsNotEmpty<Type>::value;
+	template<typename Type> struct IsEmptyV { constexpr static Bool value = std::is_empty_v<Type>; };
+	template<typename Type> constexpr inline Bool IsEmpty = IsEmptyV<Type>::value;
+	template<typename Type> concept IsEmptyC = IsEmpty<Type>;
 
-	template<typename DataType> struct IsVoid : IsSame<void, RemoveCVT<DataType>> {};
-	template<typename DataType> constexpr inline Bool IsVoidV = IsVoid<DataType>::value;
+	template<typename Type> struct IsNotEmptyV { constexpr static Bool value = !IsEmpty<Type>; };
+	template<typename Type> constexpr inline Bool IsNotEmpty = IsNotEmptyV<Type>::value;
+	template<typename Type> concept IsNotEmptyC = IsNotEmpty<Type>;
 
-	template<typename... AnyTypes> struct MakeVoid { using type = void; };
-	template<typename... AnyTypes> using MakeVoidT = MakeVoid<AnyTypes...>::type;
+	template<typename DataType> struct IsVoidV : IsSameT<void, RemoveConctVolatile<DataType>> {};
+	template<typename DataType> constexpr inline Bool IsVoid = IsVoidV<DataType>::value;
+	template<typename DataType> concept IsVoidC = IsVoid<DataType>;
 
-	namespace impl {
-		template<typename DataType, template<typename...> typename Primary>
-		struct IsSpecialization : FalseType {};
+	template<typename... AnyTypes> struct MakeVoidT { using type = void; };
+	template<typename... AnyTypes> using MakeVoid = MakeVoidT<AnyTypes...>::type;
 
-		template<template<typename...> typename Primary, typename... Args>
-		struct IsSpecialization<Primary<Args...>, Primary> : TrueType {};
 
-		template<typename DataType, template<typename...> typename Primary>
-		inline constexpr Bool IsSpecializationV = IsSpecialization<DataType, Primary>::value;
-	}
-
+	template<typename DataType, template<typename...> typename Primary>
+	struct IsSpecializationV : FalseType {};
+	template<template<typename...> typename Primary, typename... Args>
+	struct IsSpecializationV<Primary<Args...>, Primary> : TrueType {};
+	template<typename DataType, template<typename...> typename Primary>
+	inline constexpr Bool IsSpecialization = IsSpecializationV<DataType, Primary>::value;
 	template<typename Test, template<typename...> typename SpecializationType>
-	concept IsSpecialization = impl::IsSpecializationV<Test, SpecializationType>;
+	concept IsSpecializationC = IsSpecialization<Test, SpecializationType>;
 
 	//reference 
-	template<typename DataType> struct RemoveReference { using type = DataType; };
-	template<typename DataType> struct RemoveReference<DataType&> { using type = DataType; };
-	template<typename DataType> struct RemoveReference<DataType&&> { using type = DataType; };
+	template<typename DataType> struct RemoveReferenceT { using type = DataType; };
+	template<typename DataType> struct RemoveReferenceT<DataType&> { using type = DataType; };
+	template<typename DataType> struct RemoveReferenceT<DataType&&> { using type = DataType; };
 	template<typename DataType>
-	using RemoveReferenceT = typename RemoveReference<DataType>::type;
+	using RemoveReference = typename RemoveReferenceT<DataType>::type;
 
 	template <class DataType, class = void>
-	struct UniversalAddReference {
+	struct UniversalAddReferenceT {
 		using lvalue = DataType;
 		using rvalue = DataType;
 	};
 	template <class DataType>
-	struct UniversalAddReference<DataType, MakeVoidT<DataType&>> {
+	struct UniversalAddReferenceT<DataType, MakeVoid<DataType&>> {
 		using lvalue = DataType&;
 		using rvalue = DataType&&;
 	};
-	template<typename DataType> struct AddLValueReference {
-		using type = UniversalAddReference<DataType>::lvalue;
+	template<typename DataType> struct AddLValueReferenceT {
+		using type = UniversalAddReferenceT<DataType>::lvalue;
 	};
-	template<typename DataType> struct AddRValueReference {
-		using type = UniversalAddReference<DataType>::rvalue;
+	template<typename DataType> struct AddRValueReferenceT {
+		using type = UniversalAddReferenceT<DataType>::rvalue;
 	};
 
 	template<typename DataType>
-	using AddLValueReferenceT = typename AddLValueReference<DataType>::type;
+	using AddLValueReference = typename AddLValueReferenceT<DataType>::type;
 	template<typename DataType>
-	using AddRValueReferenceT = typename AddRValueReference<DataType>::type;
+	using AddRValueReference = typename AddRValueReferenceT<DataType>::type;
 	
-	template<typename DataType> struct IsLValueReference : FalseType {};
-	template<typename DataType> struct IsLValueReference<DataType&> : TrueType {};
-	template<typename DataType> constexpr inline Bool IsLValueReferenceV = IsLValueReference<DataType>::value;
-	template<typename DataType> struct IsRValueReference : FalseType {};
-	template<typename DataType> struct IsRValueReference<DataType&&> : TrueType {};
-	template<typename DataType> constexpr inline Bool IsRValueReferenceV = IsRValueReference<DataType>::value;
+	template<typename DataType> struct IsLValueReferenceV : FalseType {};
+	template<typename DataType> struct IsLValueReferenceV<DataType&> : TrueType {};
+	template<typename DataType> constexpr inline Bool IsLValueReference = IsLValueReferenceV<DataType>::value;
+	template<typename DataType> concept IsLValueReferenceC = IsLValueReference<DataType>;
+	template<typename DataType> struct IsRValueReferenceV : FalseType {};
+	template<typename DataType> struct IsRValueReferenceV<DataType&&> : TrueType {};
+	template<typename DataType> constexpr inline Bool IsRValueReference = IsRValueReferenceV<DataType>::value;
+	template<typename DataType> concept IsRValueReferenceC = IsRValueReference<DataType>;
 
-	template<typename DataType> struct IsReferenceType : FalseType {};
-	template<typename DataType> struct IsReferenceType<DataType&> : TrueType {};
-	template<typename DataType> struct IsReferenceType<DataType&&> : TrueType {};
-	template<typename DataType> constexpr inline Bool IsReference = IsReferenceType<TrueType>::value;
+	template<typename DataType> struct IsReferenceV : FalseType {};
+	template<typename DataType> struct IsReferenceV<DataType&> : TrueType {};
+	template<typename DataType> struct IsReferenceV<DataType&&> : TrueType {};
+	template<typename DataType> constexpr inline Bool IsReference = IsReferenceV<TrueType>::value;
+	template<typename DataType> concept IsReferenceC = IsReference<TrueType>;
 
 	//pointers
-	template<typename DataType> struct RemovePointer { using type = DataType; };
-	template<typename DataType> struct RemovePointer<DataType*> { using type = DataType; };
-	template<typename DataType> struct RemovePointer<DataType* const> { using type = DataType; };
-	template<typename DataType> struct RemovePointer<DataType* volatile> { using type = DataType; };
-	template<typename DataType> struct RemovePointer<DataType* const volatile> { using type = DataType; };
-	template<typename DataType> using RemovePointerT = RemovePointer<DataType>::type;
+	template<typename DataType> struct RemovePointerT { using type = DataType; };
+	template<typename DataType> struct RemovePointerT<DataType*> { using type = DataType; };
+	template<typename DataType> struct RemovePointerT<DataType* const> { using type = DataType; };
+	template<typename DataType> struct RemovePointerT<DataType* volatile> { using type = DataType; };
+	template<typename DataType> struct RemovePointerT<DataType* const volatile> { using type = DataType; };
+	template<typename DataType> using RemovePointer = RemovePointerT<DataType>::type;
 
 	namespace impl {
-		template<typename DataType> auto tryAddPointer(int) -> TypeIdentity<RemoveReferenceT<DataType>*> {};
-		template<typename DataType> auto tryAddPointer(...) -> TypeIdentity<DataType> {};
+		template<typename DataType> auto tryAddPointer(int) -> TypeIdentityT<RemoveReference<DataType>*> {};
+		template<typename DataType> auto tryAddPointer(...) -> TypeIdentityT<DataType> {};
 	}
-	template<typename DataType> struct AddPointer : decltype(impl::tryAddPointer<DataType>(0)) {};
-	template<typename DataType> using AddPointerT = typename AddPointer<DataType>::type;
+	template<typename DataType> struct AddPointerT : decltype(impl::tryAddPointer<DataType>(0)) {};
+	template<typename DataType> using AddPointer = typename AddPointerT<DataType>::type;
 
 	//misc op
-	template<typename DataType> AddRValueReferenceT<DataType> declval() noexcept {
+	template<typename DataType> AddRValueReference<DataType> declval() noexcept {
 		//static_assert(false, "natl: declval not allowed in an evaluated context");
 	}
 	template <typename DataType>
-	constexpr RemoveReferenceT<DataType>&& move(DataType&& arg) noexcept {
-		return static_cast<RemoveReferenceT<DataType>&&>(arg);
+	constexpr RemoveReference<DataType>&& move(DataType&& arg) noexcept {
+		return static_cast<RemoveReference<DataType>&&>(arg);
 	}
 	template <typename DataType>
-	constexpr DataType&& forward(RemoveReferenceT<DataType>& arg) noexcept {
+	constexpr DataType&& forward(RemoveReference<DataType>& arg) noexcept {
 		return static_cast<DataType&&>(arg);
 	}
 	template <typename DataType>
-	constexpr DataType&& forward(RemoveReferenceT<DataType>&& arg) noexcept {
-		static_assert(!IsLValueReferenceV<DataType>, "natl: template argument substituting DataType is an lvalue reference type");
+	constexpr DataType&& forward(RemoveReference<DataType>&& arg) noexcept {
+		static_assert(!IsLValueReference<DataType>, "natl: template argument substituting DataType is an lvalue reference type");
 		return static_cast<DataType&&>(arg);
 	}
 	template <typename DataType>
@@ -267,26 +286,26 @@ namespace natl {
 		b = move(temp);
 	}
 
-	template<class DataType> struct RemoveExtentType { using type = DataType; };
-	template<class DataType> struct RemoveExtentType<DataType[]> { using type = DataType; };
-	template<class DataType, std::size_t Number> struct RemoveExtentType<DataType[Number]> { using type = DataType; };
-	template<class DataType> using RemoveExtent = RemoveExtentType<DataType>::type;
+	template<class DataType> struct RemoveExtentT { using type = DataType; };
+	template<class DataType> struct RemoveExtentT<DataType[]> { using type = DataType; };
+	template<class DataType, std::size_t Number> struct RemoveExtentT<DataType[Number]> { using type = DataType; };
+	template<class DataType> using RemoveExtent = RemoveExtentT<DataType>::type;
 
-	template<class Type> struct Decay {
+	template<class Type> struct DecayT {
 	private:
-		using TypeNoReference = RemoveReferenceT<Type>;
+		using TypeNoReference = RemoveReference<Type>;
 	public:
-		using type = ConditionalT<
+		using type = Conditional<
 			IsArray<TypeNoReference>,
-			AddPointerT<RemoveExtent<TypeNoReference>>,
-			ConditionalT<
-				IsFunctionV<TypeNoReference>,
-				AddPointerT<TypeNoReference>,
-				RemoveCVT<TypeNoReference>
+			AddPointer<RemoveExtent<TypeNoReference>>,
+			Conditional<
+				IsFunction<TypeNoReference>,
+				AddPointer<TypeNoReference>,
+				RemoveConctVolatile<TypeNoReference>
 			>
 		>;
 	};
-	template<class Type> using DecayT = Decay<Type>::type;
+	template<class Type> using Decay = DecayT<Type>::type;
 
 	//convert
 	namespace impl {
@@ -299,13 +318,16 @@ namespace natl {
 	}
 
 	template<typename From, typename To>
-	struct IsConvertibleType : BoolConstant<
+	struct IsConvertibleT : BoolConstant<
 		(decltype(impl::testReturnable<To>(0))::value && decltype(impl::testImplicitlyConvertible<From, To>(0))::value) ||
-		(IsVoidV<From> && IsVoidV<To>)
+		(IsVoid<From> && IsVoid<To>)
 	> {};
 
+	template<typename From, typename To> constexpr inline Bool IsConvertible = IsConvertibleT<From, To>::value;
+	template<typename From, typename To> concept IsConvertibleC = IsConvertible<From, To>;
+
 	template<typename From, typename To>
-	struct IsNoThrowConvertibleType : Conjunction<IsVoid<From>, IsVoid<To>> {};
+	struct IsNoThrowConvertibleT : ConjunctionV<IsVoidV<From>, IsVoidV<To>> {};
 	template<typename From, typename To>
 		requires (
 			requires {
@@ -313,21 +335,20 @@ namespace natl {
 				{ declval<void(&)(To) noexcept>()(declval<From>()) } noexcept;
 		}
 	)
-	struct IsNoThrowConvertibleType<From, To> : TrueType {};
-	template<typename From, typename To>
-	constexpr inline Bool IsConvertible = IsConvertibleType<From, To>::value;
-	template<typename From, typename To>
-	constexpr inline Bool IsNothrowConvertible = IsNoThrowConvertibleType<From, To>::value;
+	struct IsNoThrowConvertibleT<From, To> : TrueType {};
 
-	template<typename From, typename To>
+	template<typename From, typename To> constexpr inline Bool IsNothrowConvertible = IsNoThrowConvertibleT<From, To>::value;
+	template<typename From, typename To> concept IsNothrowConvertibleC = IsNothrowConvertible<From, To>;
+
+	template<typename From, typename To> 
 	concept ConvertibleTo = IsConvertible<From, To> && requires { static_cast<To>(declval<From>()); };
 
 	//common
-	template<typename... Types> struct CommonReference {};
-	template<typename Type> struct CommonReference<Type> { using type = Type; };
+	template<typename... Types> struct CommonReferenceT {};
+	template<typename Type> struct CommonReferenceT<Type> { using type = Type; };
 
 	template<typename Type, typename OtherType>
-	struct CommonReferenceTwo {
+	struct CommonReferenceTwoT {
 	private:
 		template<typename LocalType, typename LocalOtherType>
 		static auto commonReferenceTest(int) -> decltype(true ? declval<LocalType>() : declval<LocalOtherType>());
@@ -338,93 +359,100 @@ namespace natl {
 	};
 
 	template<typename FirstType, typename SecondType>
-	struct CommonReference<FirstType, SecondType> {
-		using type = CommonReferenceTwo<FirstType, SecondType>;
+	struct CommonReferenceT<FirstType, SecondType> {
+		using type = CommonReferenceTwoT<FirstType, SecondType>;
 	};
 	template<typename FirstType, typename SecondType, typename... Rest>
-	struct CommonReference<FirstType, SecondType, Rest...> {
-		using type = CommonReferenceTwo<typename CommonReferenceTwo<FirstType, SecondType>::type, Rest...>;
+	struct CommonReferenceT<FirstType, SecondType, Rest...> {
+		using type = CommonReferenceTwoT<typename CommonReferenceTwoT<FirstType, SecondType>::type, Rest...>;
 	};
 
-	template<typename... Types> using CommonReferenceT = CommonReference<Types...>::type;
+	template<typename... Types> using CommonReference = CommonReferenceT<Types...>::type;
 
 	template<class Type, class OtherType>
 	concept CommonReferenceWith =
-		SameAs<CommonReferenceT<Type, OtherType>, CommonReferenceT<OtherType, Type>>&&
-		ConvertibleTo<Type, CommonReferenceT<Type, OtherType>>&&
-		ConvertibleTo<OtherType, CommonReferenceT<Type, OtherType>>;
+		SameAs<CommonReference<Type, OtherType>, CommonReference<OtherType, Type>>&&
+		ConvertibleTo<Type, CommonReference<Type, OtherType>>&&
+		ConvertibleTo<OtherType, CommonReference<Type, OtherType>>;
 
 	//assing
 	template<typename LhsDataType, class RhsDataType>
-	concept AssignableFrom =
-		IsLValueReferenceV<LhsDataType> &&
+	concept AssignableFromC =
+		IsLValueReference<LhsDataType> &&
 		CommonReferenceWith<
-		const RemoveReferenceT<LhsDataType>&,
-		const RemoveReferenceT<RhsDataType>&>&&
+		const RemoveReference<LhsDataType>&,
+		const RemoveReference<RhsDataType>&>&&
 		requires(LhsDataType lhs, RhsDataType&& rhs) {
 			{ lhs = natl::forward<RhsDataType>(rhs) } -> SameAs<RhsDataType>;
 	};
 
 	//redumentary 
 	namespace impl {
-		template<typename Type> struct IsFundamentalIterger : FalseType {};
-		template<> struct IsFundamentalIterger<i8> : TrueType {};
-		template<> struct IsFundamentalIterger<i16> : TrueType {};
-		template<> struct IsFundamentalIterger<i32> : TrueType {};
-		template<> struct IsFundamentalIterger<i64> : TrueType {};
-		template<> struct IsFundamentalIterger<ui8> : TrueType {};
-		template<> struct IsFundamentalIterger<ui16> : TrueType {};
-		template<> struct IsFundamentalIterger<ui32> : TrueType {};
-		template<> struct IsFundamentalIterger<ui64> : TrueType {};
+		template<typename Type> struct IsBuiltInIntergerV : FalseType {};
+		template<> struct IsBuiltInIntergerV<i8> : TrueType {};
+		template<> struct IsBuiltInIntergerV<i16> : TrueType {};
+		template<> struct IsBuiltInIntergerV<i32> : TrueType {};
+		template<> struct IsBuiltInIntergerV<i64> : TrueType {};
+		template<> struct IsBuiltInIntergerV<ui8> : TrueType {};
+		template<> struct IsBuiltInIntergerV<ui16> : TrueType {};
+		template<> struct IsBuiltInIntergerV<ui32> : TrueType {};
+		template<> struct IsBuiltInIntergerV<ui64> : TrueType {};
 
 #ifdef NATL_COMPILER_EMSCRIPTEN
-		template<> struct IsFundamentalIterger<Size> : TrueType {};
+		template<> struct IsBuiltInIntergerV<Size> : TrueType {};
 #endif // NATL_COMPILER_EMSCRIPTEN
 	}
-	template<typename Type> struct IsFundamentalIterger : impl::IsFundamentalIterger<DecayT<Type>> {};
-	template<typename Type> constexpr inline Bool IsFundamentalItergerV = IsFundamentalIterger<Type>::value;
+	template<typename Type> struct IsBuiltInIntergerV : impl::IsBuiltInIntergerV<Decay<Type>> {};
+	template<typename Type> constexpr inline Bool IsBuiltInInterger = IsBuiltInIntergerV<Type>::value;
+	template<typename Type> concept IsBuiltInIntergerC = IsBuiltInInterger<Type>;
 
 	namespace impl {
-		template<typename Type> struct IsFundamentalSignedIterger : FalseType {};
-		template<> struct IsFundamentalSignedIterger<i8> : TrueType {};
-		template<> struct IsFundamentalSignedIterger<i16> : TrueType {};
-		template<> struct IsFundamentalSignedIterger<i32> : TrueType {};
-		template<> struct IsFundamentalSignedIterger<i64> : TrueType {};
+		template<typename Type> struct IsBuiltInSignedIntegerV : FalseType {};
+		template<> struct IsBuiltInSignedIntegerV<i8> : TrueType {};
+		template<> struct IsBuiltInSignedIntegerV<i16> : TrueType {};
+		template<> struct IsBuiltInSignedIntegerV<i32> : TrueType {};
+		template<> struct IsBuiltInSignedIntegerV<i64> : TrueType {};
 	}
-	template<typename Type> struct IsFundamentalSignedIterger : impl::IsFundamentalSignedIterger<DecayT<Type>> {};
-	template<typename Type> constexpr inline Bool IsFundamentalSignedItergerV = IsFundamentalSignedIterger<Type>::value;
+	template<typename Type> struct IsBuiltInSignedIntegerV : impl::IsBuiltInSignedIntegerV<Decay<Type>> {};
+	template<typename Type> constexpr inline Bool IsBuiltInSignedInteger = IsBuiltInSignedIntegerV<Type>::value;
+	template<typename Type> concept IsBuiltInSignedIntegerC = IsBuiltInSignedInteger<Type>;
 
 	namespace impl {
-		template<typename Type> struct IsFundamentalUnsignedIterger : FalseType {};
-		template<> struct IsFundamentalUnsignedIterger<ui8> : TrueType {};
-		template<> struct IsFundamentalUnsignedIterger<ui16> : TrueType {};
-		template<> struct IsFundamentalUnsignedIterger<ui32> : TrueType {};
-		template<> struct IsFundamentalUnsignedIterger<ui64> : TrueType {};
+		template<typename Type> struct IsBuiltInUnsignedIntegerV : FalseType {};
+		template<> struct IsBuiltInUnsignedIntegerV<ui8> : TrueType {};
+		template<> struct IsBuiltInUnsignedIntegerV<ui16> : TrueType {};
+		template<> struct IsBuiltInUnsignedIntegerV<ui32> : TrueType {};
+		template<> struct IsBuiltInUnsignedIntegerV<ui64> : TrueType {};
 #ifdef NATL_COMPILER_EMSCRIPTEN
-		template<> struct IsFundamentalUnsignedIterger<Size> : TrueType {};
+		template<> struct IsBuiltInUnsignedIntegerV<Size> : TrueType {};
 #endif // NATL_COMPILER_EMSCRIPTEN
 	}
-	template<typename Type> struct IsFundamentalUnsignedIterger : impl::IsFundamentalUnsignedIterger<DecayT<Type>> {};
-	template<typename Type> constexpr inline Bool IsFundamentalUnsignedItergerV = IsFundamentalUnsignedIterger<Type>::value;
+	template<typename Type> struct IsBuiltInUnsignedIntegerV : impl::IsBuiltInUnsignedIntegerV<Decay<Type>> {};
+	template<typename Type> constexpr inline Bool IsBuiltInUnsignedInteger = IsBuiltInUnsignedIntegerV<Type>::value;
+	template<typename Type> concept IsBuiltInUnsignedIntegerC = IsBuiltInUnsignedInteger<Type>;
 
-	template<typename Type> struct IsFloatingPoint : BoolConstant<SameAs<DecayT<Type>, f32> || SameAs<DecayT<Type>, f64>> {};
-	template<typename Type> constexpr inline Bool IsFloatingPointV = IsFloatingPoint<Type>::value;
+	template<typename Type> struct IsBuiltInFloatingPointV : BoolConstant<SameAs<Decay<Type>, f32> || SameAs<Decay<Type>, f64>> {};
+	template<typename Type> constexpr inline Bool IsBuiltInFloatingPoint = IsBuiltInFloatingPointV<Type>::value;
+	template<typename Type> concept IsBuiltInFloatingPointC = IsBuiltInFloatingPoint<Type>;
 
-	template<typename Type> struct IsFundamentalNumeric : BoolConstant<IsFundamentalItergerV<Type> || IsFloatingPointV<Type>> {};
-	template<typename Type> constexpr inline Bool IsFundamentalNumericV = IsFundamentalNumeric<Type>::value;
+	template<typename Type> struct IsBuiltInNumericV : BoolConstant<IsBuiltInInterger<Type> || IsBuiltInFloatingPoint<Type>> {};
+	template<typename Type> constexpr inline Bool IsBuiltInNumeric = IsBuiltInNumericV<Type>::value;
+	template<typename Type> concept IsBuiltInNumericC = IsBuiltInNumeric<Type>;
 
 	namespace impl {
-		template<typename Type> struct IsFundamentalCharacter : FalseType {};
-		template<> struct IsFundamentalCharacter<Ascii> : TrueType {};
-		template<> struct IsFundamentalCharacter<Utf8> : TrueType {};
-		template<> struct IsFundamentalCharacter<Utf16> : TrueType {};
-		template<> struct IsFundamentalCharacter<Utf32> : TrueType {};
+		template<typename Type> struct IsBuiltInCharacterT : FalseType {};
+		template<> struct IsBuiltInCharacterT<Ascii> : TrueType {};
+		template<> struct IsBuiltInCharacterT<Utf8> : TrueType {};
+		template<> struct IsBuiltInCharacterT<Utf16> : TrueType {};
+		template<> struct IsBuiltInCharacterT<Utf32> : TrueType {};
 	}
-	template<typename Type> struct IsFundamentalCharacter : impl::IsFundamentalCharacter<DecayT<Type>> {};
-	template<typename Type> constexpr inline Bool IsFundamentalCharacterV = IsFundamentalCharacter<Type>::value;
+	template<typename Type> struct IsBuiltInCharacterT : impl::IsBuiltInCharacterT<Decay<Type>> {};
+	template<typename Type> constexpr inline Bool IsBuiltInCharacter = IsBuiltInCharacterT<Type>::value;
+	template<typename Type> concept IsBuiltInCharacterC = IsBuiltInCharacter<Type>;
 
-	template<typename Type> struct IsBasic : BoolConstant<IsFundamentalItergerV<Type> || IsFloatingPointV<Type> || IsFundamentalCharacterV<Type> || IsPointerV<Type>> {};
-	template<typename Type> constexpr inline Bool IsBasicV = IsBasic<Type>::value;
+	template<typename Type> struct IsBuiltInTypeT : BoolConstant<IsBuiltInInterger<Type> || IsBuiltInFloatingPoint<Type> || IsBuiltInCharacter<Type> || IsPointer<Type>> {};
+	template<typename Type> constexpr inline Bool IsBuiltInType = IsBuiltInTypeT<Type>::value;
+	template<typename Type> concept IsBuiltInTypeC = IsBuiltInType<Type>;
 
 	//type operations
 	template <typename DataType>
@@ -460,12 +488,12 @@ namespace natl {
 #undef NATL_TYPE_TRIAT_CUSTOM_TRIVIALLY_FUN
 
 	template <typename DataType>
-	concept IsTriviallyCompareable = IsBasicV<DataType> ||
+	concept IsTriviallyCompareable = IsBuiltInType<DataType> ||
 		impl::customCheckIfIsTriviallyCompareable<DataType>();
 
 	template <typename DataType>
 	concept IsTriviallyRelocatable = (std::is_trivially_copyable_v<DataType> && std::is_trivially_destructible_v<DataType>) ||
-		IsBasicV<DataType> || impl::customCheckIfIsTriviallyRelocatable<DataType>();
+		IsBuiltInType<DataType> || impl::customCheckIfIsTriviallyRelocatable<DataType>();
 
 	template <typename DataType>
 	concept IsTriviallyDefaultConstructible = std::is_trivially_default_constructible_v<DataType> ||
@@ -604,76 +632,76 @@ namespace natl {
 		auto tryInvoke(Functor&& functor, ArgTypes&&... args) -> decltype(natl::forward<Functor>(functor)(natl::forward<ArgTypes>(args)...)) {}
 	}
 
-	template<typename...> struct InvokeResultType {
+	template<typename...> struct InvokeResultTypeT {
 		using type = void;
 	};
 	template<typename Functor, typename... ArgTypes>
-	struct InvokeResultType<Functor(ArgTypes...)> {
+	struct InvokeResultTypeT<Functor(ArgTypes...)> {
 		using type = decltype(impl::tryInvoke(declval<Functor>(), declval<ArgTypes>()...));
 	};
-	template<typename Functor> using InvokeResult = typename InvokeResultType<Functor>::type;
+	template<typename Functor> using InvokeResult = typename InvokeResultTypeT<Functor>::type;
 
 	template<typename Functor, typename... ArgTypes>
-	struct InvokeResultWithArgsType {
+	struct InvokeResultWithArgsT {
 		using type = decltype(impl::tryInvoke(declval<Functor>(), declval<ArgTypes>()...));
 	};
-	template<typename Functor, typename... ArgTypes> using InvokeResultWithArgs = typename InvokeResultWithArgsType<Functor, ArgTypes...>::type;
+	template<typename Functor, typename... ArgTypes> using InvokeResultWithArgs = typename InvokeResultWithArgsT<Functor, ArgTypes...>::type;
 
-	template<typename Functor> struct ResultOf;
+	template<typename Functor> struct ResultOfT;
 
 	template<typename Functor, typename... ArgTypes>
-	struct ResultOf<Functor(ArgTypes...)> {
+	struct ResultOfT<Functor(ArgTypes...)> {
 		using type = decltype(impl::tryInvoke(declval<Functor>(), declval<ArgTypes>()...));
 	};
 	template<typename ReturnType, typename... ArgTypes>
-	struct ResultOf<ReturnType(*)(ArgTypes...)> {
+	struct ResultOfT<ReturnType(*)(ArgTypes...)> {
 		using type = ReturnType;
 	};
 	template<typename ReturnType, typename... ArgTypes>
-	struct ResultOf<ReturnType(*)(ArgTypes...) noexcept> {
+	struct ResultOfT<ReturnType(*)(ArgTypes...) noexcept> {
 		using type = ReturnType;
 	};
 	template<typename ReturnType, typename... ArgTypes>
-	struct ResultOf<ReturnType(&)(ArgTypes...)> {
+	struct ResultOfT<ReturnType(&)(ArgTypes...)> {
 		using type = ReturnType;
 	};
 	template<typename ReturnType, typename... ArgTypes>
-	struct ResultOf<ReturnType(&)(ArgTypes...) noexcept> {
+	struct ResultOfT<ReturnType(&)(ArgTypes...) noexcept> {
 		using type = ReturnType;
 	};
 
 	template<typename Functor>
-	using ResultOfT = ResultOf<Functor>::type;
+	using ResultOf = ResultOfT<Functor>::type;
 
 	template<typename Functor>
-	struct FunctorBaseStorage {};
+	struct FunctorBaseStorageT {};
 
 
 	template<typename ReturnType, typename... ArgTypes>
-	struct FunctorBaseStorage<ReturnType(*)(ArgTypes...)> {
+	struct FunctorBaseStorageT<ReturnType(*)(ArgTypes...)> {
 		using type = ReturnType(*)(ArgTypes...) noexcept;
 	};
 	template<typename ReturnType, typename... ArgTypes>
-	struct FunctorBaseStorage<ReturnType(*)(ArgTypes...) noexcept> {
+	struct FunctorBaseStorageT<ReturnType(*)(ArgTypes...) noexcept> {
 		using type = ReturnType(*)(ArgTypes...) noexcept;
 	};
 	template<typename ReturnType, typename... ArgTypes>
-	struct FunctorBaseStorage<ReturnType(&)(ArgTypes...)> {
+	struct FunctorBaseStorageT<ReturnType(&)(ArgTypes...)> {
 		using type = ReturnType(*)(ArgTypes...) noexcept;
 	};
 	template<typename ReturnType, typename... ArgTypes>
-	struct FunctorBaseStorage<ReturnType(&)(ArgTypes...) noexcept> {
+	struct FunctorBaseStorageT<ReturnType(&)(ArgTypes...) noexcept> {
 		using type = ReturnType(*)(ArgTypes...) noexcept;
 	};
 
 	template<typename Functor, typename... ArgTypes>
-	struct FunctorBaseStorage<Functor(ArgTypes...)> {
-		using ReturnType = ResultOfT<Functor(ArgTypes...)>;
-		using type = ConditionalT<ConvertibleTo<RemoveReferenceT<Functor>, ReturnType(*)(ArgTypes...) noexcept>, ReturnType(*)(ArgTypes...) noexcept, Functor>;
+	struct FunctorBaseStorageT<Functor(ArgTypes...)> {
+		using ReturnType = ResultOf<Functor(ArgTypes...)>;
+		using type = Conditional<ConvertibleTo<RemoveReference<Functor>, ReturnType(*)(ArgTypes...) noexcept>, ReturnType(*)(ArgTypes...) noexcept, Functor>;
 	};
 
 	template<typename Functor>
-	using FunctorBaseStorageT = FunctorBaseStorage<Functor>::type;
+	using FunctorBaseStorage = FunctorBaseStorageT<Functor>::type;
 
 	template<class Functor, typename... ArgTypes>
 	constexpr InvokeResultWithArgs<Functor, ArgTypes...> invokeFunction(Functor&& functor, ArgTypes&&... args) noexcept {

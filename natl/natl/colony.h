@@ -82,16 +82,16 @@ namespace natl {
 		constexpr const iterator& self() const noexcept { return *this; }
 	public:
 		using const_iterator = ColonyIterator<const DataType, Alloc>;
-		constexpr operator const_iterator() const noexcept requires(IsNotConstV<DataType>) {
+		constexpr operator const_iterator() const noexcept requires(IsNotConst<DataType>) {
 			return const_iterator(colonyBlock, skipFieldIndex, skipFieldPos);
 		}
 
-		constexpr pointer getAddress() noexcept requires(IsNotConstV<DataType>) { return &colonyBlock->data[skipFieldIndex]; }
+		constexpr pointer getAddress() noexcept requires(IsNotConst<DataType>) { return &colonyBlock->data[skipFieldIndex]; }
 		constexpr const_pointer getAddress() const noexcept { return &colonyBlock->data[skipFieldIndex]; }
 
-		constexpr reference operator*() noexcept requires(IsNotConstV<DataType>) { return colonyBlock->data[skipFieldIndex]; }
+		constexpr reference operator*() noexcept requires(IsNotConst<DataType>) { return colonyBlock->data[skipFieldIndex]; }
 		constexpr const_reference operator*() const noexcept { return colonyBlock->data[skipFieldIndex]; }
-		constexpr pointer operator->() noexcept requires(IsNotConstV<DataType>) { return &colonyBlock->data[skipFieldIndex]; }
+		constexpr pointer operator->() noexcept requires(IsNotConst<DataType>) { return &colonyBlock->data[skipFieldIndex]; }
 		constexpr const_pointer operator->() const noexcept { return &colonyBlock->data[skipFieldIndex]; }
 
 		constexpr Bool operator==(const iterator rhs) const noexcept { 

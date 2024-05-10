@@ -181,7 +181,7 @@ namespace natl {
 						outputIter, natl::forward<arg_type>(arg.getArg()), natl::forward<arg_flags_storage_tuple>(arg.getArgFlags()));
 			} else {
 				using arg_flags_storage_tuple = Tuple<>;
-				using formatter_type = Formatter<RemoveCVT<RemoveReferenceT<ArgType>>, CharType>;
+				using formatter_type = Formatter<RemoveConctVolatile<RemoveReference<ArgType>>, CharType>;
 				formatToArgCallFormat<OutputIter, ArgType, formatter_type, arg_flags_storage_tuple, 0>(
 					outputIter, natl::forward<ArgType>(arg), natl::forward<arg_flags_storage_tuple>(arg_flags_storage_tuple()));
 			}
@@ -433,15 +433,15 @@ namespace natl {
 						unreachable();
 					}
 				} else {
-					if constexpr (IsSameV<TemplateFlag, FormatBoolShorthandLowercaseFlag>) {
+					if constexpr (IsSame<TemplateFlag, FormatBoolShorthandLowercaseFlag>) {
 						boolFormat = BoolFormat::shorthand;
-					} else if constexpr (IsSameV<TemplateFlag, FormatBoolFullFirstUppercaseFlag>) {
+					} else if constexpr (IsSame<TemplateFlag, FormatBoolFullFirstUppercaseFlag>) {
 						boolFormat = BoolFormat::fullFirstUppercase;
-					} else if constexpr (IsSameV<TemplateFlag, FormatBoolFullAllUppercaseFlag>) {
+					} else if constexpr (IsSame<TemplateFlag, FormatBoolFullAllUppercaseFlag>) {
 						boolFormat = BoolFormat::fullAllUppercase;
-					} else if constexpr (IsSameV<TemplateFlag, FormatBoolShorthandUppercaseFlag>) {
+					} else if constexpr (IsSame<TemplateFlag, FormatBoolShorthandUppercaseFlag>) {
 						boolFormat = BoolFormat::shorthandUppercase;
-					} else if constexpr (IsSameV<TemplateFlag, FormatBoolFullLowercaseFlag>) {
+					} else if constexpr (IsSame<TemplateFlag, FormatBoolFullLowercaseFlag>) {
 						boolFormat = BoolFormat::fullLowercase;
 					} else {
 						unreachable();
@@ -547,11 +547,11 @@ namespace natl {
 							unreachable();
 						}
 					} else {
-						if constexpr (IsSameV<TemplateFlag, FormatIntHexadecimalFlag>) {
+						if constexpr (IsSame<TemplateFlag, FormatIntHexadecimalFlag>) {
 							intFormat = IntFormat::hexadecimal;
-						} else if constexpr (IsSameV<TemplateFlag, FormatIntBinaryFlag>) {
+						} else if constexpr (IsSame<TemplateFlag, FormatIntBinaryFlag>) {
 							intFormat = IntFormat::binary;
-						} else if constexpr (IsSameV<TemplateFlag, FormatIntDecimalFlag>) {
+						} else if constexpr (IsSame<TemplateFlag, FormatIntDecimalFlag>) {
 							intFormat = IntFormat::decimal;
 						} else {
 							unreachable();
@@ -611,8 +611,8 @@ namespace natl {
 	namespace impl {
 		template<typename FormatArgType>
 		concept IsValidFloatFormatArgType =
-			IsSameV<DecayT<FormatArgType>, FloatFormat>
-			|| IsSameV<DecayT<FormatArgType>, FormatFloatPrecision>;
+			IsSame<Decay<FormatArgType>, FloatFormat>
+			|| IsSame<Decay<FormatArgType>, FormatFloatPrecision>;
 	}
 
 	namespace impl {
@@ -665,7 +665,7 @@ namespace natl {
 							unreachable();
 						}
 					} else {
-						if constexpr (IsSameV<TemplateFlag, FormatFloatStandardFlag>) {
+						if constexpr (IsSame<TemplateFlag, FormatFloatStandardFlag>) {
 							floatFormat = FloatFormat::standard;
 						} else {
 							unreachable();
@@ -677,9 +677,9 @@ namespace natl {
 
 				template<typename FormatArgType>
 				constexpr static void handelFormatArg(FormatArgType&& formatArg, Size& precision, FloatFormat& floatFormat) noexcept {
-					if constexpr (IsSameV<DecayT<FormatArgType>, FloatFormat>) {
+					if constexpr (IsSame<Decay<FormatArgType>, FloatFormat>) {
 						floatFormat = formatArg;
-					} else if constexpr(IsSameV<DecayT<FormatArgType>, FormatFloatPrecision>) {
+					} else if constexpr(IsSame<Decay<FormatArgType>, FormatFloatPrecision>) {
 						precision = formatArg.value();
 					} else {
 						unreachable();

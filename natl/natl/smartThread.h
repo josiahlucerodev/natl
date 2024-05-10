@@ -209,7 +209,7 @@ namespace natl {
 		template<typename Functor, typename... ArgTypes>
 		SmartThread(Functor&& functor, ArgTypes&&... args) noexcept {
 			if constexpr (impl::DoesFunctorTakeSmartThreadStopAlert<Functor, ArgTypes...>) {
-				using FunctorStorage = FunctorBaseStorageT<Functor>;
+				using FunctorStorage = FunctorBaseStorage<Functor>;
 				using StorageTuple = Tuple<
 					UninitializedValue<FunctorStorage>, 
 					UninitializedValue<ArgTypes>..., 

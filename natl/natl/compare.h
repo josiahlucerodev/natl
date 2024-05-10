@@ -25,9 +25,9 @@ namespace natl {
     struct CommonComparisonCategoryType : impl::CommonCompareCatBaseType<
         (0u | ... |
             (   
-                IsSameV<DataTypes, StrongOrdering> ? 0u :
-                IsSameV<DataTypes, WeakOrdering> ? 4u :
-                IsSameV<DataTypes, PartialOrdering> ? 2u : 1u
+                IsSame<DataTypes, StrongOrdering> ? 0u :
+                IsSame<DataTypes, WeakOrdering> ? 4u :
+                IsSame<DataTypes, PartialOrdering> ? 2u : 1u
             )
         )
     > {};
@@ -56,7 +56,7 @@ namespace natl {
     };
 
     template<class LhsDataType, class RhsDataType = LhsDataType>
-    using CompareThreeWayResult = decltype(declval<const RemoveReferenceT<LhsDataType>&>() <=> declval<const RemoveReferenceT<RhsDataType>&>());
+    using CompareThreeWayResult = decltype(declval<const RemoveReference<LhsDataType>&>() <=> declval<const RemoveReference<RhsDataType>&>());
 
     template<class LhsDataType, class RhsDataType = LhsDataType>
     struct CompareThreeWayResultType {};

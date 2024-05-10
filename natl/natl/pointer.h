@@ -30,22 +30,22 @@ namespace natl {
 	public:
 		//constructor 
 		constexpr Ptr() noexcept : dataPtr(nullptr) {}
-		constexpr Ptr(DataType* data) noexcept requires(IsNotConstV<DataType>) : dataPtr(&data) {};
-		constexpr Ptr(const DataType* data) noexcept requires(IsConstV<DataType>) : dataPtr(data) {};
+		constexpr Ptr(DataType* data) noexcept requires(IsNotConst<DataType>) : dataPtr(&data) {};
+		constexpr Ptr(const DataType* data) noexcept requires(IsConst<DataType>) : dataPtr(data) {};
 
 		//destructor
 		constexpr ~Ptr() noexcept = default;
 
 		//access
-		constexpr reference unwrap() noexcept requires(IsNotConstV<DataType>) { return *dataPtr; };
+		constexpr reference unwrap() noexcept requires(IsNotConst<DataType>) { return *dataPtr; };
 		constexpr const_reference unwrap() const noexcept { return *dataPtr; };
-		constexpr reference get() noexcept requires(IsNotConstV<DataType>) { return *dataPtr; };
+		constexpr reference get() noexcept requires(IsNotConst<DataType>) { return *dataPtr; };
 		constexpr const_reference get() const noexcept { return *dataPtr; };
-		constexpr pointer getPtr() noexcept requires(IsNotConstV<DataType>) { return dataPtr; };
+		constexpr pointer getPtr() noexcept requires(IsNotConst<DataType>) { return dataPtr; };
 		constexpr const_pointer getPtr() const noexcept { return dataPtr; };
-		constexpr reference operator*() noexcept requires(IsNotConstV<DataType>) { return *dataPtr; };
+		constexpr reference operator*() noexcept requires(IsNotConst<DataType>) { return *dataPtr; };
 		constexpr const_reference operator*() const noexcept { return *dataPtr; };
-		constexpr reference operator->() noexcept requires(IsNotConstV<DataType>) { return *dataPtr; };
+		constexpr reference operator->() noexcept requires(IsNotConst<DataType>) { return *dataPtr; };
 		constexpr const_reference operator->() const noexcept { return *dataPtr; };
 	};
 
@@ -91,9 +91,9 @@ namespace natl {
 		using deleter_type = Deleter;
 	public:
 		//movement info 
-		constexpr static Bool triviallyRelocatable = true && (IsEmptyV<Deleter> || IsTriviallyRelocatable<Deleter>);
-		constexpr static Bool triviallyDefaultConstructible = true && (IsEmptyV<Deleter> || IsTriviallyDefaultConstructible<Deleter>);
-		constexpr static Bool triviallyCompareable = true && (IsEmptyV<Deleter> || IsTriviallyCompareable<Deleter>);
+		constexpr static Bool triviallyRelocatable = true && (IsEmpty<Deleter> || IsTriviallyRelocatable<Deleter>);
+		constexpr static Bool triviallyDefaultConstructible = true && (IsEmpty<Deleter> || IsTriviallyDefaultConstructible<Deleter>);
+		constexpr static Bool triviallyCompareable = true && (IsEmpty<Deleter> || IsTriviallyCompareable<Deleter>);
 		constexpr static Bool triviallyDestructible = false;
 		constexpr static Bool triviallyConstRefConstructedable = false;
 		constexpr static Bool triviallyMoveConstructedable = false;
@@ -106,41 +106,41 @@ namespace natl {
 		constexpr UniquePtr(const UniquePtr&) noexcept = delete;
 
 		
-		constexpr UniquePtr(UniquePtr&& other) noexcept requires(IsEmptyV<Deleter>) : dataPtr(other.dataPtr) {
+		constexpr UniquePtr(UniquePtr&& other) noexcept requires(IsEmpty<Deleter>) : dataPtr(other.dataPtr) {
 			other.dataPtr = nullptr;
 		}
-		constexpr UniquePtr(UniquePtr&& other) noexcept requires(IsNotEmptyV<Deleter>) : 
+		constexpr UniquePtr(UniquePtr&& other) noexcept requires(IsNotEmpty<Deleter>) : 
 			dataPtr(other.dataPtr), deleter(natl::move(deleter)) {
 			other.dataPtr = nullptr;
 		}
 
 		constexpr UniquePtr(std::nullptr_t) noexcept : dataPtr(nullptr), deleter() {}
 
-		constexpr UniquePtr(pointer ptr) noexcept requires(IsEmptyV<Deleter>) { dataPtr = ptr; }
-		constexpr UniquePtr(const value_type& value) noexcept requires(IsEmptyV<Deleter>) {
+		constexpr UniquePtr(pointer ptr) noexcept requires(IsEmpty<Deleter>) { dataPtr = ptr; }
+		constexpr UniquePtr(const value_type& value) noexcept requires(IsEmpty<Deleter>) {
 			dataPtr = Alloc::allocate(1);
 			std::construct_at<DataType, DataType>(dataPtr, value);
 		}
-		constexpr UniquePtr(value_type&& value) noexcept requires(IsEmptyV<Deleter>) {
+		constexpr UniquePtr(value_type&& value) noexcept requires(IsEmpty<Deleter>) {
 			dataPtr = Alloc::allocate(1);
 			std::construct_at<DataType, DataType>(dataPtr, natl::forward<DataType>(value));
 		}
 
-		constexpr UniquePtr(pointer ptr, const deleter_type& deleterIn) noexcept requires(IsNotEmptyV<Deleter>) : dataPtr(ptr), deleter(deleterIn) {}
-		constexpr UniquePtr(pointer ptr, deleter_type&& deleterIn) noexcept requires(IsNotEmptyV<Deleter>) : dataPtr(ptr), deleter(natl::move(deleterIn)) {}
-		constexpr UniquePtr(const value_type& value, const deleter_type& deleterIn) noexcept requires(IsNotEmptyV<Deleter>) : dataPtr(nullptr), deleter(deleterIn) {
+		constexpr UniquePtr(pointer ptr, const deleter_type& deleterIn) noexcept requires(IsNotEmpty<Deleter>) : dataPtr(ptr), deleter(deleterIn) {}
+		constexpr UniquePtr(pointer ptr, deleter_type&& deleterIn) noexcept requires(IsNotEmpty<Deleter>) : dataPtr(ptr), deleter(natl::move(deleterIn)) {}
+		constexpr UniquePtr(const value_type& value, const deleter_type& deleterIn) noexcept requires(IsNotEmpty<Deleter>) : dataPtr(nullptr), deleter(deleterIn) {
 			dataPtr = Alloc::allocate(1);
 			std::construct_at<DataType, DataType>(dataPtr, value);
 		}
-		constexpr UniquePtr(const value_type& value, deleter_type&& deleterIn) noexcept requires(IsNotEmptyV<Deleter>) : dataPtr(nullptr), deleter(natl::move(deleterIn)) {
+		constexpr UniquePtr(const value_type& value, deleter_type&& deleterIn) noexcept requires(IsNotEmpty<Deleter>) : dataPtr(nullptr), deleter(natl::move(deleterIn)) {
 			dataPtr = Alloc::allocate(1);
 			std::construct_at<DataType, DataType>(dataPtr, value);
 		}
-		constexpr UniquePtr(value_type&& value, const deleter_type& deleterIn) noexcept requires(IsNotEmptyV<Deleter>) : dataPtr(nullptr), deleter(deleterIn) {
+		constexpr UniquePtr(value_type&& value, const deleter_type& deleterIn) noexcept requires(IsNotEmpty<Deleter>) : dataPtr(nullptr), deleter(deleterIn) {
 			dataPtr = Alloc::allocate(1);
 			std::construct_at<DataType, DataType>(dataPtr, forward<DataType>(value));
 		}
-		constexpr UniquePtr(value_type&& value, deleter_type&& deleterIn) noexcept requires(IsNotEmptyV<Deleter>) : dataPtr(nullptr), deleter(natl::move(deleterIn)) {
+		constexpr UniquePtr(value_type&& value, deleter_type&& deleterIn) noexcept requires(IsNotEmpty<Deleter>) : dataPtr(nullptr), deleter(natl::move(deleterIn)) {
 			dataPtr = Alloc::allocate(1);
 			std::construct_at<DataType, DataType>(dataPtr, forward<DataType>(value));
 		}
@@ -149,7 +149,7 @@ namespace natl {
 	private:
 		constexpr void destruct() noexcept {
 			if (dataPtr) {
-				if constexpr (IsEmptyV<Deleter>) {
+				if constexpr (IsEmpty<Deleter>) {
 					Deleter{}(dataPtr);
 				} else {
 					deleter(dataPtr);
@@ -169,7 +169,7 @@ namespace natl {
 		constexpr UniquePtr& operator=(const UniquePtr&) = delete;
 		constexpr UniquePtr& operator=(UniquePtr&& other) noexcept {
 			reset(other.release());
-			if constexpr (IsNotEmptyV<Deleter>) {
+			if constexpr (IsNotEmpty<Deleter>) {
 				deleter = move(deleter);
 			}
 		}
@@ -189,7 +189,7 @@ namespace natl {
 		}
 		constexpr void swap(UniquePtr& other) noexcept {
 			exchange<UniquePtr>(dataPtr, other.dataPtr);
-			if constexpr (IsNotEmptyV<Deleter>) {
+			if constexpr (IsNotEmpty<Deleter>) {
 				exchange<Deleter>(deleter, deleter);
 			}
 		}
@@ -198,10 +198,10 @@ namespace natl {
 		constexpr pointer get() noexcept { return dataPtr; }
 		constexpr const_pointer get() const noexcept { return dataPtr; }
 
-		constexpr Deleter& get_deleter() noexcept requires(IsNotEmptyV<Deleter>) {
+		constexpr Deleter& get_deleter() noexcept requires(IsNotEmpty<Deleter>) {
 			return deleter;
 		}
-		constexpr const Deleter& get_deleter() const noexcept requires(IsNotEmptyV<Deleter>) {
+		constexpr const Deleter& get_deleter() const noexcept requires(IsNotEmpty<Deleter>) {
 			return deleter;
 		}
 
@@ -1626,7 +1626,7 @@ namespace natl {
 				dataPtrAndControlBlockState.setValues(nullptr, impl::SharedPtrControlBlockState::seperate);
 				controlBlockSeperate = nullptr;
 			} else {
-				if (IsEmptyV<Deleter>) {
+				if (IsEmpty<Deleter>) {
 					Deleter deleter = Deleter();
 					construct<DefaultAllocatorByte, Deleter>(other, move<Deleter>(deleter));
 				} else {
@@ -1641,7 +1641,7 @@ namespace natl {
 				dataPtrAndControlBlockState.setValues(nullptr, impl::SharedPtrControlBlockState::seperate);
 				controlBlockSeperate = nullptr;
 			} else {
-				if (IsEmptyV<Deleter>) {
+				if (IsEmpty<Deleter>) {
 					Deleter deleter = Deleter();
 					construct<OtherDataType, DefaultAllocatorByte, Deleter>(other, move<Deleter>(deleter));
 				} else {

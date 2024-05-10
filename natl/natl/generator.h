@@ -37,11 +37,11 @@ namespace natl {
 			SuspendAlways initial_suspend() const noexcept { return SuspendAlways{}; }
 			SuspendAlways final_suspend() noexcept { return SuspendAlways{}; }
 			template<typename U = value_type>
-			SuspendAlways yield_value(RemoveReferenceT<value_type>& value) noexcept requires(!IsRValueReferenceV<value_type>) {
+			SuspendAlways yield_value(RemoveReference<value_type>& value) noexcept requires(!IsRValueReference<value_type>) {
 				valuePtr = addressof(value);
 				return SuspendAlways{};
 			}
-			SuspendAlways yield_value(RemoveReferenceT<value_type>&& value) noexcept {
+			SuspendAlways yield_value(RemoveReference<value_type>&& value) noexcept {
 				valuePtr = addressof(value);
 				return SuspendAlways{};
 			}

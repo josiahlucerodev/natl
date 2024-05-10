@@ -9,13 +9,13 @@
 //interface
 namespace natl {
     template<typename Integer>
-        requires(IsFundamentalItergerV<Integer>)
+        requires(IsBuiltInInterger<Integer>)
     NATL_FORCE_INLINE constexpr Bool isEven(const Integer value) noexcept {
         return value % Integer(2) == Integer(0);
     }
 
     template<typename Integer>
-        requires(IsFundamentalItergerV<Integer>)
+        requires(IsBuiltInInterger<Integer>)
     NATL_FORCE_INLINE constexpr Integer roundDownToEven(const Integer value) noexcept {
         if (value % Integer(2) == Integer(0)) {
             return value;
@@ -25,7 +25,7 @@ namespace natl {
     }
 
     template<typename Integer>
-        requires(IsFundamentalItergerV<Integer>)
+        requires(IsBuiltInInterger<Integer>)
     NATL_FORCE_INLINE constexpr Integer findLargestEvenDivisor(const Integer number) noexcept {
         if (number % Integer(2) == Integer(0)) {
             return number;
@@ -40,7 +40,7 @@ namespace natl {
     }
 
     template<typename Integer>
-        requires(IsFundamentalItergerV<Integer>)
+        requires(IsBuiltInInterger<Integer>)
     NATL_FORCE_INLINE constexpr Integer findSmallestEvenDivisor(Integer number) noexcept {
         number = natl::math_abs(number);
         for (Integer i = Integer(2); i <= number; i += Integer(2)) {
@@ -51,7 +51,7 @@ namespace natl {
         return Integer(1);
     }
     template<typename Integer>
-        requires(IsFundamentalItergerV<Integer>)
+        requires(IsBuiltInInterger<Integer>)
     NATL_FORCE_INLINE constexpr Bool isPowerOfTwo(const Integer value) noexcept {
         return (value > Integer(0)) && ((value & (value - Integer(1))) == Integer(0));
     }

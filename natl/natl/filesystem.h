@@ -43,7 +43,7 @@ namespace natl {
 			using array_view_type = ArrayView<Ascii>;
 			using const_array_view_type = ArrayView<const Ascii>;
 
-			using string_view_storage_type = ConditionalT<IsNotConstV<CharType>, string_view_type, const_string_view_type>;
+			using string_view_storage_type = Conditional<IsNotConst<CharType>, string_view_type, const_string_view_type>;
 
 			using value_type = string_view_type::value_type;
 			using reference = string_view_type::reference;
@@ -65,13 +65,13 @@ namespace natl {
 			//constructor 
 			constexpr BasePathView() noexcept = default;
 			constexpr BasePathView(const path_view_type& other) noexcept : pathStringView(other) {}
-			constexpr BasePathView(const const_path_view_type& other) noexcept requires(IsConstV<CharType>) : pathStringView(other) {}
+			constexpr BasePathView(const const_path_view_type& other) noexcept requires(IsConst<CharType>) : pathStringView(other) {}
 			constexpr BasePathView(Ascii* stringPtr, const size_type length) noexcept : pathStringView(stringPtr, length) {}
-			constexpr BasePathView(const Ascii* stringPtr, const size_type length) noexcept requires(IsConstV<CharType>) : pathStringView(stringPtr, length) {}
+			constexpr BasePathView(const Ascii* stringPtr, const size_type length) noexcept requires(IsConst<CharType>) : pathStringView(stringPtr, length) {}
 			explicit constexpr BasePathView(Ascii* str) noexcept : pathStringView(str) {}
-			explicit constexpr BasePathView(const Ascii* str) noexcept requires(IsConstV<CharType>) : pathStringView(str) {}
+			explicit constexpr BasePathView(const Ascii* str) noexcept requires(IsConst<CharType>) : pathStringView(str) {}
 			explicit constexpr BasePathView(const string_view_type& str) noexcept : pathStringView(str) {}
-			explicit constexpr BasePathView(const const_string_view_type& str) noexcept requires(IsConstV<CharType>) : pathStringView(str) {}
+			explicit constexpr BasePathView(const const_string_view_type& str) noexcept requires(IsConst<CharType>) : pathStringView(str) {}
 
 			//destructor 
 			constexpr ~BasePathView() noexcept = default;
@@ -81,9 +81,9 @@ namespace natl {
 			constexpr const BasePathView& self() const noexcept { return *this; }
 
 			//convert 
-			constexpr string_view_type toStringView() noexcept requires(IsNotConstV<CharType>) { return pathStringView; }
+			constexpr string_view_type toStringView() noexcept requires(IsNotConst<CharType>) { return pathStringView; }
 			constexpr const_string_view_type toStringView() const noexcept { return pathStringView; }
-			constexpr array_view_type toArrayView() noexcept requires(IsNotConstV<CharType>) { return array_view_type(pathStringView.data(), size()); }
+			constexpr array_view_type toArrayView() noexcept requires(IsNotConst<CharType>) { return array_view_type(pathStringView.data(), size()); }
 			constexpr const_array_view_type toArrayView() const noexcept { return const_array_view_type(pathStringView.data(), size()); }
 			template<class StringLike>
 				requires(std::is_constructible_v<StringLike, const CharType*, Size>)
@@ -97,19 +97,19 @@ namespace natl {
 			constexpr operator const_array_view_type() const noexcept { return toArrayView(); }
 
 			//element access 
-			constexpr pointer data() noexcept requires(IsNotConstV<CharType>) {
+			constexpr pointer data() noexcept requires(IsNotConst<CharType>) {
 				return pathStringView.data();
 			}
 			constexpr const_pointer data() const noexcept {
 				return pathStringView.data();
 			}
-			constexpr pointer c_str() const noexcept requires(IsNotConstV<CharType>) {
+			constexpr pointer c_str() const noexcept requires(IsNotConst<CharType>) {
 				return pathStringView.c_str();
 			}
 			constexpr const_pointer c_str() const noexcept {
 				return pathStringView.c_str();
 			}
-			constexpr reference operator[](const Size index) noexcept requires(IsNotConstV<CharType>) {
+			constexpr reference operator[](const Size index) noexcept requires(IsNotConst<CharType>) {
 				return pathStringView[index];
 			}
 			constexpr const_reference operator[](const Size index) const noexcept {
@@ -117,16 +117,16 @@ namespace natl {
 			}
 
 			//iterators
-			constexpr iterator begin() noexcept requires(IsNotConstV<CharType>) { return pathStringView.begin(); }
+			constexpr iterator begin() noexcept requires(IsNotConst<CharType>) { return pathStringView.begin(); }
 			constexpr const_iterator begin() const noexcept { return pathStringView.begin(); }
 			constexpr const_iterator cbegin() const noexcept { return pathStringView.cbegin(); }
-			constexpr iterator end() noexcept requires(IsNotConstV<CharType>) { return pathStringView.end(); }
+			constexpr iterator end() noexcept requires(IsNotConst<CharType>) { return pathStringView.end(); }
 			constexpr const_iterator end() const noexcept { return pathStringView.end(); }
 			constexpr const_iterator cend() const noexcept { return pathStringView.cend(); }
-			constexpr reverse_iterator rbegin() noexcept requires(IsNotConstV<CharType>) { return pathStringView.rbegin(); }
+			constexpr reverse_iterator rbegin() noexcept requires(IsNotConst<CharType>) { return pathStringView.rbegin(); }
 			constexpr const_reverse_iterator rbegin() const noexcept { return pathStringView.rbegin(); }
 			constexpr const_reverse_iterator crbegin() const noexcept { return pathStringView.crbegin(); }
-			constexpr reverse_iterator rend() noexcept requires(IsNotConstV<CharType>) { return pathStringView.rend(); }
+			constexpr reverse_iterator rend() noexcept requires(IsNotConst<CharType>) { return pathStringView.rend(); }
 			constexpr const_reverse_iterator rend() const noexcept { return pathStringView.rend(); }
 			constexpr const_reverse_iterator crend() const noexcept { return pathStringView.crend(); }
 
@@ -215,7 +215,7 @@ namespace natl {
 			}
 
 		public:
-			constexpr path_view_type rootName() noexcept requires(IsNotConstV<CharType>) {
+			constexpr path_view_type rootName() noexcept requires(IsNotConst<CharType>) {
 				if constexpr (getPlatformType() == ProgramPlatformType::windowsPlatform) {
 					if (pathStringView.size() < 2) { return {}; }
 					if (internalHasRootName()) {
@@ -227,7 +227,7 @@ namespace natl {
 				}
 			}
 
-			constexpr path_view_type rootDirectory() noexcept requires(IsNotConstV<CharType>) {
+			constexpr path_view_type rootDirectory() noexcept requires(IsNotConst<CharType>) {
 				if constexpr (getPlatformType() == ProgramPlatformType::windowsPlatform) {
 					if (pathStringView.size() < 1) { return {}; }
 					if (isPlatformPathSeparator(pathStringView[0])) {
@@ -247,7 +247,7 @@ namespace natl {
 				}
 			}
 
-			constexpr path_view_type rootPath() noexcept requires(IsNotConstV<CharType>) {
+			constexpr path_view_type rootPath() noexcept requires(IsNotConst<CharType>) {
 				if constexpr (getPlatformType() == ProgramPlatformType::windowsPlatform) {
 					if (pathStringView.size() < 1) { return {}; }
 					if (isPlatformPathSeparator(pathStringView[0])) {
@@ -264,7 +264,7 @@ namespace natl {
 				}
 			}
 
-			constexpr path_view_type relativePath() noexcept requires(IsNotConstV<CharType>) {
+			constexpr path_view_type relativePath() noexcept requires(IsNotConst<CharType>) {
 				if constexpr (getPlatformType() == ProgramPlatformType::windowsPlatform) {
 					if (pathStringView.size() < 2) { return {}; }
 					if (isPlatformPathSeparator(pathStringView[0])) {
@@ -284,13 +284,13 @@ namespace natl {
 				}
 			}
 
-			constexpr path_view_type parentPath() noexcept requires(IsNotConstV<CharType>) {
+			constexpr path_view_type parentPath() noexcept requires(IsNotConst<CharType>) {
 				if (isEmpty()) { return{}; }
 				path_view_type filenamePathView = filename();
 				return path_view_type(pathStringView.substr(pathStringView.size() - filenamePathView.size()));
 			}
 
-			constexpr path_view_type filename() noexcept requires(IsNotConstV<CharType>) {
+			constexpr path_view_type filename() noexcept requires(IsNotConst<CharType>) {
 				if (isEmpty()) { return{}; }
 
 				size_type filenameSize = 0;
@@ -304,7 +304,7 @@ namespace natl {
 				return path_view_type(pathStringView.substr(pathStringView.size() - filenameSize));
 			}
 
-			constexpr path_view_type stem() noexcept requires(IsNotConstV<CharType>) {
+			constexpr path_view_type stem() noexcept requires(IsNotConst<CharType>) {
 				if (isEmpty()) { return{}; }
 
 				size_type extensionSize = 0;
@@ -336,7 +336,7 @@ namespace natl {
 				return {};
 			}
 
-			constexpr path_view_type extension() noexcept requires(IsNotConstV<CharType>) {
+			constexpr path_view_type extension() noexcept requires(IsNotConst<CharType>) {
 				size_type extensionSize = 0;
 				for (const Ascii& character : makeReverseIteration(pathStringView)) {
 					extensionSize++;

@@ -29,7 +29,7 @@ namespace natl {
 	concept IsIterator = IsIteratorV<Iter>;
 
 	template <typename Iter>
-	concept IsIterPtr = IsPointerV<Iter> || IsIterator<Iter>;
+	concept IsIterPtr = IsPointer<Iter> || IsIterator<Iter>;
 
 	template <typename Iter>
 		requires (IsIterPtr<Iter>)
@@ -43,8 +43,8 @@ namespace natl {
 	concept MemcopyConstructibleIter =
 		IsIterPtr<SrcIter> &&
 		IsIterPtr<DstIter> &&
-		IsSameV<typename SrcIter::iterator_catagory, std::random_access_iterator_tag> &&
-		IsSameV<typename DstIter::iterator_catagory, std::random_access_iterator_tag> &&
+		IsSame<typename SrcIter::iterator_catagory, std::random_access_iterator_tag> &&
+		IsSame<typename DstIter::iterator_catagory, std::random_access_iterator_tag> &&
 		MemcopyConstructibleSrcDst<
 		typename IterPtrTraits<SrcIter>::value_type,
 		typename IterPtrTraits<DstIter>::value_type,
@@ -229,7 +229,7 @@ namespace natl {
 
 		//assignment 
 		template<class OtherIter>
-			requires(IsIterator<OtherIter> && AssignableFrom<Iter&, const OtherIter&>)
+			requires(IsIterator<OtherIter> && AssignableFromC<Iter&, const OtherIter&>)
 		constexpr ReverseIterator& operator=(const ReverseIterator<OtherIter>& other) noexcept {
 			iterStorage = other;
 		}
@@ -237,9 +237,9 @@ namespace natl {
 		//access 
 		constexpr iterator_type base() const noexcept { return iterStorage; }
 		constexpr reference operator*() const { Iter temp = iterStorage; return *--temp; }
-		constexpr pointer operator->() const requires (IsPointerV<Iter> || requires (const Iter iter) { iter.operator->(); }) {
+		constexpr pointer operator->() const requires (IsPointer<Iter> || requires (const Iter iter) { iter.operator->(); }) {
 			Iter temp = base(); --temp;
-			if constexpr (IsPointerV<Iter>) {
+			if constexpr (IsPointer<Iter>) {
 				return temp;
 			} else {
 				return temp.operator->();
@@ -343,11 +343,11 @@ namespace natl {
 		constexpr iterator& getSelf() noexcept { return *this; }
 		constexpr const iterator& getSelf() const noexcept { return *this; }
 	public:
-		constexpr reference operator*() noexcept requires(IsNotConstV<DataType>) { return *dataPtr; }
+		constexpr reference operator*() noexcept requires(IsNotConst<DataType>) { return *dataPtr; }
 		constexpr const_reference operator*() const noexcept { return *dataPtr; }
-		constexpr pointer operator->() noexcept requires(IsNotConstV<DataType>) { return dataPtr; }
+		constexpr pointer operator->() noexcept requires(IsNotConst<DataType>) { return dataPtr; }
 		constexpr const_pointer operator->() const noexcept { return dataPtr; }
-		constexpr reference operator[](const size_type pos) noexcept requires(IsNotConstV<DataType>) { return dataPtr[pos]; };
+		constexpr reference operator[](const size_type pos) noexcept requires(IsNotConst<DataType>) { return dataPtr[pos]; };
 		constexpr const_reference operator[](const size_type pos) const noexcept { return dataPtr[pos]; };
 
 		constexpr Bool operator== (const iterator rhs) const noexcept { return dataPtr == rhs.dataPtr; }
@@ -398,18 +398,18 @@ namespace natl {
 		pointer dataPtr;
 	public:
 		constexpr RandomAccessIteratorAlloc() : dataPtr(nullptr) {}
-		constexpr RandomAccessIteratorAlloc(pointer ptr) noexcept requires(IsNotConstV<value_type>) : dataPtr(ptr) {}
-		constexpr RandomAccessIteratorAlloc(const_pointer ptr) noexcept requires(IsConstV<value_type>) : dataPtr(ptr) {}
+		constexpr RandomAccessIteratorAlloc(pointer ptr) noexcept requires(IsNotConst<value_type>) : dataPtr(ptr) {}
+		constexpr RandomAccessIteratorAlloc(const_pointer ptr) noexcept requires(IsConst<value_type>) : dataPtr(ptr) {}
 		constexpr ~RandomAccessIteratorAlloc() = default;
 	private:
 		constexpr iterator& getSelf() noexcept { return *this; }
 		constexpr const iterator& getSelf() const noexcept { return *this; }
 	public:
-		constexpr reference operator*() noexcept requires(IsNotConstV<value_type>) { return *dataPtr; }
+		constexpr reference operator*() noexcept requires(IsNotConst<value_type>) { return *dataPtr; }
 		constexpr const_reference operator*() const noexcept { return *dataPtr; }
-		constexpr pointer operator->() noexcept requires(IsNotConstV<value_type>) { return dataPtr; }
+		constexpr pointer operator->() noexcept requires(IsNotConst<value_type>) { return dataPtr; }
 		constexpr const_pointer operator->() const noexcept { return dataPtr; }
-		constexpr reference operator[](const size_type pos) noexcept requires(IsNotConstV<value_type>) { return dataPtr[pos]; };
+		constexpr reference operator[](const size_type pos) noexcept requires(IsNotConst<value_type>) { return dataPtr[pos]; };
 		constexpr const_reference operator[](const size_type pos) const noexcept { return dataPtr[pos]; };
 
 		constexpr Bool operator== (const iterator rhs) const noexcept { return dataPtr == rhs.dataPtr; }

@@ -147,7 +147,7 @@ namespace natl {
 		constexpr MDArray() noexcept = default;
 		constexpr MDArray(const MDArray&) noexcept = default;
 		constexpr MDArray(MDArray&&) noexcept = default;
-		constexpr MDArray(std::initializer_list<DataType> ilist) noexcept requires(IsConstV<DataType>) : dataArray(ilist) {};
+		constexpr MDArray(std::initializer_list<DataType> ilist) noexcept requires(IsConst<DataType>) : dataArray(ilist) {};
 	
 		//util
 		constexpr MDArray& self() noexcept { return *this; }

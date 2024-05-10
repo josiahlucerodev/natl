@@ -44,14 +44,14 @@ namespace natl {
     concept IsNotUnitTag = !IsUnitTag<UnitTag>;
 
     template<typename LhsUnitTage, typename RhsUnitTag>
-    concept IsTheSameUnitTagGroup = IsSameV<typename LhsUnitTage::tag_group, typename RhsUnitTag::tag_group>;
+    concept IsTheSameUnitTagGroup = IsSame<typename LhsUnitTage::tag_group, typename RhsUnitTag::tag_group>;
 
     template<typename LhsUnitTage, typename RhsUnitTag>
     concept IsNotTheSameUnitTagGroup = !IsTheSameUnitTagGroup<LhsUnitTage, RhsUnitTag>;
 
     template <typename FromTag, typename ToTag, typename FromDataType, typename ToDataType>
     struct StrongUnitConversionFactor {
-        static_assert(IsSameV<FromTag, ToTag>, "Unsupported conversion");
+        static_assert(IsSame<FromTag, ToTag>, "Unsupported conversion");
         static_assert(IsNotUnitTag<FromTag>, "FromTag is not a UnitTag");
         static_assert(IsNotUnitTag<ToTag>, "ToTag is not a UnitTag");
         constexpr static FromDataType factor = FromDataType(0);
@@ -61,7 +61,7 @@ namespace natl {
     concept DoesNotUnitConvertDown = FromTag::magnitudeIndex > ToTag::magnitudeIndex;
 
     template<typename FromTag, typename ToTag, typename ToDataType>
-    concept DoesNotUnitConvertRequireFloat = IsFloatingPointV<ToDataType> || DoesNotUnitConvertDown<FromTag, ToTag>;
+    concept DoesNotUnitConvertRequireFloat = IsBuiltInFloatingPoint<ToDataType> || DoesNotUnitConvertDown<FromTag, ToTag>;
 
     //magnitude based conversion
     template <typename FromTag, typename ToTag, typename FromDataType, typename ToDataType>
@@ -81,11 +81,11 @@ namespace natl {
         requires(
             IsUnitTag<FromTag>
             && IsUnitTag<ToTag> 
-            && IsSameV<typename FromTag::tag_group, typename ToTag::tag_group>
-            && IsSameV<typename FromTag::tag_group::group_type, StrongUnitGroupTypeTable>)
+            && IsSame<typename FromTag::tag_group, typename ToTag::tag_group>
+            && IsSame<typename FromTag::tag_group::group_type, StrongUnitGroupTypeTable>)
         struct StrongUnitConversionFactor<FromTag, ToTag, FromDataType, ToDataType> {
 
-        static_assert(!(!IsFloatingPointV<ToDataType> && (FromTag::tableIndex > ToTag::tableIndex)), "converting down requires a base float type");
+        static_assert(!(!IsBuiltInFloatingPoint<ToDataType> && (FromTag::tableIndex > ToTag::tableIndex)), "converting down requires a base float type");
         using tag_group = typename FromTag::tag_group;
         constexpr static ToDataType value =  
             static_cast<ToDataType>(tag_group::convertionTable[FromTag::tableIndex]) 
@@ -111,11 +111,11 @@ namespace natl {
         requires(
             IsUnitTag<FromTag>
             && IsUnitTag<ToTag> 
-            && IsNotSameV<typename FromTag::tag_group, typename ToTag::tag_group>
-            && IsSameV<typename FromTag::tag_group::unit_category, typename ToTag::tag_group::unit_category>)
+            && IsNotSame<typename FromTag::tag_group, typename ToTag::tag_group>
+            && IsSame<typename FromTag::tag_group::unit_category, typename ToTag::tag_group::unit_category>)
         struct StrongUnitConversionFactor<FromTag, ToTag, FromDataType, ToDataType> {
 
-        static_assert(IsFloatingPointV<ToDataType>, "converting to different unit group requires a base float type");
+        static_assert(IsBuiltInFloatingPoint<ToDataType>, "converting to different unit group requires a base float type");
         using from_tag_group = typename FromTag::tag_group;
         using to_tag_group = typename ToTag::tag_group;
         constexpr static ToDataType value = UnitCategoryConversionFactor<from_tag_group, to_tag_group, FromTag, ToTag, ToDataType>::value;
@@ -154,24 +154,24 @@ namespace natl {
         NATL_FORCE_INLINE constexpr const DataType& value() const { return data; }
 
         template<typename Interger>
-            requires(IsFundamentalItergerV<Interger>)
-        NATL_FORCE_INLINE constexpr Interger valueAsInt() const noexcept requires(IsFloatingPointV<DataType>) {
+            requires(IsBuiltInInterger<Interger>)
+        NATL_FORCE_INLINE constexpr Interger valueAsInt() const noexcept requires(IsBuiltInFloatingPoint<DataType>) {
             return static_cast<Interger>(data);
         }
         template<typename Float>
-            requires(IsFloatingPointV<Float>)
-        NATL_FORCE_INLINE constexpr Float valueAsFloat() const noexcept requires(IsFundamentalItergerV<DataType>) {
+            requires(IsBuiltInFloatingPoint<Float>)
+        NATL_FORCE_INLINE constexpr Float valueAsFloat() const noexcept requires(IsBuiltInInterger<DataType>) {
             return static_cast<Float>(data);
         }
 
         template<typename Interger>
-            requires(IsFloatingPointV<Interger>)
-        NATL_FORCE_INLINE constexpr UnitValue<Interger, Units...> asInt() const noexcept requires(IsFundamentalItergerV<DataType>) {
+            requires(IsBuiltInFloatingPoint<Interger>)
+        NATL_FORCE_INLINE constexpr UnitValue<Interger, Units...> asInt() const noexcept requires(IsBuiltInInterger<DataType>) {
             return UnitValue<Interger, Units...>(static_cast<Interger>(data));
         }
         template<typename Float>
-            requires(IsFloatingPointV<Float>)
-        NATL_FORCE_INLINE constexpr UnitValue<Float, Units...> asFloat() const noexcept requires(IsFundamentalItergerV<DataType>) {
+            requires(IsBuiltInFloatingPoint<Float>)
+        NATL_FORCE_INLINE constexpr UnitValue<Float, Units...> asFloat() const noexcept requires(IsBuiltInInterger<DataType>) {
             return UnitValue<Float, Units...>(static_cast<Float>(data));
         }
 
@@ -274,7 +274,7 @@ namespace natl {
         template<typename LhsUnit, typename RhsUnit>
         struct UnitGroupUnitCategoryCompare {
             constexpr static Bool value =  
-                IsSameV<typename LhsUnit::unit_tag::tag_group::unit_category, typename RhsUnit::unit_tag::tag_group::unit_category>;
+                IsSame<typename LhsUnit::unit_tag::tag_group::unit_category, typename RhsUnit::unit_tag::tag_group::unit_category>;
         };
 
         template<typename TransfromUnit, typename UnitTypePack>

@@ -49,7 +49,7 @@ namespace natl {
 	public:
 		using value_type = DataType;
 		using mutex_type = MutexType;
-		using synchronized_value_type = SynchronizedValueBase<RemoveConstT<DataType>, MutexType>;
+		using synchronized_value_type = SynchronizedValueBase<RemoveConst<DataType>, MutexType>;
 	private:
 		synchronized_value_type& synchronizedValueRef;
 	public:
@@ -61,7 +61,7 @@ namespace natl {
 			synchronizedValueRef.rwMutex.lock();
 		};
 		constexpr UpdateGuardBase(const synchronized_value_type& synchronizedValueRefIn) noexcept
-			requires(IsConstV<DataType>) : synchronizedValueRef(synchronizedValueRefIn) {
+			requires(IsConst<DataType>) : synchronizedValueRef(synchronizedValueRefIn) {
 			synchronizedValueRef.rwMutex.lock();
 		};
 
