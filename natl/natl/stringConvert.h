@@ -444,9 +444,6 @@ namespace natl {
 		return result;
 	}
 
-
-
-
 	template<class DynStringContainer, typename Interger>
 		requires(IsConvertDynStringContainer<DynStringContainer>)
 	constexpr void intToStringHexadecimalStringType(DynStringContainer& output, Interger number, const Bool addPrefix) noexcept {

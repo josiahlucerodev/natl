@@ -204,6 +204,11 @@ namespace natl {
 		return outputString;
 	}
 
+	template<typename... ArgTypes>
+	constexpr String sFormat(ArgTypes&&... args) noexcept {
+		return natl::format<String>(natl::forward<ArgTypes>(args)...);
+	}
+
 	struct FormatColumn {
 		Size columnNumber;
 		Ascii fillCharacter;
@@ -275,8 +280,43 @@ namespace natl {
 	struct Formatter<Ascii[StringSize], Ascii> {
 		template<typename OutputIter>
 		constexpr static OutputIter format(OutputIter outputIter, const Ascii* str) noexcept {
-			for (Size i = 0; i < StringSize; i++) {
+			for (Size i = 0; i < StringSize - 1; i++) {
 				outputIter = str[i];
+			}
+			return outputIter;
+		}
+	};
+
+	template<>
+	struct Formatter<BaseStringView<Ascii>, Ascii> {
+		template<typename OutputIter>
+		constexpr static OutputIter format(OutputIter outputIter, const ConstAsciiStringView stringView) noexcept {
+			for (const Ascii character : stringView) {
+				outputIter = character;
+			}
+			return outputIter;
+		}
+	};
+	template<>
+	struct Formatter<BaseStringView<const Ascii>, Ascii> {
+		template<typename OutputIter>
+		constexpr static OutputIter format(OutputIter outputIter, const ConstAsciiStringView stringView) noexcept {
+			for (const Ascii character : stringView) {
+				outputIter = character;
+			}
+			return outputIter;
+		}
+	};
+	template<
+		Size bufferSize,
+		typename Alloc,
+		Bool EnableDynAllocation,
+		Bool EnableIncreasedSmallBufferSize>
+	struct Formatter<BaseString<Ascii, bufferSize, Alloc, EnableDynAllocation, EnableIncreasedSmallBufferSize>, Ascii> {
+		template<typename OutputIter>
+		constexpr static OutputIter format(OutputIter outputIter, const ConstAsciiStringView stringView) noexcept {
+			for (const Ascii character : stringView) {
+				outputIter = character;
 			}
 			return outputIter;
 		}
@@ -420,7 +460,7 @@ namespace natl {
 
 		template<typename OutputIter>
 		constexpr static OutputIter format(OutputIter outputIter, const Bool booleanValue, BoolFormat boolFormat = BoolFormat::standard) noexcept {
-			univeralFormat<OutputIter>(outputIter, booleanValue, boolFormat);
+			univieraslFormat<OutputIter>(outputIter, booleanValue, boolFormat);
 			return outputIter;
 		}
 	};

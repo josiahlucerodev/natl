@@ -26,9 +26,9 @@ namespace natl {
 		Size stringCapacity;
 	};
 
-	template<class CharType, 
+	template<typename CharType,
 		Size bufferSize, 
-		class Alloc = DefaultAllocator<CharType>, 
+		typename Alloc = DefaultAllocator<CharType>,
 		Bool EnableDynAllocation = true, 
 		Bool EnableIncreasedSmallBufferSize = true>
 		requires(IsAllocator<Alloc>)
@@ -1895,8 +1895,6 @@ namespace natl {
 		requires(byteSize >= 32 && IsAllocator<Alloc>)
 	using StringByteSize = BaseString<Ascii, (byteSize - sizeof(BaseStringBaseMembersRef<Ascii>)) / sizeof(Ascii), Alloc>;
 
-
-
 	using String32 = BaseStringByteSize<Ascii, 32>;
 	static_assert(sizeof(String32) == 32, "natl: String32 should be 32 bytes");
 
@@ -2018,5 +2016,4 @@ namespace natl {
 			return Utf32String512(str, static_cast<Size>(len));
 		}
 	}
-
 }
