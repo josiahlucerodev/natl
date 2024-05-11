@@ -38,7 +38,7 @@ namespace natl {
 		constexpr static Bool triviallyDefaultConstructible = IsTriviallyDefaultConstructible<DataType>;
 		constexpr static Bool triviallyCompareable = IsTriviallyCompareable<DataType>;
 		constexpr static Bool triviallyDestructible = IsTriviallyDestructible<DataType>;
-	private:
+	
 		DataType dataStorage[Number];
 	public:
 		constexpr Array() = default;

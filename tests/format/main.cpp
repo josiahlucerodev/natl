@@ -32,7 +32,6 @@ static_assert(natl::sFormat(natl::String("Hello")) == "Hello");
 
 
 constexpr natl::String256 outputTest() noexcept {
-	using type = natl::FormatFloatPrecisionType<3>;
 	const natl::FormatColumn formatColumn(20);
 	const natl::f64 floatValue = 12.345678;
 	const natl::ui64 intValue = 10;

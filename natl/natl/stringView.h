@@ -58,6 +58,11 @@ namespace natl {
 		constexpr BaseStringView(CharType* stringPtr, const size_type length) noexcept : dataPtr(stringPtr), stringLength(length) {}
 		constexpr BaseStringView(CharType* str) noexcept : dataPtr(str), stringLength(cstringLength(str)) {}
 
+		template<typename StringViewLike>
+			requires(IsStringViewLike<StringViewLike, RemoveConctVolatile<CharType>>)
+		explicit constexpr BaseStringView(const StringViewLike& stringViewLike) noexcept : 
+			dataPtr(stringViewLike.data()), stringLength(stringViewLike.size()) {}
+
 		//destrutor
 		constexpr ~BaseStringView() = default;
 

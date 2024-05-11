@@ -133,11 +133,11 @@ namespace natl {
         using units_type = TypePack<Units...>;
 
     public:
-        DataType data;
+        DataType internalData;
     public:
         //constructor
         NATL_FORCE_INLINE constexpr UnitValue() noexcept = default;
-        NATL_FORCE_INLINE constexpr explicit UnitValue(const DataType dataIn) noexcept : data(dataIn) {}
+        NATL_FORCE_INLINE constexpr explicit UnitValue(const DataType dataIn) noexcept : internalData(dataIn) {}
 
         //destructor
         NATL_FORCE_INLINE constexpr ~UnitValue() noexcept = default;
@@ -150,65 +150,65 @@ namespace natl {
         NATL_FORCE_INLINE constexpr UnitValue& operator=(const UnitValue&) noexcept = default;
 
         //observers 
-        NATL_FORCE_INLINE constexpr DataType& value() { return data; }
-        NATL_FORCE_INLINE constexpr const DataType& value() const { return data; }
+        NATL_FORCE_INLINE constexpr DataType& value() { return internalData; }
+        NATL_FORCE_INLINE constexpr const DataType& value() const { return internalData; }
 
         template<typename Interger>
             requires(IsBuiltInInterger<Interger>)
         NATL_FORCE_INLINE constexpr Interger valueAsInt() const noexcept requires(IsBuiltInFloatingPoint<DataType>) {
-            return static_cast<Interger>(data);
+            return static_cast<Interger>(internalData);
         }
         template<typename Float>
             requires(IsBuiltInFloatingPoint<Float>)
         NATL_FORCE_INLINE constexpr Float valueAsFloat() const noexcept requires(IsBuiltInInterger<DataType>) {
-            return static_cast<Float>(data);
+            return static_cast<Float>(internalData);
         }
 
         template<typename Interger>
             requires(IsBuiltInFloatingPoint<Interger>)
         NATL_FORCE_INLINE constexpr UnitValue<Interger, Units...> asInt() const noexcept requires(IsBuiltInInterger<DataType>) {
-            return UnitValue<Interger, Units...>(static_cast<Interger>(data));
+            return UnitValue<Interger, Units...>(static_cast<Interger>(internalData));
         }
         template<typename Float>
             requires(IsBuiltInFloatingPoint<Float>)
         NATL_FORCE_INLINE constexpr UnitValue<Float, Units...> asFloat() const noexcept requires(IsBuiltInInterger<DataType>) {
-            return UnitValue<Float, Units...>(static_cast<Float>(data));
+            return UnitValue<Float, Units...>(static_cast<Float>(internalData));
         }
 
 
 
         //operator 
-        NATL_FORCE_INLINE constexpr UnitValue operator+(const UnitValue& other) const noexcept { return UnitValue(data + other.data); }
-        NATL_FORCE_INLINE constexpr UnitValue operator-(const UnitValue& other) const noexcept { return UnitValue(data - other.data); }
-        NATL_FORCE_INLINE constexpr UnitValue operator*(const UnitValue& other) const noexcept { return UnitValue(data * other.data); }
-        NATL_FORCE_INLINE constexpr UnitValue operator/(const UnitValue& other) const noexcept { return UnitValue(data / other.data); }
+        NATL_FORCE_INLINE constexpr UnitValue operator+(const UnitValue& other) const noexcept { return UnitValue(internalData + other.internalData); }
+        NATL_FORCE_INLINE constexpr UnitValue operator-(const UnitValue& other) const noexcept { return UnitValue(internalData - other.internalData); }
+        NATL_FORCE_INLINE constexpr UnitValue operator*(const UnitValue& other) const noexcept { return UnitValue(internalData * other.internalData); }
+        NATL_FORCE_INLINE constexpr UnitValue operator/(const UnitValue& other) const noexcept { return UnitValue(internalData / other.internalData); }
 
         //operators 
         NATL_FORCE_INLINE constexpr UnitValue& operator+=(const UnitValue& other) noexcept {
-            data += other.data;
+            internalData += other.internalData;
             return *this;
         }
         NATL_FORCE_INLINE constexpr UnitValue& operator-=(const UnitValue& other) noexcept {
-            data -= other.data;
+            internalData -= other.internalData;
             return *this;
         }
         NATL_FORCE_INLINE constexpr UnitValue& operator*=(const UnitValue& other) noexcept {
-            data *= other.data;
+            internalData *= other.internalData;
             return *this;
         }
         NATL_FORCE_INLINE constexpr UnitValue& operator/=(const UnitValue& other) noexcept {
-            data /= other.data;
+            internalData /= other.internalData;
             return *this;
         }
 
         //compare 
-        NATL_FORCE_INLINE constexpr Bool operator==(const UnitValue& other) const noexcept { return data == other.data; }
-        NATL_FORCE_INLINE constexpr Bool operator!=(const UnitValue& other) const noexcept { return data != other.data; }
-        NATL_FORCE_INLINE constexpr Bool operator<(const UnitValue& other) const noexcept { return data < other.data; }
-        NATL_FORCE_INLINE constexpr Bool operator>(const UnitValue& other) const noexcept { return data > other.data; }
-        NATL_FORCE_INLINE constexpr Bool operator<=(const UnitValue& other) const noexcept { return data <= other.data; }
-        NATL_FORCE_INLINE constexpr Bool operator>=(const UnitValue& other) const noexcept { return data >= other.data; }
-        NATL_FORCE_INLINE constexpr auto operator<=>(const UnitValue& other) const noexcept { return data <=> other.data; }
+        NATL_FORCE_INLINE constexpr Bool operator==(const UnitValue& other) const noexcept { return internalData == other.internalData; }
+        NATL_FORCE_INLINE constexpr Bool operator!=(const UnitValue& other) const noexcept { return internalData != other.internalData; }
+        NATL_FORCE_INLINE constexpr Bool operator<(const UnitValue& other) const noexcept { return internalData < other.internalData; }
+        NATL_FORCE_INLINE constexpr Bool operator>(const UnitValue& other) const noexcept { return internalData > other.internalData; }
+        NATL_FORCE_INLINE constexpr Bool operator<=(const UnitValue& other) const noexcept { return internalData <= other.internalData; }
+        NATL_FORCE_INLINE constexpr Bool operator>=(const UnitValue& other) const noexcept { return internalData >= other.internalData; }
+        NATL_FORCE_INLINE constexpr auto operator<=>(const UnitValue& other) const noexcept { return internalData <=> other.internalData; }
 
     private:
         template <typename... UnitTypes>
@@ -341,7 +341,7 @@ namespace natl {
             using UnitValueArgTypePack = typename NewUnitTypePack::template add_new_elements_front<DataType>;
             using NewCreatedUnitValueType = CreateTypeWithTypePack<UnitValue, UnitValueArgTypePack>;
             using NewUnitValueType = NewCreatedUnitValueType;
-            return NewUnitValueType(data * other.data);
+            return NewUnitValueType(internalData * other.internalData);
         }
         
 
@@ -352,7 +352,7 @@ namespace natl {
             using UnitValueArgTypePack = typename NewUnitTypePack::template add_new_elements_front<DataType>;
             using NewCreatedUnitValueType = CreateTypeWithTypePack<UnitValue, UnitValueArgTypePack>;
             using NewUnitValueType = NewCreatedUnitValueType;
-            return NewUnitValueType(data / other.data);
+            return NewUnitValueType(internalData / other.internalData);
         }
 
         template<typename... OtherUnits>
@@ -362,7 +362,7 @@ namespace natl {
             constexpr DataType convertValue = TypePackOpFoldWithIndexAndArgValue<DataType, TransformedUnitsType,
                 UnitConvertFactorValuePredicate, UnitConvertFactorMultiplyOp, UnitsTypePack>;
             using NewUnitValueType = CreateTypeWithTypePack<ConvertNewUnitType, TransformedUnitsType>::type;
-            const DataType newValue = convertValue * data;
+            const DataType newValue = convertValue * internalData;
             return NewUnitValueType(newValue);
         }
 
@@ -557,17 +557,15 @@ namespace natl {
     template<typename DataType, SSize Magnitude = 1>
     using Miles = UnitValue<DataType, MilesUnit<Magnitude>>;
 
-    namespace impl {
-        template<typename FloatDataType, typename FromTag, typename ToTag>
-        struct UnitCategoryConversionFactor<
-            ImperialLengthGroupTag, MetricLengthGroupTag, FromTag, ToTag, FloatDataType> 
-            : public UnitCategoryConversionFactorImpl<FloatDataType, 0.0254, InchesTag, MeterTag, FromTag, ToTag> {
-        };
-        template<typename FloatDataType, typename FromTag, typename ToTag>
-        struct UnitCategoryConversionFactor<
-            MetricLengthGroupTag, ImperialLengthGroupTag, FromTag, ToTag, FloatDataType>
-            : public UnitCategoryConversionFactorImpl<FloatDataType, 39.3701, MeterTag, InchesTag, FromTag, ToTag> {
-        };
-    }
+    template<typename FloatDataType, typename FromTag, typename ToTag>
+    struct UnitCategoryConversionFactor<
+        impl::ImperialLengthGroupTag, impl::MetricLengthGroupTag, FromTag, ToTag, FloatDataType> 
+        : public impl::UnitCategoryConversionFactorImpl<FloatDataType, 0.0254, impl::InchesTag, impl::MeterTag, FromTag, ToTag> {
+    };
+    template<typename FloatDataType, typename FromTag, typename ToTag>
+    struct UnitCategoryConversionFactor<
+        impl::MetricLengthGroupTag, impl::ImperialLengthGroupTag, FromTag, ToTag, FloatDataType>
+        : public impl::UnitCategoryConversionFactorImpl<FloatDataType, 39.3701, impl::MeterTag, impl::InchesTag, FromTag, ToTag> {
+    };
 }
 

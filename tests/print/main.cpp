@@ -1,19 +1,32 @@
 
 //natl
 #include <natl/print.h>
-#include <natl/format.h>
-#include <natl/string.h>
-#include <natl/stringLiteral.h>
-#include <natl/iteration.h>
+#include <natl/typeInfo.h>
+#include <natl/printFormatted.h>
+#include <natl/printColor.h>
+
 
 int main() {
-	natl::String output;
-	natl::BackInsertIterator<natl::String> ouputIter = natl::backInserter(output);
-	natl::formatTo(ouputIter, natl::formatArgText<"hexadecimal">(natl::ui64(3)));
-	natl::println(output.c_str());
+	natl::enablePrintExtendedColor();
 
-	natl::Ascii inputBuffer[256] = {0};
-	natl::input(inputBuffer, 256);
+	natl::println(natl::getTypeInfo<natl::Size>().name());
+	natl::printlnf(false);
 
-	natl::println(inputBuffer);
+	natl::printf(natl::formatArgText<"b">(natl::PrintColor::red), true, natl::PrintAllDefaultColor{});
+
+	natl::printlnf(false);
+
+	natl::printlnc("the", 3, natl::PrintBackgroundColor::red);
+	natl::printlnc(natl::getTypeInfo<natl::Size>().name(), natl::PrintBackgroundColor::red);
+
+	natl::printlnfc(natl::PrintExtendedForegroundColor(128, 128, 0), "the");
+
+
+	//natl::printf(natl::PrintExtendedBackgroundColor(0, 0, 0));
+
+
+	//natl::Ascii inputBuffer[256] = {0};
+	//natl::input(inputBuffer, 256);
+
+	//natl::println(inputBuffer);
 }

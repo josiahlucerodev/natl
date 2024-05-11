@@ -1,0 +1,132 @@
+	inline Bool printlnc(const Ascii* string, const Size size, const PrintColor printColor, const PrintColorAttribute colorAttribue = PrintColorAttribute::standard) noexcept {
+		const Bool result = printc(string, cstringLength(string), printColor, colorAttribute);
+		print("\n");
+		return result;
+	}
+	inline Bool printlnc(const Ascii* string, const Size size, const PrintBackgroundColor printColor) noexcept {
+		const Bool result = printc(string, cstringLength(string), printColor);
+		print("\n");
+		return result;
+	}
+	inline Bool printlnc(const Ascii* string, const Size size, const PrintForegroundColor printColor) noexcept {
+		const Bool result = printc(string, cstringLength(string), printColor);
+		print("\n");
+		return result;
+	}
+	inline Bool printlnc(const Ascii* string, const Size size, const PrintExtendedColor printColor, const PrintColorAttribute colorAttribue = PrintColorAttribute::standard) noexcept {
+		const Bool result = printc(string, cstringLength(string), printColor, colorAttribute);
+		print("\n");
+		return result;
+	}
+	inline Bool printlnc(const Ascii* string, const Size size, const PrintExtendedForegroundColor printColor) noexcept {
+		const Bool result = printc(string, cstringLength(string), printColor);
+		print("\n");
+		return result;
+	}
+	inline Bool printlnc(const Ascii* string, const Size size, const PrintExtendedBackgroundColor printColor) noexcept {
+		const Bool result = printc(string, cstringLength(string), printColor);
+		print("\n");
+		return result;
+	}
+	inline Bool printlnc(const Ascii* string, const Size size, const PrintDefaultColor printColor, const PrintColorAttribute colorAttribue = PrintColorAttribute::standard) noexcept {
+		const Bool result = printc(string, cstringLength(string), printColor, colorAttribute);
+		print("\n");
+		return result;
+	}
+	inline Bool printlnc(const Ascii* string, const Size size, const PrintDefaultForegroundColor printColor) noexcept {
+		const Bool result = printc(string, cstringLength(string), printColor);
+		print("\n");
+		return result;
+	}
+	inline Bool printlnc(const Ascii* string, const Size size, const PrintDefaultBackgroundColor printColor) noexcept {
+		const Bool result = printc(string, cstringLength(string), printColor);
+		print("\n");
+		return result;
+	}
+	inline Bool printlnc(const Ascii* string, const Size size, const PrintAllDefaultColor printColor) noexcept {
+		const Bool result = printc(string, cstringLength(string), printColor);
+		print("\n");
+		return result;
+	}
+
+	inline Bool printlnc(const Ascii* string, const PrintColor printColor, const PrintColorAttribute colorAttribute = PrintColorAttribute::standard) noexcept {
+		return printlnc(string, cstringLength(string), printColor, colorAttribute);
+	}
+	inline Bool printlnc(const Ascii* string, const PrintBackgroundColor printColor) noexcept {
+		return printlnc(string, cstringLength(string), printColor);
+	}
+	inline Bool printlnc(const Ascii* string, const PrintForegroundColor printColor) noexcept {
+		return printlnc(string, cstringLength(string), printColor);
+	}
+	inline Bool printlnc(const Ascii* string, const PrintExtendedColor printColor, const PrintColorAttribute colorAttribute = PrintColorAttribute::standard) noexcept {
+		return printlnc(string, cstringLength(string), printColor, colorAttribute);
+	}
+	inline Bool printlnc(const Ascii* string, const PrintExtendedForegroundColor printColor) noexcept {
+		return printlnc(string, cstringLength(string), printColor);
+	}
+	inline Bool printlnc(const Ascii* string, const PrintExtendedBackgroundColor printColor) noexcept {
+		return printlnc(string, cstringLength(string), printColor);
+	}
+	inline Bool printlnc(const Ascii* string, const PrintDefaultColor printColor, const PrintColorAttribute colorAttribute = PrintColorAttribute::standard) noexcept {
+		return printlnc(string, cstringLength(string), printColor, colorAttribute);
+	}
+	inline Bool printlnc(const Ascii* string, const PrintDefaultForegroundColor printColor) noexcept {
+		return printlnc(string, cstringLength(string), printColor);
+	}
+	inline Bool printlnc(const Ascii* string, const PrintDefaultBackgroundColor printColor) noexcept {
+		return printlnc(string, cstringLength(string), printColor);
+	}
+	inline Bool printlnc(const Ascii* string, const PrintAllDefaultColor printColor) noexcept {
+		return printlnc(string, cstringLength(string), printColor);
+	}
+
+	template<typename StringViewLike>
+		requires(IsStringViewLike<StringViewLike, Ascii>)
+	inline Bool printlnc(const StringViewLike stringViewLike, const PrintColor printColor, const PrintColorAttribute colorAttribute = PrintColorAttribute::standard) noexcept {
+		return printlnc(stringViewLike.data(), stringViewLike.size(), printColor, colorAttribute);
+	}
+	template<typename StringViewLike>
+		requires(IsStringViewLike<StringViewLike, Ascii>)
+	inline Bool printlnc(const StringViewLike stringViewLike, const PrintBackgroundColor printColor) noexcept {
+		return printlnc(stringViewLike.data(), stringViewLike.size(), printColor);
+	}
+	template<typename StringViewLike>
+		requires(IsStringViewLike<StringViewLike, Ascii>)
+	inline Bool printlnc(const StringViewLike stringViewLike, const PrintForegroundColor printColor) noexcept {
+		return printlnc(stringViewLike.data(), stringViewLike.size(), printColor);
+	}
+	template<typename StringViewLike>
+		requires(IsStringViewLike<StringViewLike, Ascii>)
+	inline Bool printlnc(const StringViewLike stringViewLike, const PrintExtendedColor printColor, const PrintColorAttribute colorAttribute = PrintColorAttribute::standard) noexcept {
+		return printlnc(stringViewLike.data(), stringViewLike.size(), printColor, colorAttribute);
+	}
+	template<typename StringViewLike>
+		requires(IsStringViewLike<StringViewLike, Ascii>)
+	inline Bool printlnc(const StringViewLike stringViewLike, const PrintExtendedForegroundColor printColor) noexcept {
+		return printlnc(stringViewLike.data(), stringViewLike.size(), printColor);
+	}
+	template<typename StringViewLike>
+		requires(IsStringViewLike<StringViewLike, Ascii>)
+	inline Bool printlnc(const StringViewLike stringViewLike, const PrintExtendedBackgroundColor printColor) noexcept {
+		return printlnc(stringViewLike.data(), stringViewLike.size(), printColor);
+	}
+	template<typename StringViewLike>
+		requires(IsStringViewLike<StringViewLike, Ascii>)
+	inline Bool printlnc(const StringViewLike stringViewLike, const PrintDefaultColor printColor, const PrintColorAttribute colorAttribute = PrintColorAttribute::standard) noexcept {
+		return printlnc(stringViewLike.data(), stringViewLike.size(), printColor, colorAttribute);
+	}
+	template<typename StringViewLike>
+		requires(IsStringViewLike<StringViewLike, Ascii>)
+	inline Bool printlnc(const StringViewLike stringViewLike, const PrintDefaultForegroundColor printColor) noexcept {
+		return printlnc(stringViewLike.data(), stringViewLike.size(), printColor);
+	}
+	template<typename StringViewLike>
+		requires(IsStringViewLike<StringViewLike, Ascii>)
+	inline Bool printlnc(const StringViewLike stringViewLike, const PrintDefaultBackgroundColor printColor) noexcept {
+		return printlnc(stringViewLike.data(), stringViewLike.size(), printColor);
+	}
+	template<typename StringViewLike>
+		requires(IsStringViewLike<StringViewLike, Ascii>)
+	inline Bool printlnc(const StringViewLike stringViewLike, const PrintAllDefaultColor printColor) noexcept {
+		return printlnc(stringViewLike.data(), stringViewLike.size(), printColor);
+	}

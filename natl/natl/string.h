@@ -1887,13 +1887,18 @@ namespace natl {
 		}
 	};
 
-	template<class DataType, Size byteSize, class Alloc = DefaultAllocator<DataType>>
-		requires(byteSize >= 32 && IsAllocator<Alloc>)
-	using BaseStringByteSize = BaseString<DataType, (byteSize - sizeof(BaseStringBaseMembersRef<DataType>)) / sizeof(DataType), Alloc>;
+	template<class DataType, Size ByteSize, class Alloc = DefaultAllocator<DataType>>
+		requires(ByteSize >= 32 && IsAllocator<Alloc>)
+	using BaseStringByteSize = BaseString<DataType, (ByteSize - sizeof(BaseStringBaseMembersRef<DataType>)) / sizeof(DataType), Alloc>;
 
-	template<Size byteSize, class Alloc = DefaultAllocator<Ascii>>
-		requires(byteSize >= 32 && IsAllocator<Alloc>)
-	using StringByteSize = BaseString<Ascii, (byteSize - sizeof(BaseStringBaseMembersRef<Ascii>)) / sizeof(Ascii), Alloc>;
+	template<Size ByteSize, class Alloc = DefaultAllocator<Ascii>>
+		requires(ByteSize >= 32 && IsAllocator<Alloc>)
+	using StringByteSize = BaseString<Ascii, (ByteSize - sizeof(BaseStringBaseMembersRef<Ascii>)) / sizeof(Ascii), Alloc>;
+
+	template<Size ByteSize, class Alloc = DefaultAllocator<Ascii>>
+		requires(ByteSize >= 32 && IsAllocator<Alloc>)
+	using AsciiStringByteSize = StringByteSize<ByteSize, Alloc>;
+
 
 	using String32 = BaseStringByteSize<Ascii, 32>;
 	static_assert(sizeof(String32) == 32, "natl: String32 should be 32 bytes");

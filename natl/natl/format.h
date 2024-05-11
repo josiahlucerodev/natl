@@ -106,8 +106,8 @@ namespace natl {
 	template<typename... FlagTypes>
 	constexpr auto formatArg(auto arg, auto... flagArgs) noexcept {
 		using arg_type = decltype(arg);
-		using arg_flags = Tuple<decltype(flagArgs)...>;
-		using template_flags = Tuple<FlagTypes...>;
+		using arg_flags = TypePack<decltype(flagArgs)...>;
+		using template_flags = TypePack<FlagTypes...>;
 		using arg_flags_storage_tuple = Tuple<decltype(flagArgs)...>;
 
 		using format_arg_flags = FormatArgFlags<
@@ -140,9 +140,9 @@ namespace natl {
 	}
 
 	template<typename Type>
-	struct IsFormatArgFlags : FalseType {};
+	struct IsFormatArgFlagsT : FalseType {};
 	template<typename ArgType, typename... FlagTypes>
-	struct IsFormatArgFlags<FormatArgFlags<ArgType, FlagTypes...>> : TrueType {};
+	struct IsFormatArgFlagsT<FormatArgFlags<ArgType, FlagTypes...>> : TrueType {};
 
 	namespace impl {
 		template<typename ArgType, typename CharType, typename... FlagTypes>
@@ -170,15 +170,23 @@ namespace natl {
 		constexpr void formatToArgCallFormat(OutputIter& outputIter, ArgType&& arg, StorageTuple&& storageTuple) noexcept {
 			formatToArgCallFormatImpl<OutputIter, ArgType, FormatterType, StorageTuple>(outputIter, natl::forward<ArgType>(arg), natl::forward<StorageTuple>(storageTuple), MakeIndexSequence<numberOfFormatArgs>{});
 		}
+
 		template<typename OutputIter, typename ArgType, typename CharType>
 		constexpr void formatToArgLevel(OutputIter& outputIter, ArgType&& arg) noexcept {
-			if constexpr (IsFormatArgFlags<ArgType>::value) {
+			if constexpr (IsFormatArgFlagsT<ArgType>::value) {
 				using FormatArgType = ArgType;
-				using formatter_type = CreateFormatterWithTemplateFlags<typename FormatArgType::arg_type, CharType, typename FormatArgType::template_flags>;
 				using arg_flags_storage_tuple = FormatArgType::arg_flags_storage_tuple;
 				using arg_type = FormatArgType::arg_type;
-				formatToArgCallFormat<OutputIter, arg_type, formatter_type, arg_flags_storage_tuple, FormatArgType::arg_flags::size>(
+
+				if constexpr (ArgType::template_flags::size > 0) {
+					using formatter_type = CreateFormatterWithTemplateFlags<typename FormatArgType::arg_type, CharType, typename FormatArgType::template_flags>;
+					formatToArgCallFormat<OutputIter, arg_type, formatter_type, arg_flags_storage_tuple, TupleSize<arg_flags_storage_tuple>>(
+							outputIter, natl::forward<arg_type>(arg.getArg()), natl::forward<arg_flags_storage_tuple>(arg.getArgFlags()));
+				} else {
+					using formatter_type = Formatter<RemoveConctVolatile<arg_type>, CharType>;
+					formatToArgCallFormat<OutputIter, arg_type, formatter_type, arg_flags_storage_tuple, TupleSize<arg_flags_storage_tuple>>(
 						outputIter, natl::forward<arg_type>(arg.getArg()), natl::forward<arg_flags_storage_tuple>(arg.getArgFlags()));
+				}
 			} else {
 				using arg_flags_storage_tuple = Tuple<>;
 				using formatter_type = Formatter<RemoveConctVolatile<RemoveReference<ArgType>>, CharType>;
@@ -188,7 +196,14 @@ namespace natl {
 		}
 	}
 
+	template<typename ArgType, typename CharType>
+	concept Formattable = requires(ArgType&& arg, 
+		FormatOutputIter<BackInsertIterator<BaseStringByteSize<CharType, 32>>> outputIter) {
+		{ impl::formatToArgLevel<decltype(outputIter), ArgType, CharType>(outputIter, natl::forward<ArgType>(arg)) };
+	};
+
 	template<typename OutputIter, typename... ArgTypes>
+		requires(Formattable<ArgTypes, Ascii> && ...)
 	constexpr OutputIter formatTo(OutputIter outputIter, ArgTypes&&... args) noexcept {
 		using format_output_iter = FormatOutputIter<OutputIter>;
 		format_output_iter formatOutputIter = format_output_iter(outputIter);
@@ -197,6 +212,7 @@ namespace natl {
 	}
 
 	template<typename DynStringType, typename... ArgTypes>
+		requires(Formattable<ArgTypes, Ascii> && ...)
 	constexpr DynStringType format(ArgTypes&&... args) noexcept {
 		DynStringType outputString;
 		natl::BackInsertIterator<DynStringType> outputIter = natl::backInserter(outputString);
@@ -205,6 +221,7 @@ namespace natl {
 	}
 
 	template<typename... ArgTypes>
+		requires(Formattable<ArgTypes, Ascii> && ...)
 	constexpr String sFormat(ArgTypes&&... args) noexcept {
 		return natl::format<String>(natl::forward<ArgTypes>(args)...);
 	}
@@ -349,7 +366,7 @@ namespace natl {
 		using value_type = Bool;
 
 		template<typename OutputIter>
-		constexpr static void univieraslFormat(OutputIter& outputIter, const Bool booleanValue, const BoolFormat boolFormat) noexcept {
+		constexpr static void universalFormat(OutputIter& outputIter, const Bool booleanValue, const BoolFormat boolFormat) noexcept {
 			switch (boolFormat) {
 			case BoolFormat::fullLowercase:
 				if (booleanValue) {
@@ -453,14 +470,14 @@ namespace natl {
 			template<typename OutputIter>
 			constexpr static OutputIter format(OutputIter outputIter, const Bool booleanValue, BoolFormat boolFormat = BoolFormat::standard) noexcept {
 				(handelTemplateFlag<TemplateFlags>(boolFormat), ...);
-				univieraslFormat<OutputIter>(outputIter, booleanValue, boolFormat);
+				universalFormat<OutputIter>(outputIter, booleanValue, boolFormat);
 				return outputIter;
 			}
 		};
 
 		template<typename OutputIter>
 		constexpr static OutputIter format(OutputIter outputIter, const Bool booleanValue, BoolFormat boolFormat = BoolFormat::standard) noexcept {
-			univieraslFormat<OutputIter>(outputIter, booleanValue, boolFormat);
+			universalFormat<OutputIter>(outputIter, booleanValue, boolFormat);
 			return outputIter;
 		}
 	};
@@ -634,7 +651,7 @@ namespace natl {
 			}
 
 			template<typename OutputIter>
-			constexpr static void univieraslFormat(OutputIter& outputIter, 
+			constexpr static void universalFormat(OutputIter& outputIter, 
 				const value_type number, 
 				const Size precision,
 				const FloatFormat floatFormat) noexcept {
@@ -693,7 +710,7 @@ namespace natl {
 					FloatFormat floatFormat = FloatFormat::standard;
 					(handelTemplateFlag<TemplateFlags>(precision, floatFormat), ...);
 					(handelFormatArg<FormatArgTypes>(forward<FormatArgTypes>(formatArgs), precision, floatFormat), ...);
-					univieraslFormat<OutputIter>(outputIter, number, precision, floatFormat);
+					universalFormat<OutputIter>(outputIter, number, precision, floatFormat);
 					return outputIter;
 				}
 			};
@@ -704,7 +721,7 @@ namespace natl {
 				Size precision = Limits<Size>::max();
 				FloatFormat floatFormat = FloatFormat::standard;
 				(handelFormatArg<FormatArgTypes>(forward<FormatArgTypes>(formatArgs), precision, floatFormat), ...);
-				univieraslFormat<OutputIter>(outputIter, number, precision, floatFormat);
+				universalFormat<OutputIter>(outputIter, number, precision, floatFormat);
 				return outputIter;
 			}
 		};

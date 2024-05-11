@@ -18,7 +18,7 @@ namespace natl {
 
 	template <Size Number>
 		requires (Number > 0)
-	constexpr TemplateStringLiteral<Number> makeStringLiteral(const Ascii(&str)[Number]) noexcept {
+	constexpr TemplateStringLiteral<Number> makeTStringLiteral(const Ascii(&str)[Number]) noexcept {
 		return TemplateStringLiteral<Number>(str);
 	}
 
@@ -44,4 +44,6 @@ namespace natl {
 	template<typename Type>
 	constexpr inline Bool IsStringLiteralV = IsStringLiteral<Type>::value;
 
+	template<auto> struct AsStringLiteralT {};
+	template<auto Value> using AsStringLiteral = AsStringLiteralT<Value>::type;
 }

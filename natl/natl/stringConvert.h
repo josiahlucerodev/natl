@@ -569,7 +569,7 @@ namespace natl {
 
 	template<typename Float>
 	constexpr String floatToStringType(const Float number) noexcept {
-		return floatToStringType<Float>(number, Limits<ui64>::max());
+		return floatToStringType<Float>(number, Limits<Size>::max());
 	}
 	
 	constexpr i64 stringDecimalToInt(const ConstStringView& stringView) noexcept {
@@ -732,7 +732,7 @@ namespace natl {
 	};
 	template<class DynStringContainer>
 		requires(IsConvertDynStringContainer<DynStringContainer>)
-	constexpr void floatToString(DynStringContainer& output, const f64 number, const Size precision = = Limits<Size>::max()) noexcept {
+	constexpr void floatToString(DynStringContainer& output, const f64 number, const Size precision = Limits<Size>::max()) noexcept {
 		floatToStringType<DynStringContainer, f64>(output, number, precision); 
 	};
 }

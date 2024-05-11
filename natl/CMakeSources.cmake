@@ -42,6 +42,8 @@ natl/pair.h
 natl/partitioner.h
 natl/pointer.h
 natl/print.h
+natl/printColor.h
+natl/printFormatted.h
 natl/priorityQueue.h
 natl/serialization.h
 natl/smallDynArray.h
@@ -73,6 +75,7 @@ natl/filesystem.cpp
 natl/mutex.cpp
 natl/natl.cpp
 natl/print.cpp
+natl/printColor.cpp
 natl/thread.cpp
 )
 
