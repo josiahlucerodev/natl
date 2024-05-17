@@ -24,7 +24,8 @@ namespace natl {
 
 	template <TemplateStringLiteral StringL>
 	struct StringLiteral {
-	private:
+	public:
+		static constexpr Ascii stringStorage[StringL.stringSize] = StringL.stringStorage;
 		static constexpr const Ascii* string = &StringL.stringStorage[0];
 		static constexpr Size stringSize = StringL.stringSize;
 		static constexpr ConstAsciiStringView stringView = string;

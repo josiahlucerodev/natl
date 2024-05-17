@@ -86,4 +86,9 @@ namespace natl {
 		constinit static TypeInfo typeInfo = getTypeInfo<Type>();
 		return &typeInfo;
 	}
+
+	template <typename LhsType, typename RhsType>
+	struct TypeCompareTypenameLessThanV {
+		constexpr static Bool value = getNameOfType<LhsType>() < getNameOfType<RhsType>();
+	};
 }

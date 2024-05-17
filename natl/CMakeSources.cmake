@@ -63,7 +63,13 @@ natl/typeInfo.h
 natl/typePack.h
 natl/typeTraits.h
 natl/uninitialized.h
+natl/unitCategoryConversion.h
 natl/units.h
+natl/unitsBase.h
+natl/unitsFreedom.h
+natl/unitsImperial.h
+natl/unitsMetric.h
+natl/unitsStandard.h
 natl/utility.h
 natl/variant.h
 natl/view.h
