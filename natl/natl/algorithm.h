@@ -3,11 +3,11 @@
 //interface
 namespace natl {
 	template<class DataType> 
-	constexpr const DataType& min(const DataType& a, const DataType& b) noexcept {
+	constexpr DataType min(const DataType& a, const DataType& b) noexcept {
 		return (b < a) ? b : a;
 	}
 	template<class DataType> 
-	constexpr const DataType& max(const DataType& a, const DataType& b) noexcept {
+	constexpr DataType max(const DataType& a, const DataType& b) noexcept {
 		return (b > a) ? b : a;
 	}
 	template<class DataType>

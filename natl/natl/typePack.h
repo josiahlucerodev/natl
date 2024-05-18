@@ -290,6 +290,43 @@ namespace natl {
     using TypePackRemoveElementsIf = typename impl::TypePackRemoveElementsIfTypePackArgImpl<PredicateType, InputTypePack>::type;
 
     namespace impl {
+        template<template<typename> typename PredicateType, typename... Elements>
+        struct TemplatePackFilterT;
+
+        template<template<typename> typename PredicateType, typename FilteredElements, typename TestElement, typename... RemainingElements>
+        struct TemplatePackFilterT<PredicateType, FilteredElements, TestElement, RemainingElements...> {
+
+            using new_filtered_elements = Conditional<
+                PredicateType<TestElement>::value,
+                typename FilteredElements::template add_new_elements_back<TestElement>,
+                FilteredElements
+            >;
+
+            using type = TemplatePackFilterT<PredicateType, new_filtered_elements, RemainingElements...>::type;
+        };
+
+        template <template<typename> typename PredicateType, typename FilteredElements>
+        struct TemplatePackFilterT<PredicateType, FilteredElements> {
+            using type = FilteredElements;
+        };
+
+        template<template<typename> typename PredicateType, typename... Types>
+        struct TypePackFilterT;
+
+        template<template<typename> typename PredicateType, typename... TypePackElements>
+        struct TypePackFilterT<PredicateType, TypePack<TypePackElements...>> {
+            using type = typename TemplatePackFilterT<PredicateType, TypePack<>, TypePackElements...>::type;
+        };
+    }
+
+    template<template<typename> typename PredicateType, typename... ElementTypes>
+    using TemplatePackFilter = typename impl::TemplatePackFilterT<PredicateType, TypePack<>, ElementTypes...>::type;
+
+    template<template<typename> typename PredicateType, typename TypePackArg>
+        requires(IsTypePackC<TypePackArg>)
+    using TypePackFilter = typename impl::TypePackFilterT<PredicateType, TypePackArg>::type;
+
+    namespace impl {
         template<typename... Types>
         struct TypePackMergeTwoImpl {};
         template<typename LhsTypePack, typename... RhsTypePackElements>
@@ -298,7 +335,7 @@ namespace natl {
         };
         template<typename LhsTypePack>
         struct TypePackMergeTwoImpl<LhsTypePack, TypePack<>> {
-            using type = typename LhsTypePack;
+            using type = LhsTypePack;
         };
     }
 
@@ -342,6 +379,28 @@ namespace natl {
     template<template<typename, typename> typename TypeCompare, typename ExistingTypePack, typename... TestElements>
         requires(IsTypePackC<ExistingTypePack>)
     using TypePackAddUnique = typename impl::TypePackAddUniqueImpl<TypeCompare, ExistingTypePack, TestElements...>::type;
+
+    namespace impl {
+        template<template<typename TansformType> typename TransformPredicate, typename... Types> 
+        struct TemplatePackTransformT {
+            using type = TypePack<typename TransformPredicate<Types>::type...>;
+        };
+
+        template<template<typename TansformType> typename TransformPredicate, typename TypePack>
+        struct TypePackTransformT;
+
+        template<template<typename TansformType> typename TransformPredicate, typename... TypePackElements>
+        struct TypePackTransformT<TransformPredicate, TypePack<TypePackElements...>> {
+            using type = TemplatePackTransformT<TransformPredicate, TypePackElements...>::type;
+        };
+    }
+
+    template<template<typename TansformType> typename TransformPredicate, typename... Types>
+    using TemplatePackTransform = impl::TemplatePackTransformT<TransformPredicate, Types...>::type;
+
+    template<template<typename TansformType> typename TransformPredicate, typename TypePackArg>
+        requires(IsTypePackC<TypePackArg>)
+    using TypePackTransform = impl::TypePackTransformT<TransformPredicate, TypePackArg>::type;
 
     namespace impl {
         template<template<typename ChangeType, typename Args> typename TransformType, typename TypePackTransformArgs, typename... TransformTypePackElements>
@@ -557,6 +616,7 @@ namespace natl {
     struct IntegerSequence {
         using type = IntegerSequence;
         using value_type = DataType;
+        using values_type_pack = TypePack<TypeValue<Ints>...>;
         static constexpr Size size() noexcept { return sizeof...(Ints); }
     };
 
@@ -581,5 +641,26 @@ namespace natl {
     using MakeIndexSequenceFor = MakeIndexSequence<sizeof...(DataTypeTypes)>;
     template<Size... Ints>
     using IndexSequence = IntegerSequence<Size, Ints...>;
+
+
+    namespace impl {
+
+        template<typename Type, Size Index>
+        struct TypePackTypeAndIndexIdentityT {
+            using type = Type;
+            constexpr static Size index = Index;
+        };
+
+        template<typename, typename>
+        struct TypePackUniformT;
+
+        template<typename Type, Size... Indices>
+        struct TypePackUniformT<Type, IndexSequence<Indices...>> {
+            using type = TypePack<typename TypePackTypeAndIndexIdentityT<Type, Indices>::type...>;
+        };
+    }
+
+    template<Size Number, typename Type>
+    using TypePackUniform = impl::TypePackUniformT<Type, MakeIndexSequence<Number>>::type;
 
 }

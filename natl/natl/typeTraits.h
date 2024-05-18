@@ -55,6 +55,13 @@ namespace natl {
 	template<typename Type> struct TypeIdentityT { using type = Type; };
 	template<typename Type> using TypeIdentity = typename TypeIdentityT<Type>::type;
 
+	template<auto Value> struct ValueIdentityV { 
+		using type = decltype(Value); 
+		constexpr static type value = Value;
+	};
+	template<auto Value> constexpr inline auto ValueIdentity = ValueIdentityV<Value>::value;
+	
+
 	//underlying
 	template <typename EnumType>
 	using UnderlyingTypeT = std::underlying_type<EnumType>;

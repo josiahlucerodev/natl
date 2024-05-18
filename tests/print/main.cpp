@@ -23,10 +23,7 @@ int main() {
 
 
 	//natl::printf(natl::PrintExtendedBackgroundColor(0, 0, 0));
-
-
 	//natl::Ascii inputBuffer[256] = {0};
 	//natl::input(inputBuffer, 256);
-
 	//natl::println(inputBuffer);
 }

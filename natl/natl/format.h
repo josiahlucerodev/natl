@@ -160,6 +160,7 @@ namespace natl {
 		};
 
 		template<typename ArgType, typename CharType, typename FlagsTypePack>
+			requires(IsTypePack<FlagsTypePack>)
 		using CreateFormatterWithTemplateFlags = CreateFormatterWithTemplateFlagsImpl<ArgType, CharType, FlagsTypePack>::formatter;
 
 		template<typename OutputIter, typename ArgType, typename FormatterType, typename StorageTuple, Size... Indices>
@@ -339,6 +340,16 @@ namespace natl {
 		}
 	};
 
+	template<TemplateStringLiteral TStringL, typename CharType>
+	struct Formatter<StringLiteral<TStringL>, CharType> {
+		using value_type = StringLiteral<TStringL>;
+		template<typename OutputIter>
+		constexpr static OutputIter format(OutputIter outputIter, value_type = value_type{}) noexcept {
+			outputIter = Formatter<ConstAsciiStringView, CharType>::format<OutputIter>(outputIter, value_type::toStringView());
+			return outputIter;
+		}
+	};
+
 	enum class BoolFormat {
 		fullLowercase,
 		fullFirstUppercase,
@@ -436,15 +447,15 @@ namespace natl {
 			constexpr static void handelTemplateFlag(BoolFormat& boolFormat) noexcept {
 				if constexpr (IsStringLiteralV<TemplateFlag>) {
 					constexpr ConstAsciiStringView tflagName = TemplateFlag::toStringView();
-					if constexpr (tflagName == "shorthand") {
+					if constexpr (tflagName == "shorthand" || tflagName == "s") {
 						boolFormat = BoolFormat::shorthand;
 					} else if constexpr (tflagName == "Full") {
 						boolFormat = BoolFormat::fullFirstUppercase;
-					} else if constexpr (tflagName == "FULL") {
+					} else if constexpr (tflagName == "FULL" || tflagName == "F") {
 						boolFormat = BoolFormat::fullAllUppercase;
-					} else if constexpr (tflagName == "Shorthand") {
+					} else if constexpr (tflagName == "Shorthand" || tflagName == "S") {
 						boolFormat = BoolFormat::shorthandUppercase;
-					} else if constexpr (tflagName == "full") {
+					} else if constexpr (tflagName == "full" || tflagName == "f") {
 						boolFormat = BoolFormat::fullLowercase;
 					} else {
 						unreachable();
@@ -637,7 +648,6 @@ namespace natl {
 		struct FloatFormatter {
 		public:
 			using value_type = FloatType;
-
 			
 			template<typename OutputIter>
 			constexpr static void formatStandard(OutputIter& outputIter, 
@@ -731,4 +741,403 @@ namespace natl {
 	struct Formatter<f32, CharType> : impl::FloatFormatter<f32, CharType> {};
 	template<typename CharType>
 	struct Formatter<f64, CharType> : impl::FloatFormatter<f64, CharType> {};
+
+	template<Size Index, typename... TemplateFlags>
+	struct FormatElement {
+		using template_flags = TypePack<TemplateFlags...>;
+	};
+	
+
+	namespace impl {
+		template<typename>
+		struct IsFormatElementV : FalseType {};
+		template<Size Index, typename... TemplateFlags>
+		struct IsFormatElementV<FormatElement<Index, TemplateFlags...>> : TrueType {};
+		template<typename Type>
+		constexpr inline Bool IsFormatElement = IsFormatElementV<Type>::value;
+
+		template<Size Index, typename... ArgTypes>
+		struct FormatElementArg {
+			constexpr static Size index = Index;
+			using arg_types = TypePack<ArgTypes...>;
+			using storage_tuple_type = Tuple<ArgTypes&&...>;
+		public:
+			storage_tuple_type argStorage;
+		};
+
+		template<typename>
+		struct IsFormatElementArgV : FalseType {};
+		template<Size Index, typename... ArgTypes>
+		struct IsFormatElementArgV<FormatElementArg<Index, ArgTypes...>> : TrueType {};
+		template<typename Type>
+		constexpr inline Bool IsFormatElementArg = IsFormatElementArgV<Type>::value;
+	}
+
+	template<typename... DataTypes, typename CharType>
+		requires(Formattable<DataTypes, CharType> && ...)
+	struct Formatter<Tuple<DataTypes...>, CharType> {
+		using value_type = Tuple<DataTypes...>;
+		constexpr static Size tupleArgSize = sizeof...(DataTypes);
+
+		template<Size Index, typename... FormatArgTypes>
+		struct HandelFormatArgT {
+			template<Size Index, typename FormatArgType>
+			struct IndexAndFormatArgPair {
+				constexpr static Bool index = Index;
+				using format_arg_type = FormatArgType;
+			};
+
+			template<typename>
+			struct GeneratePairedTypePackT;
+
+			template<Size... Indices>
+			struct GeneratePairedTypePackT<IndexSequence<Indices...>> {
+				using type = TypePack<IndexAndFormatArgPair<Indices, FormatArgTypes>...>;
+			};
+
+			using index_and_arg_pairs = GeneratePairedTypePackT<MakeIndexSequence<tupleArgSize>>;
+
+			template<typename IndexAndArgPairType>
+			struct IsArgOfIndexV {
+				consteval static Bool testType() noexcept {
+					if constexpr (impl::IsFormatElementArg<typename IndexAndArgPairType::format_arg_type>) {
+						return IndexAndArgPairType::format_arg_type::index == Index;
+					} else {
+						return true;
+					}
+				}
+
+				constexpr static Bool value = testType();
+			};
+
+			using filitered_format_arg_flags = TemplatePackFilter<IsArgOfIndexV, index_and_arg_pairs>;
+			using type = filitered_format_arg_flags;
+		};
+
+	public:
+		template<typename... TemplateFlags>
+		class WithTemplateFlags {
+
+			template<Size Index, typename... TemplateFlags>
+			struct HandelTemplateFlags {
+
+				template<typename TemplateFlag>
+				struct IsFlagOfIndexV {
+					consteval static Bool testTemplateFlag() noexcept {
+						if constexpr (impl::IsFormatElementArg<TemplateFlag>) {
+							return TemplateFlag::index == Index;
+						} else if constexpr (IsStringLiteralV<TemplateFlag>) {
+							constexpr ConstAsciiStringView tflagName = TemplateFlag::toStringView();
+							if constexpr (tflagName.size() > 3 && tflagName[1] == ':' &&  tflagName[0] - '0' == Index) {
+								return true;
+							} else {
+								return false;
+							}
+						} else {
+							return true;
+						}
+					}
+
+					constexpr static Bool value = testTemplateFlag();
+				};
+
+				using filitered_template_flags = TemplatePackFilter<IsFlagOfIndexV, TemplateFlags...>;
+
+				template<typename TemplateFlag>
+				struct ReduceTemplateFlagT {
+					using type = TypePack<TemplateFlag>;
+				};
+
+				template<typename TemplateFlag>
+					requires(impl::IsFormatElementArg<TemplateFlag>)
+				struct ReduceTemplateFlagT<TemplateFlag> {
+					using type = TemplateFlag::template_flags;
+				};
+
+				template<typename TemplateFlag>
+					requires(IsStringLiteralV<TemplateFlag>)
+				struct ReduceTemplateFlagT<TemplateFlag> {
+					consteval static auto getReduceType() noexcept {
+						constexpr ConstAsciiStringView tflagName = TemplateFlag::toStringView();
+						if constexpr (tflagName.size() > 3 && tflagName[1] == ':' && tflagName[0] - '0' == Index) {
+							return typename TemplateFlag::template Substr<3>{};
+						} else {
+							return TemplateFlag{};
+						}
+					}
+					using type = decltype(getReduceType());
+				};
+
+				using reduced_template_flags = TypePackTransform<ReduceTemplateFlagT, filitered_template_flags>;
+
+				template<typename TypePack> 
+				struct TypePackExtractTemplateFlagsT;
+
+				template<typename... TemplateFlagTypePacks>
+				struct TypePackExtractTemplateFlagsT<TypePack<TemplateFlagTypePacks...>> {
+					using type = TypePackMergeBlend<TemplateFlagTypePacks...>;
+				};
+
+				using extracted_template_flags = TypePackExtractTemplateFlagsT<reduced_template_flags>::type;
+				using type = extracted_template_flags;
+			};
+
+			template<Size Index>
+			struct FormatTupleElement {
+				using template_flags = HandelTemplateFlags<Index, TemplateFlags...>::type;
+				
+				template<typename OutputIter, typename ArgType,typename... FormatArgTypes>
+				constexpr static void baseFormat(OutputIter& outputIter, ArgType&& arg, FormatArgTypes&&... formatArgs) noexcept {
+					if constexpr (Index > 0) {
+						outputIter = ',';
+						outputIter = ' ';
+					}
+
+					if constexpr (template_flags::size == 0) {
+						outputIter = Formatter<Decay<ArgType>>::format(
+							outputIter,
+							natl::forward<ArgType>(arg),
+							natl::forward<FormatArgTypes>(formatArgs)...);
+					} else {
+						using formatter = impl::CreateFormatterWithTemplateFlags<Decay<ArgType>, CharType, template_flags>;
+						outputIter = formatter::format(
+							outputIter,
+							natl::forward<ArgType>(arg),
+							natl::forward<FormatArgTypes>(formatArgs)...);
+					}
+				}
+
+				template<typename OutputIter, typename FormatArgsStorageTuple, typename ArgType,
+					typename IndicesTypePack, Size... Indices>
+				constexpr static void formatWithArgsImpl(
+					OutputIter& outputIter, FormatArgsStorageTuple& formatArgsStorageTuple,
+					ArgType&& arg, IndexSequence<Indices...>) noexcept {
+
+					baseFormat(outputIter,
+						natl::forward<ArgType>(arg),
+						formatArgsStorageTuple.template get<TypePackNthElement<Indices, IndicesTypePack>::index>()...
+					);
+				}
+
+				template<typename OutputIter, typename FormatArgsStorageTuple,
+					typename ArgType, typename... FormatArgTypes>
+				constexpr static void formatWithArgs(
+					OutputIter& outputIter,
+					FormatArgsStorageTuple& formatArgsStorageTuple, ArgType&& arg) noexcept {
+
+
+					using format_arg_indices = HandelFormatArgT<Index, FormatArgTypes...>;
+					if constexpr (format_arg_indices::size == 0) {
+						baseFormat<OutputIter, ArgType>(outputIter, natl::forward<ArgType>(arg));
+					} else {
+						formatWithArgsImpl<OutputIter, FormatArgsStorageTuple, ArgType, format_arg_indices>(
+							outputIter,
+							formatArgsStorageTuple,
+							natl::forward<ArgType>(arg),
+							MakeIndexSequence<format_arg_indices::size>{});
+					}
+				}
+			};
+
+			template<typename... FormatArgTypes>
+			struct FormatElementsWithArgs {
+				template<typename OutputIter, typename FormatArgsStorageTuple, Size... Indices>
+				constexpr static void format(
+					OutputIter outputIter, const value_type& tuple,
+					FormatArgsStorageTuple& formatArgsStorageTuple, IndexSequence<Indices...>) noexcept {
+
+					(formatWithArgs<
+						OutputIter,
+						FormatArgsStorageTuple,
+						TupleElement<Indices, value_type>,
+						FormatArgTypes...>(
+							outputIter,
+							formatArgsStorageTuple,
+							tuple.template get<Indices>()) && ...);
+				}
+			};
+
+			template<typename OutputIter, Size... Indices>
+			constexpr static void formatElements(OutputIter outputIter, const value_type& tuple, IndexSequence<Indices...>) noexcept {
+				(FormatTupleElement<Indices>::baseFormat(outputIter, tuple.template get<Indices>()), ...);
+			}
+
+		public:
+			template<typename OutputIter, typename... FormatArgTypes>
+			constexpr static OutputIter format(OutputIter outputIter, const value_type& tuple, FormatArgTypes&&... formatArgs) noexcept {
+				outputIter = '{';
+
+				if constexpr (sizeof...(FormatArgTypes) == 0) {
+					formatElements(
+						outputIter,
+						tuple,
+						MakeIndexSequence<tupleArgSize>{});
+				} else {
+					using format_args_storage_tuple = Tuple<FormatArgTypes&&...>;
+					format_args_storage_tuple formatArgsStorageTuple(natl::forward<FormatArgTypes>(formatArgs)...);
+					FormatElementsWithArgs<FormatArgTypes...>::format(
+						outputIter,
+						tuple,
+						formatArgsStorageTuple,
+						MakeIndexSequence<tupleArgSize>{});
+				}
+
+				outputIter = '}';
+
+				return outputIter;
+			}
+		};
+
+		
+
+		template<typename OutputIter, typename ArgType, typename... FormatArgTypes>
+		constexpr static void baseElementFormat(
+			OutputIter& outputIter, ArgType&& arg, FormatArgTypes&&... formatArgs) noexcept {
+			outputIter = Formatter<Decay<ArgType>>::format(
+				outputIter, natl::forward<ArgType>(arg), natl::forward<FormatArgTypes>(formatArgs)...);
+		}
+
+		template<typename OutputIter, typename FormatArgsStorageTuple, typename ArgType,
+			typename IndicesTypePack, Size... Indices>
+		constexpr static void formatWithArgsImpl(
+			OutputIter& outputIter, FormatArgsStorageTuple& formatArgsStorageTuple,
+			ArgType&& arg, IndexSequence<Indices...>) noexcept {
+
+			baseElementFormat(outputIter,
+				natl::forward<ArgType>(arg),
+				formatArgsStorageTuple.template get<TypePackNthElement<Indices, IndicesTypePack>::index>()...
+			);
+		}
+
+		template<Size Index, typename OutputIter, typename FormatArgsStorageTuple,
+			typename ArgType, typename... FormatArgTypes>
+		constexpr static void formatWithArgs(
+			ValueIdentityV<Index>, OutputIter& outputIter,
+			FormatArgsStorageTuple& formatArgsStorageTuple, ArgType&& arg) noexcept {
+
+			if constexpr (Index > 0) {
+				outputIter = ',';
+				outputIter = ' ';
+			}
+
+			using format_arg_indices = HandelFormatArgT<Index, FormatArgTypes...>;
+			if constexpr (format_arg_indices::size == 0) {
+				baseElementFormat<OutputIter, ArgType>(outputIter, natl::forward<ArgType>(arg));
+			} else {
+				formatWithArgsImpl<OutputIter, FormatArgsStorageTuple, ArgType, format_arg_indices>(
+					outputIter, formatArgsStorageTuple,
+					natl::forward<ArgType>(arg), MakeIndexSequence<format_arg_indices::size>{});
+			}
+		}
+
+		template<typename... FormatArgTypes>
+		struct FormatElementsWithArgs {
+			template<typename OutputIter, typename FormatArgsStorageTuple, Size... Indices>
+			constexpr static void format(
+				OutputIter outputIter, const value_type& tuple,
+				FormatArgsStorageTuple& formatArgsStorageTuple, IndexSequence<Indices...>) noexcept {
+
+				(formatWithArgs(ValueIdentityV<Indices>{}, outputIter, formatArgsStorageTuple, tuple.template get<Indices>()) && ...);
+			}
+		};
+
+		template<Size Index, typename OutputIter, typename ArgType, typename... FormatArgTypes>
+		constexpr static void formatElementsImpl(ValueIdentityV<Index>, OutputIter& outputIter,
+			ArgType&& arg, FormatArgTypes&&... formatArgs) noexcept {
+
+			if constexpr (Index > 0) {
+				outputIter = ',';
+				outputIter = ' ';
+			}
+
+			outputIter = Formatter<Decay<ArgType>>::format(
+				outputIter, natl::forward<ArgType>(arg), natl::forward<FormatArgTypes>(formatArgs)...);
+		}
+
+		template<typename OutputIter, Size... Indices>
+		constexpr static void formatElements(
+			OutputIter outputIter,
+			const value_type& tuple,
+			IndexSequence<Indices...>) noexcept {
+
+			(formatElementsImpl(ValueIdentityV<Indices>{}, outputIter, tuple.template get<Indices>()), ...);
+		}
+
+	public:
+		template<typename OutputIter, typename... FormatArgTypes>
+			requires(impl::IsFormatElementArg<FormatArgTypes> && ...)
+		constexpr static OutputIter format(OutputIter outputIter, const value_type& tuple, FormatArgTypes&&... formatArgs) noexcept {
+
+			outputIter = '{';
+
+			if constexpr (sizeof...(FormatArgTypes) == 0) {
+				formatElements(
+					outputIter,
+					tuple,
+					MakeIndexSequence<tupleArgSize>{});
+			} else {
+				using format_args_storage_tuple = Tuple<FormatArgTypes&&...>;
+				format_args_storage_tuple formatArgsStorageTuple(natl::forward<FormatArgTypes>(formatArgs)...);
+				FormatElementsWithArgs<FormatArgTypes...>::format(
+					outputIter,
+					tuple,
+					formatArgsStorageTuple,
+					MakeIndexSequence<tupleArgSize>{});
+			}
+
+			outputIter = '}';
+
+			return outputIter;
+		}
+
+	};
+	//format(formatArgText<"1: standard", "2: fish", "t", FormatElement<1, >>(tuple, formatElement()));
+
+	template<typename CharType>
+	struct Formatter<TypeInfo, CharType> {
+		using value_type = TypeInfo;
+		template<typename OutputIter>
+		constexpr static OutputIter format(OutputIter outputIter, const TypeInfo typeInfo = TypeInfo{}) noexcept {
+			outputIter = '<';
+			outputIter = 'h';
+			outputIter = ':';
+			outputIter = ' ';
+			outputIter = Formatter<natl::Size, CharType>::format<OutputIter>(outputIter, typeInfo.hashCode());
+			outputIter = ',';
+			outputIter = ' ';
+			outputIter = 'n';
+			outputIter = ':';
+			outputIter = ' ';
+			outputIter = Formatter<ConstAsciiStringView, CharType>::format<OutputIter>(outputIter, typeInfo.name());
+			outputIter = '>';
+			return outputIter;
+		}
+	};
+
+	template<typename... Types, typename CharType>
+	struct Formatter<TypePack<Types...>, CharType> {
+		using value_type = TypePack<Types...>;
+
+		template<typename OutputIter, typename Type, Size Index>
+		constexpr static void formatType(OutputIter& outputIter) noexcept {
+			if constexpr (Index > 0) {
+				outputIter = ',';
+				outputIter = ' ';
+			}
+			outputIter = Formatter<TypeInfo, CharType>::format<OutputIter>(outputIter, getTypeInfo<Type>());
+		}
+
+		template<typename OutputIter, Size... Indices>
+		constexpr static void formatTypes(OutputIter& outputIter, IndexSequence<Indices...>) noexcept {
+			outputIter = '{';
+			(formatType<OutputIter, Types, Indices>(outputIter), ...);
+			outputIter = '}';
+		}
+
+		template<typename OutputIter>
+		constexpr static OutputIter format(OutputIter outputIter, value_type = value_type{}) noexcept {
+			formatTypes(outputIter, MakeIndexSequence<value_type::size>{});
+			return outputIter;
+		}
+	};
 }

@@ -12,6 +12,9 @@ namespace natl {
 		Ascii stringStorage[StringSize];
 		constexpr static Size stringSize = StringSize;
 		constexpr TemplateStringLiteral(const Ascii(&str)[StringSize]) { uninitializedCopyCountNoOverlap<const Ascii*>(str, stringStorage, StringSize); }
+		template<typename StringPtrType>
+			requires(IsSame<StringPtrType, const Ascii*>)
+		constexpr TemplateStringLiteral(StringPtrType str) { uninitializedCopyCountNoOverlap<const Ascii*>(str, stringStorage, StringSize); }
 		constexpr const Ascii* c_str() const noexcept { return stringStorage; }
 		constexpr Size size() const noexcept { return StringSize; }
 	};
@@ -24,17 +27,22 @@ namespace natl {
 
 	template <TemplateStringLiteral StringL>
 	struct StringLiteral {
+		using size_type = Size;
+		static constexpr size_type npos = size_type(-1);
 	public:
-		static constexpr Ascii stringStorage[StringL.stringSize] = StringL.stringStorage;
-		static constexpr const Ascii* string = &StringL.stringStorage[0];
-		static constexpr Size stringSize = StringL.stringSize;
-		static constexpr ConstAsciiStringView stringView = string;
+		constexpr static Ascii stringStorage[StringL.stringSize] = StringL.stringStorage;
+		constexpr static const Ascii* string = &StringL.stringStorage[0];
+		constexpr static size_type stringSize = StringL.stringSize;
+		constexpr static ConstAsciiStringView stringView = string;
 	public:
-		static constexpr Size size() noexcept { return stringSize; }
-		static constexpr Size length() noexcept { return size(); }
-		static constexpr const Ascii* c_str() noexcept { return string; }
-		static constexpr const Ascii* data() noexcept { return string; }
-		static constexpr ConstAsciiStringView toStringView() noexcept { return stringView; }
+		constexpr static size_type size() noexcept { return stringSize; }
+		constexpr static size_type length() noexcept { return size(); }
+		constexpr static const Ascii* c_str() noexcept { return string; }
+		constexpr static const Ascii* data() noexcept { return string; }
+		constexpr static ConstAsciiStringView toStringView() noexcept { return stringView; }
+
+		template<size_type Pos = 0, size_type Count = npos, size_type UsedCount = natl::min<size_type>(size() - Pos, Count)>
+		using Substr = StringLiteral<TemplateStringLiteral<UsedCount>(c_str() + Pos)>;
 	};
 
 	template<typename Type>

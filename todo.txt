@@ -1,2 +1,2 @@
-add more format 
 add mutex and thread time based functionality 
+remake timer 

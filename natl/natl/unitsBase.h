@@ -857,7 +857,7 @@ namespace natl {
         template<typename OutputIter, typename UnitType>
         constexpr static void baseFormatUnit(OutputIter& outputIter, const FormatUnit formatUnit) noexcept {
             outputIter = ' ';
-            Formatter<UnitType, Ascii>::format<OutputIter>(outputIter, UnitType{}, formatUnit);
+            outputIter = Formatter<UnitType, Ascii>::format(outputIter, UnitType{}, formatUnit);
         }
 
         template<typename OutputIter>

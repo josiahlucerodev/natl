@@ -2,6 +2,9 @@
 //natl
 #include <natl/tuple.h>
 #include <natl/string.h>
+#include <natl/format.h>
+
+static_assert(natl::format<natl::String256>(natl::formatArgText<"0: FULL", "1: s">(natl::Tuple<natl::Bool, natl::Bool>(false, true))) == "{FALSE, t}");
 
 constexpr natl::Size addFunction(natl::Size a, natl::Size b) noexcept {
 	return a + b;
