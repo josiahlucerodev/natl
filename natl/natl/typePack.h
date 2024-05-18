@@ -644,7 +644,6 @@ namespace natl {
 
 
     namespace impl {
-
         template<typename Type, Size Index>
         struct TypePackTypeAndIndexIdentityT {
             using type = Type;
@@ -662,5 +661,22 @@ namespace natl {
 
     template<Size Number, typename Type>
     using TypePackUniform = impl::TypePackUniformT<Type, MakeIndexSequence<Number>>::type;
+
+    namespace impl {
+        template<Size Index>
+        struct PackAtAnyType {
+            template<typename Type>
+            constexpr PackAtAnyType(Type) noexcept {};
+        };
+    }
+
+    template<Size Index, typename... ArgTypes>
+    constexpr decltype(auto) packAt(ArgTypes&&... args) noexcept {
+        return[&]<Size... Indices>(IndexSequence<Indices...>) noexcept {
+            return[]<typename AtArgType>(impl::PackAtAnyType<Indices>&&..., AtArgType&& atArg, auto&&...) noexcept {
+                return atArg;
+            }(natl::forward<ArgTypes>(args)...);
+        }(MakeIndexSequence<Index>{});
+    }
 
 }

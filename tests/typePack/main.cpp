@@ -19,4 +19,6 @@ static_assert(natl::IsSame<TypePackFilteredTestType, natl::TypePack<natl::i8, na
 using TypePackUniformTestType = natl::TypePackUniform<3, TestTypePack>;
 static_assert(natl::IsSame<TypePackUniformTestType, natl::TypePack<TestTypePack, TestTypePack, TestTypePack>>);
 
+static_assert(natl::packAt<1>(2, 3, 4) == 3);
+
 int main() noexcept {}

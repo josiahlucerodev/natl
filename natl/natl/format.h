@@ -10,6 +10,7 @@
 #include "characterTest.h"
 #include "iteration.h"
 #include "strongType.h"
+#include "typeInfo.h"
 
 //interface
 namespace natl {
