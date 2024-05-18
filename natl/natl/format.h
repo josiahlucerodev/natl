@@ -346,7 +346,7 @@ namespace natl {
 		using value_type = StringLiteral<TStringL>;
 		template<typename OutputIter>
 		constexpr static OutputIter format(OutputIter outputIter, value_type = value_type{}) noexcept {
-			outputIter = Formatter<ConstAsciiStringView, CharType>::format<OutputIter>(outputIter, value_type::toStringView());
+			outputIter = Formatter<ConstAsciiStringView, CharType>::template format<OutputIter>(outputIter, value_type::toStringView());
 			return outputIter;
 		}
 	};
@@ -782,9 +782,9 @@ namespace natl {
 
 		template<Size Index, typename... FormatArgTypes>
 		struct HandelFormatArgT {
-			template<Size Index, typename FormatArgType>
+			template<Size IndexArg, typename FormatArgType>
 			struct IndexAndFormatArgPair {
-				constexpr static Bool index = Index;
+				constexpr static Bool index = IndexArg;
 				using format_arg_type = FormatArgType;
 			};
 
@@ -819,7 +819,7 @@ namespace natl {
 		template<typename... TemplateFlags>
 		class WithTemplateFlags {
 
-			template<Size Index, typename... TemplateFlags>
+			template<Size Index, typename... TemplateFlagsArg>
 			struct HandelTemplateFlags {
 
 				template<typename TemplateFlag>
@@ -842,7 +842,7 @@ namespace natl {
 					constexpr static Bool value = testTemplateFlag();
 				};
 
-				using filitered_template_flags = TemplatePackFilter<IsFlagOfIndexV, TemplateFlags...>;
+				using filitered_template_flags = TemplatePackFilter<IsFlagOfIndexV, TemplateFlagsArg...>;
 
 				template<typename TemplateFlag>
 				struct ReduceTemplateFlagT {
@@ -872,14 +872,14 @@ namespace natl {
 				using reduced_template_flags = TypePackTransform<ReduceTemplateFlagT, filitered_template_flags>;
 
 				template<typename TypePack> 
-				struct TypePackExtractTemplateFlagsT;
+				struct TypePackExtractTemplateFlagsArgT;
 
 				template<typename... TemplateFlagTypePacks>
-				struct TypePackExtractTemplateFlagsT<TypePack<TemplateFlagTypePacks...>> {
+				struct TypePackExtractTemplateFlagsArgT<TypePack<TemplateFlagTypePacks...>> {
 					using type = TypePackMergeBlend<TemplateFlagTypePacks...>;
 				};
 
-				using extracted_template_flags = TypePackExtractTemplateFlagsT<reduced_template_flags>::type;
+				using extracted_template_flags = TypePackExtractTemplateFlagsArgT<reduced_template_flags>::type;
 				using type = extracted_template_flags;
 			};
 
@@ -1103,13 +1103,13 @@ namespace natl {
 			outputIter = 'h';
 			outputIter = ':';
 			outputIter = ' ';
-			outputIter = Formatter<natl::Size, CharType>::format<OutputIter>(outputIter, typeInfo.hashCode());
+			outputIter = Formatter<natl::Size, CharType>::template format<OutputIter>(outputIter, typeInfo.hashCode());
 			outputIter = ',';
 			outputIter = ' ';
 			outputIter = 'n';
 			outputIter = ':';
 			outputIter = ' ';
-			outputIter = Formatter<ConstAsciiStringView, CharType>::format<OutputIter>(outputIter, typeInfo.name());
+			outputIter = Formatter<ConstAsciiStringView, CharType>::template format<OutputIter>(outputIter, typeInfo.name());
 			outputIter = '>';
 			return outputIter;
 		}
@@ -1125,7 +1125,7 @@ namespace natl {
 				outputIter = ',';
 				outputIter = ' ';
 			}
-			outputIter = Formatter<TypeInfo, CharType>::format<OutputIter>(outputIter, getTypeInfo<Type>());
+			outputIter = Formatter<TypeInfo, CharType>::template format<OutputIter>(outputIter, getTypeInfo<Type>());
 		}
 
 		template<typename OutputIter, Size... Indices>

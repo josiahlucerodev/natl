@@ -10,7 +10,7 @@
 namespace natl {
 	Bool enablePrintExtendedColor() noexcept;
 	
-	enum class PrintColor {
+	enum class PrintColor : Size {
 		black,
 		red,
 		green,
@@ -22,28 +22,28 @@ namespace natl {
 		standard,
 	};
 
-	enum class PrintForegroundColor {
-		black = PrintColor::black,
-		red = PrintColor::red,
-		green = PrintColor::green,
-		yellow = PrintColor::yellow,
-		blue = PrintColor::blue,
-		magenta = PrintColor::magenta,
-		cyan = PrintColor::cyan,
-		white = PrintColor::white,
-		standard = PrintColor::standard,
+	enum class PrintForegroundColor : Size {
+		black = static_cast<Size>(PrintColor::black),
+		red = static_cast<Size>(PrintColor::red),
+		green = static_cast<Size>(PrintColor::green),
+		yellow = static_cast<Size>(PrintColor::yellow),
+		blue = static_cast<Size>(PrintColor::blue),
+		magenta = static_cast<Size>(PrintColor::magenta),
+		cyan = static_cast<Size>(PrintColor::cyan),
+		white = static_cast<Size>(PrintColor::white),
+		standard = static_cast<Size>(PrintColor::standard),
 	};
 
-	enum class PrintBackgroundColor {
-		black = PrintColor::black,
-		red = PrintColor::red,
-		green = PrintColor::green,
-		yellow = PrintColor::yellow,
-		blue = PrintColor::blue,
-		magenta = PrintColor::magenta,
-		cyan = PrintColor::cyan,
-		white = PrintColor::white,
-		standard = PrintColor::standard,
+	enum class PrintBackgroundColor : Size {
+		black = static_cast<Size>(PrintColor::black),
+		red = static_cast<Size>(PrintColor::red),
+		green = static_cast<Size>(PrintColor::green),
+		yellow = static_cast<Size>(PrintColor::yellow),
+		blue = static_cast<Size>(PrintColor::blue),
+		magenta = static_cast<Size>(PrintColor::magenta),
+		cyan = static_cast<Size>(PrintColor::cyan),
+		white = static_cast<Size>(PrintColor::white),
+		standard = static_cast<Size>(PrintColor::standard),
 	};
 
 	struct PrintExtendedColor {
@@ -166,9 +166,9 @@ namespace natl {
 					index += 1;
 				}
 			} else if (value > 99) {
-				string.stringData[index + 0] = '0' + (value / 100);
-				string.stringData[index + 1] = '0' + ((value / 10) % 10);
-				string.stringData[index + 2] = '0' + (value % 10);
+				string.stringData[index + 0] = '0' + static_cast<Ascii>(value / 100);
+				string.stringData[index + 1] = '0' + static_cast<Ascii>((value / 10) % 10);
+				string.stringData[index + 2] = '0' + static_cast<Ascii>(value % 10);
 				if constexpr (AddEndSeimColon) {
 					string.stringData[index + 3] = ';';
 					index += 4;
@@ -176,8 +176,8 @@ namespace natl {
 					index += 3;
 				}
 			} else if (value > 9) {
-				string.stringData[index + 0] = '0' + (value / 10);
-				string.stringData[index + 1] = '0' + (value % 10);
+				string.stringData[index + 0] = '0' + static_cast<Ascii>(value / 10);
+				string.stringData[index + 1] = '0' + static_cast<Ascii>(value % 10);
 				if constexpr (AddEndSeimColon) {
 					string.stringData[index + 2] = ';';
 					index += 3;
@@ -185,7 +185,7 @@ namespace natl {
 					index += 2;
 				}
 			} else {
-				string.stringData[index + 0] = '0' + (value % 10);
+				string.stringData[index + 0] = '0' + static_cast<Ascii>(value % 10);
 
 				if constexpr (AddEndSeimColon) {
 					string.stringData[index + 1] = ';';

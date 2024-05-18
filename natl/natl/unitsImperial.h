@@ -41,56 +41,56 @@ namespace natl {
 
         struct InchTag {
             using tag_group = ImperialLengthTagGroup;
-            constexpr static i64 unitWeight = (i64)ImperialLengthUnitWeights::inch;
+            constexpr static i64 unitWeight = static_cast<i64>(ImperialLengthUnitWeights::inch);
             constexpr static ImperialLengthType unitType = ImperialLengthType::inch;
             using name = StringLiteral<"inch">;
             using abbreviation_name = StringLiteral<"in">;
         };
         struct HandTag {
             using tag_group = ImperialLengthTagGroup;
-            constexpr static i64 unitWeight = (i64)ImperialLengthUnitWeights::hand;
+            constexpr static i64 unitWeight = static_cast<i64>(ImperialLengthUnitWeights::hand);
             constexpr static ImperialLengthType unitType = ImperialLengthType::hand;
             using name = StringLiteral<"hand">;
             using abbreviation_name = StringLiteral<"hh">;
         };
         struct FootTag {
             using tag_group = ImperialLengthTagGroup;
-            constexpr static i64 unitWeight = (i64)ImperialLengthUnitWeights::foot;
+            constexpr static i64 unitWeight = static_cast<i64>(ImperialLengthUnitWeights::foot);
             constexpr static ImperialLengthType unitType = ImperialLengthType::foot;
             using name = StringLiteral<"foot">;
             using abbreviation_name = StringLiteral<"ft">;
         };
         struct YardTag {
             using tag_group = ImperialLengthTagGroup;
-            constexpr static i64 unitWeight = (i64)ImperialLengthUnitWeights::yard;
+            constexpr static i64 unitWeight = static_cast<i64>(ImperialLengthUnitWeights::yard);
             constexpr static ImperialLengthType unitType = ImperialLengthType::yard;
             using name = StringLiteral<"yard">;
             using abbreviation_name = StringLiteral<"yd">;
         };
         struct ChainTag {
             using tag_group = ImperialLengthTagGroup;
-            constexpr static i64 unitWeight = (i64)ImperialLengthUnitWeights::chain;
+            constexpr static i64 unitWeight = static_cast<i64>(ImperialLengthUnitWeights::chain);
             constexpr static ImperialLengthType unitType = ImperialLengthType::chain;
             using name = StringLiteral<"chain">;
             using abbreviation_name = StringLiteral<"ch">;
         };
         struct FurlongTag {
             using tag_group = ImperialLengthTagGroup;
-            constexpr static i64 unitWeight = (i64)ImperialLengthUnitWeights::furlong;
+            constexpr static i64 unitWeight = static_cast<i64>(ImperialLengthUnitWeights::furlong);
             constexpr static ImperialLengthType unitType = ImperialLengthType::furlong;
             using name = StringLiteral<"furlong">;
             using abbreviation_name = StringLiteral<"fur">;
         };
         struct MileTag {
             using tag_group = ImperialLengthTagGroup;
-            constexpr static i64 unitWeight = (i64)ImperialLengthUnitWeights::mile;
+            constexpr static i64 unitWeight = static_cast<i64>(ImperialLengthUnitWeights::mile);
             constexpr static ImperialLengthType unitType = ImperialLengthType::mile;
             using name = StringLiteral<"mile">;
             using abbreviation_name = StringLiteral<"mi">;
         };
         struct LeagueTag {
             using tag_group = ImperialLengthTagGroup;
-            constexpr static i64 unitWeight = (i64)ImperialLengthUnitWeights::league;
+            constexpr static i64 unitWeight = static_cast<i64>(ImperialLengthUnitWeights::league);
             constexpr static ImperialLengthType unitType = ImperialLengthType::league;
             using name = StringLiteral<"league">;
             using abbreviation_name = StringLiteral<"lea">;
@@ -205,49 +205,49 @@ namespace natl {
 
         struct DrachmTag {
             using tag_group = ImperialMassTagGroup;
-            constexpr static i64 unitWeight = (i64)ImperialMassUnitWeights::drachm;
+            constexpr static i64 unitWeight = static_cast<i64>(ImperialMassUnitWeights::drachm);
             constexpr static ImperialMassType unitType = ImperialMassType::drachm;
             using name = StringLiteral<"drachm">;
             using abbreviation_name = StringLiteral<"dr">;
         };
         struct OunceTag {
             using tag_group = ImperialMassTagGroup;
-            constexpr static i64 unitWeight = (i64)ImperialMassUnitWeights::ounce;
+            constexpr static i64 unitWeight = static_cast<i64>(ImperialMassUnitWeights::ounce);
             constexpr static ImperialMassType unitType = ImperialMassType::ounce;
             using name = StringLiteral<"ounce">;
             using abbreviation_name = StringLiteral<"oz">;
         };
         struct PoundTag {
             using tag_group = ImperialMassTagGroup;
-            constexpr static i64 unitWeight = (i64)ImperialMassUnitWeights::pound;
+            constexpr static i64 unitWeight = static_cast<i64>(ImperialMassUnitWeights::pound);
             constexpr static ImperialMassType unitType = ImperialMassType::pound;
             using name = StringLiteral<"pound">;
             using abbreviation_name = StringLiteral<"lb">;
         };
         struct StoneTag {
             using tag_group = ImperialMassTagGroup;
-            constexpr static i64 unitWeight = (i64)ImperialMassUnitWeights::stone;
+            constexpr static i64 unitWeight = static_cast<i64>(ImperialMassUnitWeights::stone);
             constexpr static ImperialMassType unitType = ImperialMassType::stone;
             using name = StringLiteral<"stone">;
             using abbreviation_name = StringLiteral<"st">;
         };
         struct QuarterTag {
             using tag_group = ImperialMassTagGroup;
-            constexpr static i64 unitWeight = (i64)ImperialMassUnitWeights::quarter;
+            constexpr static i64 unitWeight = static_cast<i64>(ImperialMassUnitWeights::quarter);
             constexpr static ImperialMassType unitType = ImperialMassType::quarter;
             using name = StringLiteral<"quarter">;
             using abbreviation_name = StringLiteral<"qtr">;
         };
         struct HundredWeightTag {
             using tag_group = ImperialMassTagGroup;
-            constexpr static i64 unitWeight = (i64)ImperialMassUnitWeights::hundredWeight;
+            constexpr static i64 unitWeight = static_cast<i64>(ImperialMassUnitWeights::hundredWeight);
             constexpr static ImperialMassType unitType = ImperialMassType::hundredWeight;
             using name = StringLiteral<"hundred_weight">;
             using abbreviation_name = StringLiteral<"cwt">;
         };
         struct TonTag {
             using tag_group = ImperialMassTagGroup;
-            constexpr static i64 unitWeight = (i64)ImperialMassUnitWeights::ton;
+            constexpr static i64 unitWeight = static_cast<i64>(ImperialMassUnitWeights::ton);
             constexpr static ImperialMassType unitType = ImperialMassType::ton;
             using name = StringLiteral<"ton">;
             using abbreviation_name = StringLiteral<"ton">;

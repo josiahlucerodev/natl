@@ -347,7 +347,7 @@ namespace natl {
 		constexpr Variant& operator=(const Variant& other) noexcept {
 			if (other.variantIndex == emptyVariantValue) {
 				destoryValue();
-				other.variantIndex = 0;
+				variantIndex = 0;
 			} else if (other.variantIndex == other.variantIndex) {
 				VariantCopyFunction copyFunctions[numberOfVariants] = { getCopyFunction<TemplatePackFindIndexOfType<Elements, Elements...>::value>()... };
 				VariantCopyFunction& copyFunction = copyFunctions[other.getIndex() - 1];

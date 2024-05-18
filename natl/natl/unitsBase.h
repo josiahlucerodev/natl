@@ -792,9 +792,8 @@ namespace natl {
         class WithTemplateFlags {
         public:
 
-            template<typename OutputIter, typename... FormatArgTypes>
-            constexpr static OutputIter format(OutputIter outputIter, value_type, FormatArgTypes&&... formatArgs) noexcept {
-                FormatUnit formatUnit = FormatUnit::standard;
+            template<typename OutputIter>
+            constexpr static OutputIter format(OutputIter outputIter, value_type, const FormatUnit formatUnit = FormatUnit::standard) noexcept {
                 (impl::unitHandelTemplateFlag<TemplateFlags>(formatUnit), ...);
                 universalFormat<OutputIter>(outputIter, formatUnit);
                 return outputIter;
@@ -817,7 +816,7 @@ namespace natl {
             if constexpr (Index != 0) {
                 outputIter = ' ';
             }
-            Formatter<UnitType, Ascii>::format<OutputIter>(outputIter, UnitType{}, formatUnit);
+            outputIter = Formatter<UnitType, Ascii>::template format<OutputIter>(outputIter, UnitType{}, formatUnit);
         }
 
         template<typename OutputIter, Size... Indices>
@@ -871,7 +870,7 @@ namespace natl {
             const value_type unitValue,
             const FormatUnit formatUnit,
             FormatArgTypes&&... formatArgs) noexcept {
-            Formatter<DataType>::format(outputIter, unitValue.value(), natl::forward<FormatArgTypes>(formatArgs)...);
+            outputIter = Formatter<DataType>::format(outputIter, unitValue.value(), natl::forward<FormatArgTypes>(formatArgs)...);
             formatUnits<OutputIter>(outputIter, formatUnit);
         }
 
@@ -880,7 +879,7 @@ namespace natl {
             OutputIter& outputIter,
             const value_type unitValue,
             FormatArgTypes&&... formatArgs) noexcept {
-            Formatter<DataType>::format(outputIter, unitValue.value(), natl::forward<FormatArgTypes>(formatArgs)...);
+            outputIter = Formatter<DataType>::format(outputIter, unitValue.value(), natl::forward<FormatArgTypes>(formatArgs)...);
             formatUnits<OutputIter>(outputIter, FormatUnit::standard);
         }
 
@@ -894,14 +893,14 @@ namespace natl {
             constexpr static void universalFormat(
                 OutputIter& outputIter,
                 const value_type unitValue,
-                const FormatUnit templateFormatUnit,
+                FormatUnit, //templateFormatUnit
                 const FormatUnit formatUnitArg,
                 FormatArgTypes&&... formatArgs) noexcept {
                 if (FilteredTemplateFlags::size > 0) {
-                    using date_type_formatter = InstantiateWithTypePack<Formatter<DataType>::WithTemplateFlags, FilteredTemplateFlags>;
-                    date_type_formatter::format(outputIter, unitValue.value(), natl::forward<FormatArgTypes>(formatArgs)...);
+                    using date_type_formatter = InstantiateWithTypePack<Formatter<DataType>::template WithTemplateFlags, FilteredTemplateFlags>;
+                    outputIter = date_type_formatter::format(outputIter, unitValue.value(), natl::forward<FormatArgTypes>(formatArgs)...);
                 } else {
-                    Formatter<DataType>::format(outputIter, unitValue.value(), natl::forward<FormatArgTypes>(formatArgs)...);
+                    outputIter = Formatter<DataType>::format(outputIter, unitValue.value(), natl::forward<FormatArgTypes>(formatArgs)...);
                 }
                 formatUnits<OutputIter>(outputIter, formatUnitArg);
             }
@@ -913,10 +912,10 @@ namespace natl {
                 const FormatUnit templateFormatUnit,
                 FormatArgTypes&&... formatArgs) noexcept {
                 if constexpr (FilteredTemplateFlags::size > 0) {
-                    using date_type_formatter = InstantiateWithTypePack<Formatter<DataType>::WithTemplateFlags, FilteredTemplateFlags>;
-                    date_type_formatter::format(outputIter, unitValue.value(), natl::forward<FormatArgTypes>(formatArgs)...);
+                    using date_type_formatter = InstantiateWithTypePack<Formatter<DataType>::template WithTemplateFlags, FilteredTemplateFlags>;
+                    outputIter = date_type_formatter::format(outputIter, unitValue.value(), natl::forward<FormatArgTypes>(formatArgs)...);
                 } else {
-                    Formatter<DataType>::format(outputIter, unitValue.value(), natl::forward<FormatArgTypes>(formatArgs)...);
+                    outputIter = Formatter<DataType>::format(outputIter, unitValue.value(), natl::forward<FormatArgTypes>(formatArgs)...);
                 }
                 formatUnits<OutputIter>(outputIter, templateFormatUnit);
             }

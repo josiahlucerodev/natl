@@ -65,133 +65,133 @@ namespace natl {
 
         struct NanosecondsTag {
             using tag_group = StandardTimeTagGroup;
-            constexpr static i64 unitWeight = (i64)StandardTimeUnitWeight::nanoseconds;
+            constexpr static i64 unitWeight = static_cast<i64>(StandardTimeUnitWeight::nanoseconds);
             constexpr static StandardTimeType unitType = StandardTimeType::nanoseconds;
             using name = StringLiteral<"nanoseconds">;
             using abbreviation_name = StringLiteral<"ns">;
         };
         struct MicrosecondsTag {
             using tag_group = StandardTimeTagGroup;
-            constexpr static i64 unitWeight = (i64)StandardTimeUnitWeight::microseconds;
+            constexpr static i64 unitWeight = static_cast<i64>(StandardTimeUnitWeight::microseconds);
             constexpr static StandardTimeType unitType = StandardTimeType::microseconds;
             using name = StringLiteral<"microseconds">;
             using abbreviation_name = StringLiteral<"mus">;
         };
         struct MillisecondsTag {
             using tag_group = StandardTimeTagGroup;
-            constexpr static i64 unitWeight = (i64)StandardTimeUnitWeight::milliseconds;
+            constexpr static i64 unitWeight = static_cast<i64>(StandardTimeUnitWeight::milliseconds);
             constexpr static StandardTimeType unitType = StandardTimeType::milliseconds;
             using name = StringLiteral<"milliseconds">;
             using abbreviation_name = StringLiteral<"ms">;
         };
         struct CentisecondsTag {
             using tag_group = StandardTimeTagGroup;
-            constexpr static i64 unitWeight = (i64)StandardTimeUnitWeight::centiseconds;
+            constexpr static i64 unitWeight = static_cast<i64>(StandardTimeUnitWeight::centiseconds);
             constexpr static StandardTimeType unitType = StandardTimeType::centiseconds;
             using name = StringLiteral<"centiseconds">;
             using abbreviation_name = StringLiteral<"cs">;
         };
         struct DecisecondsTag {
             using tag_group = StandardTimeTagGroup;
-            constexpr static i64 unitWeight = (i64)StandardTimeUnitWeight::deciseconds;
+            constexpr static i64 unitWeight = static_cast<i64>(StandardTimeUnitWeight::deciseconds);
             constexpr static StandardTimeType unitType = StandardTimeType::deciseconds;
             using name = StringLiteral<"deciseconds">;
             using abbreviation_name = StringLiteral<"ds">;
         };
         struct SecondsTag {
             using tag_group = StandardTimeTagGroup;
-            constexpr static i64 unitWeight = (i64)StandardTimeUnitWeight::seconds;
+            constexpr static i64 unitWeight = static_cast<i64>(StandardTimeUnitWeight::seconds);
             constexpr static StandardTimeType unitType = StandardTimeType::seconds;
             using name = StringLiteral<"seconds">;
             using abbreviation_name = StringLiteral<"s">;
         };
         struct DecasecondsTag {
             using tag_group = StandardTimeTagGroup;
-            constexpr static i64 unitWeight = (i64)StandardTimeUnitWeight::decaseconds;
+            constexpr static i64 unitWeight = static_cast<i64>(StandardTimeUnitWeight::decaseconds);
             constexpr static StandardTimeType unitType = StandardTimeType::decaseconds;
             using name = StringLiteral<"decaseconds">;
             using abbreviation_name = StringLiteral<"das">;
         };
         struct MinutesTag {
             using tag_group = StandardTimeTagGroup;
-            constexpr static i64 unitWeight = (i64)StandardTimeUnitWeight::minutes;
+            constexpr static i64 unitWeight = static_cast<i64>(StandardTimeUnitWeight::minutes);
             constexpr static StandardTimeType unitType = StandardTimeType::minutes;
             using name = StringLiteral<"minutes">;
             using abbreviation_name = StringLiteral<"min">;
         };
         struct HectosecondsTag {
             using tag_group = StandardTimeTagGroup;
-            constexpr static i64 unitWeight = (i64)StandardTimeUnitWeight::hectoseconds;
+            constexpr static i64 unitWeight = static_cast<i64>(StandardTimeUnitWeight::hectoseconds);
             constexpr static StandardTimeType unitType = StandardTimeType::hectoseconds;
             using name = StringLiteral<"hectoseconds">;
             using abbreviation_name = StringLiteral<"hs">;
         };
         struct KilosecondsTag {
             using tag_group = StandardTimeTagGroup;
-            constexpr static i64 unitWeight = (i64)StandardTimeUnitWeight::kiloseconds;
+            constexpr static i64 unitWeight = static_cast<i64>(StandardTimeUnitWeight::kiloseconds);
             constexpr static StandardTimeType unitType = StandardTimeType::kiloseconds;
             using name = StringLiteral<"kiloseconds">;
             using abbreviation_name = StringLiteral<"ks">;
         };
         struct HoursTag {
             using tag_group = StandardTimeTagGroup;
-            constexpr static i64 unitWeight = (i64)StandardTimeUnitWeight::hours;
+            constexpr static i64 unitWeight = static_cast<i64>(StandardTimeUnitWeight::hours);
             constexpr static StandardTimeType unitType = StandardTimeType::hours;
             using name = StringLiteral<"hours">;
             using abbreviation_name = StringLiteral<"hrs">;
         };
         struct DaysTag {
             using tag_group = StandardTimeTagGroup;
-            constexpr static i64 unitWeight = (i64)StandardTimeUnitWeight::days;
+            constexpr static i64 unitWeight = static_cast<i64>(StandardTimeUnitWeight::days);
             constexpr static StandardTimeType unitType = StandardTimeType::days;
             using name = StringLiteral<"days">;
             using abbreviation_name = StringLiteral<"dys">;
         };
         struct WeeksTag {
             using tag_group = StandardTimeTagGroup;
-            constexpr static i64 unitWeight = (i64)StandardTimeUnitWeight::weeks;
+            constexpr static i64 unitWeight = static_cast<i64>(StandardTimeUnitWeight::weeks);
             constexpr static StandardTimeType unitType = StandardTimeType::weeks;
             using name = StringLiteral<"weeks">;
             using abbreviation_name = StringLiteral<"wks">;
         };
         struct MegasecondsTag {
             using tag_group = StandardTimeTagGroup;
-            constexpr static i64 unitWeight = (i64)StandardTimeUnitWeight::megaseconds;
+            constexpr static i64 unitWeight = static_cast<i64>(StandardTimeUnitWeight::megaseconds);
             constexpr static StandardTimeType unitType = StandardTimeType::megaseconds;
             using name = StringLiteral<"megaseconds">;
             using abbreviation_name = StringLiteral<"Ms">;
         };
         struct FortnightsTag {
             using tag_group = StandardTimeTagGroup;
-            constexpr static i64 unitWeight = (i64)StandardTimeUnitWeight::fortnights;
+            constexpr static i64 unitWeight = static_cast<i64>(StandardTimeUnitWeight::fortnights);
             constexpr static StandardTimeType unitType = StandardTimeType::fortnights;
             using name = StringLiteral<"fortnights">;
             using abbreviation_name = StringLiteral<"ftns">;
         };
         struct YearsTag {
             using tag_group = StandardTimeTagGroup;
-            constexpr static i64 unitWeight = (i64)StandardTimeUnitWeight::years;
+            constexpr static i64 unitWeight = static_cast<i64>(StandardTimeUnitWeight::years);
             constexpr static StandardTimeType unitType = StandardTimeType::years;
             using name = StringLiteral<"years">;
             using abbreviation_name = StringLiteral<"yrs">;
         };
         struct DecadesTag {
             using tag_group = StandardTimeTagGroup;
-            constexpr static i64 unitWeight = (i64)StandardTimeUnitWeight::decades;
+            constexpr static i64 unitWeight = static_cast<i64>(StandardTimeUnitWeight::decades);
             constexpr static StandardTimeType unitType = StandardTimeType::decades;
             using name = StringLiteral<"decades">;
             using abbreviation_name = StringLiteral<"dcads">;
         };
         struct GigasecondsTag {
             using tag_group = StandardTimeTagGroup;
-            constexpr static i64 unitWeight = (i64)StandardTimeUnitWeight::gigaseconds;
+            constexpr static i64 unitWeight = static_cast<i64>(StandardTimeUnitWeight::gigaseconds);
             constexpr static StandardTimeType unitType = StandardTimeType::gigaseconds;
             using name = StringLiteral<"gigaseconds">;
             using abbreviation_name = StringLiteral<"Gs">;
         };
         struct CenturysTag {
             using tag_group = StandardTimeTagGroup;
-            constexpr static i64 unitWeight = (i64)StandardTimeUnitWeight::centurys;
+            constexpr static i64 unitWeight = static_cast<i64>(StandardTimeUnitWeight::centurys);
             constexpr static StandardTimeType unitType = StandardTimeType::centurys;
             using name = StringLiteral<"centurys">;
             using abbreviation_name = StringLiteral<"ctrys">;
@@ -377,49 +377,49 @@ namespace natl {
 
         struct BitTag {
             using tag_group = StandardDataTagGroup;
-            constexpr static i64 unitWeight = (i64)StandardDataUnitWeight::bit;
+            constexpr static i64 unitWeight = static_cast<i64>(StandardDataUnitWeight::bit);
             constexpr static StandardDataType unitType = StandardDataType::bit;
             using name = StringLiteral<"bit">;
             using abbreviation_name = StringLiteral<"b">;
         };
         struct ByteTag {
             using tag_group = StandardDataTagGroup;
-            constexpr static i64 unitWeight = (i64)StandardDataUnitWeight::byte;
+            constexpr static i64 unitWeight = static_cast<i64>(StandardDataUnitWeight::byte);
             constexpr static StandardDataType unitType = StandardDataType::byte;
             using name = StringLiteral<"byte">;
             using abbreviation_name = StringLiteral<"B">;
         };
         struct KilobyteTag {
             using tag_group = StandardDataTagGroup;
-            constexpr static i64 unitWeight = (i64)StandardDataUnitWeight::kilobyte;
+            constexpr static i64 unitWeight = static_cast<i64>(StandardDataUnitWeight::kilobyte);
             constexpr static StandardDataType unitType = StandardDataType::kilobyte;
             using name = StringLiteral<"kilobyte">;
             using abbreviation_name = StringLiteral<"KB">;
         };
         struct MegabyteTag {
             using tag_group = StandardDataTagGroup;
-            constexpr static i64 unitWeight = (i64)StandardDataUnitWeight::megabyte;
+            constexpr static i64 unitWeight = static_cast<i64>(StandardDataUnitWeight::megabyte);
             constexpr static StandardDataType unitType = StandardDataType::megabyte;
             using name = StringLiteral<"megabyte">;
             using abbreviation_name = StringLiteral<"MB">;
         };
         struct GigabyteTag {
             using tag_group = StandardDataTagGroup;
-            constexpr static i64 unitWeight = (i64)StandardDataUnitWeight::gigabyte;
+            constexpr static i64 unitWeight = static_cast<i64>(StandardDataUnitWeight::gigabyte);
             constexpr static StandardDataType unitType = StandardDataType::gigabyte;
             using name = StringLiteral<"gigabyte">;
             using abbreviation_name = StringLiteral<"GB">;
         };
         struct TerabyteTag {
             using tag_group = StandardDataTagGroup;
-            constexpr static i64 unitWeight = (i64)StandardDataUnitWeight::terabyte;
+            constexpr static i64 unitWeight = static_cast<i64>(StandardDataUnitWeight::terabyte);
             constexpr static StandardDataType unitType = StandardDataType::terabyte;
             using name = StringLiteral<"terabyte">;
             using abbreviation_name = StringLiteral<"TB">;
         };
         struct PetabyteTag {
             using tag_group = StandardDataTagGroup;
-            constexpr static i64 unitWeight = (i64)StandardDataUnitWeight::petabyte;
+            constexpr static i64 unitWeight = static_cast<i64>(StandardDataUnitWeight::petabyte);
             constexpr static StandardDataType unitType = StandardDataType::petabyte;
             using name = StringLiteral<"petabyte">;
             using abbreviation_name = StringLiteral<"PB">;

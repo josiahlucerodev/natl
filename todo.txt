@@ -1,2 +1,4 @@
 add mutex and thread time based functionality 
 remake timer 
+remake flat map 
+make constexpr perfect hasp map 

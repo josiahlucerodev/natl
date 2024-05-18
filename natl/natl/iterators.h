@@ -2,6 +2,7 @@
 
 //std
 #include <iterator>
+#include <cstring>
 
 //own
 #include "typeTraits.h"
