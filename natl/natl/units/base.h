@@ -1,13 +1,13 @@
 #pragma once
 
 //own
-#include "basicTypes.h"
-#include "typeTraits.h"
-#include "typePack.h"
-#include "compilerDependent.h"
-#include "array.h"
-#include "stringLiteral.h"
-#include "format.h"
+#include "../basicTypes.h"
+#include "../typeTraits.h"
+#include "../typePack.h"
+#include "../compilerDependent.h"
+#include "../array.h"
+#include "../stringLiteral.h"
+#include "../format.h"
 
 //interface
 namespace natl {

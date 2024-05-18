@@ -1,8 +1,8 @@
 #pragma once 
 
 //own
-#include "unitsBase.h"
-#include "unitsStandard.h"
-#include "unitsImperial.h"
-#include "unitsMetric.h"
-#include "unitCategoryConversion.h"
+#include "units/base.h"
+#include "units/standard.h"
+#include "units/imperial.h"
+#include "units/metric.h"
+#include "units/categoryConversion.h"

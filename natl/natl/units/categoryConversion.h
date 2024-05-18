@@ -1,9 +1,9 @@
 #pragma once
 
 //own
-#include "unitsBase.h"
-#include "unitsImperial.h"
-#include "unitsMetric.h"
+#include "base.h"
+#include "imperial.h"
+#include "metric.h"
 
 //interface
 namespace natl {
