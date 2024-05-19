@@ -8,6 +8,7 @@
 #include "typeTraits.h"
 #include "tuple.h"
 #include "pointer.h"
+#include "units/standard.h"
 
 //interface
 namespace natl {
@@ -59,6 +60,10 @@ namespace natl {
 
 	ThreadCreateResult createThread(NativeThreadFunctionType threadFunction, void* paramater) noexcept;
 	Bool joinThread(NativeThreadHandle thread) noexcept;
+	void thisThreadSleep(const Milliseconds<i64> milliseconds) noexcept;
+	void thisThreadYield() noexcept;
+
+
 
 	class Thread {
 	public:

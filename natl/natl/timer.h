@@ -1,233 +1,191 @@
 #pragma once
 
-//std
-#include <cstdint>
-#include <chrono>
-
 //own
 #include "basicTypes.h"
 #include "string.h"
 #include "stringView.h"
 #include "stringConvert.h"
 #include "dynArray.h"
+#include "strongType.h"
+#include "units/standard.h"
 
 //interface
 namespace natl {
-	class NamedTimeInfo {
-	private:
-		String name;
-		i64 nanoseconds;
-		i64 microseconds;
-		f64 miliseconds;
-		f64 seconds;
+
+	template<typename DataType, typename Tag>
+	struct Timepoint {
 	public:
-		constexpr NamedTimeInfo() noexcept : name("not defined"), nanoseconds(0), microseconds(0), miliseconds(0), seconds(0) {};
-		constexpr NamedTimeInfo(const ConstStringView& inputString) noexcept : name(inputString), nanoseconds(0), microseconds(0), miliseconds(0), seconds(0) {};
+		using tag_type = Tag;
+		using value_type = DataType;
+	private:
+		value_type internalValueStorage;
+	public:
 
-		constexpr ConstStringView getName() const noexcept { return name.toStringView(); }
-		constexpr i64 getNanoseconds() const noexcept { return nanoseconds; }
-		constexpr i64 getMicroseconds() const noexcept { return microseconds; }
-		constexpr f64 getMiliseconds() const noexcept { return miliseconds; }
-		constexpr f64 getSeconds() const noexcept { return seconds; }
+		//constructor 
+		constexpr Timepoint() noexcept = default;
+		explicit constexpr Timepoint(const value_type valueIn) noexcept : internalValueStorage(valueIn) {};
 
-		constexpr void inputTimeValues(const i64 inputNanoseconds, const i64 inputMicroseconds, const f64 inputMiliseconds, const f64 inputSeconds) noexcept {
-			nanoseconds = inputNanoseconds;
-			microseconds = inputMicroseconds;
-			miliseconds = inputMiliseconds;
-			seconds = inputSeconds;
-		}
-		constexpr void inputTimeValues(const NamedTimeInfo& inputNamedTimeInfo) noexcept {
-			name = inputNamedTimeInfo.getName();
-			microseconds = inputNamedTimeInfo.getMicroseconds();
-			miliseconds = inputNamedTimeInfo.getMiliseconds();
-			seconds = inputNamedTimeInfo.getSeconds();
-		}
-		constexpr void changeName(const ConstStringView& input) { name = input; }
+		//destructor 
+		constexpr ~Timepoint() noexcept = default;
 
-		constexpr String string() const noexcept {
-			String outputString;
-			outputString += name;
-			outputString += "\n";
-			outputString += " microseconds: ";
-			outputString += intToStringDecimalType<i64>(microseconds);
-			outputString += "\n";
-			outputString += " milliseconds: ";
-			outputString += floatToStringType<f64>(miliseconds);
-			outputString += "\n";
-			outputString += " seconds: ";
-			outputString += floatToStringType<f64>(seconds);
-			outputString += "\n";
-			return outputString;
-		}
-		constexpr String condensedString() const noexcept {
-			String outputString;
-			outputString += name;
-			outputString += "\n";
-			outputString += " microseconds: ";
-			outputString += intToStringDecimalType<i64>(microseconds);
-			outputString += "   ";
-			outputString += " milliseconds: ";
-			outputString += floatToStringType<f64>(miliseconds);
-			outputString += "   ";
-			outputString += " seconds: ";
-			outputString += floatToStringType<f64>(seconds);
-			outputString += "\n";
-			return outputString;
+		//util 
+		constexpr Timepoint& self() noexcept { return *this; }
+		constexpr const Timepoint& self() const noexcept { return *this; }
+
+		//element access 
+		constexpr value_type value() noexcept { return internalValueStorage; }
+		constexpr value_type value() const noexcept { return internalValueStorage; }
+		explicit constexpr operator value_type&() & noexcept { return internalValueStorage; }
+		explicit constexpr operator const value_type&() const& noexcept { return internalValueStorage; }
+
+		//operations 
+		constexpr Timepoint& operator+=(const Timepoint& rhs) noexcept { internalValueStorage += rhs.value(); return self(); }
+		constexpr Timepoint& operator-=(const Timepoint& rhs) noexcept { internalValueStorage -= rhs.value(); return self(); }
+		constexpr Timepoint operator+(const Timepoint& rhs) const noexcept { return Timepoint(value() + rhs.value()); }
+		constexpr Timepoint operator-(const Timepoint& rhs) const noexcept { return Timepoint(value() - rhs.value()); }
+		constexpr Timepoint& operator++() noexcept { internalValueStorage++; return self(); }
+		constexpr Timepoint operator++(int) noexcept { Timepoint temp = self(); ++self().internalValueStorage; return temp; }
+		constexpr Timepoint& operator--() noexcept { internalValueStorage--; return self(); }
+		constexpr Timepoint operator--(int) noexcept { Timepoint temp = self(); --self().internalValueStorage; return temp; }
+		
+		//compare 
+		constexpr Bool operator==(const Timepoint& rhs) const noexcept { return value() == rhs.value(); }
+		constexpr Bool operator!=(const Timepoint& rhs) const noexcept { return value() != rhs.value(); }
+		constexpr Bool operator<(const Timepoint& rhs) const noexcept { return value() < rhs.value(); }
+		constexpr Bool operator<=(const Timepoint& rhs) const noexcept { return value() <= rhs.value(); }
+		constexpr Bool operator>(const Timepoint& rhs) const noexcept { return value() > rhs.value(); }
+		constexpr Bool operator>=(const Timepoint& rhs) const noexcept { return value() >= rhs.value(); }
+		constexpr CompareThreeWayResult<value_type> operator<=>(const Timepoint& rhs) const noexcept { return value() <=> rhs.value(); }
+
+		//special 
+		constexpr Size hash() const noexcept { return value(); }
+	};
+
+
+	namespace impl {
+		struct HighResolutionTag {};
+	}
+	using HighResolutionTimePoint = Timepoint<i64, impl::HighResolutionTag>;
+	HighResolutionTimePoint highResolutionNow() noexcept;
+	Nanoseconds<i64> highResolutionTimePointToNanoseconds(const HighResolutionTimePoint timePoint) noexcept;
+
+	class Timer {
+	private:
+		HighResolutionTimePoint startTimePoint;
+	public:
+		//constructor
+		constexpr Timer() noexcept {
+			if (!isConstantEvaluated()) {
+				start(); 
+			}
+		};
+
+		//destructor 
+		constexpr ~Timer() noexcept = default;
+
+		//operaitons 
+		void start() noexcept {
+			startTimePoint = highResolutionNow();
 		}
 
-		void print() const noexcept {
-			std::cout << name.c_str() << "\n";
-			std::cout << "nanoseconds: " << nanoseconds << "\n";
-			std::cout << "microseconds: " << microseconds << "\n";
-			std::cout << "milliseconds: " << std::fixed << miliseconds << "\n";
-			std::cout << "seconds: " << std::fixed << seconds << "\n";
+		natl::Nanoseconds<natl::i64,1> getNanosecondsInt() const noexcept {
+			const HighResolutionTimePoint endTimePoint = highResolutionNow();
+			const HighResolutionTimePoint elapsedTime = endTimePoint - startTimePoint;
+			return highResolutionTimePointToNanoseconds(elapsedTime);
 		}
-		void condensedPrint() const noexcept {
-			std::cout << name.c_str() << "\n";
-			std::cout << "nanoseconds: " << nanoseconds << "   ";
-			std::cout << "microseconds: " << microseconds << "   ";
-			std::cout << "milliseconds: " << std::fixed << miliseconds << "   ";
-			std::cout << "seconds: " << std::fixed << seconds << "\n";
+		natl::Microseconds<natl::i64> getMicrosecondsInt() const noexcept {
+			return getNanosecondsFloat().convertTo<natl::abbrt::mus>().asInt<natl::i64>();
+		}
+		natl::Milliseconds<natl::i64> getMillisecondsInt() const noexcept {
+			return getNanosecondsFloat().convertTo<natl::abbrt::ms>().asInt<natl::i64>();
+		}
+		natl::Seconds<natl::i64> getSecondsInt() const noexcept {
+			return getNanosecondsFloat().convertTo<natl::abbrt::s>().asInt<natl::i64>();
+		}
+
+		natl::Nanoseconds<natl::f64> getNanosecondsFloat() const noexcept {
+			return getNanosecondsInt().asF64();
+		}
+		natl::Microseconds<natl::f64> getMicrosecondsFloat() const noexcept {
+			return getNanosecondsFloat().convertTo<natl::abbrt::mus>();
+		}
+		natl::Milliseconds<natl::f64> getMillisecondsFloat() const noexcept {
+			return getNanosecondsFloat().convertTo<natl::abbrt::ms>();
+		}
+		natl::Seconds<natl::f64> getSecondsFloat() const noexcept {
+			return getNanosecondsFloat().convertTo<natl::abbrt::s>();
 		}
 	};
 
-	class NamedTimeInfoCollection {
+	class NamedTimeInfo {
 	private:
-		String name;
-		DynArray<NamedTimeInfo> timeSavesVector;
+		natl::Nanoseconds<natl::i64> elapsedTime;
+		String timerName;
 	public:
-		NamedTimeInfoCollection() noexcept = default;
-		NamedTimeInfoCollection(const StringView& inputName) noexcept : name(inputName), timeSavesVector() {}
-		NamedTimeInfoCollection(const String& inputName) noexcept : name(inputName), timeSavesVector() {}
-		
-		constexpr NamedTimeInfoCollection& self() noexcept { return *this; }
-		constexpr const NamedTimeInfoCollection& self() const noexcept { return *this; }
+		constexpr NamedTimeInfo() noexcept = default;
+		constexpr NamedTimeInfo(const natl::Nanoseconds<natl::i64> elapsedTimeIn, const String& timerNameIn) noexcept
+			: elapsedTime(elapsedTimeIn), timerName(timerNameIn) {};
+		constexpr NamedTimeInfo(const natl::Nanoseconds<natl::i64> elapsedTimeIn, String&& timerNameIn) noexcept
+			: elapsedTime(elapsedTimeIn), timerName(natl::forward<String>(timerNameIn)) {};
 
-		constexpr ConstStringView getName() const noexcept { return name.toStringView(); }
-
-		constexpr void changeName(const StringView& nameInput) noexcept {
-			name = nameInput;
-		}
-		constexpr void changeName(const String& nameInput) noexcept {
-			name = nameInput;
-		}
-		constexpr void inputNamedTimeInfo(const NamedTimeInfo& inputValue) noexcept {
-			timeSavesVector.push_back(inputValue);
+		constexpr const String& name() const noexcept { 
+			return timerName;
 		}
 
-		constexpr NamedTimeInfoCollection operator+= (const NamedTimeInfo& inputValue) noexcept {
-			timeSavesVector.push_back(inputValue);
-			return self();
+		natl::Nanoseconds<natl::i64> getNanosecondsInt() const noexcept {
+			return elapsedTime;
 		}
-		constexpr NamedTimeInfoCollection operator+= (const NamedTimeInfoCollection& inputValue) noexcept {
-			for (Size i = 0; i < inputValue.timeSavesVector.size(); i++) {
-				timeSavesVector.push_back(inputValue.timeSavesVector[i]);
-			}
-			return self();
+		natl::Microseconds<natl::i64> getMicrosecondsInt() const noexcept {
+			return getNanosecondsFloat().convertTo<natl::abbrt::mus>().asInt<natl::i64>();
 		}
-
-		constexpr NamedTimeInfo average() const noexcept {
-			NamedTimeInfo average;
-			average = timeSavesVector[0];
-			for (Size i = 1; i < timeSavesVector.size(); i++) {
-				average.inputTimeValues(
-					(average.getNanoseconds() + timeSavesVector[i].getNanoseconds()) / 2,
-					(average.getMicroseconds() + timeSavesVector[i].getMicroseconds()) / 2,
-					(average.getMiliseconds() + timeSavesVector[i].getMiliseconds()) / 2,
-					(average.getSeconds() + timeSavesVector[i].getSeconds()) / 2);
-			}
-			String tempName;
-			tempName = name;
-			tempName += " collection average";
-			average.changeName(tempName);
-			return average;
+		natl::Milliseconds<natl::i64> getMillisecondsInt() const noexcept {
+			return getNanosecondsFloat().convertTo<natl::abbrt::ms>().asInt<natl::i64>();
+		}
+		natl::Seconds<natl::i64> getSecondsInt() const noexcept {
+			return getNanosecondsFloat().convertTo<natl::abbrt::s>().asInt<natl::i64>();
 		}
 
-		constexpr String string() const noexcept {
-			String outputvalue;
-			outputvalue += name;
-			outputvalue += " collection\n";
-			for (Size i = 0; i < timeSavesVector.size(); i++) {
-				outputvalue += timeSavesVector[i].string();
-			}
-			return outputvalue;
+		natl::Nanoseconds<natl::f64> getNanosecondsFloat() const noexcept {
+			return getNanosecondsInt().asF64();
 		}
-		constexpr String condensedString() const noexcept {
-			String outputvalue;
-			outputvalue += name;
-			outputvalue += " collection\n";
-			for (Size i = 0; i < timeSavesVector.size(); i++)
-			{
-				outputvalue += timeSavesVector[i].condensedString();
-			}
-			return outputvalue;
+		natl::Microseconds<natl::f64> getMicrosecondsFloat() const noexcept {
+			return getNanosecondsFloat().convertTo<natl::abbrt::mus>();
 		}
-
-		void print() const noexcept {
-			std::cout << name.toStringView() << " collection\n";
-			for (Size i = 0; i < timeSavesVector.size(); i++) {
-				timeSavesVector[i].print();
-			}
+		natl::Milliseconds<natl::f64> getMillisecondsFloat() const noexcept {
+			return getNanosecondsFloat().convertTo<natl::abbrt::ms>();
 		}
-		void condensedPrint() const noexcept {
-			std::cout << name.toStringView() << " collection\n";
-			for (Size i = 0; i < timeSavesVector.size(); i++) {
-				timeSavesVector[i].condensedPrint();
-			}
+		natl::Seconds<natl::f64> getSecondsFloat() const noexcept {
+			return getNanosecondsFloat().convertTo<natl::abbrt::s>();
 		}
 	};
 
 	class NamedTimer {
-		String name;
-		std::chrono::time_point<std::chrono::high_resolution_clock> startpoint;
+	private:
+		Timer timer;
+		String timerName;
 	public:
-		NamedTimer() noexcept : name("not defined"), startpoint() { start(); };
-		NamedTimer(const ConstStringView& nameIn)  noexcept : name(nameIn) { start(); }
+		NamedTimer() noexcept : timer(), timerName("not defined") {};
+		NamedTimer(const ConstStringView& nameIn)  noexcept : timer(), timerName(nameIn) {}
 	public:
-		void start() noexcept {
-			startpoint = std::chrono::high_resolution_clock::now();
+		//operations
+		void start() noexcept { 
+			timer.start(); 
 		}
 		void start(const ConstStringView& nameIn) noexcept {
 			changeName(nameIn);
 			start();
 		}
+		
+		void changeName(const ConstStringView& nameIn) noexcept { timerName = nameIn;  }
+		natl::Nanoseconds<natl::i64> getNanosecondsInt() const noexcept { return timer.getNanosecondsInt(); }
+		natl::Microseconds<natl::i64> getMicrosecondsInt() const noexcept { return timer.getMicrosecondsInt(); }
+		natl::Milliseconds<natl::i64> getMillisecondsInt() const noexcept { return timer.getMillisecondsInt(); }
+		natl::Seconds<natl::i64> getSecondsInt() const noexcept { return timer.getSecondsInt(); }
 
-		void changeName(const ConstStringView& nameIn) noexcept { name = nameIn; }
-
-		i64 getNanoseconds() const noexcept {
-			std::chrono::high_resolution_clock::time_point endTimpoint = std::chrono::high_resolution_clock::now();
-			auto start = std::chrono::time_point_cast<std::chrono::nanoseconds>(startpoint).time_since_epoch().count();
-			auto end = std::chrono::time_point_cast<std::chrono::nanoseconds>(endTimpoint).time_since_epoch().count();
-			return end - start;
-		}
-		i64  getMicroseconds() const noexcept {
-			std::chrono::high_resolution_clock::time_point endTimpoint = std::chrono::high_resolution_clock::now();
-			auto start = std::chrono::time_point_cast<std::chrono::microseconds>(startpoint).time_since_epoch().count();
-			auto end = std::chrono::time_point_cast<std::chrono::microseconds>(endTimpoint).time_since_epoch().count();
-			return end - start;
-		}
-		f64 getMiliseconds() const noexcept {
-			return static_cast<f64>(getMicroseconds()) * f64(0.001L);
-		}
-		f64 getSeconds() const noexcept {
-			return static_cast<f64>(getMicroseconds()) * f64(0.000001L);
-		}
-
-		void getNamedTimeInfo(NamedTimeInfo& timeSaveInput) const noexcept {
-			i64 microseconds = getMicroseconds();
-			i64 nonoseconds = getNanoseconds();
-			timeSaveInput.changeName(timeSaveInput.getName());
-			timeSaveInput.inputTimeValues(
-				nonoseconds, 
-				microseconds, 
-				static_cast<f64>(microseconds) * f64(0.001L), 
-				static_cast<f64>(microseconds) * f64(0.000001L)
-			);
-		}
-		NamedTimeInfo getNamedTimeInfo() const noexcept {
-			NamedTimeInfo outputNamedTimeInfo;
-			getNamedTimeInfo(outputNamedTimeInfo);
-			return outputNamedTimeInfo;
-		}
+		natl::Nanoseconds<natl::f64> getNanosecondsFloat() const noexcept { return timer.getNanosecondsFloat(); }
+		natl::Microseconds<natl::f64> getMicrosecondsFloat() const noexcept { return timer.getMicrosecondsFloat(); }
+		natl::Milliseconds<natl::f64> getMillisecondsFloat() const noexcept { return timer.getMillisecondsFloat(); }
+		natl::Seconds<natl::f64> getSecondsFloat() const noexcept { return timer.getSecondsFloat(); }
+		NamedTimeInfo getTimeInfo() const noexcept { return NamedTimeInfo(getNanosecondsInt(), timerName); }
 	};
 }

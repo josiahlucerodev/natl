@@ -26,10 +26,10 @@ namespace natl {
         constexpr const value_type&& value() const&& noexcept { return natl::move(internalValueStorage); }
 
         //convert 
-        constexpr operator const value_type&() & noexcept { return internalValueStorage; }
-        constexpr operator const value_type&() const& noexcept { return internalValueStorage; }
-        constexpr operator value_type&&() && noexcept { return natl::move(internalValueStorage); }
-        constexpr operator const value_type&&() const&& noexcept { return natl::move(internalValueStorage); }
+        explicit constexpr operator value_type&() & noexcept { return internalValueStorage; }
+        explicit constexpr operator const value_type&() const& noexcept { return internalValueStorage; }
+        explicit constexpr operator value_type&&() && noexcept { return natl::move(internalValueStorage); }
+        explicit constexpr operator const value_type&&() const&& noexcept { return natl::move(internalValueStorage); }
 
         //modifiers 
         constexpr void setValue(const value_type& valueIn) noexcept { internalValueStorage = valueIn; }

@@ -54,6 +54,12 @@ namespace natl {
 		return true;
 	}
 
+	void thisThreadSleep(const Milliseconds<i64> milliseconds) noexcept {
+		Sleep(static_cast<DWORD>(milliseconds.value()));
+	}
+	void thisThreadYield() noexcept {
+		SwitchToThread();
+	}
 #endif // NATL_WINDOWS_PLATFORM
 
 #if defined(NATL_UNIX_PLATFORM) || defined(NATL_WEB_PLATFORM)
@@ -82,6 +88,13 @@ namespace natl {
 	}
 	Bool joinThread(NativeThreadHandle thread) noexcept {
 		return pthread_join(static_cast<pthread_t>(thread), nullptr) == 0;
+	}
+
+	void thisThreadSleep(const Milliseconds<i64> milliseconds) noexcept {
+		usleep(static_cast<useconds_t>(milliseconds.convertTo<natl::abbrt::mus>().value()));
+	}
+	void thisThreadYield() noexcept {
+		sched_yield();
 	}
 
 #endif // NATL_UNIX_PLATFORM || NATL_WEB_PLATFORM

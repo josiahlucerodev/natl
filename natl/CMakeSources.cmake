@@ -63,12 +63,12 @@ natl/typeInfo.h
 natl/typePack.h
 natl/typeTraits.h
 natl/uninitialized.h
-natl/units/unitCategoryConversion.h
-natl/units/unitsBase.h
-natl/units/unitsFreedom.h
-natl/units/unitsImperial.h
-natl/units/unitsMetric.h
-natl/units/unitsStandard.h
+natl/units/base.h
+natl/units/categoryConversion.h
+natl/units/freedom.h
+natl/units/imperial.h
+natl/units/metric.h
+natl/units/standard.h
 natl/units.h
 natl/utility.h
 natl/variant.h
@@ -83,6 +83,7 @@ natl/natl.cpp
 natl/print.cpp
 natl/printColor.cpp
 natl/thread.cpp
+natl/timer.cpp
 )
 
 foreach(target_header IN LISTS HEADER_FILES)

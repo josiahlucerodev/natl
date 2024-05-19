@@ -36,8 +36,8 @@ namespace natl {
 		constexpr FlatHashMapIterator(pointer dataPtrIn, pointer beginPtrIn, pointer endPtrIn) noexcept
 			: dataPtr(dataPtrIn), beginPtr(beginPtrIn), endPtr(endPtrIn) {}
 	private:
-		constexpr iterator& getSelf() noexcept { return *this; }
-		constexpr const iterator& getSelf() const noexcept { return *this; }
+		constexpr iterator& self() noexcept { return *this; }
+		constexpr const iterator& self() const noexcept { return *this; }
 	public:
 		constexpr reference operator*() const noexcept { return *dataPtr; }
 		constexpr pointer operator->() const noexcept { return dataPtr; }
@@ -46,21 +46,21 @@ namespace natl {
 		constexpr iterator& operator++() noexcept { 
 			while (dataPtr != endPtr) {
 				dataPtr++;
-				if (dataPtr->used) { return getSelf(); }
+				if (dataPtr->used) { return self(); }
 			}
-			dataPtr++; return getSelf(); 
+			dataPtr++; return self(); 
 		}
-		constexpr iterator operator++(int) noexcept { iterator tempIt = getSelf(); ++getSelf().dataPtr; return tempIt; }
+		constexpr iterator operator++(int) noexcept { iterator tempIt = self(); ++self().dataPtr; return tempIt; }
 
 		constexpr iterator& operator--() noexcept { 
 			while (dataPtr > beginPtr) {
 				dataPtr--;
-				if (dataPtr->used) { return getSelf(); }
+				if (dataPtr->used) { return self(); }
 			}
-			return getSelf(); 
+			return self(); 
 		}
 
-		constexpr iterator operator--(int) noexcept { iterator tempIt = getSelf(); --getSelf().dataPtr; return tempIt; }
+		constexpr iterator operator--(int) noexcept { iterator tempIt = self(); --self().dataPtr; return tempIt; }
 
 
 		constexpr Bool operator== (const iterator rhs) const noexcept { return dataPtr == rhs.dataPtr; }

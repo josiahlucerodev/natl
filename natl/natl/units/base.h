@@ -93,7 +93,8 @@ namespace natl {
     struct UnitCategoryConversionFactor;
 
     namespace impl {
-        template<typename FloatDataType, FloatDataType defaultUnitsConvertFactor,
+        template<
+            typename FloatDataType, FloatDataType defaultUnitsConvertFactor,
             typename FormDefaultUnitTag, typename ToDefaultUnitTag,
             typename FromTag, typename ToTag>
         struct UnitCategoryConversionFactorImpl {
@@ -229,11 +230,11 @@ namespace natl {
         NATL_FORCE_INLINE constexpr BaseUnitValue& operator=(const BaseUnitValue&) noexcept = default;
 
         //observers 
-        NATL_FORCE_INLINE constexpr DataType& value() { return internalData; }
-        NATL_FORCE_INLINE constexpr const DataType& value() const { return internalData; }
+        NATL_FORCE_INLINE constexpr DataType& value() noexcept { return internalData; }
+        NATL_FORCE_INLINE constexpr const DataType& value() const noexcept { return internalData; }
 
         template<typename Interger>
-            requires(IsBuiltInInterger<Interger>)
+            requires(IsBuiltInIntergerC<Interger>)
         NATL_FORCE_INLINE constexpr Interger valueAsInt() const noexcept requires(IsBuiltInFloatingPoint<DataType>) {
             return static_cast<Interger>(internalData);
         }
@@ -244,14 +245,21 @@ namespace natl {
         }
 
         template<typename Interger>
-            requires(IsBuiltInFloatingPoint<Interger>)
-        NATL_FORCE_INLINE constexpr BaseUnitValue<Interger, Units...> asInt() const noexcept requires(IsBuiltInInterger<DataType>) {
+            requires(IsBuiltInIntergerC<Interger>)
+        NATL_FORCE_INLINE constexpr BaseUnitValue<Interger, Units...> asInt() const noexcept {
             return BaseUnitValue<Interger, Units...>(static_cast<Interger>(internalData));
         }
         template<typename Float>
             requires(IsBuiltInFloatingPoint<Float>)
         NATL_FORCE_INLINE constexpr BaseUnitValue<Float, Units...> asFloat() const noexcept requires(IsBuiltInInterger<DataType>) {
             return BaseUnitValue<Float, Units...>(static_cast<Float>(internalData));
+        }
+
+        NATL_FORCE_INLINE constexpr BaseUnitValue<f32, Units...> asF32() const noexcept requires(IsBuiltInInterger<DataType>) {
+            return BaseUnitValue<f32, Units...>(static_cast<f32>(internalData));
+        }
+        NATL_FORCE_INLINE constexpr BaseUnitValue<f64, Units...> asF64() const noexcept requires(IsBuiltInInterger<DataType>) {
+            return BaseUnitValue<f64, Units...>(static_cast<f64>(internalData));
         }
 
 
@@ -417,14 +425,16 @@ namespace natl {
             return new_unit_value_type(internalData / other.internalData);
         }
 
+    public:
+
         template<typename... OtherUnitsOrUnitValues>
         NATL_FORCE_INLINE constexpr auto convertTo() const noexcept {
             using units_type_pack = TypePack<Units...>;
             using reduced_other_units_type_pack = ReduceToUnits<Decay<OtherUnitsOrUnitValues>...>;
             using transformed_units_type = TypePackTransformWithTypePackArgs<UnitConvertTransform, reduced_other_units_type_pack, units_type_pack>;
+            using new_unit_value_type = InstantiateWithTypePack<ConvertNewUnitType, transformed_units_type>::type;
             constexpr DataType convertValue = TypePackOpFoldWithIndexAndArgValue<DataType, transformed_units_type,
                 UnitConvertFactorValuePredicate, UnitConvertFactorMultiplyOp, units_type_pack>;
-            using new_unit_value_type = InstantiateWithTypePack<ConvertNewUnitType, transformed_units_type>::type;
             const DataType newValue = convertValue * internalData;
             return new_unit_value_type(newValue);
         }
@@ -732,8 +742,10 @@ namespace natl {
 
         template<typename OutputIter>
         constexpr static void formatMagnitude(OutputIter& outputIter) noexcept {
-            outputIter = '^';
-            Formatter<SSize, Ascii>::format<OutputIter>(outputIter, Magnitude);
+            if constexpr (Magnitude > 1) {
+                outputIter = '^';
+                Formatter<SSize, Ascii>::format<OutputIter>(outputIter, Magnitude);
+            }
         }
 
         template<typename OutputIter>

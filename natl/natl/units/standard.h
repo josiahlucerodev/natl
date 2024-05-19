@@ -276,7 +276,7 @@ namespace natl {
     template<typename DataType, SSize Magnitude = 1>
     using Centurys = BaseUnitValue<DataType, CenturysUnit<Magnitude>>;
 
-    namespace value {
+    namespace unit {
         constexpr inline Nanoseconds<Size> nanoseconds = Nanoseconds<Size>(1);
         constexpr inline Microseconds<Size> microseconds = Microseconds<Size>(1);
         constexpr inline Milliseconds<Size> milliseconds = Milliseconds<Size>(1);
