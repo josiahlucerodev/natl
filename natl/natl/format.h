@@ -17,6 +17,9 @@ namespace natl {
 	template<typename Type, typename CharType = Ascii>
 	struct  Formatter;
 
+	template<typename Type, typename CharType = Ascii>
+	using MakeFormatter = Formatter<RemoveConctVolatile<RemoveReference<Type>>, Ascii>;
+
 	template<typename OutputIter>
 	class FormatOutputIter {
 	public:
@@ -105,7 +108,7 @@ namespace natl {
 	};
 
 	template<typename... FlagTypes>
-	constexpr auto formatArg(auto arg, auto... flagArgs) noexcept {
+	constexpr auto formatArg(auto&& arg, auto&&... flagArgs) noexcept {
 		using arg_type = decltype(arg);
 		using arg_flags = TypePack<decltype(flagArgs)...>;
 		using template_flags = TypePack<FlagTypes...>;
@@ -118,14 +121,14 @@ namespace natl {
 			arg_flags_storage_tuple>;
 		return format_arg_flags(
 			natl::forward<arg_type>(arg), 
-			natl::forward<arg_flags_storage_tuple>(arg_flags_storage_tuple(flagArgs...)));
+			natl::forward<arg_flags_storage_tuple>(arg_flags_storage_tuple(natl::forward<decltype(flagArgs)>(flagArgs)...)));
 	}
 
 	template<TemplateStringLiteral textFlag>
 	constexpr auto fromatTextFlag() noexcept { return StringLiteral<textFlag>{}; }
 
 	template<TemplateStringLiteral... textFlags>
-	constexpr auto formatArgText(auto arg, auto... flagArgs) noexcept {
+	constexpr auto formatArgText(auto&& arg, auto&&... flagArgs) noexcept {
 		using arg_type = decltype(arg);
 		using template_flags = TypePack<StringLiteral<textFlags>...>;
 		using arg_flags = TypePack<decltype(flagArgs)...>;
@@ -137,7 +140,10 @@ namespace natl {
 			arg_flags_storage_tuple>;
 		return format_arg_flags(
 			natl::forward<arg_type>(arg),
-			natl::forward<arg_flags_storage_tuple>(arg_flags_storage_tuple(flagArgs...)));
+			natl::forward<arg_flags_storage_tuple>(
+				arg_flags_storage_tuple(natl::forward<decltype(flagArgs)>(flagArgs)...)
+			)
+		);
 	}
 
 	template<typename Type>
@@ -145,25 +151,23 @@ namespace natl {
 	template<typename ArgType, typename... FlagTypes>
 	struct IsFormatArgFlagsT<FormatArgFlags<ArgType, FlagTypes...>> : TrueType {};
 
+	template<typename ArgType, typename CharType, typename... FlagTypes>
+	struct InstantiateFormatterWithTemplateFlagsTypePackT;
+
+	template<typename ArgType, typename CharType, typename... FlagTypes>
+	struct InstantiateFormatterWithTemplateFlagsTypePackT<ArgType, CharType, TypePack<FlagTypes...>> {
+		using type = Formatter<ArgType, CharType>::template WithTemplateFlags<FlagTypes...>;
+	};
+	template<typename ArgType, typename CharType>
+	struct InstantiateFormatterWithTemplateFlagsTypePackT<ArgType, CharType, TypePack<>> {
+		using type = Formatter<ArgType, CharType>;
+	};
+
+	template<typename ArgType, typename CharType, typename FlagsTypePack>
+		requires(IsTypePack<FlagsTypePack>)
+	using InstantiateFormatterWithTemplateFlagsTypePack = InstantiateFormatterWithTemplateFlagsTypePackT<Decay<ArgType>, CharType, FlagsTypePack>::type;
+
 	namespace impl {
-		template<typename ArgType, typename CharType, typename... FlagTypes>
-		struct CreateFormatterWithTemplateFlagsImpl {
-			using formatter = void;
-		};
-
-		template<typename ArgType, typename CharType, typename... FlagTypes>
-		struct CreateFormatterWithTemplateFlagsImpl<ArgType, CharType, TypePack<FlagTypes...>> {
-			using formatter = Formatter<ArgType, CharType>::template WithTemplateFlags<FlagTypes...>;
-		};
-		template<typename ArgType, typename CharType>
-		struct CreateFormatterWithTemplateFlagsImpl<ArgType, CharType, TypePack<>> {
-			using formatter = Formatter<ArgType, CharType>;
-		};
-
-		template<typename ArgType, typename CharType, typename FlagsTypePack>
-			requires(IsTypePack<FlagsTypePack>)
-		using CreateFormatterWithTemplateFlags = CreateFormatterWithTemplateFlagsImpl<ArgType, CharType, FlagsTypePack>::formatter;
-
 		template<typename OutputIter, typename ArgType, typename FormatterType, typename StorageTuple, Size... Indices>
 		constexpr void formatToArgCallFormatImpl(OutputIter& outputIter, ArgType&& arg, StorageTuple&& storageTuple, IndexSequence<Indices...>) noexcept {
 			outputIter = FormatterType::format(outputIter, arg, natl::forward<TupleElement<Indices, StorageTuple>>(storageTuple.template get<Indices>())...);
@@ -181,17 +185,17 @@ namespace natl {
 				using arg_type = FormatArgType::arg_type;
 
 				if constexpr (ArgType::template_flags::size > 0) {
-					using formatter_type = CreateFormatterWithTemplateFlags<typename FormatArgType::arg_type, CharType, typename FormatArgType::template_flags>;
+					using formatter_type = InstantiateFormatterWithTemplateFlagsTypePack<typename FormatArgType::arg_type, CharType, typename FormatArgType::template_flags>;
 					formatToArgCallFormat<OutputIter, arg_type, formatter_type, arg_flags_storage_tuple, TupleSize<arg_flags_storage_tuple>>(
 							outputIter, natl::forward<arg_type>(arg.getArg()), natl::forward<arg_flags_storage_tuple>(arg.getArgFlags()));
 				} else {
-					using formatter_type = Formatter<RemoveConctVolatile<arg_type>, CharType>;
+					using formatter_type = MakeFormatter<arg_type, CharType>;
 					formatToArgCallFormat<OutputIter, arg_type, formatter_type, arg_flags_storage_tuple, TupleSize<arg_flags_storage_tuple>>(
 						outputIter, natl::forward<arg_type>(arg.getArg()), natl::forward<arg_flags_storage_tuple>(arg.getArgFlags()));
 				}
 			} else {
 				using arg_flags_storage_tuple = Tuple<>;
-				using formatter_type = Formatter<RemoveConctVolatile<RemoveReference<ArgType>>, CharType>;
+				using formatter_type = MakeFormatter<ArgType, CharType>;
 				formatToArgCallFormat<OutputIter, ArgType, formatter_type, arg_flags_storage_tuple, 0>(
 					outputIter, natl::forward<ArgType>(arg), natl::forward<arg_flags_storage_tuple>(arg_flags_storage_tuple()));
 			}
@@ -224,7 +228,7 @@ namespace natl {
 
 	template<typename... ArgTypes>
 		requires(Formattable<ArgTypes, Ascii> && ...)
-	constexpr String sFormat(ArgTypes&&... args) noexcept {
+	constexpr String sformat(ArgTypes&&... args) noexcept {
 		return natl::format<String>(natl::forward<ArgTypes>(args)...);
 	}
 
@@ -442,11 +446,11 @@ namespace natl {
 		}
 
 		template<typename... TemplateFlags>
-		class WithTemplateFlags {
+		struct WithTemplateFlags {
 		public:
 			template<typename TemplateFlag>
 			constexpr static void handelTemplateFlag(BoolFormat& boolFormat) noexcept {
-				if constexpr (IsStringLiteralV<TemplateFlag>) {
+				if constexpr (IsStringLiteral<TemplateFlag>) {
 					constexpr ConstAsciiStringView tflagName = TemplateFlag::toStringView();
 					if constexpr (tflagName == "shorthand" || tflagName == "s") {
 						boolFormat = BoolFormat::shorthand;
@@ -517,7 +521,7 @@ namespace natl {
 
 			template<typename OutputIter>
 			constexpr static void formatHexadecimal(OutputIter& outputIter, const value_type number) noexcept {
-				natl::String numberAsString = intToStringHexadecimal(number);
+				natl::String numberAsString = intToStringHexadecimalType<value_type>(number);
 				outputIter = copyNoOverlap<natl::String::const_iterator, OutputIter>(
 					numberAsString.cbegin(),
 					numberAsString.cend(),
@@ -525,7 +529,7 @@ namespace natl {
 			}
 			template<typename OutputIter>
 			constexpr static void formatBinary(OutputIter& outputIter, const value_type number) noexcept {
-				natl::String numberAsString = intToStringBinary(number);
+				natl::String numberAsString = intToStringBinaryType<value_type>(number);
 				outputIter = copyNoOverlap<natl::String::const_iterator, OutputIter>(
 					numberAsString.cbegin(),
 					numberAsString.cend(),
@@ -533,7 +537,7 @@ namespace natl {
 			}
 			template<typename OutputIter>
 			constexpr static void formatDecimal(OutputIter& outputIter, const value_type number) noexcept {
-				natl::String numberAsString = intToStringDecimal(number);
+				natl::String numberAsString = intToStringDecimalType<value_type>(number);
 				outputIter = copyNoOverlap<natl::String::const_iterator, OutputIter>(
 					numberAsString.cbegin(),
 					numberAsString.cend(),
@@ -558,12 +562,12 @@ namespace natl {
 			}
 
 			template<typename... TemplateFlags>
-			class WithTemplateFlags {
+			struct WithTemplateFlags {
 			public:
 
 				template<typename TemplateFlag>
 				constexpr static void handelTemplateFlag(IntFormat& intFormat) noexcept {
-					if constexpr (IsStringLiteralV<TemplateFlag>) {
+					if constexpr (IsStringLiteral<TemplateFlag>) {
 						constexpr ConstAsciiStringView tflagName = TemplateFlag::toStringView();
 
 						if constexpr (tflagName == "hexadecimal" || tflagName == "hex") {
@@ -624,6 +628,11 @@ namespace natl {
 	template<typename CharType>
 	struct Formatter<ui64, CharType> : impl::IntegerFormatter<ui64, CharType> {};
 
+#ifdef NATL_COMPILER_EMSCRIPTEN
+	template<typename CharType>
+	struct Formatter<Size, CharType> : impl::IntegerFormatter<Size, CharType> {};
+#endif
+
 	enum class FloatFormat {
 		standard,
 	};
@@ -677,11 +686,11 @@ namespace natl {
 			}
 
 			template<typename... TemplateFlags>
-			class WithTemplateFlags {
+			struct WithTemplateFlags {
 			public:
 				template<typename TemplateFlag>
 				constexpr static void handelTemplateFlag(Size& precision, FloatFormat& floatFormat) noexcept {
-					if constexpr (IsStringLiteralV<TemplateFlag>) {
+					if constexpr (IsStringLiteral<TemplateFlag>) {
 						constexpr ConstAsciiStringView tflagName = TemplateFlag::toStringView();
 
 						if constexpr (tflagName.starts_with("p: ")) {
@@ -817,7 +826,7 @@ namespace natl {
 
 	public:
 		template<typename... TemplateFlags>
-		class WithTemplateFlags {
+		struct WithTemplateFlags {
 
 			template<Size Index, typename... TemplateFlagsArg>
 			struct HandelTemplateFlags {
@@ -827,7 +836,7 @@ namespace natl {
 					consteval static Bool testTemplateFlag() noexcept {
 						if constexpr (impl::IsFormatElementArg<TemplateFlag>) {
 							return TemplateFlag::index == Index;
-						} else if constexpr (IsStringLiteralV<TemplateFlag>) {
+						} else if constexpr (IsStringLiteral<TemplateFlag>) {
 							constexpr ConstAsciiStringView tflagName = TemplateFlag::toStringView();
 							if constexpr (tflagName.size() > 3 && tflagName[1] == ':' &&  tflagName[0] - '0' == Index) {
 								return true;
@@ -856,7 +865,7 @@ namespace natl {
 				};
 
 				template<typename TemplateFlag>
-					requires(IsStringLiteralV<TemplateFlag>)
+					requires(IsStringLiteral<TemplateFlag>)
 				struct ReduceTemplateFlagT<TemplateFlag> {
 					consteval static auto getReduceType() noexcept {
 						constexpr ConstAsciiStringView tflagName = TemplateFlag::toStringView();
@@ -900,7 +909,7 @@ namespace natl {
 							natl::forward<ArgType>(arg),
 							natl::forward<FormatArgTypes>(formatArgs)...);
 					} else {
-						using formatter = impl::CreateFormatterWithTemplateFlags<Decay<ArgType>, CharType, template_flags>;
+						using formatter = InstantiateFormatterWithTemplateFlagsTypePack<Decay<ArgType>, CharType, template_flags>;
 						outputIter = formatter::format(
 							outputIter,
 							natl::forward<ArgType>(arg),

@@ -126,11 +126,11 @@ namespace natl {
 
 			ArgsStorageType argumentStorage(arguments...);
 			ResultCacheType& resultCache = getThreadLocalResultCacheOfCallFunctionCached<ResultCacheType>();
-			Option<typename ResultCacheType::entry_type*> value = resultCache.find(argumentStorage);
+			typename ResultCacheType::optional_pointer value = resultCache.find(argumentStorage);
 			if (value.hasValue()) {
-				return value.value()->data;
+				return value.value()->value;
 			} else {
-				return resultCache.insert(argumentStorage, natl::forward<Functor>(functor)(natl::forward<ArgTypes>(arguments)...))->data;
+				return resultCache.insert(argumentStorage, natl::forward<Functor>(functor)(natl::forward<ArgTypes>(arguments)...))->value;
 			}
 
 		}

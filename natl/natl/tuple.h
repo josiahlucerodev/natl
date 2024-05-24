@@ -57,8 +57,8 @@ namespace natl {
 		template<typename FirstU, typename... RestU>
 			requires(std::is_constructible_v<FirstDataType, FirstU&&> && std::is_constructible_v<rest_tuple_type, RestU&&...>)
 		constexpr Tuple(Tuple<FirstU, RestU...>&& other) noexcept : 
-			first(natl::move(static_cast<FirstDataType>(other.first))), 
-			rest(natl::move(other.rest)) {}
+			first(natl::forward<FirstDataType>(other.first)),
+			rest(natl::forward<decltype(other.rest)>(other.rest)) {}
 
 		//destructor 
 		constexpr ~Tuple() noexcept = default;

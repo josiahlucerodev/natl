@@ -292,6 +292,10 @@ namespace natl {
 		a = move(b);
 		b = move(temp);
 	}
+	template<typename Type>
+	constexpr const Type& toConst(const Type& value) noexcept {
+		return value;
+	}
 
 	template<class DataType> struct RemoveExtentT { using type = DataType; };
 	template<class DataType> struct RemoveExtentT<DataType[]> { using type = DataType; };
@@ -462,6 +466,24 @@ namespace natl {
 	template<typename Type> concept IsBuiltInTypeC = IsBuiltInType<Type>;
 
 	//type operations
+	template<typename Type, typename... ConstructArgTypes>
+	concept IsConstructibleC = requires {
+		{ Type(natl::declval<ConstructArgTypes>()...) };
+	};
+	template<typename Type, typename... ConstructArgTypes>
+	constexpr inline Bool IsConstructible = IsConstructibleC<Type, ConstructArgTypes...>;
+	template<typename Type, typename... ConstructArgTypes>
+	struct IsConstructibleV : BoolConstant<IsConstructible<Type, ConstructArgTypes...>> {};
+
+	template<typename Type, typename OtherType>
+	concept IsAssignableC = requires(Type value, OtherType other) {
+		{ value = other } -> SameAs<Type&>;
+	};
+	template<typename Type, typename OtherType>
+	constexpr inline Bool IsAssignable = IsAssignableC<Type, OtherType>;
+	template<typename Type, typename OtherType>
+	struct IsAssignableV : BoolConstant<IsAssignable<Type, OtherType>> {};
+
 	template <typename DataType>
 	concept IsCopyConstructible = std::is_copy_constructible_v<std::decay_t<DataType>>;
 
@@ -723,4 +745,6 @@ namespace natl {
 	concept HasResize = requires(Container container, const Size newCapacity) {
 		{ container.resize(newCapacity) };
 	};
+
+	//
 }

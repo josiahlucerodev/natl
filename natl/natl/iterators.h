@@ -12,6 +12,29 @@
 
 //interface 
 namespace natl {
+#ifdef NATL_COMPILER_MSVC
+#pragma warning(push)
+#pragma warning(disable : 4180)
+#endif // NATL_COMPILER_MSVC
+
+	template<typename DataType>
+	struct DefaultIteratorTraits {
+		using value_type = DataType;
+		using reference = DataType&;
+		using const_reference = const DataType&;
+		using pointer = DataType*;
+		using const_pointer = const DataType*;
+		using difference_type = PtrDiff;
+		using size_type = Size;
+	};
+
+#ifdef NATL_COMPILER_MSVC
+#pragma warning(pop)
+#endif // NATL_COMPILER_MSVC
+
+	struct RandomAccessIteratorTag {};
+	struct BidirectionalIteratorTag {};
+
 	template<typename Type>
 	concept HasIteratorType = requires {
 		typename Type::iterator;

@@ -1,70 +1,91 @@
 
 //natl
 #include <natl/flatHashMap.h>
-#include <natl/iteration.h>
-#include <natl/option.h>
-#include <natl/string.h>
+#include <natl/test.h>
+#include <natl/printFormatted.h>
 
-
-constexpr natl::Size compileTimeTest() {
-	natl::FlatHashMap<natl::Size, natl::Size> map{};
-
-	for (const natl::Size index : natl::Repeat(1)) {
-		map.insert(index, index);
-	}
-
-	map.find(0);
-
-	return map.find(0).value()->data;
-}
-
-
-constexpr natl::Size testFlatHashMap() {
-
-	natl::FlatHashMap<natl::Size, natl::Size> map{};
-	map.insert(1, 1);
-	map.insert(2, 2);
-	map.insert(3, 3);
-	map.insert(3, compileTimeTest());
-	map.insert(3, compileTimeTest());
-
-	return map.find(2).value()->data;
-}
-
- constexpr natl::Size testStringMap() {
-	natl::FlatHashMap<natl::String, natl::Size> map{};
-	map.insert("1", 1);
-
-	char character = 'a';
-	for (const natl::Size index : natl::Repeat(10)) {
-		map.insert(natl::String(1, char(static_cast<natl::Size>(character) + index)), index);
-	}
-
-	natl::SmallFlatHashMap<natl::Size, natl::Size, 8> smallMap{};
-	smallMap.insert(1, 1);
-	smallMap.insert(2, 2);
-	smallMap.insert(3, 3);
-	smallMap.insert(4, 4);
-	smallMap.insert(5, 5);
-	smallMap.insert(6, 6);
-	//map.insert("2", 2);
-	//map.insert("3", 3);
-	//map.insert("3", compileTimeTest());
-	//map.insert("3", compileTimeTest());
-	//
-	//return map.find("1").value()->data;
-	return 0;
-}
-
-int main() {
-	[[maybe_unused]] constexpr natl::Size number = compileTimeTest();
-	[[maybe_unused]] constexpr natl::Size number2 = testFlatHashMap();
-	//constexpr int test = natl::String().();
-	[[maybe_unused]] constexpr natl::Size number3 = testStringMap();
-	[[maybe_unused]] natl::SmallFlatHashMap<natl::Size, natl::Size, 8> map{};
+constexpr natl::FlatHashMap<natl::Size, natl::Size> getTestHashMap() noexcept {
+	natl::FlatHashMap<natl::Size, natl::Size> map;
+	map.reserve(8);
 	map.insert(1, 1);
 	map.insert(2, 2);
 	map.insert(3, 3);
 	map.insert(4, 4);
-	[[maybe_unused]] natl::Size number4 = map.find(1).value()->data;
+	map.insert(5, 5);
+	map.insert(6, 6);
+	map.insert(7, 7);
+	map.insert(8, 8);
+	return map;
+}
+
+constexpr natl::Bool testIteration() noexcept {
+	natl::FlatHashMap<natl::Size, natl::Size> testMap = getTestHashMap();
+	for (auto&& [key, value] : testMap) {
+		if (key == 4 && value == 4) {
+			return true;
+		}
+	}
+	return false;
+}
+
+constexpr natl::Bool testConstIteration() noexcept {
+	natl::FlatHashMap<natl::Size, natl::Size> testMap = getTestHashMap();
+	for (const auto& [key, value] : natl::toConst(testMap)) {
+		if (key == 4 && value == 4) {
+			return true;
+		}
+	}
+	return false;
+}
+
+constexpr natl::Bool testErase() noexcept {
+	auto testMap = getTestHashMap();
+	testMap.erase(1);
+	return testMap.find(1).doesNotHaveValue();
+}
+
+constexpr natl::Bool testFind() noexcept {
+	auto testMap = getTestHashMap();
+	return testMap.find(4).value()->value;
+}
+
+constexpr natl::Bool testFormatter() noexcept {
+	auto testMap = getTestHashMap();
+	natl::sformat(
+		natl::formatArg(testMap,
+			natl::formatKey(natl::IntFormat::hexadecimal)
+		)
+	);
+
+	natl::sformat(
+		natl::formatArg(testMap,
+			natl::formatKey(natl::IntFormat::hexadecimal),
+			natl::formatValue(natl::IntFormat::binary)
+		)
+	);
+
+	natl::sformat(
+		natl::formatArgText<"v: hex", "k: hex">(testMap)
+	);
+
+	return true;
+}
+
+static_assert(testIteration());
+static_assert(testConstIteration());
+static_assert(testFormatter());
+static_assert(testErase());
+static_assert(testFind());
+
+natl::Bool tests() noexcept {
+	NATL_TEST_ASSERT("NatlFlatHashMapTest", testIteration(), "test iteration failed");
+	NATL_TEST_ASSERT("NatlFlatHashMapTest", testConstIteration(), "test const iteration failed");
+	NATL_TEST_ASSERT("NatlFlatHashMapTest", testFormatter(), "test formatter failed");
+	NATL_TEST_ASSERT("NatlFlatHashMapTest", testErase(), "test erase failed");
+	NATL_TEST_ASSERT("NatlFlatHashMapTest", testFind(), "test find failed");
+	return true;
+}
+
+int main() {
+	tests();
 }

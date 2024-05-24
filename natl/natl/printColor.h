@@ -640,7 +640,7 @@ namespace natl {
 		public:
 			template<typename TemplateFlag>
 			constexpr static void handelTemplateFlag(PrintColorAttribute& colorAttribute) noexcept {
-				if constexpr (IsStringLiteralV<TemplateFlag>) {
+				if constexpr (IsStringLiteral<TemplateFlag>) {
 					constexpr ConstAsciiStringView tflagName = TemplateFlag::toStringView();
 					if constexpr (tflagName == "b") {
 						colorAttribute = PrintColorAttribute::background;
@@ -678,7 +678,7 @@ namespace natl {
 		}
 
 		template<typename... TemplateFlags>
-		class WithTemplateFlags : impl::PrintColorAttributeTemplateFlag {
+		struct WithTemplateFlags : impl::PrintColorAttributeTemplateFlag {
 		public:
 			template<typename OutputIter>
 			constexpr static OutputIter format(OutputIter outputIter, const PrintColor printColor) noexcept {
@@ -733,7 +733,7 @@ namespace natl {
 		}
 
 		template<typename... TemplateFlags>
-		class WithTemplateFlags : impl::PrintColorAttributeTemplateFlag {
+		struct WithTemplateFlags : impl::PrintColorAttributeTemplateFlag {
 		public:
 			template<typename OutputIter>
 			constexpr static OutputIter format(OutputIter outputIter, const PrintExtendedColor printColor) noexcept {
@@ -788,7 +788,7 @@ namespace natl {
 		}
 
 		template<typename... TemplateFlags>
-		class WithTemplateFlags : impl::PrintColorAttributeTemplateFlag {
+		struct WithTemplateFlags : impl::PrintColorAttributeTemplateFlag {
 		public:
 			template<typename OutputIter>
 			constexpr static OutputIter format(OutputIter outputIter, PrintDefaultColor) noexcept {

@@ -182,13 +182,13 @@ namespace natl {
 			template<Size... Indices>
 			constexpr void callStorageTupleFunction(StorageTuple& storageTuple, IndexSequence<Indices...>) const noexcept {
 				invokeFunction(
-					storageTuple.template get<0>().getValueAsRef(), //functor 
-					ThreadStopAlert(storageTuple.getLast().getValueAsPtr()), //StopAlert 
-					storageTuple.template get<Indices + 1>().getValueAsRef()... //Function Args
+					storageTuple.template get<0>().valueAsRef(), //functor 
+					ThreadStopAlert(storageTuple.getLast().valueAsPtr()), //StopAlert 
+					storageTuple.template get<Indices + 1>().valueAsRef()... //Function Args
 				);
 
-				deconstruct(storageTuple.template get<0>().getValueAsPtr());
-				(deconstruct(storageTuple.template get<Indices + 1>().getValueAsRef()), ...);
+				deconstruct(storageTuple.template get<0>().valueAsPtr());
+				(deconstruct(storageTuple.template get<Indices + 1>().valueAsRef()), ...);
 			}
 
 			constexpr void operator()(StorageTuple* storageTuple) const noexcept {
@@ -201,7 +201,7 @@ namespace natl {
 
 		template<Size Index, typename StorageTuple, typename ArgType, typename... RestArgTypes>
 		constexpr void constructStorageTupleArgs(StorageTuple& storageTuple, ArgType&& arg, RestArgTypes&&... args) const noexcept {
-			construct(storageTuple.template get<Index>().getValueAsPtr(), natl::forward<ArgType>(arg));
+			construct(storageTuple.template get<Index>().valueAsPtr(), natl::forward<ArgType>(arg));
 			constructStorageTupleArgs<Index + 1, StorageTuple, RestArgTypes...>(storageTuple, args...);
 		}
 	public:
@@ -219,14 +219,14 @@ namespace natl {
 				StorageTuple* storageTuple = DefaultAllocator<StorageTuple>::allocate(1);
 				StorageTuple& storageTupleRef = *storageTuple;
 				construct<StorageTuple>(storageTuple);
-				construct<FunctorStorage, Functor>(storageTupleRef.template get<0>().getValueAsPtr(), natl::forward<Functor>(functor));
+				construct<FunctorStorage, Functor>(storageTupleRef.template get<0>().valueAsPtr(), natl::forward<Functor>(functor));
 				constructStorageTupleArgs<1, StorageTuple, ArgTypes...>(*storageTuple, natl::forward<ArgTypes>(args)...);
 
 				auto destoryFunction = [](void* storagePtr) noexcept -> void {
 					StorageTuple* storageTupleToDestroy = reinterpret_cast<StorageTuple*>(storagePtr);
 					DefaultAllocator<StorageTuple>::deallocate(storageTupleToDestroy, 1);
 				};
-				threadStopData = storageTupleRef.getLast().getValueAsPtr();
+				threadStopData = storageTupleRef.getLast().valueAsPtr();
 				construct<ThreadStopData>(threadStopData, reinterpret_cast<void*>(storageTuple), destoryFunction);
 
 				thread = natl::move(

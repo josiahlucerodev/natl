@@ -46,12 +46,12 @@ namespace natl {
 	};
 
 	template<typename Type>
-	struct IsStringLiteral : FalseType {};
+	struct IsStringLiteralV : FalseType {};
 	template<TemplateStringLiteral TStringL>
-	struct IsStringLiteral<StringLiteral<TStringL>> : TrueType {};
+	struct IsStringLiteralV<StringLiteral<TStringL>> : TrueType {};
 
 	template<typename Type>
-	constexpr inline Bool IsStringLiteralV = IsStringLiteral<Type>::value;
+	constexpr inline Bool IsStringLiteral = IsStringLiteralV<Type>::value;
 
 	template<auto> struct AsStringLiteralT {};
 	template<auto Value> using AsStringLiteral = AsStringLiteralT<Value>::type;

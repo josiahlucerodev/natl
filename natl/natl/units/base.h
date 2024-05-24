@@ -674,7 +674,7 @@ namespace natl {
     namespace impl {
         template<typename TemplateFlag>
         constexpr void unitHandelTemplateFlag(FormatUnit& formatUnit) noexcept {
-            if constexpr (IsStringLiteralV<TemplateFlag>) {
+            if constexpr (IsStringLiteral<TemplateFlag>) {
                 constexpr ConstAsciiStringView tflagName = TemplateFlag::toStringView();
                 if constexpr (tflagName == "fullname") {
                     formatUnit = FormatUnit::fullname;
@@ -704,7 +704,7 @@ namespace natl {
         struct IsUnitTemplateFlagV {
         public:
             consteval static Bool testFlag() noexcept {
-                if constexpr (IsStringLiteralV<TemplateFlag>) {
+                if constexpr (IsStringLiteral<TemplateFlag>) {
                     constexpr ConstAsciiStringView tflagName = TemplateFlag::toStringView();
                     if constexpr (tflagName == "fullname") {
                         return true;
@@ -801,7 +801,7 @@ namespace natl {
         }
 
         template<typename... TemplateFlags>
-        class WithTemplateFlags {
+        struct WithTemplateFlags {
         public:
 
             template<typename OutputIter>
@@ -842,7 +842,7 @@ namespace natl {
         }
 
         template<typename... TemplateFlags>
-        class WithTemplateFlags {
+        struct WithTemplateFlags {
         public:
             template<typename OutputIter>
             constexpr static OutputIter format(OutputIter outputIter, value_type, FormatUnit formatUnit = FormatUnit::standard) noexcept {
@@ -896,7 +896,7 @@ namespace natl {
         }
 
         template<typename... TemplateFlags>
-        class WithTemplateFlags {
+        struct WithTemplateFlags {
         public:
 
             using FilteredTemplateFlags = TypePackRemoveElementsIf<impl::IsUnitTemplateFlagV, TypePack<TemplateFlags...>>;

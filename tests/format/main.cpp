@@ -5,30 +5,30 @@
 #include <natl/string.h>
 
 //boolean format
-static_assert(natl::sFormat(true) == "true");
-static_assert(natl::sFormat(false) == "false");
+static_assert(natl::sformat(true) == "true");
+static_assert(natl::sformat(false) == "false");
 
-static_assert(natl::sFormat(natl::formatArgText<"Full">(true)) == "True");
-static_assert(natl::sFormat(natl::formatArgText<"Full">(false)) == "False");
+static_assert(natl::sformat(natl::formatArgText<"Full">(true)) == "True");
+static_assert(natl::sformat(natl::formatArgText<"Full">(false)) == "False");
 
-static_assert(natl::sFormat(natl::formatArgText<"FULL">(true)) == "TRUE");
-static_assert(natl::sFormat(natl::formatArgText<"FULL">(false)) == "FALSE");
+static_assert(natl::sformat(natl::formatArgText<"FULL">(true)) == "TRUE");
+static_assert(natl::sformat(natl::formatArgText<"FULL">(false)) == "FALSE");
 
-static_assert(natl::sFormat(natl::formatArgText<"shorthand">(true)) == "t");
-static_assert(natl::sFormat(natl::formatArgText<"shorthand">(false)) == "f");
+static_assert(natl::sformat(natl::formatArgText<"shorthand">(true)) == "t");
+static_assert(natl::sformat(natl::formatArgText<"shorthand">(false)) == "f");
 
-static_assert(natl::sFormat(natl::formatArgText<"Shorthand">(true)) == "T");
-static_assert(natl::sFormat(natl::formatArgText<"Shorthand">(false)) == "F");
+static_assert(natl::sformat(natl::formatArgText<"Shorthand">(true)) == "T");
+static_assert(natl::sformat(natl::formatArgText<"Shorthand">(false)) == "F");
 
 //string literal format
-static_assert(natl::sFormat("Hello") == "Hello");
+static_assert(natl::sformat("Hello") == "Hello");
 
 //string view
-static_assert(natl::sFormat(natl::AsciiStringView("Hello")) == "Hello");
-static_assert(natl::sFormat(natl::ConstAsciiStringView("Hello")) == "Hello");
+static_assert(natl::sformat(natl::AsciiStringView("Hello")) == "Hello");
+static_assert(natl::sformat(natl::ConstAsciiStringView("Hello")) == "Hello");
 
 //string 
-static_assert(natl::sFormat(natl::String("Hello")) == "Hello");
+static_assert(natl::sformat(natl::String("Hello")) == "Hello");
 
 
 constexpr natl::String256 outputTest() noexcept {
