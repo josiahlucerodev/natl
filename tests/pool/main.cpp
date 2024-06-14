@@ -1,7 +1,7 @@
 
 //natl
-#include <natl/batchPool.h>
-#include <natl/test.h>
+#include <natl/container/batchPool.h>
+#include <natl/util/test.h>
 
 int main() {
 	natl::BatchPool<int> batchPool;

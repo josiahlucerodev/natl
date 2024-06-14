@@ -1,7 +1,7 @@
 
 //natl
-#include <natl/synchronizedValue.h>
-#include <natl/test.h>
+#include <natl/sync/synchronizedValue.h>
+#include <natl/util/test.h>
 
 constexpr natl::Bool constructionTest() noexcept {
 	natl::SynchronizedValue<natl::Bool> syncValue(false);
@@ -22,7 +22,8 @@ constexpr natl::Bool constructionTest() noexcept {
 static_assert(constructionTest());
 
 natl::Bool tests() noexcept {
-	NATL_TEST_ASSERT("NatlSynchronizedValueTest", constructionTest(), "construction test failed")
+	constructionTest();
+	//NATL_TEST_ASSERT("NatlSynchronizedValueTest", constructionTest(), "construction test failed")
 	return true;
 }
 

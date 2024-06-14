@@ -1,7 +1,6 @@
 
 //natl
-#include <natl/serialization.h>
-#include <natl/dynArray.h>
+#include <natl/processing/serialization.h>
 
 int main() {
 

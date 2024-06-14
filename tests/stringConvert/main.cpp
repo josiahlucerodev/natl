@@ -1,6 +1,6 @@
 
 //natl
-#include <natl/stringConvert.h>
+#include <natl/util/stringConvert.h>
 
 int main() {
 	[[maybe_unused]] constexpr natl::i64 uint32DecimalTest1Constexpr = natl::stringDecimalToInt(natl::intToStringDecimal(32));

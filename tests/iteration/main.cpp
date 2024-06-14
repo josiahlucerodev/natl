@@ -1,7 +1,7 @@
 
 //natl
-#include <natl/iteration.h>
-#include <natl/string.h>
+#include <natl/util/iteration.h>
+#include <natl/container/string.h>
 
 constexpr natl::String testBackInsertIterator() noexcept{
 	natl::String output;

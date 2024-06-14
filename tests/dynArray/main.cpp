@@ -1,8 +1,8 @@
 //natl
-#include <natl/test.h>
-#include <natl/dynArray.h>
-#include <natl/smallDynArray.h>
-#include <natl/batchPool.h>
+#include <natl/util/test.h>
+#include <natl/container/dynArray.h>
+#include <natl/container/smallDynArray.h>
+#include <natl/container/batchPool.h>
 
 consteval void constructionTest() {
 	natl::DynArray<int> dynArray(4);

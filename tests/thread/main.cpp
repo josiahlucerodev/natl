@@ -1,8 +1,8 @@
 
 //natl
-#include <natl/thread.h>
-#include <natl/smartThread.h>
-#include <natl/mutex.h>
+#include <natl/sync/thread.h>
+#include <natl/sync/smartThread.h>
+#include <natl/sync/mutex.h>
 #include <thread>
 
 

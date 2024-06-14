@@ -1,7 +1,7 @@
 
 //natl
-#include <natl/priorityQueue.h>
-#include <natl/stringView.h>
+#include <natl/container/priorityQueue.h>
+#include <natl/container/stringView.h>
 
 template<typename HeapType>
 constexpr void testHeap(const natl::ConstAsciiStringView& name) noexcept {

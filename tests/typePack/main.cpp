@@ -1,8 +1,8 @@
 
 //natl
-#include <natl/printFormatted.h>
-#include <natl/typePack.h>
-#include <natl/typeInfo.h>
+#include <natl/util/typePack.h>
+#include <natl/util/typeInfo.h>
+#include <natl/system/printFormatted.h>
 
 using TestTypePack = natl::TypePack<natl::i8, natl::i16, natl::i32, natl::i64>;
 

@@ -1,10 +1,10 @@
 
 //natl
-#include <natl/dataMovement.h>
-#include <natl/smallDynArray.h>
-#include <natl/dynArray.h>
-#include <natl/string.h>
-#include <natl/heapArray.h>
+#include <natl/util/dataMovement.h>
+#include <natl/container/smallDynArray.h>
+#include <natl/container/dynArray.h>
+#include <natl/container/string.h>
+#include <natl/container/heapArray.h>
 
 
 constexpr char compileTimeTest() {

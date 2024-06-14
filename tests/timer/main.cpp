@@ -2,9 +2,9 @@
 #include <thread>
 
 //natl
-#include <natl/timer.h>
-#include <natl/printFormatted.h>
-#include <natl/thread.h>
+#include <natl/system/timer.h>
+#include <natl/system/printFormatted.h>
+#include <natl/sync/thread.h>
 
 int main() {
 	natl::Milliseconds<natl::i64> sleepTime(100);

@@ -1,8 +1,7 @@
 
 //natl
 #include <natl/units.h>
-#include <natl/printFormatted.h>
-#include <natl/typeInfo.h>
+#include <natl/system/printFormatted.h>
 
 template<typename UnitType>
 constexpr natl::Bool unitConstructionTest() noexcept {

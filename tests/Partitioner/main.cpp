@@ -1,8 +1,6 @@
 //natl
-#include <natl/pch.h>
-#include <natl/partitioner.h>
-#include <natl/test.h>
-#include <natl/container.h>
+#include <natl/container/partitioner.h>
+#include <natl/util/test.h>
 
 int main() {
 

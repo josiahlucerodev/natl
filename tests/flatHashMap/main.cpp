@@ -1,8 +1,9 @@
 
 //natl
-#include <natl/flatHashMap.h>
-#include <natl/test.h>
-#include <natl/printFormatted.h>
+#include <natl/util/test.h>
+#include <natl/container/flatHashMap.h>
+
+#define NATL_TEST_FROM "NatlFlatHashMapTest"
 
 constexpr natl::FlatHashMap<natl::Size, natl::Size> getTestHashMap() noexcept {
 	natl::FlatHashMap<natl::Size, natl::Size> map;
@@ -78,12 +79,13 @@ static_assert(testErase());
 static_assert(testFind());
 
 natl::Bool tests() noexcept {
-	NATL_TEST_ASSERT("NatlFlatHashMapTest", testIteration(), "test iteration failed");
-	NATL_TEST_ASSERT("NatlFlatHashMapTest", testConstIteration(), "test const iteration failed");
-	NATL_TEST_ASSERT("NatlFlatHashMapTest", testFormatter(), "test formatter failed");
-	NATL_TEST_ASSERT("NatlFlatHashMapTest", testErase(), "test erase failed");
-	NATL_TEST_ASSERT("NatlFlatHashMapTest", testFind(), "test find failed");
-	return true;
+	natl::Test test(NATL_TEST_FROM, "all", natl::TestType::root);
+	NATL_TEST_ASSERT(testIteration(), "iteration");
+	NATL_TEST_ASSERT(testConstIteration(), "const iteration");
+	NATL_TEST_ASSERT(testFormatter(), "formatter");
+	NATL_TEST_ASSERT(testErase(), "erase");
+	NATL_TEST_ASSERT(testFind(), "find");
+	return test;
 }
 
 int main() {

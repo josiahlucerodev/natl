@@ -1,6 +1,6 @@
 
 //natl
-#include <natl/array.h>
+#include <natl/container/array.h>
 
 constexpr int compileTimeTest() {
 	natl::Array<int, 4> array = {2, 3, 4, 5};

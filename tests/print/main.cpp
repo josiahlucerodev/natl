@@ -1,9 +1,8 @@
 
 //natl
-#include <natl/print.h>
-#include <natl/typeInfo.h>
-#include <natl/printFormatted.h>
-#include <natl/printColor.h>
+#include <natl/system/print.h>
+#include <natl/system/printFormatted.h>
+#include <natl/system/printColor.h>
 
 
 int main() {

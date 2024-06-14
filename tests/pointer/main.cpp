@@ -1,6 +1,6 @@
 
 //natl
-#include <natl/pointer.h>
+#include <natl/util/pointer.h>
 
 constexpr natl::Size constexprTest() {
 	natl::WeakPtr<int> weakPtr{};

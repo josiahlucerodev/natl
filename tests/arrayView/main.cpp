@@ -1,7 +1,6 @@
 
-#include <natl/arrayView.h>
-#include <natl/test.h>
-#include <natl/container.h>
+#include <natl/container/arrayView.h>
+#include <natl/util/test.h>
 
 int main() {
 

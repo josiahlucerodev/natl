@@ -1,7 +1,7 @@
 
 //natl
-#include <natl/typeInfo.h>
-#include <natl/print.h>
+#include <natl/util/typeInfo.h>
+#include <natl/system/print.h>
 
 
 int main() {

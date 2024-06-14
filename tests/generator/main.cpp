@@ -1,7 +1,7 @@
 
 //natl
-#include <natl/generator.h>
-#include <natl/string.h>
+#include <natl/processing/generator.h>
+#include <natl/container/string.h>
 
 natl::Generator<natl::Ascii> charExplode(const natl::String& string) {
 	for (const natl::Ascii& character : string) {

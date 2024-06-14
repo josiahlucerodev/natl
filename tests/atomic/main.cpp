@@ -1,5 +1,5 @@
 //natl
-#include <natl/atomic.h>
+#include <natl/sync/atomic.h>
 
 
 //std

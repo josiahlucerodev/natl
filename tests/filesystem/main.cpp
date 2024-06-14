@@ -1,6 +1,6 @@
 //natl
-#include <natl/filesystem.h>
-#include <natl/smallDynArray.h>
+#include <natl/system/filesystem.h>
+#include <natl/container/smallDynArray.h>
 
 //own
 #include "../testUtils.h"

@@ -1,8 +1,8 @@
 
 //natl
-#include <natl/variant.h>
-#include <natl/dynArray.h>
-#include <natl/test.h>
+#include <natl/container/variant.h>
+#include <natl/container/dynArray.h>
+#include <natl/util/test.h>
 
 
 int main() {

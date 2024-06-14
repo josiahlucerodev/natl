@@ -1,7 +1,7 @@
 
 //natl
-#include <natl/heapArray.h>
-#include <natl/test.h>
+#include <natl/container/heapArray.h>
+#include <natl/util/test.h>
 
 constexpr natl::i64 compileTimeTest() {
 	natl::HeapArray<natl::i64> intArray(100, 5);

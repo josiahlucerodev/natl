@@ -1,7 +1,7 @@
 
 //natl
-#include <natl/expect.h>
-#include <natl/stringConvert.h>
+#include <natl/fundamental/expect.h>
+#include <natl/util/stringConvert.h>
 
 enum class TestError {
 	none,

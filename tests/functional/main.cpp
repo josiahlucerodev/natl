@@ -1,7 +1,7 @@
 
 //natl
-#include <natl/functional.h>
-#include <natl/test.h>
+#include <natl/container/functional.h>
+#include <natl/util/test.h>
 
 constexpr natl::Bool work() noexcept {
 	return true;
@@ -18,7 +18,8 @@ constexpr natl::Bool constructionTest() {
 static_assert(constructionTest());
 
 natl::Bool tests() noexcept {
-	NATL_TEST_ASSERT("NatlFunctionalTest", constructionTest(), "construction test failed")
+	constructionTest();
+	//NATL_TEST_ASSERT("NatlFunctionalTest", constructionTest(), "construction test failed")
 	return true;
 }
 

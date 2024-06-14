@@ -1,8 +1,8 @@
 
 //natl
-#include <natl/print.h>
-#include <natl/format.h>
-#include <natl/string.h>
+#include <natl/system/print.h>
+#include <natl/processing/format.h>
+#include <natl/container/string.h>
 
 //boolean format
 static_assert(natl::sformat(true) == "true");

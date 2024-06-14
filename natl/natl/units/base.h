@@ -1,13 +1,13 @@
 #pragma once
 
 //own
-#include "../basicTypes.h"
-#include "../typeTraits.h"
-#include "../typePack.h"
-#include "../compilerDependent.h"
-#include "../array.h"
-#include "../stringLiteral.h"
-#include "../format.h"
+#include "../util/basicTypes.h"
+#include "../util/typeTraits.h"
+#include "../util/typePack.h"
+#include "../util/compilerDependent.h"
+#include "../util/stringLiteral.h"
+#include "../container/array.h"
+#include "../processing/format.h"
 
 //interface
 namespace natl {
@@ -233,32 +233,32 @@ namespace natl {
         NATL_FORCE_INLINE constexpr DataType& value() noexcept { return internalData; }
         NATL_FORCE_INLINE constexpr const DataType& value() const noexcept { return internalData; }
 
-        template<typename Interger>
-            requires(IsBuiltInIntergerC<Interger>)
-        NATL_FORCE_INLINE constexpr Interger valueAsInt() const noexcept requires(IsBuiltInFloatingPoint<DataType>) {
-            return static_cast<Interger>(internalData);
+        template<typename Integer>
+            requires(IsBuiltInIntegerC<Integer>)
+        NATL_FORCE_INLINE constexpr Integer valueAsInt() const noexcept requires(IsBuiltInFloatingPoint<DataType>) {
+            return static_cast<Integer>(internalData);
         }
         template<typename Float>
             requires(IsBuiltInFloatingPoint<Float>)
-        NATL_FORCE_INLINE constexpr Float valueAsFloat() const noexcept requires(IsBuiltInInterger<DataType>) {
+        NATL_FORCE_INLINE constexpr Float valueAsFloat() const noexcept requires(IsBuiltInInteger<DataType>) {
             return static_cast<Float>(internalData);
         }
 
-        template<typename Interger>
-            requires(IsBuiltInIntergerC<Interger>)
-        NATL_FORCE_INLINE constexpr BaseUnitValue<Interger, Units...> asInt() const noexcept {
-            return BaseUnitValue<Interger, Units...>(static_cast<Interger>(internalData));
+        template<typename Integer>
+            requires(IsBuiltInIntegerC<Integer>)
+        NATL_FORCE_INLINE constexpr BaseUnitValue<Integer, Units...> asInt() const noexcept {
+            return BaseUnitValue<Integer, Units...>(static_cast<Integer>(internalData));
         }
         template<typename Float>
             requires(IsBuiltInFloatingPoint<Float>)
-        NATL_FORCE_INLINE constexpr BaseUnitValue<Float, Units...> asFloat() const noexcept requires(IsBuiltInInterger<DataType>) {
+        NATL_FORCE_INLINE constexpr BaseUnitValue<Float, Units...> asFloat() const noexcept requires(IsBuiltInInteger<DataType>) {
             return BaseUnitValue<Float, Units...>(static_cast<Float>(internalData));
         }
 
-        NATL_FORCE_INLINE constexpr BaseUnitValue<f32, Units...> asF32() const noexcept requires(IsBuiltInInterger<DataType>) {
+        NATL_FORCE_INLINE constexpr BaseUnitValue<f32, Units...> asF32() const noexcept requires(IsBuiltInInteger<DataType>) {
             return BaseUnitValue<f32, Units...>(static_cast<f32>(internalData));
         }
-        NATL_FORCE_INLINE constexpr BaseUnitValue<f64, Units...> asF64() const noexcept requires(IsBuiltInInterger<DataType>) {
+        NATL_FORCE_INLINE constexpr BaseUnitValue<f64, Units...> asF64() const noexcept requires(IsBuiltInInteger<DataType>) {
             return BaseUnitValue<f64, Units...>(static_cast<f64>(internalData));
         }
 
