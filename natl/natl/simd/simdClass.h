@@ -290,10 +290,10 @@ namespace natl::simd {
 
 		//bitwise 
 		constexpr SimdRegisterClass operator<<(const Size count) const noexcept {
-			return SimdRegisterClass(simd_impl::bitwise_shift_left_c(self().simdRegister, count.simdRegister));
+			return SimdRegisterClass(simd_impl::bitwise_shift_left_c(self().simdRegister, count));
 		}
 		constexpr SimdRegisterClass operator>>(const Size count) const noexcept {
-			return SimdRegisterClass(simd_impl::bitwise_shift_right_c(self().simdRegister, count.simdRegister));
+			return SimdRegisterClass(simd_impl::bitwise_shift_right_c(self().simdRegister, count));
 		}
 		constexpr SimdRegisterClass operator<<(const SimdRegisterClass& rhs) const noexcept {
 			return SimdRegisterClass(simd_impl::bitwise_shift_left(self().simdRegister, rhs.simdRegister));

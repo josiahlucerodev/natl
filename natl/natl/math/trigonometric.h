@@ -9,10 +9,12 @@
 //interface 
 namespace natl::math {
 	NATL_FORCE_INLINE f32 degToRad(const f32 degrees) noexcept {
-		return static_cast<f32>(degrees * pi / 180.0);
+		using namespace natl::literals;
+		return degrees * f32(pi) / 180.0_f32;
 	}
 	NATL_FORCE_INLINE f64 degToRad(const f64 degrees) noexcept {
-		return degrees * pi / 180.0;
+		using namespace natl::literals;
+		return degrees * pi / 180.0_f64;
 	}
 
 	namespace bounded {
@@ -22,10 +24,11 @@ namespace natl::math {
 		//pos appoximation -0.4053(x-0)(x-pi) or -0.4053x^2 - 1.273288x
 		//neg appoximation 0.4053(x-pi)(x-2pi) or 0.4053x^2 - 3.819863x + 8.000301
 		NATL_FORCE_INLINE constexpr f32 sinQuadBoundedF32(const f32 value) noexcept {
-			if (value < pi) {
-				return (f32(-0.4053) * value * value) + (f32(1.273288) * value);
+			using namespace natl::literals;
+			if (value < f32(pi)) {
+				return (-0.4053_f32 * value * value) + (1.273288_f32 * value);
 			} else {
-				return (f32(0.4053) * value * value) - (f32(3.819863) * value) + f32(8.000301);
+				return (0.4053_f32 * value * value) - (3.819863_f32 * value) + 8.000301_f32;
 			}
 		}
 
@@ -49,8 +52,9 @@ namespace natl::math {
 	//pos appoximation -0.4053(x-0)(x-pi) or -0.4053x^2 - 1.273288x
 	//neg appoximation 0.4053(x-pi)(x-2pi) or 0.4053x^2 - 3.819863x + 8.000301
 	NATL_FORCE_INLINE constexpr f32 sinQuadF32(const f32 value) noexcept {
+		using namespace natl::literals;
 		f32 constrainedValue = fmodF32(value, f32(twoPi));
-		if (constrainedValue < 0.0) {
+		if (constrainedValue < 0.0_f32) {
 			constrainedValue += f32(twoPi);
 		}
 		return bounded::sinQuadBoundedF32(constrainedValue);
@@ -71,7 +75,8 @@ namespace natl::math {
 	//cos quadratic appoximation
 	//only accurate for small value
 	NATL_FORCE_INLINE constexpr f32 cosQuadF32(const f32 value) noexcept {
-		return sinQuadF32(value + f32((5 * f32(pi)) / 2.0));
+		using namespace natl::literals;
+		return sinQuadF32(value + f32((5 * f32(pi)) / 2.0_f32));
 	}
 	//cos quadratic appoximation
 	//has accuracy within a tolorance of 0.1 for large values 
@@ -87,10 +92,11 @@ namespace natl::math {
 		//pos appoximation -16(x-0)(x-0.5) or -16x^2 - 8x
 		//neg appoximation -16(x-0.5)(x-1.0) or 16x^2 - 24x + 8
 		NATL_FORCE_INLINE constexpr f32 sinQuadBoundedMulFmodF32(const f32 value) noexcept {
-			if (value < 0.5) {
-				return (f32(-16.0) * value * value) + (f32(8.0) * value);
+			using namespace natl::literals;
+			if (value < 0.5_f32) {
+				return (-16.0_f32 * value * value) + (8.0_f32 * value);
 			} else {
-				return (f32(16.0) * value * value) - (f32(24.0) * value) + f32(8.0);
+				return (16.0_f32 * value * value) - (24.0_f32 * value) + 8.0_f32;
 			}
 		}
 
@@ -115,9 +121,10 @@ namespace natl::math {
 	//pos appoximation -16(x-0)(x-0.5) or -16x^2 - 8x
 	//neg appoximation -16(x-0.5)(x-1.0) or 16x^2 - 24x + 8
 	NATL_FORCE_INLINE constexpr f32 sinQuadMulFmodF32(const f32 value) noexcept {
+		using namespace natl::literals;
 		f32 constrainedValue = mulFmodNoscaleF32(value, f32(twoPi));
-		if (constrainedValue < 0.0) {
-			constrainedValue += f32(1.0);
+		if (constrainedValue < 0.0_f32) {
+			constrainedValue += 1.0_f32;
 		}
 		return bounded::sinQuadBoundedMulFmodF32(constrainedValue);
 	}
@@ -137,7 +144,8 @@ namespace natl::math {
 	//cos quadratic appoximation
 	//only accurate for small value
 	NATL_FORCE_INLINE constexpr f32 cosQuadMulFmodF32(const f32 value) noexcept {
-		return sinQuadMulFmodF32(value + f32((5 * f32(pi)) / 2.0));
+		using namespace natl::literals;
+		return sinQuadMulFmodF32(value + f32((5 * f32(pi)) / 2.0_f32));
 	}
 	//cos quadratic appoximation
 	//has accuracy within a tolorance of 0.1 for large values 
@@ -152,8 +160,9 @@ namespace natl::math {
 		//only accurate for small value
 		//half appoximation 1 - ((x^2 / 2! + 0.013) + (x^4 / 4! + 3)) or 1 - ((x^2 / 2.013) + (x^4 / 27)) 
 		NATL_FORCE_INLINE constexpr f32 cosTaySerd4pBoundedF32(const f32 value) noexcept {
-			const f32 sign = value < pi ? f32(1.0) : f32(-1.0);
-			const f32 x = value < pi ? value - f32(piOver2) : value - f32(piOver2) - f32(pi);
+			using namespace natl::literals;
+			const f32 sign = value < f32(pi) ? 1.0_f32 : -1.0_f32;
+			const f32 x = value < f32(pi) ? value - f32(piOver2) : value - f32(piOver2) - f32(pi);
 			const f32 x2 = x * x;
 			const f32 x4 = x2 * x2;
 			constexpr f32 d2MulDivisorConstant = f32(1 / 2.013);
@@ -180,8 +189,9 @@ namespace natl::math {
 	//only accurate for small value
 	//half appoximation 1 - ((x^2 / 2! + 0.013) + (x^4 / 4! + 3)) or 1 - ((x^2 / 2.013) + (x^4 / 27)) 
 	NATL_FORCE_INLINE constexpr f32 cosTaySerd4pF32(const f32 value) noexcept {
+		using namespace natl::literals;
 		f32 constrainedValue = fmodF32(value + f32(piOver2), f32(twoPi));
-		if (constrainedValue < 0.0) {
+		if (constrainedValue < 0.0_f32) {
 			constrainedValue += f32(twoPi);
 		}
 		return bounded::cosTaySerd4pBoundedF32(constrainedValue);
@@ -191,18 +201,21 @@ namespace natl::math {
 	//only accurate for small value
 	//half appoximation 1 - ((x^2 / 2! + 0.013) + (x^4 / 4! + 3)) or 1 - ((x^2 / 2.013) + (x^4 / 27)) 
 	NATL_FORCE_INLINE constexpr f64 cosTaySerd4pF64(const f64 value) noexcept {
+		using namespace natl::literals;
 		f64 constrainedValue = fmodF64(value + piOver2, twoPi);
-		if (constrainedValue < 0.0) {
+		if (constrainedValue < 0.0_f64) {
 			constrainedValue += twoPi;
 		}
 		return bounded::cosTaySerd4pBoundedF64(constrainedValue);
 	}
 
 	NATL_FORCE_INLINE constexpr f32 sinTaySerd4pF32(const f32 value) noexcept {
-		return cosTaySerd4pF32(value + f32((3 * f32(pi)) / 2.0));
+		using namespace natl::literals;
+		return cosTaySerd4pF32(value + f32((3 * f32(pi)) / 2.0_f32));
 	}
 	NATL_FORCE_INLINE constexpr f64 sinTaySerd4pF64(const f64 value) noexcept {
-		return cosTaySerd4pF64(value + f64((3 * f64(pi)) / 2.0));
+		using namespace natl::literals;
+		return cosTaySerd4pF64(value + f64((3 * f64(pi)) / 2.0_f64));
 	}
 
 
@@ -212,12 +225,13 @@ namespace natl::math {
 		//only accurate for small value
 		//appoximation x * ( (1/945 * x^4 - 1/9 x^2 + 1) / ((1/63 * x^4 - 4/9 x^2 + 1) ) )
 		NATL_FORCE_INLINE constexpr f32 tan4dpBoundedF32(const f32 value) noexcept {
+			using namespace natl::literals;
 			const f32 x = value;
 			const f32 x2 = x * x;
 			const f32 x4 = x2 * x2;
 			return f32(x * (
-				(((1.0 / 945.0) * x4) - ((1.0 / 9.0) * x2) + 1)
-				/ (((1.0 / 63.0) * x4) - ((4.0 / 9.0) * x2) + 1)));
+				((f32(1.0 / 945.0) * x4) - (f32(1.0 / 9.0) * x2) + 1)
+				/ ((f32(1.0 / 63.0) * x4) - (f32(4.0 / 9.0) * x2) + 1)));
 		}
 
 		//tan degree 4 polynomial appoximation
@@ -545,7 +559,7 @@ namespace natl::math {
 	}
 
 	NATL_FORCE_INLINE constexpr f32 atanF32(const f32 value) noexcept {
-		if (isInfinityF64(value) || isnanF64(value)) {
+		if (isInfinityF32(value) || isnanF32(value)) {
 			return value;
 		} else {
 			return basicAtanF32(value);

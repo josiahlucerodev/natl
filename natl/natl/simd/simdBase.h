@@ -44,38 +44,38 @@ namespace natl::simd {
 	//AnyRegister;
 
 	template<class Arch>
-		requires(IsSimdArch<Arch> && requires() { typename ArchSimdRegisters<Arch>::template SimdRegisterI8; })
-	using SimdRegisterI8 = typename ArchSimdRegisters<Arch>::template SimdRegisterI8;
+		requires(IsSimdArch<Arch> && requires() { typename ArchSimdRegisters<Arch>::SimdRegisterI8; })
+	using SimdRegisterI8 = typename ArchSimdRegisters<Arch>::SimdRegisterI8;
 	template<class Arch>
-		requires(IsSimdArch<Arch> && requires() { typename ArchSimdRegisters<Arch>::template SimdRegisterI16; })
-	using SimdRegisterI16 = typename ArchSimdRegisters<Arch>::template SimdRegisterI16;
+		requires(IsSimdArch<Arch> && requires() { typename ArchSimdRegisters<Arch>::SimdRegisterI16; })
+	using SimdRegisterI16 = typename ArchSimdRegisters<Arch>::SimdRegisterI16;
 	template<class Arch>
-		requires(IsSimdArch<Arch> && requires() { typename ArchSimdRegisters<Arch>::template SimdRegisterI32; })
-	using SimdRegisterI32 = typename ArchSimdRegisters<Arch>::template SimdRegisterI32;
+		requires(IsSimdArch<Arch> && requires() { typename ArchSimdRegisters<Arch>::SimdRegisterI32; })
+	using SimdRegisterI32 = typename ArchSimdRegisters<Arch>::SimdRegisterI32;
 	template<class Arch>
-		requires(IsSimdArch<Arch> && requires() { typename ArchSimdRegisters<Arch>::template SimdRegisterI64; })
-	using SimdRegisterI64 = typename ArchSimdRegisters<Arch>::template SimdRegisterI64;
+		requires(IsSimdArch<Arch> && requires() { typename ArchSimdRegisters<Arch>::SimdRegisterI64; })
+	using SimdRegisterI64 = typename ArchSimdRegisters<Arch>::SimdRegisterI64;
 	template<class Arch>
-		requires(IsSimdArch<Arch> && requires() { typename ArchSimdRegisters<Arch>::template SimdRegisterUI8; })
-	using SimdRegisterUI8 = typename ArchSimdRegisters<Arch>::template SimdRegisterUI8;
+		requires(IsSimdArch<Arch> && requires() { typename ArchSimdRegisters<Arch>::SimdRegisterUI8; })
+	using SimdRegisterUI8 = typename ArchSimdRegisters<Arch>::SimdRegisterUI8;
 	template<class Arch>
-		requires(IsSimdArch<Arch> && requires() { typename ArchSimdRegisters<Arch>::template SimdRegisterUI16; })
-	using SimdRegisterUI16 = typename ArchSimdRegisters<Arch>::template SimdRegisterUI16;
+		requires(IsSimdArch<Arch> && requires() { typename ArchSimdRegisters<Arch>::SimdRegisterUI16; })
+	using SimdRegisterUI16 = typename ArchSimdRegisters<Arch>::SimdRegisterUI16;
 	template<class Arch>
-		requires(IsSimdArch<Arch> && requires() { typename ArchSimdRegisters<Arch>::template SimdRegisterUI32; })
-	using SimdRegisterUI32 = typename ArchSimdRegisters<Arch>::template SimdRegisterUI32;
+		requires(IsSimdArch<Arch> && requires() { typename ArchSimdRegisters<Arch>::SimdRegisterUI32; })
+	using SimdRegisterUI32 = typename ArchSimdRegisters<Arch>::SimdRegisterUI32;
 	template<class Arch>
-		requires(IsSimdArch<Arch> && requires() { typename ArchSimdRegisters<Arch>::template SimdRegisterUI64; })
-	using SimdRegisterUI64 = typename ArchSimdRegisters<Arch>::template SimdRegisterUI64;
+		requires(IsSimdArch<Arch> && requires() { typename ArchSimdRegisters<Arch>::SimdRegisterUI64; })
+	using SimdRegisterUI64 = typename ArchSimdRegisters<Arch>::SimdRegisterUI64;
 	template<class Arch>
-		requires(IsSimdArch<Arch> && requires() { typename ArchSimdRegisters<Arch>::template SimdRegisterF32; })
-	using SimdRegisterF32 = typename ArchSimdRegisters<Arch>::template SimdRegisterF32;
+		requires(IsSimdArch<Arch> && requires() { typename ArchSimdRegisters<Arch>::SimdRegisterF32; })
+	using SimdRegisterF32 = typename ArchSimdRegisters<Arch>::SimdRegisterF32;
 	template<class Arch>
-		requires(IsSimdArch<Arch> && requires() { typename ArchSimdRegisters<Arch>::template SimdRegisterF64; })
-	using SimdRegisterF64 = typename ArchSimdRegisters<Arch>::template SimdRegisterF64;
+		requires(IsSimdArch<Arch> && requires() { typename ArchSimdRegisters<Arch>::SimdRegisterF64; })
+	using SimdRegisterF64 = typename ArchSimdRegisters<Arch>::SimdRegisterF64;
 	template<class Arch>
-		requires(IsSimdArch<Arch> && requires() { typename ArchSimdRegisters<Arch>::template SimdRegisterAny; })
-	using SimdRegisterAny = typename ArchSimdRegisters<Arch>::template SimdRegisterAny;
+		requires(IsSimdArch<Arch> && requires() { typename ArchSimdRegisters<Arch>::SimdRegisterAny; })
+	using SimdRegisterAny = typename ArchSimdRegisters<Arch>::SimdRegisterAny;
 
 	//ArchSimdRegistersInfo//
 	class ArchSimdRegistersInfo;
@@ -93,38 +93,38 @@ namespace natl::simd {
 	//AnyRegisterInfo
 
 	template<class Arch>
-		requires(IsSimdArch<Arch> && requires() { typename ArchSimdRegisters<Arch>::template SimdRegisterI8Info; })
-	using SimdRegisterI8Info = typename ArchSimdRegisters<Arch>::template SimdRegisterI8Info;
+		requires(IsSimdArch<Arch> && requires() { typename ArchSimdRegisters<Arch>::SimdRegisterI8Info; })
+	using SimdRegisterI8Info = typename ArchSimdRegisters<Arch>::SimdRegisterI8Info;
 	template<class Arch>
-		requires(IsSimdArch<Arch> && requires() { typename ArchSimdRegisters<Arch>::template SimdRegisterI16Info; })
-	using SimdRegisterI16Info = typename ArchSimdRegisters<Arch>::template SimdRegisterI16Info;
+		requires(IsSimdArch<Arch> && requires() { typename ArchSimdRegisters<Arch>::SimdRegisterI16Info; })
+	using SimdRegisterI16Info = typename ArchSimdRegisters<Arch>::SimdRegisterI16Info;
 	template<class Arch>
-		requires(IsSimdArch<Arch> && requires() { typename ArchSimdRegisters<Arch>::template SimdRegisterI32Info; })
-	using SimdRegisterI32Info = typename ArchSimdRegisters<Arch>::template SimdRegisterI32Info;
+		requires(IsSimdArch<Arch> && requires() { typename ArchSimdRegisters<Arch>::SimdRegisterI32Info; })
+	using SimdRegisterI32Info = typename ArchSimdRegisters<Arch>::SimdRegisterI32Info;
 	template<class Arch>
-		requires(IsSimdArch<Arch> && requires() { typename ArchSimdRegisters<Arch>::template SimdRegisterI64Info; })
-	using SimdRegisterI64Info = typename ArchSimdRegisters<Arch>::template SimdRegisterI64Info;
+		requires(IsSimdArch<Arch> && requires() { typename ArchSimdRegisters<Arch>::SimdRegisterI64Info; })
+	using SimdRegisterI64Info = typename ArchSimdRegisters<Arch>::SimdRegisterI64Info;
 	template<class Arch>
-		requires(IsSimdArch<Arch> && requires() { typename ArchSimdRegisters<Arch>::template SimdRegisterUI8Info; })
-	using SimdRegisterUI8Info = typename ArchSimdRegisters<Arch>::template SimdRegisterUI8Info;
+		requires(IsSimdArch<Arch> && requires() { typename ArchSimdRegisters<Arch>::SimdRegisterUI8Info; })
+	using SimdRegisterUI8Info = typename ArchSimdRegisters<Arch>::SimdRegisterUI8Info;
 	template<class Arch>
-		requires(IsSimdArch<Arch> && requires() { typename ArchSimdRegisters<Arch>::template SimdRegisterUI16Info; })
-	using SimdRegisterUI16Info = typename ArchSimdRegisters<Arch>::template SimdRegisterUI16Info;
+		requires(IsSimdArch<Arch> && requires() { typename ArchSimdRegisters<Arch>::SimdRegisterUI16Info; })
+	using SimdRegisterUI16Info = typename ArchSimdRegisters<Arch>::SimdRegisterUI16Info;
 	template<class Arch>
-		requires(IsSimdArch<Arch> && requires() { typename ArchSimdRegisters<Arch>::template SimdRegisterUI32Info; })
-	using SimdRegisterUI32Info = typename ArchSimdRegisters<Arch>::template SimdRegisterUI32Info;
+		requires(IsSimdArch<Arch> && requires() { typename ArchSimdRegisters<Arch>::SimdRegisterUI32Info; })
+	using SimdRegisterUI32Info = typename ArchSimdRegisters<Arch>::SimdRegisterUI32Info;
 	template<class Arch>
-		requires(IsSimdArch<Arch> && requires() { typename ArchSimdRegisters<Arch>::template SimdRegisterUI64Info; })
-	using SimdRegisterUI64Info = typename ArchSimdRegisters<Arch>::template SimdRegisterUI64Info;
+		requires(IsSimdArch<Arch> && requires() { typename ArchSimdRegisters<Arch>::SimdRegisterUI64Info; })
+	using SimdRegisterUI64Info = typename ArchSimdRegisters<Arch>::SimdRegisterUI64Info;
 	template<class Arch>
-		requires(IsSimdArch<Arch> && requires() { typename ArchSimdRegisters<Arch>::template SimdRegisterF32Info; })
-	using SimdRegisterF32Info = typename ArchSimdRegisters<Arch>::template SimdRegisterF32Info;
+		requires(IsSimdArch<Arch> && requires() { typename ArchSimdRegisters<Arch>::SimdRegisterF32Info; })
+	using SimdRegisterF32Info = typename ArchSimdRegisters<Arch>::SimdRegisterF32Info;
 	template<class Arch>
-		requires(IsSimdArch<Arch> && requires() { typename ArchSimdRegisters<Arch>::template SimdRegisterF64Info; })
-	using SimdRegisterF64Info = typename ArchSimdRegisters<Arch>::template SimdRegisterF64Info;
+		requires(IsSimdArch<Arch> && requires() { typename ArchSimdRegisters<Arch>::SimdRegisterF64Info; })
+	using SimdRegisterF64Info = typename ArchSimdRegisters<Arch>::SimdRegisterF64Info;
 	template<class Arch>
-		requires(IsSimdArch<Arch> && requires() { typename ArchSimdRegisters<Arch>::template SimdRegisterAnyInfo; })
-	using SimdRegisterAnyInfo = typename ArchSimdRegisters<Arch>::template SimdRegisterAnyInfo;
+		requires(IsSimdArch<Arch> && requires() { typename ArchSimdRegisters<Arch>::SimdRegisterAnyInfo; })
+	using SimdRegisterAnyInfo = typename ArchSimdRegisters<Arch>::SimdRegisterAnyInfo;
 
 	//simd mask op 
 	template<class Arch>
@@ -135,69 +135,69 @@ namespace natl::simd {
 	class ArchSimdMask;
 
 	template<class Arch>
-		requires(IsSimdArch<Arch> && requires() { typename ArchSimdMask<Arch>::template SimdMaskI8; })
-	using SimdMaskI8 = typename ArchSimdMask<Arch>::template SimdMaskI8;
+		requires(IsSimdArch<Arch> && requires() { typename ArchSimdMask<Arch>::SimdMaskI8; })
+	using SimdMaskI8 = typename ArchSimdMask<Arch>::SimdMaskI8;
 	template<class Arch>
-		requires(IsSimdArch<Arch> && requires() { typename ArchSimdMask<Arch>::template SimdMaskI16; })
-	using SimdMaskI16 = typename ArchSimdMask<Arch>::template SimdMaskI16;
+		requires(IsSimdArch<Arch> && requires() { typename ArchSimdMask<Arch>::SimdMaskI16; })
+	using SimdMaskI16 = typename ArchSimdMask<Arch>::SimdMaskI16;
 	template<class Arch>
-		requires(IsSimdArch<Arch> && requires() { typename ArchSimdMask<Arch>::template SimdMaskI32; })
-	using SimdMaskI32 = typename ArchSimdMask<Arch>::template SimdMaskI32;
+		requires(IsSimdArch<Arch> && requires() { typename ArchSimdMask<Arch>::SimdMaskI32; })
+	using SimdMaskI32 = typename ArchSimdMask<Arch>::SimdMaskI32;
 	template<class Arch>
-		requires(IsSimdArch<Arch> && requires() { typename ArchSimdMask<Arch>::template SimdMaskI64; })
-	using SimdMaskI64 = typename ArchSimdMask<Arch>::template SimdMaskI64;
+		requires(IsSimdArch<Arch> && requires() { typename ArchSimdMask<Arch>::SimdMaskI64; })
+	using SimdMaskI64 = typename ArchSimdMask<Arch>::SimdMaskI64;
 	template<class Arch>
-		requires(IsSimdArch<Arch> && requires() { typename ArchSimdMask<Arch>::template SimdMaskUI8; })
-	using SimdMaskUI8 = typename ArchSimdMask<Arch>::template SimdMaskUI8;
+		requires(IsSimdArch<Arch> && requires() { typename ArchSimdMask<Arch>::SimdMaskUI8; })
+	using SimdMaskUI8 = typename ArchSimdMask<Arch>::SimdMaskUI8;
 	template<class Arch>
-		requires(IsSimdArch<Arch> && requires() { typename ArchSimdMask<Arch>::template SimdMaskUI16; })
-	using SimdMaskUI16 = typename ArchSimdMask<Arch>::template SimdMaskUI16;
+		requires(IsSimdArch<Arch> && requires() { typename ArchSimdMask<Arch>::SimdMaskUI16; })
+	using SimdMaskUI16 = typename ArchSimdMask<Arch>::SimdMaskUI16;
 	template<class Arch>
-		requires(IsSimdArch<Arch> && requires() { typename ArchSimdMask<Arch>::template SimdMaskUI32; })
-	using SimdMaskUI32 = typename ArchSimdMask<Arch>::template SimdMaskUI32;
+		requires(IsSimdArch<Arch> && requires() { typename ArchSimdMask<Arch>::SimdMaskUI32; })
+	using SimdMaskUI32 = typename ArchSimdMask<Arch>::SimdMaskUI32;
 	template<class Arch>
-		requires(IsSimdArch<Arch> && requires() { typename ArchSimdMask<Arch>::template SimdMaskUI64; })
-	using SimdMaskUI64 = typename ArchSimdMask<Arch>::template SimdMaskUI64;
+		requires(IsSimdArch<Arch> && requires() { typename ArchSimdMask<Arch>::SimdMaskUI64; })
+	using SimdMaskUI64 = typename ArchSimdMask<Arch>::SimdMaskUI64;
 	template<class Arch>
-		requires(IsSimdArch<Arch> && requires() { typename ArchSimdMask<Arch>::template SimdMaskF32; })
-	using SimdMaskF32 = typename ArchSimdMask<Arch>::template SimdMaskF32;
+		requires(IsSimdArch<Arch> && requires() { typename ArchSimdMask<Arch>::SimdMaskF32; })
+	using SimdMaskF32 = typename ArchSimdMask<Arch>::SimdMaskF32;
 	template<class Arch>
-		requires(IsSimdArch<Arch> && requires() { typename ArchSimdMask<Arch>::template SimdMaskF64; })
-	using SimdMaskF64 = typename ArchSimdMask<Arch>::template SimdMaskF64;
+		requires(IsSimdArch<Arch> && requires() { typename ArchSimdMask<Arch>::SimdMaskF64; })
+	using SimdMaskF64 = typename ArchSimdMask<Arch>::SimdMaskF64;
 
 	template<class Arch>
 	class ArchSimdMaskInfo;
 
 	template<class Arch>
-		requires(IsSimdArch<Arch> && requires() { typename ArchSimdMaskInfo<Arch>::template SimdMaskI8Info; })
-	using SimdMaskI8Info = typename ArchSimdMaskInfo<Arch>::template SimdMaskI8Info;
+		requires(IsSimdArch<Arch> && requires() { typename ArchSimdMaskInfo<Arch>::SimdMaskI8Info; })
+	using SimdMaskI8Info = typename ArchSimdMaskInfo<Arch>::SimdMaskI8Info;
 	template<class Arch>
-		requires(IsSimdArch<Arch> && requires() { typename ArchSimdMaskInfo<Arch>::template SimdMaskI16Info; })
-	using SimdMaskI16Info = typename ArchSimdMaskInfo<Arch>::template SimdMaskI16Info;
+		requires(IsSimdArch<Arch> && requires() { typename ArchSimdMaskInfo<Arch>::SimdMaskI16Info; })
+	using SimdMaskI16Info = typename ArchSimdMaskInfo<Arch>::SimdMaskI16Info;
 	template<class Arch>
-		requires(IsSimdArch<Arch> && requires() { typename ArchSimdMaskInfo<Arch>::template SimdMaskI32Info; })
-	using SimdMaskI32Info = typename ArchSimdMaskInfo<Arch>::template SimdMaskI32Info;
+		requires(IsSimdArch<Arch> && requires() { typename ArchSimdMaskInfo<Arch>::SimdMaskI32Info; })
+	using SimdMaskI32Info = typename ArchSimdMaskInfo<Arch>::SimdMaskI32Info;
 	template<class Arch>
-		requires(IsSimdArch<Arch> && requires() { typename ArchSimdMaskInfo<Arch>::template SimdMaskI64Info; })
-	using SimdMaskI64Info = typename ArchSimdMaskInfo<Arch>::template SimdMaskI64Info;
+		requires(IsSimdArch<Arch> && requires() { typename ArchSimdMaskInfo<Arch>::SimdMaskI64Info; })
+	using SimdMaskI64Info = typename ArchSimdMaskInfo<Arch>::SimdMaskI64Info;
 	template<class Arch>
-		requires(IsSimdArch<Arch> && requires() { typename ArchSimdMaskInfo<Arch>::template SimdMaskUI8Info; })
-	using SimdMaskUI8Info = typename ArchSimdMaskInfo<Arch>::template SimdMaskUI8Info;
+		requires(IsSimdArch<Arch> && requires() { typename ArchSimdMaskInfo<Arch>::SimdMaskUI8Info; })
+	using SimdMaskUI8Info = typename ArchSimdMaskInfo<Arch>::SimdMaskUI8Info;
 	template<class Arch>
-		requires(IsSimdArch<Arch> && requires() { typename ArchSimdMaskInfo<Arch>::template SimdMaskUI16Info; })
-	using SimdMaskUI16Info = typename ArchSimdMaskInfo<Arch>::template SimdMaskUI16Info;
+		requires(IsSimdArch<Arch> && requires() { typename ArchSimdMaskInfo<Arch>::SimdMaskUI16Info; })
+	using SimdMaskUI16Info = typename ArchSimdMaskInfo<Arch>::SimdMaskUI16Info;
 	template<class Arch>
-		requires(IsSimdArch<Arch> && requires() { typename ArchSimdMaskInfo<Arch>::template SimdMaskUI32Info; })
-	using SimdMaskUI32Info = typename ArchSimdMaskInfo<Arch>::template SimdMaskUI32Info;
+		requires(IsSimdArch<Arch> && requires() { typename ArchSimdMaskInfo<Arch>::SimdMaskUI32Info; })
+	using SimdMaskUI32Info = typename ArchSimdMaskInfo<Arch>::SimdMaskUI32Info;
 	template<class Arch>
-		requires(IsSimdArch<Arch> && requires() { typename ArchSimdMaskInfo<Arch>::template SimdMaskUI64Info; })
-	using SimdMaskUI64Info = typename ArchSimdMaskInfo<Arch>::template SimdMaskUI64Info;
+		requires(IsSimdArch<Arch> && requires() { typename ArchSimdMaskInfo<Arch>::SimdMaskUI64Info; })
+	using SimdMaskUI64Info = typename ArchSimdMaskInfo<Arch>::SimdMaskUI64Info;
 	template<class Arch>
-		requires(IsSimdArch<Arch> && requires() { typename ArchSimdMaskInfo<Arch>::template SimdMaskF32Info; })
-	using SimdMaskF32Info = typename ArchSimdMaskInfo<Arch>::template SimdMaskF32Info;
+		requires(IsSimdArch<Arch> && requires() { typename ArchSimdMaskInfo<Arch>::SimdMaskF32Info; })
+	using SimdMaskF32Info = typename ArchSimdMaskInfo<Arch>::SimdMaskF32Info;
 	template<class Arch>
-		requires(IsSimdArch<Arch> && requires() { typename ArchSimdMaskInfo<Arch>::template SimdMaskF64Info; })
-	using SimdMaskF64Info = typename ArchSimdMaskInfo<Arch>::template SimdMaskF64Info;
+		requires(IsSimdArch<Arch> && requires() { typename ArchSimdMaskInfo<Arch>::SimdMaskF64Info; })
+	using SimdMaskF64Info = typename ArchSimdMaskInfo<Arch>::SimdMaskF64Info;
 
 	namespace impl {
 		template<class DataType, Size RegisterSize>
@@ -691,64 +691,64 @@ namespace natl::simd {
 	};
 
 	template<class Arch>
-		requires(IsSimdArch<Arch>&& requires() { typename ArchSimdMask<Arch>::template SimdMaskI8; })
-	using SimdCMaskI8 = typename ArchSimdCMask<Arch>::template SimdCMaskI8;
+		requires(IsSimdArch<Arch>&& requires() { typename ArchSimdMask<Arch>::SimdMaskI8; })
+	using SimdCMaskI8 = typename ArchSimdCMask<Arch>::SimdCMaskI8;
 	template<class Arch>
-		requires(IsSimdArch<Arch>&& requires() { typename ArchSimdMask<Arch>::template SimdMaskI16; })
-	using SimdCMaskI16 = typename ArchSimdCMask<Arch>::template SimdCMaskI16;
+		requires(IsSimdArch<Arch>&& requires() { typename ArchSimdMask<Arch>::SimdMaskI16; })
+	using SimdCMaskI16 = typename ArchSimdCMask<Arch>::SimdCMaskI16;
 	template<class Arch>
-		requires(IsSimdArch<Arch>&& requires() { typename ArchSimdMask<Arch>::template SimdMaskI32; })
-	using SimdCMaskI32 = typename ArchSimdCMask<Arch>::template SimdCMaskI32;
+		requires(IsSimdArch<Arch>&& requires() { typename ArchSimdMask<Arch>::SimdMaskI32; })
+	using SimdCMaskI32 = typename ArchSimdCMask<Arch>::SimdCMaskI32;
 	template<class Arch>
-		requires(IsSimdArch<Arch>&& requires() { typename ArchSimdMask<Arch>::template SimdMaskI64; })
-	using SimdCMaskI64 = typename ArchSimdCMask<Arch>::template SimdCMaskI64;
+		requires(IsSimdArch<Arch>&& requires() { typename ArchSimdMask<Arch>::SimdMaskI64; })
+	using SimdCMaskI64 = typename ArchSimdCMask<Arch>::SimdCMaskI64;
 	template<class Arch>
-		requires(IsSimdArch<Arch>&& requires() { typename ArchSimdMask<Arch>::template SimdMaskUI8; })
-	using SimdCMaskUI8 = typename ArchSimdCMask<Arch>::template SimdCMaskUI8;
+		requires(IsSimdArch<Arch>&& requires() { typename ArchSimdMask<Arch>::SimdMaskUI8; })
+	using SimdCMaskUI8 = typename ArchSimdCMask<Arch>::SimdCMaskUI8;
 	template<class Arch>
-		requires(IsSimdArch<Arch>&& requires() { typename ArchSimdMask<Arch>::template SimdMaskUI16; })
-	using SimdCMaskUI16 = typename ArchSimdCMask<Arch>::template SimdCMaskUI16;
+		requires(IsSimdArch<Arch>&& requires() { typename ArchSimdMask<Arch>::SimdMaskUI16; })
+	using SimdCMaskUI16 = typename ArchSimdCMask<Arch>::SimdCMaskUI16;
 	template<class Arch>
-		requires(IsSimdArch<Arch>&& requires() { typename ArchSimdMask<Arch>::template SimdMaskUI32; })
-	using SimdCMaskUI32 = typename ArchSimdCMask<Arch>::template SimdCMaskUI32;
+		requires(IsSimdArch<Arch>&& requires() { typename ArchSimdMask<Arch>::SimdMaskUI32; })
+	using SimdCMaskUI32 = typename ArchSimdCMask<Arch>::SimdCMaskUI32;
 	template<class Arch>
-		requires(IsSimdArch<Arch>&& requires() { typename ArchSimdMask<Arch>::template SimdMaskUI64; })
-	using SimdCMaskUI64 = typename ArchSimdCMask<Arch>::template SimdCMaskUI64;
+		requires(IsSimdArch<Arch>&& requires() { typename ArchSimdMask<Arch>::SimdMaskUI64; })
+	using SimdCMaskUI64 = typename ArchSimdCMask<Arch>::SimdCMaskUI64;
 	template<class Arch>
-		requires(IsSimdArch<Arch>&& requires() { typename ArchSimdMask<Arch>::template SimdMaskF32; })
-	using SimdCMaskF32 = typename ArchSimdCMask<Arch>::template SimdCMaskF32;
+		requires(IsSimdArch<Arch>&& requires() { typename ArchSimdMask<Arch>::SimdMaskF32; })
+	using SimdCMaskF32 = typename ArchSimdCMask<Arch>::SimdCMaskF32;
 	template<class Arch>
-		requires(IsSimdArch<Arch>&& requires() { typename ArchSimdMask<Arch>::template SimdMaskF64; })
-	using SimdCMaskF64 = typename ArchSimdCMask<Arch>::template SimdCMaskF64;
+		requires(IsSimdArch<Arch>&& requires() { typename ArchSimdMask<Arch>::SimdMaskF64; })
+	using SimdCMaskF64 = typename ArchSimdCMask<Arch>::SimdCMaskF64;
 
 	template<class Arch>
-		requires(IsSimdArch<Arch>&& requires() { typename ArchSimdMaskInfo<Arch>::template SimdMaskI8Info; })
-	using SimdCMaskI8Info = typename ArchSimdCMaskInfo<Arch>::template SimdCMaskI8Info;
+		requires(IsSimdArch<Arch>&& requires() { typename ArchSimdMaskInfo<Arch>::SimdMaskI8Info; })
+	using SimdCMaskI8Info = typename ArchSimdCMaskInfo<Arch>::SimdCMaskI8Info;
 	template<class Arch>
-		requires(IsSimdArch<Arch>&& requires() { typename ArchSimdMaskInfo<Arch>::template SimdMaskI16Info; })
-	using SimdCMaskI16Info = typename ArchSimdCMaskInfo<Arch>::template SimdCMaskI16Info;
+		requires(IsSimdArch<Arch>&& requires() { typename ArchSimdMaskInfo<Arch>::SimdMaskI16Info; })
+	using SimdCMaskI16Info = typename ArchSimdCMaskInfo<Arch>::SimdCMaskI16Info;
 	template<class Arch>
-		requires(IsSimdArch<Arch>&& requires() { typename ArchSimdMaskInfo<Arch>::template SimdMaskI32Info; })
-	using SimdCMaskI32Info = typename ArchSimdCMaskInfo<Arch>::template SimdCMaskI32Info;
+		requires(IsSimdArch<Arch>&& requires() { typename ArchSimdMaskInfo<Arch>::SimdMaskI32Info; })
+	using SimdCMaskI32Info = typename ArchSimdCMaskInfo<Arch>::SimdCMaskI32Info;
 	template<class Arch>
-		requires(IsSimdArch<Arch>&& requires() { typename ArchSimdMaskInfo<Arch>::template SimdMaskI64Info; })
-	using SimdCMaskI64Info = typename ArchSimdCMaskInfo<Arch>::template SimdCMaskI64Info;
+		requires(IsSimdArch<Arch>&& requires() { typename ArchSimdMaskInfo<Arch>::SimdMaskI64Info; })
+	using SimdCMaskI64Info = typename ArchSimdCMaskInfo<Arch>::SimdCMaskI64Info;
 	template<class Arch>
-		requires(IsSimdArch<Arch>&& requires() { typename ArchSimdMaskInfo<Arch>::template SimdMaskUI8Info; })
-	using SimdCMaskUI8Info = typename ArchSimdCMaskInfo<Arch>::template SimdCMaskUI8Info;
+		requires(IsSimdArch<Arch>&& requires() { typename ArchSimdMaskInfo<Arch>::SimdMaskUI8Info; })
+	using SimdCMaskUI8Info = typename ArchSimdCMaskInfo<Arch>::SimdCMaskUI8Info;
 	template<class Arch>
-		requires(IsSimdArch<Arch>&& requires() { typename ArchSimdMaskInfo<Arch>::template SimdMaskUI16Info; })
-	using SimdCMaskUI16Info = typename ArchSimdCMaskInfo<Arch>::template SimdCMaskUI16Info;
+		requires(IsSimdArch<Arch>&& requires() { typename ArchSimdMaskInfo<Arch>::SimdMaskUI16Info; })
+	using SimdCMaskUI16Info = typename ArchSimdCMaskInfo<Arch>::SimdCMaskUI16Info;
 	template<class Arch>
-		requires(IsSimdArch<Arch>&& requires() { typename ArchSimdMaskInfo<Arch>::template SimdMaskUI32Info; })
-	using SimdCMaskUI32Info = typename ArchSimdCMaskInfo<Arch>::template SimdCMaskUI32Info;
+		requires(IsSimdArch<Arch>&& requires() { typename ArchSimdMaskInfo<Arch>::SimdMaskUI32Info; })
+	using SimdCMaskUI32Info = typename ArchSimdCMaskInfo<Arch>::SimdCMaskUI32Info;
 	template<class Arch>
-		requires(IsSimdArch<Arch>&& requires() { typename ArchSimdMaskInfo<Arch>::template SimdMaskUI64Info; })
-	using SimdCMaskUI64Info = typename ArchSimdCMaskInfo<Arch>::template SimdCMaskUI64Info;
+		requires(IsSimdArch<Arch>&& requires() { typename ArchSimdMaskInfo<Arch>::SimdMaskUI64Info; })
+	using SimdCMaskUI64Info = typename ArchSimdCMaskInfo<Arch>::SimdCMaskUI64Info;
 	template<class Arch>
-		requires(IsSimdArch<Arch>&& requires() { typename ArchSimdMaskInfo<Arch>::template SimdMaskF32Info; })
-	using SimdCMaskF32Info = typename ArchSimdCMaskInfo<Arch>::template SimdCMaskF32Info;
+		requires(IsSimdArch<Arch>&& requires() { typename ArchSimdMaskInfo<Arch>::SimdMaskF32Info; })
+	using SimdCMaskF32Info = typename ArchSimdCMaskInfo<Arch>::SimdCMaskF32Info;
 	template<class Arch>
-		requires(IsSimdArch<Arch>&& requires() { typename ArchSimdMaskInfo<Arch>::template SimdMaskF64Info; })
-	using SimdCMaskF64Info = typename ArchSimdCMaskInfo<Arch>::template SimdCMaskF64Info;
+		requires(IsSimdArch<Arch>&& requires() { typename ArchSimdMaskInfo<Arch>::SimdMaskF64Info; })
+	using SimdCMaskF64Info = typename ArchSimdCMaskInfo<Arch>::SimdCMaskF64Info;
 }

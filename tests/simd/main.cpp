@@ -30,12 +30,10 @@ natl::Bool tests() noexcept {
 
 int main() noexcept {
 	{
-		using simd_arch = nasimd::StandardArch<256>;
-
 		nasimd::SimdRegisterClass<natl::i8, simd_arch> simd_i8(1);
 		++simd_i8;
 
-		nasimd::SimdRegisterClass<natl::i32, simd_arch> type{};
+		[[maybe_unused]] nasimd::SimdRegisterClass<natl::i32, simd_arch> type{};
 		nasimd::SimdRegisterI32<simd_arch> r1_i8{};
 		nasimd::SimdRegisterI32<simd_arch> r2_i8{};
 		r1_i8 = nasimd::set_i32<simd_arch>(4);

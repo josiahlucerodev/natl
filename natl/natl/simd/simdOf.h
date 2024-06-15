@@ -9,7 +9,7 @@ namespace natl::simd {
 	struct SimdOfType;
 
 	template <class Arch>
-	class SimdOfType<i8, Arch> {
+	struct SimdOfType<i8, Arch> {
 		public:
 		using value_type = i8;
 
@@ -226,7 +226,7 @@ namespace natl::simd {
 	};
 
 	template <class Arch>
-	class SimdOfType<i16, Arch> {
+	struct SimdOfType<i16, Arch> {
 	public:
 		using value_type = i16;
 
@@ -443,7 +443,7 @@ namespace natl::simd {
 	};
 
 	template <class Arch>
-	class SimdOfType<i32, Arch> {
+	struct SimdOfType<i32, Arch> {
 	public:
 		using value_type = i32;
 
@@ -672,7 +672,7 @@ namespace natl::simd {
 
 
 	template <class Arch>
-	class SimdOfType<i64, Arch> {
+	struct SimdOfType<i64, Arch> {
 	public:
 		using value_type = i64;
 
@@ -900,7 +900,7 @@ namespace natl::simd {
 	};
 
 	template <class Arch>
-	class SimdOfType<ui8, Arch> {
+	struct SimdOfType<ui8, Arch> {
 	public:
 		using value_type = ui8;
 
@@ -1111,7 +1111,7 @@ namespace natl::simd {
 	};
 
 	template <class Arch>
-	class SimdOfType<ui16, Arch> {
+	struct SimdOfType<ui16, Arch> {
 	public:
 		using value_type = ui16;
 
@@ -1322,7 +1322,7 @@ namespace natl::simd {
 	};
 
 	template <class Arch>
-	class SimdOfType<ui32, Arch> {
+	struct SimdOfType<ui32, Arch> {
 	public:
 		using value_type = ui32;
 
@@ -1545,7 +1545,7 @@ namespace natl::simd {
 	};
 
 	template <class Arch>
-	class SimdOfType<ui64, Arch> {
+	struct SimdOfType<ui64, Arch> {
 	public:
 		using value_type = ui64;
 
@@ -1767,7 +1767,7 @@ namespace natl::simd {
 	};
 
 	template <class Arch>
-	class SimdOfType<f32, Arch> {
+	struct SimdOfType<f32, Arch> {
 	public:
 		using value_type = f32;
 
@@ -2084,7 +2084,7 @@ namespace natl::simd {
 	};
 
 	template <class Arch>
-	class SimdOfType<f64, Arch> {
+	struct SimdOfType<f64, Arch> {
 	public:
 		using value_type = f64;
 
@@ -2400,22 +2400,22 @@ namespace natl::simd {
 	};
 
 	template<typename DataType, class Arch>
-	using SimdRegister = SimdOfType<DataType, Arch>::template simd_register;
+	using SimdRegister = SimdOfType<DataType, Arch>::simd_register;
 	template<typename DataType, class Arch>
-	using SimdRegisterInfo = SimdOfType<DataType, Arch>::template simd_register_info;
+	using SimdRegisterInfo = SimdOfType<DataType, Arch>::simd_register_info;
 	template<typename DataType, class Arch>
-	using SimdMask = SimdOfType<DataType, Arch>::template simd_mmask;
+	using SimdMask = SimdOfType<DataType, Arch>::simd_mmask;
 	template<typename DataType, class Arch>
-	using SimdMaskInfo = SimdOfType<DataType, Arch>::template simd_mask_info;
+	using SimdMaskInfo = SimdOfType<DataType, Arch>::simd_mask_info;
 	template<typename DataType, class Arch>
-	using SimdCMask = SimdOfType<DataType, Arch>::template simd_cmask;
+	using SimdCMask = SimdOfType<DataType, Arch>::simd_cmask;
 	template<typename DataType, class Arch>
-	using SimdCMaskInfo = SimdOfType<DataType, Arch>::template simd_cmask_info;
+	using SimdCMaskInfo = SimdOfType<DataType, Arch>::simd_cmask_info;
 
 	template<typename DataType, class Arch>
-	using SimdRegisterBit = SimdOfType<DataType, Arch>::template simd_register_bit;
+	using SimdRegisterBit = SimdOfType<DataType, Arch>::simd_register_bit;
 	template<typename DataType, class Arch>
-	using SimdRegisterBitInfo = SimdOfType<DataType, Arch>::template simd_register_info_bit;
+	using SimdRegisterBitInfo = SimdOfType<DataType, Arch>::simd_register_info_bit;
 
 	template<typename DataType, class Arch>
 	constexpr inline static SimdRegister<DataType, Arch>(&simd_add) (SimdRegister<DataType, Arch>, SimdRegister<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::add;

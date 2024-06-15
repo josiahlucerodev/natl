@@ -10,7 +10,7 @@ template<typename NumericType, natl::TemplateStringLiteral IntegerNameTemplate>
 constexpr natl::Bool numericPopcountTests() noexcept {
 	constexpr auto IntegerName = natl::StringLiteral<IntegerNameTemplate>::toStringView();
 	natl::Test test(NATL_TEST_FROM, natl::String(IntegerName) + " popcount", natl::TestType::leaf);
-	NATL_TEST_ASSERT(natl::popcount(NumericType(0)) == NumericType(0), "popcount 0");
+	NATL_TEST_ASSERT(natl::popcount(NumericType(0)) == 0, "popcount 0");
 
 	if constexpr (natl::IsBuiltInUnsignedIntegerC<NumericType>) {
 		NATL_TEST_ASSERT(natl::popcount(natl::Limits<NumericType>::max()) == natl::TypeBitSize<NumericType>, "popcount max");

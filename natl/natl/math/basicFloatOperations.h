@@ -5,6 +5,7 @@
 #include "../util/compilerDependent.h"
 #include "../util/limits.h"
 #include "../util/bits.h"
+#include "../util/algorithm.h"
 #include "constants.h"
 
 //interface 
@@ -21,10 +22,10 @@ namespace natl::math {
 
 	//getExponent
 	NATL_FORCE_INLINE constexpr i32 getExponentF32(const f32 value) noexcept {
-		return getExponentBitsF32(value) - Limits<f32>::exponentBias();
+		return static_cast<i32>(getExponentBitsF32(value) - static_cast<ui32>(Limits<f32>::exponentBias()));
 	}
 	NATL_FORCE_INLINE constexpr i64 getExponentF64(const f64 value) noexcept {
-		return getExponentBitsF64(value) - Limits<f64>::exponentBias();
+		return static_cast<i64>(getExponentBitsF64(value) - static_cast<ui64>(Limits<f64>::exponentBias()));
 	}
 
 	//getMantissaWithExponent
@@ -88,14 +89,14 @@ namespace natl::math {
 	}
 
 	//isnan 
-	NATL_FORCE_INLINE constexpr f32 isnanF32(const f32 value) noexcept {
+	NATL_FORCE_INLINE constexpr Bool isnanF32(const f32 value) noexcept {
 		using namespace natl::literals;
 		const ui32 bits = bitCast<ui32, f32>(value);
 		const ui32 exponent = getExponentBitsF32(value);
 		const ui32 fraction = bits & 0x7FFFFF_ui32;
 		return exponent == 0xFF_ui32 && fraction != 0_ui32;
 	}
-	NATL_FORCE_INLINE constexpr f64 isnanF64(const f64 value) noexcept {
+	NATL_FORCE_INLINE constexpr Bool isnanF64(const f64 value) noexcept {
 		using namespace natl::literals;
 		const ui64 bits = bitCast<ui64, f64>(value);
 		const ui64 exponent = getExponentBitsF64(value);
@@ -105,7 +106,7 @@ namespace natl::math {
 
 	template<typename FloatType>
 		requires(IsBuiltInFloatingPointC<Decay<FloatType>>)
-	NATL_FORCE_INLINE constexpr FloatType isnan(const FloatType value) noexcept {
+	NATL_FORCE_INLINE constexpr Bool isnan(const FloatType value) noexcept {
 		if constexpr (sizeof(FloatType) == sizeof(f32)) {
 			return isnanF32(value);
 		} else {
@@ -114,13 +115,13 @@ namespace natl::math {
 	}
 
 	//is infinity
-	NATL_FORCE_INLINE constexpr f32 isInfinityF32(const f32 value) noexcept {
+	NATL_FORCE_INLINE constexpr Bool isInfinityF32(const f32 value) noexcept {
 		using namespace natl::literals;
 		const ui32 bits = bitCast<ui32, f32>(value);
 		const ui32 exponent = getExponentBitsF32(value);
 		return exponent == 0xFF_ui64 && ((bits & 0x7FFFFF_ui64) == 0);
 	}
-	NATL_FORCE_INLINE constexpr f64 isInfinityF64(const f64 value) noexcept {
+	NATL_FORCE_INLINE constexpr Bool isInfinityF64(const f64 value) noexcept {
 		using namespace natl::literals;
 		const ui64 bits = bitCast<ui64, f64>(value);
 		const ui64 exponent = getExponentBitsF64(value);
@@ -129,7 +130,7 @@ namespace natl::math {
 
 	template<typename FloatType>
 		requires(IsBuiltInFloatingPointC<Decay<FloatType>>)
-	NATL_FORCE_INLINE constexpr FloatType isInfinity(const FloatType value) noexcept {
+	NATL_FORCE_INLINE constexpr Bool isInfinity(const FloatType value) noexcept {
 		if constexpr (sizeof(FloatType) == sizeof(f32)) {
 			return isInfinityF32(value);
 		} else {
@@ -160,29 +161,29 @@ namespace natl::math {
 	//is roughtly equal
 	template<typename FloatType>
 		requires(IsBuiltInFloatingPointC<FloatType>)
-	NATL_FORCE_INLINE constexpr FloatType isRelativelyClose(const FloatType lhs, FloatType rhs, const FloatType relativeTolorance) noexcept {
+	NATL_FORCE_INLINE constexpr Bool isRelativelyClose(const FloatType lhs, FloatType rhs, const FloatType relativeTolorance) noexcept {
 		const FloatType larger = max<FloatType>(fabs<FloatType>(lhs), fabs<FloatType>(rhs));
 		return (fabs<FloatType>(lhs - rhs) / larger) <= relativeTolorance;
 	}
 
 	//is relatively close
-	NATL_FORCE_INLINE constexpr natl::Bool isRelativelyCloseF32(const f32 lhs, const f32& rhs, const f32 relativeTolorance) noexcept {
+	NATL_FORCE_INLINE constexpr Bool isRelativelyCloseF32(const f32 lhs, const f32& rhs, const f32 relativeTolorance) noexcept {
 		return isRelativelyClose<f32>(lhs, rhs, relativeTolorance);
 	}
-	NATL_FORCE_INLINE constexpr natl::Bool isRelativelyCloseF64(const f64 lhs, const f64& rhs, const f64 relativeTolorance) noexcept {
+	NATL_FORCE_INLINE constexpr Bool isRelativelyCloseF64(const f64 lhs, const f64& rhs, const f64 relativeTolorance) noexcept {
 		return isRelativelyClose<f64>(lhs, rhs, relativeTolorance);
 	}
 
 	//is roughtly equal
 	template<typename FloatType>
 		requires(IsBuiltInFloatingPointC<FloatType>)
-	NATL_FORCE_INLINE constexpr FloatType isRoughtlyEqual(const FloatType lhs, const FloatType rhs, const FloatType tolerance) noexcept {
+	NATL_FORCE_INLINE constexpr Bool isRoughtlyEqual(const FloatType lhs, const FloatType rhs, const FloatType tolerance) noexcept {
 		return fabs<FloatType>(lhs - rhs) <= tolerance || lhs == rhs;
 	}
-	NATL_FORCE_INLINE constexpr f32 isRoughtlyEqualF32(const f32 lhs, const f32 rhs, const f32 tolorance) noexcept {
+	NATL_FORCE_INLINE constexpr Bool isRoughtlyEqualF32(const f32 lhs, const f32 rhs, const f32 tolorance) noexcept {
 		return isRoughtlyEqual<f32>(lhs, rhs, tolorance);
 	}
-	NATL_FORCE_INLINE constexpr f64 isRoughtlyEqualF64(const f64 lhs, const f64 rhs, const f64 tolorance) noexcept {
+	NATL_FORCE_INLINE constexpr Bool isRoughtlyEqualF64(const f64 lhs, const f64 rhs, const f64 tolorance) noexcept {
 		return isRoughtlyEqual<f64>(lhs, rhs, tolorance);
 	}
 
@@ -409,13 +410,14 @@ namespace natl::math {
 
 	//fmod 
 	NATL_FORCE_INLINE constexpr f32 fmodF32(const f32 dividend, const f32 divisor) noexcept {
-		if (divisor == 0.0) {
+		using namespace natl::literals;
+		if (divisor == 0.0_f32) {
 			return Limits<f32>::quietNaN();
 		}
 		if (isInfinityF32(dividend) || isInfinityF32(divisor)) {
 			return Limits<f32>::quietNaN();
 		}
-		if (dividend == 0.0) {
+		if (dividend == 0.0_f32) {
 			return dividend;
 		}
 		const f32 absDividend = fabsF32(dividend);

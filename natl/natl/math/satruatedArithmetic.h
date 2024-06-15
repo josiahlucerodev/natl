@@ -28,7 +28,7 @@ namespace natl::math {
 		requires(IsBuiltInIntegerC<IntegerType>)
 	NATL_FORCE_INLINE constexpr Bool isAddOverflow(const IntegerType lhs, const IntegerType rhs) noexcept {
 		if constexpr (IsBuiltInSignedIntegerC<IntegerType>) {
-			return isAddOverflowMax<IntegerType>() && isAddOverflowMin<IntegerType>();
+			return isAddOverflowMax<IntegerType>(lhs, rhs) && isAddOverflowMin<IntegerType>(lhs, rhs);
 		} else {
 			return isAddOverflowMax<IntegerType>();
 		}
@@ -99,8 +99,32 @@ namespace natl::math {
 				return false;
 			}
 		}
-
-#ifdef NATL_COMPILER_MSVC
+#if defined(NATL_COMPILER_GCC) && defined(NATL_ARCHITECTURE_X86_64) || defined(NATL_COMPILER_EMSCRIPTEN)
+		NATL_FORCE_INLINE Bool addOverflowImplD(const i8 lhs, const i8 rhs, i8& out) noexcept {
+			return __builtin_add_overflow(lhs, rhs, &out);
+		}
+		NATL_FORCE_INLINE Bool addOverflowImplD(const i16 lhs, const i16 rhs, i16& out) noexcept {
+			return __builtin_add_overflow(lhs, rhs, &out);
+		}
+		NATL_FORCE_INLINE Bool addOverflowImplD(const i32 lhs, const i32 rhs, i32& out) noexcept {
+			return __builtin_add_overflow(lhs, rhs, &out);
+		}
+		NATL_FORCE_INLINE Bool addOverflowImplD(const i64 lhs, const i64 rhs, i64& out) noexcept {
+			return __builtin_add_overflow(lhs, rhs, &out);
+		}
+		NATL_FORCE_INLINE Bool addOverflowImplD(const ui8 lhs, const ui8 rhs, ui8& out) noexcept {
+			return __builtin_add_overflow(lhs, rhs, &out);
+		}
+		NATL_FORCE_INLINE Bool addOverflowImplD(const ui16 lhs, const ui16 rhs, ui16& out) noexcept {
+			return __builtin_add_overflow(lhs, rhs, &out);
+		}
+		NATL_FORCE_INLINE Bool addOverflowImplD(const ui32 lhs, const ui32 rhs, ui32& out) noexcept {
+			return __builtin_add_overflow(lhs, rhs, &out);
+		}
+		NATL_FORCE_INLINE Bool addOverflowImplD(const ui64 lhs, const ui64 rhs, ui64& out) noexcept {
+			return __builtin_add_overflow(lhs, rhs, &out);
+		}
+#elif defined(NATL_COMPILER_MSVC) && defined(NATL_ARCHITECTURE_X86_64)
 		NATL_FORCE_INLINE Bool addOverflowImplD(const i8 lhs, const i8 rhs, i8& out) noexcept {
 			return _add_overflow_i8(0, lhs, rhs, &out);
 		}
@@ -125,7 +149,9 @@ namespace natl::math {
 		NATL_FORCE_INLINE Bool addOverflowImplD(const ui64 lhs, const ui64 rhs, ui64& out) noexcept {
 			return addOverflowImplS(lhs, rhs, out);
 		}
-#endif // NATL_COMPILER_MSVC
+#else 
+		static_assert(false, "natl: no implemenation of dependent add overflow");
+#endif
 	}
 
 	NATL_FORCE_INLINE constexpr Bool addOverflow(const i8 lhs, const i8 rhs, i8& out) noexcept {
@@ -217,7 +243,7 @@ namespace natl::math {
 		requires(IsBuiltInIntegerC<IntegerType>)
 	NATL_FORCE_INLINE constexpr Bool isSubOverflow(const IntegerType lhs, const IntegerType rhs) noexcept {
 		if constexpr (IsBuiltInSignedIntegerC<IntegerType>) {
-			return isSubOverflowMax<IntegerType>() || isSubOverflowMin<IntegerType>();
+			return isSubOverflowMax<IntegerType>(lhs, rhs) || isSubOverflowMin<IntegerType>(lhs, rhs);
 		} else {
 			return isSubOverflowMin<IntegerType>();
 		}
@@ -289,7 +315,33 @@ namespace natl::math {
 			}
 		}
 
-#ifdef NATL_COMPILER_MSVC
+#if defined(NATL_COMPILER_GCC) && defined(NATL_ARCHITECTURE_X86_64) || defined(NATL_COMPILER_EMSCRIPTEN)
+		NATL_FORCE_INLINE Bool subOverflowImplD(const i8 lhs, const i8 rhs, i8& out) noexcept {
+			return __builtin_sub_overflow(lhs, rhs, &out);
+		}
+		NATL_FORCE_INLINE Bool subOverflowImplD(const i16 lhs, const i16 rhs, i16& out) noexcept {
+			return __builtin_sub_overflow(lhs, rhs, &out);
+		}
+		NATL_FORCE_INLINE Bool subOverflowImplD(const i32 lhs, const i32 rhs, i32& out) noexcept {
+			return __builtin_sub_overflow(lhs, rhs, &out);
+		}
+		NATL_FORCE_INLINE Bool subOverflowImplD(const i64 lhs, const i64 rhs, i64& out) noexcept {
+			return __builtin_sub_overflow(lhs, rhs, &out);
+		}
+
+		NATL_FORCE_INLINE Bool subOverflowImplD(const ui8 lhs, const ui8 rhs, ui8& out) noexcept {
+			return __builtin_sub_overflow(lhs, rhs, &out);
+		}
+		NATL_FORCE_INLINE Bool subOverflowImplD(const ui16 lhs, const ui16 rhs, ui16& out) noexcept {
+			return __builtin_sub_overflow(lhs, rhs, &out);
+		}
+		NATL_FORCE_INLINE Bool subOverflowImplD(const ui32 lhs, const ui32 rhs, ui32& out) noexcept {
+			return __builtin_sub_overflow(lhs, rhs, &out);
+		}
+		NATL_FORCE_INLINE Bool subOverflowImplD(const ui64 lhs, const ui64 rhs, ui64& out) noexcept {
+			return __builtin_sub_overflow(lhs, rhs, &out);
+		}
+#elif defined(NATL_COMPILER_MSVC) && defined(NATL_ARCHITECTURE_X86_64)
 		NATL_FORCE_INLINE Bool subOverflowImplD(const i8 lhs, const i8 rhs, i8& out) noexcept {
 			return _sub_overflow_i8(0, lhs, rhs, &out);
 		}
@@ -315,7 +367,9 @@ namespace natl::math {
 		NATL_FORCE_INLINE Bool subOverflowImplD(const ui64 lhs, const ui64 rhs, ui64& out) noexcept {
 			return subOverflowImplS(lhs, rhs, out);
 		}
-#endif // NATL_COMPILER_MSVC
+#else 
+		static_assert(false, "natl: no implemenation of dependent sub overflow");
+#endif
 	}
 
 	NATL_FORCE_INLINE constexpr Bool subOverflow(const i8 lhs, const i8 rhs, i8& out) noexcept {
@@ -406,7 +460,7 @@ namespace natl::math {
 		requires(IsBuiltInIntegerC<IntegerType>)
 	NATL_FORCE_INLINE constexpr Bool isMulOverflow(const IntegerType lhs, const IntegerType rhs) noexcept {
 		if constexpr (IsBuiltInSignedIntegerC<IntegerType>) {
-			return isMulOverflowMax<IntegerType>() && isMulOverflowMin<IntegerType>();
+			return isMulOverflowMax<IntegerType>(lhs, rhs) && isMulOverflowMin<IntegerType>(lhs, rhs);
 		} else {
 			return isMulOverflowMax<IntegerType>();
 		}
@@ -477,8 +531,33 @@ namespace natl::math {
 				return false;
 			}
 		}
+#if defined(NATL_COMPILER_GCC) && defined(NATL_ARCHITECTURE_X86_64) || defined(NATL_COMPILER_EMSCRIPTEN)
+		NATL_FORCE_INLINE Bool mulOverflowImplD(const i8 lhs, const i8 rhs, i8& out) noexcept {
+			return __builtin_mul_overflow(lhs, rhs, &out);
+		}
+		NATL_FORCE_INLINE Bool mulOverflowImplD(const i16 lhs, const i16 rhs, i16& out) noexcept {
+			return __builtin_mul_overflow(lhs, rhs, &out);
+		}
+		NATL_FORCE_INLINE Bool mulOverflowImplD(const i32 lhs, const i32 rhs, i32& out) noexcept {
+			return __builtin_mul_overflow(lhs, rhs, &out);
+		}
+		NATL_FORCE_INLINE Bool mulOverflowImplD(const i64 lhs, const i64 rhs, i64& out) noexcept {
+			return __builtin_mul_overflow(lhs, rhs, &out);
+		}
 
-#ifdef NATL_COMPILER_MSVC
+		NATL_FORCE_INLINE Bool mulOverflowImplD(const ui8 lhs, const ui8 rhs, ui8& out) noexcept {
+			return __builtin_mul_overflow(lhs, rhs, &out);
+		}
+		NATL_FORCE_INLINE Bool mulOverflowImplD(const ui16 lhs, const ui16 rhs, ui16& out) noexcept {
+			return __builtin_mul_overflow(lhs, rhs, &out);
+		}
+		NATL_FORCE_INLINE Bool mulOverflowImplD(const ui32 lhs, const ui32 rhs, ui32& out) noexcept {
+			return __builtin_mul_overflow(lhs, rhs, &out);
+		}
+		NATL_FORCE_INLINE Bool mulOverflowImplD(const ui64 lhs, const ui64 rhs, ui64& out) noexcept {
+			return __builtin_mul_overflow(lhs, rhs, &out);
+		}
+#elif defined(NATL_COMPILER_MSVC) && defined(NATL_ARCHITECTURE_X86_64)
 		NATL_FORCE_INLINE Bool mulOverflowImplD(const i8 lhs, const i8 rhs, i8& out) noexcept {
 			signed short result;
 			const Bool overflowResult = _mul_full_overflow_i8(lhs, rhs, &result);
@@ -584,7 +663,7 @@ namespace natl::math {
 		}
 		if constexpr (IsBuiltInUnsignedIntegerC<IntegerType>) {
 			return Limits<IntegerType>::max();
-		} else if (lhs < 0 != rhs < 0) {
+		} else if ((lhs < 0) != (rhs < 0)) {
 			return Limits<IntegerType>::min();
 		} else {
 			return Limits<IntegerType>::max();

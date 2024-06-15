@@ -36,12 +36,12 @@ namespace natl::math {
 	//value bounds (-87, 88)
 	NATL_FORCE_INLINE constexpr f32 basicExpF32(const f32 value) noexcept {
 		using namespace natl::literals;
-		const f32 t = value * 1.442695041f;
+		const f32 t = value * 1.442695041_f32;
 		const f32 integerPart = floorF32(t);
 		const f32 factionalPart = t - integerPart;
 		const i32 integer = static_cast<i32>(integerPart);
 		f32 result = (0.3371894346_f32 * factionalPart + 0.657636276_f32) * factionalPart + 1.00172476_f32;
-		result = bitCast<f32, ui32>((integer << 23) + bitCast<ui32, f32>(result));
+		result = bitCast<f32, ui32>(ui32(integer << 23) + bitCast<ui32, f32>(result));
 		return result;
 	}
 
@@ -49,12 +49,12 @@ namespace natl::math {
 	//value bounds (-87, 88)
 	NATL_FORCE_INLINE constexpr f64 basicExpF64(const f64 value) noexcept {
 		using namespace natl::literals;
-		const f64 t = value * 1.442695041f;
+		const f64 t = value * 1.442695041_f64;
 		const f64 integerPart = floorF64(t);
 		const f64 factionalPart = t - integerPart;
 		const i64 integer = static_cast<i64>(integerPart);
 		f64 result = (0.3371894346_f64 * factionalPart + 0.657636276_f64) * factionalPart + 1.00172476_f64;
-		result = bitCast<f64, ui64>((integer << 52) + bitCast<ui64, f64>(result));
+		result = bitCast<f64, ui64>(ui64(integer << 52) + bitCast<ui64, f64>(result));
 		return result;
 	}
 
@@ -88,29 +88,31 @@ namespace natl::math {
 		using namespace natl::literals;
 		const f32 x = static_cast<f32>(bitCast<ui32, f32>(value)) * 1.1920928955078e-7_f32;
 		const f32 mx = bitCast<f32, ui32>((bitCast<ui32, f32>(value) & 0x007FFFFF) | 0x3F000000);
-		return x - 124.2255149f - 1.49803030f * mx - 1.7258799f / (0.352088706f + mx);
+		return x - 124.2255149_f32 - 1.49803030_f32 * mx - 1.7258799_f32 / (0.352088706_f32 + mx);
 	}
 	NATL_FORCE_INLINE constexpr f64 basicLog2F64(const f64 value) noexcept {
 		using namespace natl::literals;
-		const f64 x = static_cast<f64>(bitCast<ui32, f32>(static_cast<f32>(value))) * 1.1920928955078e-7_f32;
+		const f64 x = static_cast<f64>(bitCast<ui32, f32>(static_cast<f32>(value))) * 1.1920928955078e-7_f64;
 		const f64 mx = bitCast<f64, ui64>((bitCast<ui64, f64>(value) & 0x000FFFFFFFFFFFFF) | 0x3FE0000000000000);
-		return x - 124.2255149f - 1.49803030f * mx - 1.7258799f / (0.352088706f + mx);
+		return x - 124.2255149_f64 - 1.49803030_f64 * mx - 1.7258799_f64 / (0.352088706_f64 + mx);
 	}
 
 	NATL_FORCE_INLINE constexpr f32 log2F32(const f32 value) noexcept {
-		if (value < 0.0 || isnanF32(value)) {
+		using namespace natl::literals;
+		if (value < 0.0_f32 || isnanF32(value)) {
 			return Limits<f32>::quietNaN();
 		}
-		if (value == 0.0) {
+		if (value == 0.0_f32) {
 			return -Limits<f32>::infinity();
 		}
 		return basicLog2F32(value);
 	}
 	NATL_FORCE_INLINE constexpr f64 log2F64(const f64 value) noexcept {
-		if (value < 0.0 || isnanF64(value)) {
+		using namespace natl::literals;
+		if (value < 0.0_f64 || isnanF64(value)) {
 			return Limits<f64>::quietNaN();
 		}
-		if (value == 0.0) {
+		if (value == 0.0_f64) {
 			return -Limits<f64>::infinity();
 		}
 		return basicLog2F64(value);
@@ -126,19 +128,21 @@ namespace natl::math {
 
 	//ln
 	NATL_FORCE_INLINE constexpr f32 lnF32(const f32 value) noexcept {
-		if (value < 0.0 || isnanF32(value)) {
+		using namespace natl::literals;
+		if (value < 0.0_f32 || isnanF32(value)) {
 			return Limits<f32>::quietNaN();
 		}
-		if (value == 0.0) {
+		if (value == 0.0_f32) {
 			return -Limits<f32>::infinity();
 		}
 		return basicLnF32(value);
 	}
 	NATL_FORCE_INLINE constexpr f64 lnF64(const f64 value) noexcept {
-		if (value < 0.0 || isnanF64(value)) {
+		using namespace natl::literals;
+		if (value < 0.0_f64 || isnanF64(value)) {
 			return Limits<f64>::quietNaN();
 		}
-		if (value == 0.0) {
+		if (value == 0.0_f64) {
 			return -Limits<f64>::infinity();
 		}
 		return basicLnF64(value);
@@ -153,23 +157,23 @@ namespace natl::math {
 	}
 
 	NATL_FORCE_INLINE constexpr f32 logF32(const f32 value) noexcept {
-		if (value < 0.0 || isnanF32(value)) {
+		using namespace natl::literals;
+		if (value < 0.0_f32 || isnanF32(value)) {
 			return Limits<f32>::quietNaN();
 		}
-		if (value == 0.0) {
+		if (value == 0.0_f32) {
 			return -Limits<f32>::infinity();
 		}
 		return basicLogF32(value);
 	}
 	NATL_FORCE_INLINE constexpr f64 logF64(const f64 value) noexcept {
-		if (value < 0.0 || isnanF64(value)) {
+		using namespace natl::literals;
+		if (value < 0.0_f64 || isnanF64(value)) {
 			return Limits<f64>::quietNaN();
 		}
-		if (value == 0.0) {
+		if (value == 0.0_f64) {
 			return -Limits<f64>::infinity();
 		}
 		return basicLogF64(value);
 	}
-
-
 }

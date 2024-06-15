@@ -11,24 +11,18 @@
 #define NATL_COMPILER_MSVC
 #endif 
 
-
-
 //force inline 
-#ifdef NATL_COMPILER_EMSCRIPTEN 
-#define NATL_FORCE_INLINE __attribute__((always_inline)) 
-#endif //  NATL_COMPILER_EMSCRIPTEN
-
-#ifdef NATL_COMPILER_CLANG
-#define NATL_FORCE_INLINE [[clang::always_inline]] 
-#endif // !NATL_FORCE_INLINE
-
-#ifdef NATL_COMPILER_GCC
-#define NATL_FORCE_INLINE [[gnu::always_inline]]
-#endif //NATL_COMPILER_GCC
-
-#ifdef NATL_COMPILER_MSVC
+#if defined(NATL_COMPILER_EMSCRIPTEN) 
+#define NATL_FORCE_INLINE __attribute__((always_inline)) inline
+#elif defined(NATL_COMPILER_CLANG)
+#define NATL_FORCE_INLINE [[clang::always_inline]] inline
+#elif defined(NATL_COMPILER_GCC)
+#define NATL_FORCE_INLINE [[gnu::always_inline]] inline
+#elif defined(NATL_COMPILER_MSVC)
 #define NATL_FORCE_INLINE __forceinline
-#endif // NATL_COMPILER_MSVC
+#else
+static_cast(false, "natl: force inline for compiler not implemented");
+#endif
 
 //in debug 
 //NATL_IN_DEBUG
@@ -82,7 +76,23 @@ static_assert(false, "natl: platform type not supported");
 #endif
 
 //architecture
-#ifdef NATL_COMPILER_MSVC
+
+#if defined(NATL_COMPILER_EMSCRIPTEN) 
+
+#define NATL_ARCHITECTURE_WASM
+
+#elif defined(NATL_COMPILER_CLANG)
+
+static_cast(false, "natl: architecture for compiler not implemented");
+#elif defined(NATL_COMPILER_GCC)
+
+#ifdef __x86_64__ 
+#define NATL_ARCHITECTURE_X86_64
+#else 
+static_assert(false, "natl: unknown architecture");
+#endif
+
+#elif defined(NATL_COMPILER_MSVC)
 
 #ifdef _M_X64 
 #define NATL_ARCHITECTURE_X86_64
@@ -90,7 +100,10 @@ static_assert(false, "natl: platform type not supported");
 static_assert(false, "natl: unknown architecture");
 #endif
 
-#endif // NATL_COMPILER_MSVC
+#else
+static_cast(false, "natl: architecture for compiler not implemented");
+#endif
+
 
 
 
@@ -117,7 +130,7 @@ namespace natl {
 #elif defined(NATL_WEB_PLATFORM)
         return ProgramPlatformType::webPlatform;
 #else
-        return ProgramPlatformType::unknownPlatform;
+        static_cast("natl: get platform type not implemented");
 #endif
     }
 
@@ -144,21 +157,17 @@ namespace natl {
         } else {
 
 
-#ifdef NATL_COMPILER_EMSCRIPTEN 
+#if defined(NATL_COMPILER_EMSCRIPTEN) 
             emscripten_debugger();
-#endif //  NATL_COMPILER_EMSCRIPTEN
-
-#ifdef NATL_COMPILER_CLANG
+#elif defined(NATL_COMPILER_CLANG)
             __builtin_debugtrap();
-#endif //  NATL_COMPILER_CLANG
-
-#ifdef NATL_COMPILER_GCC
+#elif defined(NATL_COMPILER_GCC)
             __builtin_trap();
-#endif //  NATL_COMPILER_GCC
-
-#ifdef NATL_COMPILER_MSVC
+#elif defined(NATL_COMPILER_MSVC)
             __debugbreak();
-#endif //  NATL_COMPILER_MSVC
+#else 
+            static_cast(false, "natl: debug break not implemented");
+#endif 
 
         }
 #endif
@@ -185,21 +194,17 @@ namespace natl {
             natlDebugBreak();
         }
 
-#ifdef NATL_COMPILER_EMSCRIPTEN
+#if defined(NATL_COMPILER_EMSCRIPTEN) 
         __builtin_unreachable();
-#endif //  NATL_COMPILER_EMSCRIPTEN
-
-#ifdef NATL_COMPILER_CLANG
+#elif defined(NATL_COMPILER_CLANG)
         __builtin_unreachable();
-#endif //  NATL_COMPILER_CLANG
-
-#ifdef NATL_COMPILER_GCC
+#elif defined(NATL_COMPILER_GCC)
         __builtin_unreachable();
-#endif // NATL_COMPILER_GCC
-
-#ifdef NATL_COMPILER_MSVC
-		__assume(false);
-#endif // NATL_COMPILER_MSVC
+#elif defined(NATL_COMPILER_MSVC)
+        __assume(false);
+#else 
+        static_cast(false, "natl: unreachable not implemented");
+#endif 
 	}
 
     constexpr const Ascii* platformTypeToString(const ProgramPlatformType platformType) noexcept {

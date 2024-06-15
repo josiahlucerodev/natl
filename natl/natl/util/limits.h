@@ -1,6 +1,8 @@
 #pragma once 
 
-#include <limits>
+//own
+#include "basicTypes.h"
+#include "compilerDependent.h"
 
 //interface
 namespace natl {
@@ -57,6 +59,15 @@ namespace natl {
 		constexpr static ui64 max() noexcept { return 18446744073709551614ULL + 1; }
 	};
 
+#if defined(NATL_COMPILER_EMSCRIPTEN)
+	template<>
+	struct Limits<Size> {
+		using value_type = Size;
+		constexpr static Size min() noexcept { return 0; }
+		constexpr static Size max() noexcept { return ~Size(0); }
+	};
+#endif // NATL_COMPILER_EMSCRIPTEN
+
 	template<>
 	struct Limits<f32> {
 		using value_type = f32;
@@ -65,11 +76,21 @@ namespace natl {
 		constexpr static f32 smallest() noexcept { return 1.17549435e-38f; }
 		constexpr static f32 epsilon() noexcept { return 1.19209290e-07f; }
 
-#ifdef NATL_COMPILER_MSVC
+#if defined(NATL_COMPILER_EMSCRIPTEN)
 		constexpr static f32 infinity() noexcept { return __builtin_huge_valf(); };
 		constexpr static f32 quietNaN() noexcept { return __builtin_nanf("0"); };
 		constexpr static f32 signalingNaN() noexcept { return __builtin_nansf("1"); };
-#endif // NATL_COMPILER_MSVC
+#elif defined(NATL_COMPILER_GCC)
+		constexpr static f32 infinity() noexcept { return __builtin_huge_valf(); };
+		constexpr static f32 quietNaN() noexcept { return __builtin_nanf(""); };
+		constexpr static f32 signalingNaN() noexcept { return __builtin_nansf(""); };
+#elif defined(NATL_COMPILER_MSVC)
+		constexpr static f32 infinity() noexcept { return __builtin_huge_valf(); };
+		constexpr static f32 quietNaN() noexcept { return __builtin_nanf("0"); };
+		constexpr static f32 signalingNaN() noexcept { return __builtin_nansf("1"); };
+#else 
+		static_assert(false, "natl: f32 limits not implemented");
+#endif 
 
 		constexpr static ui32 mantissaBitCount() noexcept { return 23; }
 		constexpr static ui32 exponentBitCount() noexcept { return 8; }
@@ -85,13 +106,21 @@ namespace natl {
 		constexpr static f64 max() noexcept { return 1.7976931348623158e+308; }
 		constexpr static f64 smallest() noexcept { return 2.2250738585072014e-308; }
 		constexpr static f64 epsilon() noexcept { return 2.2204460492503131e-16; }
-
-#ifdef NATL_COMPILER_MSVC
+#if defined(NATL_COMPILER_EMSCRIPTEN)
+		constexpr static f64 infinity() noexcept { return __builtin_huge_val(); };
+		constexpr static f64 quietNaN() noexcept { return __builtin_nan(""); };
+		constexpr static f64 signalingNaN() noexcept { return __builtin_nans(""); };
+#elif defined(NATL_COMPILER_GCC)
+		constexpr static f64 infinity() noexcept { return __builtin_huge_val(); };
+		constexpr static f64 quietNaN() noexcept { return __builtin_nan(""); };
+		constexpr static f64 signalingNaN() noexcept { return __builtin_nans(""); };
+#elif defined(NATL_COMPILER_MSVC)
 		constexpr static f64 infinity() noexcept { return __builtin_huge_val(); };
 		constexpr static f64 quietNaN() noexcept { return __builtin_nan("0"); };
 		constexpr static f64 signalingNaN() noexcept { return __builtin_nans("1"); };
-#endif // NATL_COMPILER_MSVC
-
+#else 
+		static_assert(false, "natl: f64 limits not implemented");
+#endif 
 		constexpr static ui64 mantissaBitCount() noexcept { return 52; }
 		constexpr static ui64 exponentBitCount() noexcept { return 11; }
 		constexpr static i64 exponentBias() noexcept { return 1023; };

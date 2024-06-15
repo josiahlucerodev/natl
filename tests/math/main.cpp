@@ -134,29 +134,32 @@ constexpr natl::Bool isInfinityTests() noexcept {
 }
 
 constexpr natl::Bool fabsTests() noexcept {
+	using namespace natl::literals;
 	natl::Test test(NATL_TEST_FROM, "fabs", natl::TestType::leaf);
-	NATL_TEST_ASSERT(natlm::isRoughtlyEqualF32(natlm::fabsF32(3.0), 3.0, natl::f32(0.01)), "fabs f32 positive test");
-	NATL_TEST_ASSERT(natlm::isRoughtlyEqualF32(natlm::fabsF32(-3.0), 3.0, natl::f32(0.01)), "fabs f32 negative test");
-	NATL_TEST_ASSERT(natlm::isRoughtlyEqualF64(natlm::fabsF64(3.0), 3.0, 0.01), "fabs f64 positive test");
-	NATL_TEST_ASSERT(natlm::isRoughtlyEqualF64(natlm::fabsF64(-3.0), 3.0, 0.01), "fabs f64 negative test");
+	NATL_TEST_ASSERT(natlm::isRoughtlyEqualF32(natlm::fabsF32(3.0_f32), 3.0_f32, 0.01_f32), "fabs f32 positive test");
+	NATL_TEST_ASSERT(natlm::isRoughtlyEqualF32(natlm::fabsF32(-3.0_f32), 3.0_f32, 0.01_f32), "fabs f32 negative test");
+	NATL_TEST_ASSERT(natlm::isRoughtlyEqualF64(natlm::fabsF64(3.0_f64), 3.0_f64, 0.01_f64), "fabs f64 positive test");
+	NATL_TEST_ASSERT(natlm::isRoughtlyEqualF64(natlm::fabsF64(-3.0_f64), 3.0_f64, 0.01_f64), "fabs f64 negative test");
 	return test;
 }
 
 constexpr natl::Bool isRoughtlyEqualTests() noexcept {
+	using namespace natl::literals;
 	natl::Test test(NATL_TEST_FROM, "isRoughtlyEqual", natl::TestType::leaf);
-	NATL_TEST_ASSERT(natlm::isRoughtlyEqualF32(1.0, 3.0, 3.0), "isRoughtlyEqual f32 test");
-	NATL_TEST_ASSERT(!natlm::isRoughtlyEqualF32(1.0, 3.0, 1.0), "not isRoughtlyEqual f32 test");
-	NATL_TEST_ASSERT(natlm::isRoughtlyEqualF64(1.0, 3.0, 3.0), "isRoughtlyEqual f64 test");
-	NATL_TEST_ASSERT(!natlm::isRoughtlyEqualF64(1.0, 3.0, 1.0), "not isRoughtlyEqual f64 test");
+	NATL_TEST_ASSERT(natlm::isRoughtlyEqualF32(1.0_f32, 3.0_f32, 3.0_f32), "isRoughtlyEqual f32 test");
+	NATL_TEST_ASSERT(!natlm::isRoughtlyEqualF32(1.0_f32, 3.0_f32, 1.0_f32), "not isRoughtlyEqual f32 test");
+	NATL_TEST_ASSERT(natlm::isRoughtlyEqualF64(1.0_f64, 3.0_f64, 3.0_f64), "isRoughtlyEqual f64 test");
+	NATL_TEST_ASSERT(!natlm::isRoughtlyEqualF64(1.0_f64, 3.0_f64, 1.0_f64), "not isRoughtlyEqual f64 test");
 	return test;
 }
 
 constexpr natl::Bool basicCeilTests() noexcept {
+	using namespace natl::literals;
 	natl::Test test(NATL_TEST_FROM, "basicCeil", natl::TestType::leaf);
-	NATL_TEST_ASSERT(natlm::isRoughtlyEqualF32(natlm::basicCeilF32(5.5), 6.0, natl::f32(0.01)), "basicCeil f32 positive test");
-	NATL_TEST_ASSERT(natlm::isRoughtlyEqualF32(natlm::basicCeilF32(-5.5), -5.0, natl::f32(0.01)), "basicCeil f32 negative test");
-	NATL_TEST_ASSERT(natlm::isRoughtlyEqualF64(natlm::basicCeilF64(5.5), 6.0, 0.01), "basicCeil f64 positive test");
-	NATL_TEST_ASSERT(natlm::isRoughtlyEqualF64(natlm::basicCeilF64(-5.5), -5.0, 0.01), "basicCeil f64 negative test");
+	NATL_TEST_ASSERT(natlm::isRoughtlyEqualF32(natlm::basicCeilF32(5.5_f32), 6.0_f32, 0.01_f32), "basicCeil f32 positive test");
+	NATL_TEST_ASSERT(natlm::isRoughtlyEqualF32(natlm::basicCeilF32(-5.5_f32), -5.0_f32, 0.01_f32), "basicCeil f32 negative test");
+	NATL_TEST_ASSERT(natlm::isRoughtlyEqualF64(natlm::basicCeilF64(5.5_f64), 6.0_f64, 0.01_f64), "basicCeil f64 positive test");
+	NATL_TEST_ASSERT(natlm::isRoughtlyEqualF64(natlm::basicCeilF64(-5.5_f64), -5.0_f64, 0.01_f64), "basicCeil f64 negative test");
 	return test;
 }
 
@@ -569,7 +572,7 @@ natl::Bool cosQuadTest() noexcept {
 	successful &= testMathFunctionF32("cosQuadTestF32", natlm::cosQuadF32, std::cosf, 
 		natl::f32(-natlm::twoPi), natl::f32(natlm::twoPi), natl::f32(0.001), natl::f32(0.1), natl::f32(0.1));
 	successful &= testMathFunctionF64("cosQuadTestF64", natlm::cosQuadF64, std::cos, 
-		natl::f64(-natlm::twoPi), natl::f64(natlm::twoPi), natl::f64(0.001), natl::f32(0.1), natl::f64(0.1));
+		natl::f64(-natlm::twoPi), natl::f64(natlm::twoPi), natl::f64(0.001), natl::f64(0.1), natl::f64(0.1));
 	return successful;
 }
 
@@ -614,7 +617,7 @@ natl::Bool tan4dpTest() noexcept {
 	successful &= testMathFunctionF32("tan4dpTestF32", natlm::tan4dpF32, std::tanf, 
 		natl::f32(-natlm::piOver2 + 0.1), natl::f32(natlm::piOver2 - 0.1), natl::f32(0.001), natl::f32(0.02), natl::f32(0.02));
 	successful &= testMathFunctionF64("tan4dpTestF64", natlm::tan4dpF64, std::tan, 
-		natl::f64(-natlm::piOver2 + 0.1), natl::f64(natlm::piOver2 - 0.1), natl::f64(0.001), natl::f32(0.02), natl::f32(0.02));
+		natl::f64(-natlm::piOver2 + 0.1), natl::f64(natlm::piOver2 - 0.1), natl::f64(0.001), natl::f64(0.02), natl::f64(0.02));
 	return successful;
 }
 
@@ -623,7 +626,7 @@ natl::Bool asinQuadTest() noexcept {
 	successful &= testMathFunctionF32("asinQuadF32", natlm::asinQuadF32, std::asinf, 
 		natl::f32(-1), natl::f32(1), natl::f32(0.001), natl::f32(0.05), natl::f32(0.05));
 	successful &= testMathFunctionF64("asinQuadF64", natlm::asinQuadF64, std::asin, 
-		natl::f64(-1), natl::f64(1), natl::f64(0.001), natl::f32(0.05), natl::f32(0.05));
+		natl::f64(-1), natl::f64(1), natl::f64(0.001), natl::f64(0.05), natl::f64(0.05));
 	return successful;
 }
 
@@ -632,7 +635,7 @@ natl::Bool acosQuadTest() noexcept {
 	successful &= testMathFunctionF32("acosQuadF32", natlm::acosQuadF32, std::acosf, 
 		natl::f32(-1), natl::f32(1), natl::f32(0.001), natl::f32(0.08), natl::f32(0.08));
 	successful &= testMathFunctionF64("acosQuadF64", natlm::acosQuadF64, std::acos, 
-		natl::f64(-1), natl::f64(1), natl::f64(0.001), natl::f32(0.08), natl::f32(0.08));
+		natl::f64(-1), natl::f64(1), natl::f64(0.001), natl::f64(0.08), natl::f64(0.08));
 	return successful;
 }
 
@@ -641,7 +644,7 @@ natl::Bool atan4dpTest() noexcept {
 	successful &= testMathFunctionF32("atan4dpF32", natlm::atan4dpF32, std::atanf, 
 		natl::f32(-1), natl::f32(1), natl::f32(0.001), natl::f32(0.008), natl::f32(0.001));
 	successful &= testMathFunctionF64("atan4dpF64", natlm::atan4dpF64, std::atan, 
-		natl::f64(-1), natl::f64(1), natl::f64(0.001), natl::f32(0.008), natl::f32(0.001));
+		natl::f64(-1), natl::f64(1), natl::f64(0.001), natl::f64(0.008), natl::f64(0.001));
 	return successful;
 }
 

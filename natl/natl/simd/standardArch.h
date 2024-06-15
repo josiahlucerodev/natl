@@ -7,6 +7,7 @@
 //own
 #include "../util/bits.h"
 #include "../util/assert.h"
+#include "../container/array.h"
 #include "../math.h"
 #include "simdBase.h"
 
@@ -15,11 +16,13 @@ namespace natl::simd {
 	template<typename DataType, Size registerSize>
 	struct StandardSimdRegisterBase {
 		using value_type = DataType;
-		DataType values[registerSize / (sizeof(DataType) * 8)];
-		constexpr DataType& operator[] (const Size index) { return values[index]; }
-		constexpr const DataType& operator[] (const Size index) const { return values[index]; }
+		Array<DataType, registerSize / (sizeof(DataType) * 8)> values;
+		constexpr StandardSimdRegisterBase() noexcept = default;
+		constexpr StandardSimdRegisterBase(const StandardSimdRegisterBase& other) noexcept : values(other.values) {}
+		constexpr DataType& operator[] (const Size index) noexcept { return values[index]; }
+		constexpr const DataType& operator[] (const Size index) const noexcept { return values[index]; }
 		constexpr static inline Size count() noexcept { return registerSize / (sizeof(DataType) * 8); };
-		constexpr static inline Size size() { return count(); };
+		constexpr static inline Size size() noexcept { return count(); };
 		constexpr void operator=(StandardSimdRegisterBase rhs) noexcept {
 			for (Size i = 0; i < count(); i++) {
 				values[i] = rhs[i];
@@ -5455,7 +5458,7 @@ namespace natl::simd {
 			}
 
 			simd_register_value_type output = value[index];
-			for (; index < SimdRegisterToInfo<SimdRegisterType>::count(); index) {
+			for (; index < SimdRegisterToInfo<SimdRegisterType>::count(); index++) {
 				if (mmask[index]) {
 					output = natl::min(output, value[index]);
 				}
@@ -5473,7 +5476,7 @@ namespace natl::simd {
 			}
 
 			simd_register_value_type output = value[index];
-			for (; index < SimdRegisterToInfo<SimdRegisterType>::count(); index) {
+			for (; index < SimdRegisterToInfo<SimdRegisterType>::count(); index++) {
 				if (mmask[index]) {
 					output = natl::max(output, value[index]);
 				}
@@ -5491,7 +5494,7 @@ namespace natl::simd {
 			}
 
 			simd_register_value_type output = value[index];
-			for (; index < SimdRegisterToInfo<SimdRegisterType>::count(); index) {
+			for (; index < SimdRegisterToInfo<SimdRegisterType>::count(); index++) {
 				if (mmask[index]) {
 					output = output + value[index];
 				}
@@ -5509,7 +5512,7 @@ namespace natl::simd {
 			}
 
 			simd_register_value_type output = value[index];
-			for (; index < SimdRegisterToInfo<SimdRegisterType>::count(); index) {
+			for (; index < SimdRegisterToInfo<SimdRegisterType>::count(); index++) {
 				if (mmask[index]) {
 					output = output * value[index];
 				}
@@ -5527,7 +5530,7 @@ namespace natl::simd {
 			}
 
 			simd_register_value_type output = value[index];
-			for (; index < SimdRegisterToInfo<SimdRegisterType>::count(); index) {
+			for (; index < SimdRegisterToInfo<SimdRegisterType>::count(); index++) {
 				if (mmask[index]) {
 					output = natl::bitwiseAnd(output, value[index]);
 				}
@@ -5545,7 +5548,7 @@ namespace natl::simd {
 			}
 
 			simd_register_value_type output = value[index];
-			for (; index < SimdRegisterToInfo<SimdRegisterType>::count(); index) {
+			for (; index < SimdRegisterToInfo<SimdRegisterType>::count(); index++) {
 				if (mmask[index]) {
 					output = natl::bitwiseOr(output, value[index]);
 				}
@@ -5563,7 +5566,7 @@ namespace natl::simd {
 			}
 
 			simd_register_value_type output = value[index];
-			for (; index < SimdRegisterToInfo<SimdRegisterType>::count(); index) {
+			for (; index < SimdRegisterToInfo<SimdRegisterType>::count(); index++) {
 				if (mmask[index]) {
 					output = natl::bitwiseXor(output, value[index]);
 				}
@@ -6204,7 +6207,6 @@ namespace natl::simd {
 		template<typename SimdRegisterType, typename SimdMaskType>
 		constexpr inline static SimdMaskType compareLessThanMmask(SimdRegisterType lhs, SimdRegisterType rhs) noexcept {
 			SimdMaskType output{};
-			using simd_register_value_type = SimdRegisterToInfo<SimdRegisterType>::value_type;
 			for (Size i = 0; i < SimdRegisterToInfo<SimdRegisterType>::count(); i++) {
 				output.setAtIndex(i, lhs[i] < rhs[i]);
 			}
@@ -6248,7 +6250,6 @@ namespace natl::simd {
 		template<typename SimdRegisterType, typename SimdMaskType>
 		constexpr inline static SimdMaskType compareGreaterThanMmask(SimdRegisterType lhs, SimdRegisterType rhs) noexcept {
 			SimdMaskType output{};
-			using simd_register_value_type = SimdRegisterToInfo<SimdRegisterType>::value_type;
 			for (Size i = 0; i < SimdRegisterToInfo<SimdRegisterType>::count(); i++) {
 				output.setAtIndex(i, lhs[i] > rhs[i]);
 			}
@@ -6292,7 +6293,6 @@ namespace natl::simd {
 		template<typename SimdRegisterType, typename SimdMaskType>
 		constexpr inline static SimdMaskType compareLessThanOrEqualMmask(SimdRegisterType lhs, SimdRegisterType rhs) noexcept {
 			SimdMaskType output{};
-			using simd_register_value_type = SimdRegisterToInfo<SimdRegisterType>::value_type;
 			for (Size i = 0; i < SimdRegisterToInfo<SimdRegisterType>::count(); i++) {
 				output.setAtIndex(i, lhs[i] <= rhs[i]);
 			}
@@ -6336,7 +6336,6 @@ namespace natl::simd {
 		template<typename SimdRegisterType, typename SimdMaskType>
 		constexpr inline static SimdMaskType compareGreaterThanOrEqualMmask(SimdRegisterType lhs, SimdRegisterType rhs) noexcept {
 			SimdMaskType output{};
-			using simd_register_value_type = SimdRegisterToInfo<SimdRegisterType>::value_type;
 			for (Size i = 0; i < SimdRegisterToInfo<SimdRegisterType>::count(); i++) {
 				output.setAtIndex(i, lhs[i] >= rhs[i]);
 			}
@@ -6955,7 +6954,6 @@ namespace natl::simd {
 		//store
 		template<typename SimdRegisterType>
 		constexpr inline static void store(typename SimdRegisterToInfo<SimdRegisterType>::value_type* dstPtr, SimdRegisterType src) noexcept {
-			using simd_register_value_type = SimdRegisterToInfo<SimdRegisterType>::value_type;
 			for (Size i = 0; i < SimdRegisterToInfo<SimdRegisterType>::count(); i++) {
 				dstPtr[i] = src[i];
 			}
@@ -7094,7 +7092,6 @@ namespace natl::simd {
 		//store aligned
 		template<typename SimdRegisterType>
 		constexpr inline static void storeAligned(typename SimdRegisterToInfo<SimdRegisterType>::value_type* dstPtr, SimdRegisterType src) noexcept {
-			using simd_register_value_type = SimdRegisterToInfo<SimdRegisterType>::value_type;
 			for (Size i = 0; i < SimdRegisterToInfo<SimdRegisterType>::count(); i++) {
 				dstPtr[i] = src[i];
 			}
@@ -8234,7 +8231,7 @@ namespace natl::simd {
 					}
 				}
 			} else {
-				std::memcpy(output.values, value.values, sizeof(Src));
+				std::memcpy(output.values.data(), value.values.data(), sizeof(Src));
 			}
 			return output;
 		}
@@ -8286,14 +8283,14 @@ namespace natl::simd {
 					for (Size valueIndex = 0; valueIndex < byteCount; valueIndex++, srcIndex++) {
 						UIntByteType value = bitCast<UIntByteType, DstDataType>(output[dstIndex]);
 						output[dstIndex] = bitCast<DstDataType, UIntByteType>(
-							value | ((UIntByteType)src[srcIndex] << ((valueIndex) * 8))
+							value | (static_cast<UIntByteType>(src[srcIndex]) << ((valueIndex) * 8))
 						);
 					}
 				}
 				return output;
 			} else {
 				Src output;
-				std::memcpy(output.values, src.values, sizeof(Src));
+				std::memcpy(output.values.data(), src.values.data(), sizeof(Src));
 				return output;
 			}
 		}
