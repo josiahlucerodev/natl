@@ -1,6 +1,7 @@
 //natl
 #include <natl/system/filesystem.h>
 #include <natl/container/smallDynArray.h>
+#include <natl/system/printFormatted.h>
 
 //own
 #include "../testUtils.h"
@@ -13,9 +14,10 @@ int main() {
 	natl::StringByteSize<100> fileContents;
 	const natl::LoadAllFileContentError error = natl::loadAllFileContent(file, fileContents);
 	if (error != natl::LoadAllFileContentError::none) {
-		std::cout << "file load failed: " << natl::loadAllFileContentErrorToString(error) << "\n";
+		natl::printlnf("file load failed: ", natl::loadAllFileContentErrorToString(error));
 	} else {
-		std::cout << "file contents: " << fileContents << "\n";
+		natl::print("file contents: ");
+		natl::println(fileContents);
 	}
-	std::cout << "working dir: " << natl::getWorkingDirectoryIn<natl::String>() << "\n";
+	natl::printlnf("working dir: ", natl::getWorkingDirectoryIn<natl::String>());
 }

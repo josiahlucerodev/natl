@@ -260,7 +260,7 @@ namespace natl {
 			return {};
 		}
 
-		const i64 fileReadResult = read(file.nativeHandle(), reinterpret_cast<void*>(dst), count.value());
+		const i64 fileReadResult = static_cast<i64>(read(file.nativeHandle(), reinterpret_cast<void*>(dst), static_cast<size_t>(count.value())));
 		if (fileReadResult == unixFileOpFailValue) {
 			return {};
 		}
@@ -276,7 +276,7 @@ namespace natl {
 			return false;
 		}
 
-		const i64 fileWriteResult = write(file.nativeHandle(), reinterpret_cast<const void*>(src), count.value());
+		const i64 fileWriteResult = write(file.nativeHandle(), reinterpret_cast<const void*>(src), static_cast<size_t>(count.value()));
 		if (fileWriteResult == unixFileOpFailValue) {
 			return false;
 		}
@@ -296,7 +296,7 @@ namespace natl {
 	}
 
 	Bool getWorkingDirectory(Ascii* dst, const Size dstSize) noexcept {
-		Ascii* workingDirectoryPath = getcwd(dst, dstSize);
+		Ascii* workingDirectoryPath = getcwd(dst, static_cast<size_t>(dstSize));
 		return workingDirectoryPath != nullptr;
 	}
 

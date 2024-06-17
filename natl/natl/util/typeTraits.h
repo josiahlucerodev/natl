@@ -408,10 +408,6 @@ namespace natl {
 		template<> struct IsBuiltInIntegerV<ui16> : TrueType {};
 		template<> struct IsBuiltInIntegerV<ui32> : TrueType {};
 		template<> struct IsBuiltInIntegerV<ui64> : TrueType {};
-
-#ifdef NATL_COMPILER_EMSCRIPTEN
-		template<> struct IsBuiltInIntegerV<Size> : TrueType {};
-#endif // NATL_COMPILER_EMSCRIPTEN
 	}
 	template<typename Type> struct IsBuiltInIntegerV : impl::IsBuiltInIntegerV<Decay<Type>> {};
 	template<typename Type> constexpr inline Bool IsBuiltInInteger = IsBuiltInIntegerV<Type>::value;
@@ -434,9 +430,6 @@ namespace natl {
 		template<> struct IsBuiltInUnsignedIntegerV<ui16> : TrueType {};
 		template<> struct IsBuiltInUnsignedIntegerV<ui32> : TrueType {};
 		template<> struct IsBuiltInUnsignedIntegerV<ui64> : TrueType {};
-#ifdef NATL_COMPILER_EMSCRIPTEN
-		template<> struct IsBuiltInUnsignedIntegerV<Size> : TrueType {};
-#endif // NATL_COMPILER_EMSCRIPTEN
 	}
 	template<typename Type> struct IsBuiltInUnsignedIntegerV : impl::IsBuiltInUnsignedIntegerV<Decay<Type>> {};
 	template<typename Type> constexpr inline Bool IsBuiltInUnsignedInteger = IsBuiltInUnsignedIntegerV<Type>::value;

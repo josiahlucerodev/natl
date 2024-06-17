@@ -2,8 +2,6 @@
 
 //std
 #include <cstdint>
-#include <cstddef>
-#include <type_traits>
 
 //interface 
 namespace natl {
@@ -27,7 +25,7 @@ namespace natl {
 
 	using UIntPtrSized = std::conditional_t<sizeof(void*) == 4, ui32, ui64>;
 
-	using Size = std::size_t;
+	using Size = ui64;
 	using PtrDiff = std::ptrdiff_t;
 
 	using SChar = signed char;

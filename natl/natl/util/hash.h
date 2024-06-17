@@ -73,17 +73,6 @@ namespace natl {
 		constexpr static Size hash(const ui64 value) { return static_cast<Size>(value); }
 	};
 
-
-//used for constexpr hash of size, only for EMSCRIPTEN
-//the reason why is idk, im either stupid or things just don't work out
-#ifdef __EMSCRIPTEN__
-	template<> struct Hash<Size> {
-		constexpr static Size hash(const Size value) { return value; }
-	};
-#endif // __EMSCRIPTEN__
-
-
-
 	template<> struct Hash<float> {
 		constexpr static Size hash(const float value) { return static_cast<Size>(std::bit_cast<ui32, float>(value)); }
 	};

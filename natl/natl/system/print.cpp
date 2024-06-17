@@ -68,7 +68,7 @@ namespace natl {
 
 #if defined(NATL_UNIX_PLATFORM) || defined(NATL_WEB_PLATFORM)
 	Bool print(const Ascii* string, const Size size) noexcept {
-		SSize bytes_written = static_cast<SSize>(write(STDOUT_FILENO, string, size));
+		SSize bytes_written = static_cast<SSize>(write(STDOUT_FILENO, string, static_cast<size_t>(size)));
 		if (bytes_written == -1) {
 			return false;
 		}
@@ -83,7 +83,7 @@ namespace natl {
 	}
 
 	InputReturn input(Ascii* dst, const Size dstSize) noexcept {
-		SSize bytesRead = static_cast<SSize>(read(STDIN_FILENO, dst, dstSize - 1));
+		SSize bytesRead = static_cast<SSize>(read(STDIN_FILENO, dst, static_cast<size_t>(dstSize - 1)));
 		if (bytesRead == -1) {
 			return InputReturn{ false, 0 };
 		}

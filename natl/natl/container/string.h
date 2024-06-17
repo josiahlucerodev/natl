@@ -1876,24 +1876,6 @@ namespace natl {
 			return fnv1aHash(stringView.data(), stringView.size());
 		}
 
-		//stream
-		friend std::ostream& operator<<(std::ostream& os, const BaseString& str) {
-			os << std::string_view(str.data(), str.size());
-			return os;
-		}
-
-		friend std::istream& operator>>(std::istream& is, BaseString& str) {
-			str.clear();
-			constexpr const size_type isBufferSize = 1024;
-			Ascii buffer[isBufferSize];
-
-			if (is.getline(buffer, isBufferSize)) {
-				str.append(buffer);
-			}
-
-			return is;
-		}
-
 		//set
 		constexpr void setEnd(value_type value) noexcept {
 			if (isConstantEvaluated()) {

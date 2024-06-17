@@ -59,15 +59,6 @@ namespace natl {
 		constexpr static ui64 max() noexcept { return 18446744073709551614ULL + 1; }
 	};
 
-#if defined(NATL_COMPILER_EMSCRIPTEN)
-	template<>
-	struct Limits<Size> {
-		using value_type = Size;
-		constexpr static Size min() noexcept { return 0; }
-		constexpr static Size max() noexcept { return ~Size(0); }
-	};
-#endif // NATL_COMPILER_EMSCRIPTEN
-
 	template<>
 	struct Limits<f32> {
 		using value_type = f32;

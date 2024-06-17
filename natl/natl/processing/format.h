@@ -658,11 +658,6 @@ namespace natl {
 	template<typename CharType>
 	struct Formatter<ui64, CharType> : impl::IntegerFormatter<ui64, CharType> {};
 
-#ifdef NATL_COMPILER_EMSCRIPTEN
-	template<typename CharType>
-	struct Formatter<Size, CharType> : impl::IntegerFormatter<Size, CharType> {};
-#endif
-
 	enum class FloatFormat {
 		standard,
 	};
