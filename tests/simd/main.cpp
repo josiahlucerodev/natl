@@ -249,6 +249,38 @@ constexpr natl::Bool compareTest() noexcept {
 	return test;
 }
 
+template<typename DataType, typename SimdArchType>
+constexpr void testOpIfEqaul(natl::Test& test,
+	nasimd::SimdRegister<DataType, SimdArchType> result,
+	nasimd::SimdRegister<DataType, SimdArchType> expectedValue,
+	const natl::ConstAsciiStringView& message) noexcept {
+	nasimd::SimdMask<DataType, SimdArchType> mask = nasimd::simd_compare_equal<DataType, SimdArchType>(result, expectedValue);
+	natl::Bool condition = nasimd::simd_mask_test_all_active<DataType, SimdArchType>(mask);
+	natl::testAssert(test, condition, message);
+}
+
+template<typename DataType, typename SimdArchType>
+constexpr void testOpIfEqaulCount(natl::Test& test,
+	nasimd::SimdRegister<DataType, SimdArchType> result,
+	nasimd::SimdRegister<DataType, SimdArchType> expectedValue,
+	const natl::Size count,
+	const natl::ConstAsciiStringView& message) noexcept {
+	nasimd::SimdMask<DataType, SimdArchType> mask = nasimd::simd_compare_equal<DataType, SimdArchType>(result, expectedValue);
+	natl::Bool condition = nasimd::simd_mask_popcount<DataType, SimdArchType>(mask) == count;
+	natl::testAssert(test, condition, message);
+}
+
+template<typename DataType, typename SimdArchType>
+constexpr void testOpIfEqaulMaskedCount(natl::Test& test,
+	nasimd::SimdRegister<DataType, SimdArchType> result,
+	nasimd::SimdRegister<DataType, SimdArchType> expectedValue,
+	nasimd::SimdMask<DataType, SimdArchType> mmask,
+	const natl::Size count,
+	const natl::ConstAsciiStringView& message) noexcept {
+	nasimd::SimdMask<DataType, SimdArchType> mask = nasimd::simd_mmasked_compare_equal<DataType, SimdArchType>(result, expectedValue, mmask);
+	natl::Bool condition = nasimd::simd_mask_popcount<DataType, SimdArchType>(mask) == count;
+	natl::testAssert(test, condition, message);
+}
 
 //arithmetic
 template<typename DataType, typename SimdArchType>
@@ -267,136 +299,226 @@ constexpr natl::Bool arithmeticTest() noexcept {
 	simd_register constant3 = nasimd::simd_set<DataType, SimdArchType>(3);
 	simd_register constant4 = nasimd::simd_set<DataType, SimdArchType>(4);
 
+	simd_register constantMax = nasimd::simd_set<DataType, SimdArchType>(natl::Limits<DataType>::max());
+	simd_register constantMin = nasimd::simd_set<DataType, SimdArchType>(natl::Limits<DataType>::min());
 
 	//add
 	{
 		simd_register addResult = nasimd::simd_add<DataType, SimdArchType>(constant1, constant2);
-		simd_mmask addMask = nasimd::simd_compare_equal<DataType, SimdArchType>(addResult, constant3);
-		natl::Bool addCondition = nasimd::simd_mask_test_all_active<DataType, SimdArchType>(addMask);
-		natl::testAssert(test, addCondition, "add");
+		testOpIfEqaul<DataType, SimdArchType>(test, addResult, constant3, "add");
 
 		simd_register mmaskedAddResult = nasimd::simd_mmasked_add<DataType, SimdArchType>(constant1, constant2, evenMask);
-		simd_mmask mmaskedAddMask = nasimd::simd_compare_equal<DataType, SimdArchType>(mmaskedAddResult, constant3);
-		natl::Bool mmaskedAddCondition = nasimd::simd_mask_popcount<DataType, SimdArchType>(mmaskedAddMask) == halfCount ;
-		natl::testAssert(test, mmaskedAddCondition, "mmasked add");
-
-		simd_mmask mmaskedAddRemainMask = nasimd::simd_mmasked_compare_equal<DataType, SimdArchType>(mmaskedAddResult, constant0, oddMask);
-		natl::Bool mmaskedAddRemainCondition = nasimd::simd_mask_popcount<DataType, SimdArchType>(mmaskedAddRemainMask) == halfCount;
-		natl::testAssert(test, mmaskedAddRemainCondition, "mmasked add remain");
+		testOpIfEqaulCount<DataType, SimdArchType>(test, mmaskedAddResult, constant3, halfCount, "mmasked add");
+		testOpIfEqaulMaskedCount<DataType, SimdArchType>(test, mmaskedAddResult, constant0, oddMask, halfCount, "mmasked add remain");
 
 		simd_register mmaskedSrcAddResult = nasimd::simd_mmasked_src_add<DataType, SimdArchType>(constant1, constant2, constant1, evenMask);
-		simd_mmask mmaskedSrcAddMask = nasimd::simd_compare_equal<DataType, SimdArchType>(mmaskedSrcAddResult, constant3);
-		natl::Bool mmaskedSrcAddCondition = nasimd::simd_mask_popcount<DataType, SimdArchType>(mmaskedSrcAddMask) == halfCount;
-		natl::testAssert(test, mmaskedSrcAddCondition, "mmasked src add");
-
-		simd_mmask mmaskedSrcAddRemainMask = nasimd::simd_mmasked_compare_equal<DataType, SimdArchType>(mmaskedSrcAddResult, constant1, oddMask);
-		natl::Bool mmaskedSrcAddRemainCondition = nasimd::simd_mask_popcount<DataType, SimdArchType>(mmaskedSrcAddRemainMask) == halfCount;
-		natl::testAssert(test, mmaskedSrcAddRemainCondition, "mmasked src add remain");
+		testOpIfEqaulCount<DataType, SimdArchType>(test, mmaskedSrcAddResult, constant3, halfCount, "mmasked src add");
+		testOpIfEqaulMaskedCount<DataType, SimdArchType>(test, mmaskedSrcAddResult, constant1, oddMask, halfCount, "mmasked src add remain");
 	}
 
 	//sub
 	{
 		simd_register subResult = nasimd::simd_sub<DataType, SimdArchType>(constant3, constant2);
-		simd_mmask subMask = nasimd::simd_compare_equal<DataType, SimdArchType>(subResult, constant1);
-		natl::Bool subCondition = nasimd::simd_mask_test_all_active<DataType, SimdArchType>(subMask);
-		natl::testAssert(test, subCondition, "sub");
+		testOpIfEqaul<DataType, SimdArchType>(test, subResult, constant1, "sub");
 
 		simd_register mmaskedSubResult = nasimd::simd_mmasked_sub<DataType, SimdArchType>(constant3, constant2, evenMask);
-		simd_mmask mmaskedSubMask = nasimd::simd_compare_equal<DataType, SimdArchType>(mmaskedSubResult, constant1);
-		natl::Bool mmaskedSubCondition = nasimd::simd_mask_popcount<DataType, SimdArchType>(mmaskedSubMask) == halfCount;
-		natl::testAssert(test, mmaskedSubCondition, "mmasked sub");
-
-		simd_mmask mmaskedSubRemainMask = nasimd::simd_mmasked_compare_equal<DataType, SimdArchType>(mmaskedSubResult, constant0, oddMask);
-		natl::Bool mmaskedSubRemainCondition = nasimd::simd_mask_popcount<DataType, SimdArchType>(mmaskedSubRemainMask) == halfCount;
-		natl::testAssert(test, mmaskedSubRemainCondition, "mmasked sub remain");
+		testOpIfEqaulCount<DataType, SimdArchType>(test, mmaskedSubResult, constant1, halfCount, "mmasked sub");
+		testOpIfEqaulMaskedCount<DataType, SimdArchType>(test, mmaskedSubResult, constant0, oddMask, halfCount, "mmasked sub remain");
 
 		simd_register mmaskedSrcSubResult = nasimd::simd_mmasked_src_sub<DataType, SimdArchType>(constant3, constant2, constant2, evenMask);
-		simd_mmask mmaskedSrcSubMask = nasimd::simd_compare_equal<DataType, SimdArchType>(mmaskedSrcSubResult, constant1);
-		natl::Bool mmaskedSrcSubCondition = nasimd::simd_mask_popcount<DataType, SimdArchType>(mmaskedSrcSubMask) == halfCount;
-		natl::testAssert(test, mmaskedSrcSubCondition, "mmasked src sub");
-
-		simd_mmask mmaskedSrcSubRemainMask = nasimd::simd_mmasked_compare_equal<DataType, SimdArchType>(mmaskedSrcSubResult, constant2, oddMask);
-		natl::Bool mmaskedSrcSubRemainCondition = nasimd::simd_mask_popcount<DataType, SimdArchType>(mmaskedSrcSubRemainMask) == halfCount;
-		natl::testAssert(test, mmaskedSrcSubRemainCondition, "mmasked src sub remain");
+		testOpIfEqaulCount<DataType, SimdArchType>(test, mmaskedSrcSubResult, constant1, halfCount, "mmasked src sub");
+		testOpIfEqaulMaskedCount<DataType, SimdArchType>(test, mmaskedSrcSubResult, constant2, oddMask, halfCount, "mmasked src sub remain");
 	}
 
 	//mul
 	{
 		simd_register mulResult = nasimd::simd_mul<DataType, SimdArchType>(constant2, constant2);
-		simd_mmask mulMask = nasimd::simd_compare_equal<DataType, SimdArchType>(mulResult, constant4);
-		natl::Bool mulCondition = nasimd::simd_mask_test_all_active<DataType, SimdArchType>(mulMask);
-		natl::testAssert(test, mulCondition, "mul");
+		testOpIfEqaul<DataType, SimdArchType>(test, mulResult, constant4, "mul");
 
 		simd_register mmaskedMulResult = nasimd::simd_mmasked_mul<DataType, SimdArchType>(constant2, constant2, evenMask);
-		simd_mmask mmaskedMulMask = nasimd::simd_compare_equal<DataType, SimdArchType>(mmaskedMulResult, constant4);
-		natl::Bool mmaskedMulCondition = nasimd::simd_mask_popcount<DataType, SimdArchType>(mmaskedMulMask) == halfCount;
-		natl::testAssert(test, mmaskedMulCondition, "mmasked mul");
-
-		simd_mmask mmaskedMulRemainMask = nasimd::simd_mmasked_compare_equal<DataType, SimdArchType>(mmaskedMulResult, constant0, oddMask);
-		natl::Bool mmaskedMulRemainCondition = nasimd::simd_mask_popcount<DataType, SimdArchType>(mmaskedMulRemainMask) == halfCount;
-		natl::testAssert(test, mmaskedMulRemainCondition, "mmasked mul remain");
+		testOpIfEqaulCount<DataType, SimdArchType>(test, mmaskedMulResult, constant4, halfCount, "mmasked mul");
+		testOpIfEqaulMaskedCount<DataType, SimdArchType>(test, mmaskedMulResult, constant0, oddMask, halfCount, "mmasked mul remain");
 
 		simd_register mmaskedSrcMulResult = nasimd::simd_mmasked_src_mul<DataType, SimdArchType>(constant2, constant2, constant1, evenMask);
-		simd_mmask mmaskedSrcMulMask = nasimd::simd_compare_equal<DataType, SimdArchType>(mmaskedSrcMulResult, constant4);
-		natl::Bool mmaskedSrcMulCondition = nasimd::simd_mask_popcount<DataType, SimdArchType>(mmaskedSrcMulMask) == halfCount;
-		natl::testAssert(test, mmaskedSrcMulCondition, "mmasked src mul");
-
-		simd_mmask mmaskedSrcMulRemainMask = nasimd::simd_mmasked_compare_equal<DataType, SimdArchType>(mmaskedSrcMulResult, constant1, oddMask);
-		natl::Bool mmaskedSrcMulRemainCondition = nasimd::simd_mask_popcount<DataType, SimdArchType>(mmaskedSrcMulRemainMask) == halfCount;
-		natl::testAssert(test, mmaskedSrcMulRemainCondition, "mmasked src mul remain");
+		testOpIfEqaulCount<DataType, SimdArchType>(test, mmaskedSrcMulResult, constant4, halfCount, "mmasked src mul");
+		testOpIfEqaulMaskedCount<DataType, SimdArchType>(test, mmaskedSrcMulResult, constant1, oddMask, halfCount, "mmasked src mul remain");
 	}
 
 	//div
 	{
 		simd_register divResult = nasimd::simd_div<DataType, SimdArchType>(constant4, constant2);
-		simd_mmask divMask = nasimd::simd_compare_equal<DataType, SimdArchType>(divResult, constant2);
-		natl::Bool divCondition = nasimd::simd_mask_test_all_active<DataType, SimdArchType>(divMask);
-		natl::testAssert(test, divCondition, "div");
+		testOpIfEqaul<DataType, SimdArchType>(test, divResult, constant2, "div");
 
 		simd_register mmaskedDivResult = nasimd::simd_mmasked_div<DataType, SimdArchType>(constant4, constant2, evenMask);
-		simd_mmask mmaskedDivMask = nasimd::simd_compare_equal<DataType, SimdArchType>(mmaskedDivResult, constant2);
-		natl::Bool mmaskedDivCondition = nasimd::simd_mask_popcount<DataType, SimdArchType>(mmaskedDivMask) == halfCount;
-		natl::testAssert(test, mmaskedDivCondition, "mmasked div");
-
-		simd_mmask mmaskedDivRemainMask = nasimd::simd_mmasked_compare_equal<DataType, SimdArchType>(mmaskedDivResult, constant0, oddMask);
-		natl::Bool mmaskedDivRemainCondition = nasimd::simd_mask_popcount<DataType, SimdArchType>(mmaskedDivRemainMask) == halfCount;
-		natl::testAssert(test, mmaskedDivRemainCondition, "mmasked div remain");
+		testOpIfEqaulCount<DataType, SimdArchType>(test, mmaskedDivResult, constant2, halfCount, "mmasked div");
+		testOpIfEqaulMaskedCount<DataType, SimdArchType>(test, mmaskedDivResult, constant0, oddMask, halfCount, "mmasked div remain");
 
 		simd_register mmaskedSrcDivResult = nasimd::simd_mmasked_src_div<DataType, SimdArchType>(constant4, constant2, constant1, evenMask);
-		simd_mmask mmaskedSrcDivMask = nasimd::simd_compare_equal<DataType, SimdArchType>(mmaskedSrcDivResult, constant2);
-		natl::Bool mmaskedSrcDivCondition = nasimd::simd_mask_popcount<DataType, SimdArchType>(mmaskedSrcDivMask) == halfCount;
-		natl::testAssert(test, mmaskedSrcDivCondition, "mmasked src div");
-
-		simd_mmask mmaskedSrcDivRemainMask = nasimd::simd_mmasked_compare_equal<DataType, SimdArchType>(mmaskedSrcDivResult, constant1, oddMask);
-		natl::Bool mmaskedSrcDivRemainCondition = nasimd::simd_mask_popcount<DataType, SimdArchType>(mmaskedSrcDivRemainMask) == halfCount;
-		natl::testAssert(test, mmaskedSrcDivRemainCondition, "mmasked src div remain");
+		testOpIfEqaulCount<DataType, SimdArchType>(test, mmaskedSrcDivResult, constant2, halfCount, "mmasked src div");
+		testOpIfEqaulMaskedCount<DataType, SimdArchType>(test, mmaskedSrcDivResult, constant1, oddMask, halfCount, "mmasked src div remain");
 	}
 
+	//add sat 
+	if constexpr (natl::IsBuiltInIntegerC<DataType>) {
+		simd_register addSatResult = nasimd::simd_add_sat<DataType, SimdArchType>(constant1, constant2);
+		testOpIfEqaul<DataType, SimdArchType>(test, addSatResult, constant3, "add sat");
+
+		simd_register mmaskedAddSatResult = nasimd::simd_mmasked_add_sat<DataType, SimdArchType>(constant1, constant2, evenMask);
+		testOpIfEqaulCount<DataType, SimdArchType>(test, mmaskedAddSatResult, constant3, halfCount, "mmasked add sat");
+		testOpIfEqaulMaskedCount<DataType, SimdArchType>(test, mmaskedAddSatResult, constant0, oddMask, halfCount, "mmasked add sat remain");
+
+		simd_register mmaskedSrcAddSatResult = nasimd::simd_mmasked_src_add_sat<DataType, SimdArchType>(constant1, constant2, constant1, evenMask);
+		testOpIfEqaulCount<DataType, SimdArchType>(test, mmaskedSrcAddSatResult, constant3, halfCount, "mmasked src add sat");
+		testOpIfEqaulMaskedCount<DataType, SimdArchType>(test, mmaskedSrcAddSatResult, constant1, oddMask, halfCount, "mmasked src add sat remain");
+
+		simd_register addSatOverflowMaxResult = nasimd::simd_add_sat<DataType, SimdArchType>(constantMax, constantMax);
+		testOpIfEqaul<DataType, SimdArchType>(test, addSatOverflowMaxResult, constantMax, "add sat overflow max");
+
+		simd_register mmaskedAddSatOverflowMaxResult = nasimd::simd_mmasked_add_sat<DataType, SimdArchType>(constantMax, constantMax, evenMask);
+		testOpIfEqaulCount<DataType, SimdArchType>(test, mmaskedAddSatOverflowMaxResult, constantMax, halfCount, "mmasked add sat overflow max");
+		testOpIfEqaulMaskedCount<DataType, SimdArchType>(test, mmaskedAddSatOverflowMaxResult, constant0, oddMask, halfCount, "mmasked add sat overflow max remain");
+
+		simd_register mmaskedSrcAddSatOverflowMaxResult = nasimd::simd_mmasked_src_add_sat<DataType, SimdArchType>(constantMax, constantMax, constant1, evenMask);
+		testOpIfEqaulCount<DataType, SimdArchType>(test, mmaskedSrcAddSatOverflowMaxResult, constantMax, halfCount, "mmasked src add sat overflow max");
+		testOpIfEqaulMaskedCount<DataType, SimdArchType>(test, mmaskedSrcAddSatOverflowMaxResult, constant1, oddMask, halfCount, "mmasked src add sat overflow max remain");
+
+		simd_register addSatOverflowMinResult = nasimd::simd_add_sat<DataType, SimdArchType>(constantMin, constantMin);
+		testOpIfEqaul<DataType, SimdArchType>(test, addSatOverflowMinResult, constantMin, "add sat overflow min");
+
+		simd_register mmaskedAddSatOverflowMinResult = nasimd::simd_mmasked_add_sat<DataType, SimdArchType>(constantMin, constantMin, evenMask);
+		if constexpr (natl::IsBuiltInSignedIntegerC<DataType>) {
+			testOpIfEqaulCount<DataType, SimdArchType>(test, mmaskedAddSatOverflowMinResult, constantMin, halfCount, "mmasked add sat overflow min");
+			testOpIfEqaulMaskedCount<DataType, SimdArchType>(test, mmaskedAddSatOverflowMinResult, constant0, oddMask, halfCount, "mmasked add sat overflow min remain");
+		} else {
+			testOpIfEqaul<DataType, SimdArchType>(test, mmaskedAddSatOverflowMinResult, constantMin, "mmasked add sat overflow min");
+		}
+
+		simd_register mmaskedSrcAddSatOverflowMinResult = nasimd::simd_mmasked_src_add_sat<DataType, SimdArchType>(constantMin, constantMin, constant1, evenMask);
+		testOpIfEqaulCount<DataType, SimdArchType>(test, mmaskedSrcAddSatOverflowMinResult, constantMin, halfCount, "mmasked src add sat overflow min");
+		testOpIfEqaulMaskedCount<DataType, SimdArchType>(test, mmaskedSrcAddSatOverflowMinResult, constant1, oddMask, halfCount, "mmasked src add sat overflow min remain");
+	}
+
+	//sub sat 
+	if constexpr (natl::IsBuiltInIntegerC<DataType>) {
+		simd_register subSatResult = nasimd::simd_sub_sat<DataType, SimdArchType>(constant3, constant2);
+		testOpIfEqaul<DataType, SimdArchType>(test, subSatResult, constant1, "sub sat");
+
+		simd_register mmaskedSubSatResult = nasimd::simd_mmasked_sub_sat<DataType, SimdArchType>(constant3, constant2, evenMask);
+		testOpIfEqaulCount<DataType, SimdArchType>(test, mmaskedSubSatResult, constant1, halfCount, "mmasked sub sat");
+		testOpIfEqaulMaskedCount<DataType, SimdArchType>(test, mmaskedSubSatResult, constant0, oddMask, halfCount, "mmasked sub sat remain");
+
+		simd_register mmaskedSrcSubSatResult = nasimd::simd_mmasked_src_sub_sat<DataType, SimdArchType>(constant3, constant2, constant2, evenMask);
+		testOpIfEqaulCount<DataType, SimdArchType>(test, mmaskedSrcSubSatResult, constant1, halfCount, "mmasked src sub sat");
+		testOpIfEqaulMaskedCount<DataType, SimdArchType>(test, mmaskedSrcSubSatResult, constant2, oddMask, halfCount, "mmasked src sub sat remain");
+
+		simd_register subSatOverflowMaxResult = nasimd::simd_sub_sat<DataType, SimdArchType>(constantMax, constantMin);
+		testOpIfEqaul<DataType, SimdArchType>(test, subSatOverflowMaxResult, constantMax, "sub sat overflow max");
+
+		simd_register mmaskedSubSatOverflowMaxResult = nasimd::simd_mmasked_sub_sat<DataType, SimdArchType>(constantMax, constantMin, evenMask);
+		testOpIfEqaulCount<DataType, SimdArchType>(test, mmaskedSubSatOverflowMaxResult, constantMax, halfCount, "mmasked sub sat overflow max");
+		testOpIfEqaulMaskedCount<DataType, SimdArchType>(test, mmaskedSubSatOverflowMaxResult, constant0, oddMask, halfCount, "mmasked sub sat overflow max remain");
+
+		simd_register mmaskedSrcSubSatOverflowMaxResult = nasimd::simd_mmasked_src_sub_sat<DataType, SimdArchType>(constantMax, constantMin, constant1, evenMask);
+		testOpIfEqaulCount<DataType, SimdArchType>(test, mmaskedSrcSubSatOverflowMaxResult, constantMax, halfCount, "mmasked src sub sat overflow max" );
+		testOpIfEqaulMaskedCount<DataType, SimdArchType>(test, mmaskedSrcSubSatOverflowMaxResult, constant1, oddMask, halfCount, "mmasked src sub sat overflow max remain");
+
+		simd_register subSatOverflowMinResult = nasimd::simd_sub_sat<DataType, SimdArchType>(constantMin, constantMax);
+		testOpIfEqaul<DataType, SimdArchType>(test, subSatOverflowMinResult, constantMin, "sub sat overflow min");
+
+		simd_register mmaskedSubSatOverflowMinResult = nasimd::simd_mmasked_sub_sat<DataType, SimdArchType>(constantMin, constantMax, evenMask);
+		if constexpr (natl::IsBuiltInSignedIntegerC<DataType>) {
+			testOpIfEqaulCount<DataType, SimdArchType>(test, mmaskedSubSatOverflowMinResult, constantMin, halfCount, "mmasked sub sat overflow min");
+			testOpIfEqaulMaskedCount<DataType, SimdArchType>(test, mmaskedSubSatOverflowMinResult, constant0, oddMask, halfCount, "mmasked sub sat overflow min remain");
+		} else {
+			testOpIfEqaul<DataType, SimdArchType>(test, mmaskedSubSatOverflowMinResult, constantMin, "mmasked sub sat overflow min");
+		}
+
+		simd_register mmaskedSrcSubSatOverflowMinResult = nasimd::simd_mmasked_src_sub_sat<DataType, SimdArchType>(constantMin, constantMax, constant1, evenMask);
+		testOpIfEqaulCount<DataType, SimdArchType>(test, mmaskedSrcSubSatOverflowMinResult, constantMin, halfCount, "mmasked src sub sat overflow min");
+		testOpIfEqaulMaskedCount<DataType, SimdArchType>(test, mmaskedSrcSubSatOverflowMinResult, constant1, oddMask, halfCount, "mmasked src sub sat overflow min remain");
+	}
+
+	//mul sat 
+	if constexpr (natl::IsBuiltInIntegerC<DataType>) {
+		simd_register mulSatResult = nasimd::simd_mul_sat<DataType, SimdArchType>(constant2, constant2);
+		testOpIfEqaul<DataType, SimdArchType>(test, mulSatResult, constant4, "mul sat");
+
+		simd_register mmaskedMulSatResult = nasimd::simd_mmasked_mul_sat<DataType, SimdArchType>(constant2, constant2, evenMask);
+		testOpIfEqaulCount<DataType, SimdArchType>(test, mmaskedMulSatResult, constant4, halfCount, "mmasked mul sat");
+		testOpIfEqaulMaskedCount<DataType, SimdArchType>(test, mmaskedMulSatResult, constant0, oddMask, halfCount, "mmasked mul sat remain");
+
+		simd_register mmaskedSrcMulSatResult = nasimd::simd_mmasked_src_mul_sat<DataType, SimdArchType>(constant2, constant2, constant1, evenMask);
+		testOpIfEqaulCount<DataType, SimdArchType>(test, mmaskedSrcMulSatResult, constant4, halfCount, "mmasked src mul sat");
+		testOpIfEqaulMaskedCount<DataType, SimdArchType>(test, mmaskedSrcMulSatResult, constant1, oddMask, halfCount, "mmasked src mul sat remain");
+
+		simd_register mulSatOverflowMaxResult = nasimd::simd_mul_sat<DataType, SimdArchType>(constantMax, constantMax);
+		testOpIfEqaul<DataType, SimdArchType>(test, mulSatOverflowMaxResult, constantMax, "mul sat overflow max");
+
+		simd_register mmaskedMulSatOverflowMaxResult = nasimd::simd_mmasked_mul_sat<DataType, SimdArchType>(constantMax, constantMax, evenMask);
+		testOpIfEqaulCount<DataType, SimdArchType>(test, mmaskedMulSatOverflowMaxResult, constantMax, halfCount, "mmasked mul sat overflow max");
+		testOpIfEqaulMaskedCount<DataType, SimdArchType>(test, mmaskedMulSatOverflowMaxResult, constant0, oddMask, halfCount, "mmasked mul sat overflow max remain");
+
+		simd_register mmaskedSrcMulSatOverflowMaxResult = nasimd::simd_mmasked_src_mul_sat<DataType, SimdArchType>(constantMax, constantMax, constant1, evenMask);
+		testOpIfEqaulCount<DataType, SimdArchType>(test, mmaskedSrcMulSatOverflowMaxResult, constantMax, halfCount, "mmasked src mul sat overflow max");
+		testOpIfEqaulMaskedCount<DataType, SimdArchType>(test, mmaskedSrcMulSatOverflowMaxResult, constant1, oddMask, halfCount, "mmasked src mul sat overflow max remain");
+
+		simd_register mulSatOverflowMinResult = nasimd::simd_mul_sat<DataType, SimdArchType>(constantMin, constantMax);
+		testOpIfEqaul<DataType, SimdArchType>(test, mulSatOverflowMinResult, constantMin, "mul sat overflow min");
+
+		simd_register mmaskedMulSatOverflowMinResult = nasimd::simd_mmasked_mul_sat<DataType, SimdArchType>(constantMin, constantMax, evenMask);
+		if constexpr (natl::IsBuiltInSignedIntegerC<DataType>) {
+			testOpIfEqaulCount<DataType, SimdArchType>(test, mmaskedMulSatOverflowMinResult, constantMin, halfCount, "mmasked mul sat overflow min");
+			testOpIfEqaulMaskedCount<DataType, SimdArchType>(test, mmaskedMulSatOverflowMinResult, constant0, oddMask, halfCount, "mmasked mul sat overflow min remain");
+		} else {
+			testOpIfEqaul<DataType, SimdArchType>(test, mmaskedMulSatOverflowMinResult, constantMin, "mmasked mul sat overflow min");
+		}
+
+		simd_register mmaskedSrcMulSatOverflowMinResult = nasimd::simd_mmasked_src_mul_sat<DataType, SimdArchType>(constantMin, constantMax, constant1, evenMask);
+		testOpIfEqaulCount<DataType, SimdArchType>(test, mmaskedSrcMulSatOverflowMinResult, constantMin, halfCount, "mmasked src mul sat overflow max");
+		testOpIfEqaulMaskedCount<DataType, SimdArchType>(test, mmaskedSrcMulSatOverflowMinResult, constant1, oddMask, halfCount, "mmasked src mul sat overflow max remain");
+	}
 	
+	//mul div 
+	if constexpr (natl::IsBuiltInIntegerC<DataType>) {
+		simd_register divSatResult = nasimd::simd_div_sat<DataType, SimdArchType>(constant4, constant2);
+		testOpIfEqaul<DataType, SimdArchType>(test, divSatResult, constant2, "div sat");
+
+		simd_register mmaskedDivSatResult = nasimd::simd_mmasked_div_sat<DataType, SimdArchType>(constant4, constant2, evenMask);
+		testOpIfEqaulCount<DataType, SimdArchType>(test, mmaskedDivSatResult, constant2, halfCount, "mmasked div sat");
+		testOpIfEqaulMaskedCount<DataType, SimdArchType>(test, mmaskedDivSatResult, constant0, oddMask, halfCount, "mmasked div sat remain");
+
+		simd_register mmaskedSrcDivSatResult = nasimd::simd_mmasked_src_div_sat<DataType, SimdArchType>(constant4, constant2, constant1, evenMask);
+		testOpIfEqaulCount<DataType, SimdArchType>(test, mmaskedSrcDivSatResult, constant2, halfCount, "mmasked src div sat");
+		testOpIfEqaulMaskedCount<DataType, SimdArchType>(test, mmaskedSrcDivSatResult, constant1, oddMask, halfCount, "mmasked src div sat remain");
+
+		if constexpr (natl::IsBuiltInSignedIntegerC<DataType>) {
+			simd_register constantNeg1 = nasimd::simd_set<DataType, SimdArchType>(DataType(-1));
+
+			simd_register divSatOverflowMaxResult = nasimd::simd_div_sat<DataType, SimdArchType>(constantMin, constantNeg1);
+			testOpIfEqaul<DataType, SimdArchType>(test, divSatOverflowMaxResult, constantMax, "div sat overflow max");
+
+			simd_register mmaskedDivSatOverflowMaxResult = nasimd::simd_mmasked_div_sat<DataType, SimdArchType>(constantMin, constantNeg1, evenMask);
+			testOpIfEqaulCount<DataType, SimdArchType>(test, mmaskedDivSatOverflowMaxResult, constantMax, halfCount, "mmasked div sat overflow max");
+			testOpIfEqaulMaskedCount<DataType, SimdArchType>(test, mmaskedDivSatOverflowMaxResult, constant0, oddMask, halfCount, "mmasked div sat overflow max remain");
+
+			simd_register mmaskedSrcDivSatOverflowMaxResult = nasimd::simd_mmasked_src_div_sat<DataType, SimdArchType>(constantMin, constantNeg1, constant1, evenMask);
+			testOpIfEqaulCount<DataType, SimdArchType>(test, mmaskedSrcDivSatOverflowMaxResult, constantMax, halfCount, "mmasked src div sat overflow max");
+			testOpIfEqaulMaskedCount<DataType, SimdArchType>(test, mmaskedSrcDivSatOverflowMaxResult, constant1, oddMask, halfCount, "mmasked src div sat overflow max remain");
+		}
+	}
+
 	//remainder
 	if constexpr(natl::IsBuiltInIntegerC<DataType>) {
 		simd_register remainderResult = nasimd::simd_remainder<DataType, SimdArchType>(constant3, constant2);
-		simd_mmask remainderMask = nasimd::simd_compare_equal<DataType, SimdArchType>(remainderResult, constant1);
-		natl::Bool remainderCondition = nasimd::simd_mask_test_all_active<DataType, SimdArchType>(remainderMask);
-		natl::testAssert(test, remainderCondition, "remainder");
-
+		testOpIfEqaul<DataType, SimdArchType>(test, remainderResult, constant1, "remainder");
+		
 		simd_register mmaskedRemainderResult = nasimd::simd_mmasked_remainder<DataType, SimdArchType>(constant3, constant2, evenMask);
-		simd_mmask mmaskedRemainderMask = nasimd::simd_compare_equal<DataType, SimdArchType>(mmaskedRemainderResult, constant1);
-		natl::Bool mmaskedRemainderCondition = nasimd::simd_mask_popcount<DataType, SimdArchType>(mmaskedRemainderMask) == halfCount;
-		natl::testAssert(test, mmaskedRemainderCondition, "mmasked remainder");
-
-		simd_mmask mmaskedRemainderRemainMask = nasimd::simd_mmasked_compare_equal<DataType, SimdArchType>(mmaskedRemainderResult, constant0, oddMask);
-		natl::Bool mmaskedRemainderRemainCondition = nasimd::simd_mask_popcount<DataType, SimdArchType>(mmaskedRemainderRemainMask) == halfCount;
-		natl::testAssert(test, mmaskedRemainderRemainCondition, "mmasked remainder remain");
+		testOpIfEqaulCount<DataType, SimdArchType>(test, mmaskedRemainderResult, constant1, halfCount, "mmasked add sat");
+		testOpIfEqaulMaskedCount<DataType, SimdArchType>(test, mmaskedRemainderResult, constant0, oddMask, halfCount, "mmasked add sat remain");
 
 		simd_register mmaskedSrcRemainderResult = nasimd::simd_mmasked_src_remainder<DataType, SimdArchType>(constant3, constant2, constant4, evenMask);
-		simd_mmask mmaskedSrcRemainderMask = nasimd::simd_compare_equal<DataType, SimdArchType>(mmaskedSrcRemainderResult, constant1);
-		natl::Bool mmaskedSrcRemainderCondition = nasimd::simd_mask_popcount<DataType, SimdArchType>(mmaskedSrcRemainderMask) == halfCount;
-		natl::testAssert(test, mmaskedSrcRemainderCondition, "mmasked src remainder");
-
-		simd_mmask mmaskedSrcRemainderRemainMask = nasimd::simd_mmasked_compare_equal<DataType, SimdArchType>(mmaskedSrcRemainderResult, constant4, oddMask);
-		natl::Bool mmaskedSrcRemainderRemainCondition = nasimd::simd_mask_popcount<DataType, SimdArchType>(mmaskedSrcRemainderRemainMask) == halfCount;
-		natl::testAssert(test, mmaskedSrcRemainderRemainCondition, "mmasked src remainder remain");
+		testOpIfEqaulCount<DataType, SimdArchType>(test, mmaskedSrcRemainderResult, constant1, halfCount, "mmasked src add sat");
+		testOpIfEqaulMaskedCount<DataType, SimdArchType>(test, mmaskedSrcRemainderResult, constant4, oddMask, halfCount, "mmasked src add sat remain");
 	}
 
 	return test;
