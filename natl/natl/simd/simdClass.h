@@ -68,12 +68,12 @@ namespace natl::simd {
 			return SimdMMaskClass(simd_impl::mask_bitwise_xor(simdMmask, rhs.simdMmask));
 		}
 
-		constexpr SimdMMaskClass& operator<<=(SimdMMaskClass rhs) noexcept {
-			self() = self() << rhs;
+		constexpr SimdMMaskClass& operator<<=(const Size count) noexcept {
+			self() = self() << count;
 			return self();
 		}
-		constexpr SimdMMaskClass& operator>>=(SimdMMaskClass rhs) noexcept {
-			self() = self() >> rhs;
+		constexpr SimdMMaskClass& operator>>=(const Size count) noexcept {
+			self() = self() >> count;
 			return self();
 		}
 		constexpr SimdMMaskClass& operator&=(SimdMMaskClass rhs) noexcept {

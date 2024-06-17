@@ -2,6 +2,7 @@
 
 //own
 #include "commonHashs.h"
+#include "../util/stringLiteral.h"
 #include "../container/stringView.h"
 
 //interface 
@@ -91,4 +92,49 @@ namespace natl {
 	struct TypeCompareTypenameLessThanV {
 		constexpr static Bool value = getNameOfType<LhsType>() < getNameOfType<RhsType>();
 	};
+
+	template<typename Type>
+	struct NameOfBuiltInNumericV;
+
+	template<> struct NameOfBuiltInNumericV<i8> {
+		constexpr static ConstAsciiStringView value = "i8";
+	};
+	template<> struct NameOfBuiltInNumericV<i16> {
+		constexpr static ConstAsciiStringView value = "i16";
+	};
+	template<> struct NameOfBuiltInNumericV<i32> {
+		constexpr static ConstAsciiStringView value = "i32";
+	};
+	template<> struct NameOfBuiltInNumericV<i64> {
+		constexpr static ConstAsciiStringView value = "i64";
+	};
+
+	template<> struct NameOfBuiltInNumericV<ui8> {
+		constexpr static ConstAsciiStringView value = "ui8";
+	};
+	template<> struct NameOfBuiltInNumericV<ui16> {
+		constexpr static ConstAsciiStringView value = "ui16";
+	};
+	template<> struct NameOfBuiltInNumericV<ui32> {
+		constexpr static ConstAsciiStringView value = "ui32";
+	};
+	template<> struct NameOfBuiltInNumericV<ui64> {
+		constexpr static ConstAsciiStringView value = "ui64";
+	};
+
+	template<> struct NameOfBuiltInNumericV<f32> {
+		constexpr static ConstAsciiStringView value = "f32";
+	};
+	template<> struct NameOfBuiltInNumericV<f64> {
+		constexpr static ConstAsciiStringView value = "f64";
+	};
+
+	template<typename NumericType>
+		requires(IsBuiltInNumericC<NumericType>)
+	constexpr inline ConstAsciiStringView NameOfBuiltInNumeric = NameOfBuiltInNumericV<NumericType>::value;
+
+	template<typename NumericType>
+	constexpr ConstAsciiStringView getNameOfBuiltInNumeric() noexcept {
+		return NameOfBuiltInNumeric<NumericType>;
+	}
 }

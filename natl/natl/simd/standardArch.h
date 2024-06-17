@@ -45,11 +45,16 @@ namespace natl::simd {
 	};
 
 	template<Size RegisterSize>
+	struct SimdArchInfo<StandardArch<RegisterSize>> {
+		constexpr static inline Size registerSize = RegisterSize;
+		constexpr static inline ConstAsciiStringView name = "StandardArch";
+	};
+
+	template<Size RegisterSize>
 	struct ArchSimdRegisters<StandardArch<RegisterSize>> {
 	public:
 		using simd_arch = StandardArch<RegisterSize>;
 
-		//int
 		using SimdRegisterI8 = StandardSimdRegisterBase<i8, simd_arch::registerSize>;
 		using SimdRegisterI16 = StandardSimdRegisterBase<i16, simd_arch::registerSize>;
 		using SimdRegisterI32 = StandardSimdRegisterBase<i32, simd_arch::registerSize>;
@@ -60,14 +65,11 @@ namespace natl::simd {
 		using SimdRegisterUI32 = StandardSimdRegisterBase<ui32, simd_arch::registerSize>;
 		using SimdRegisterUI64 = StandardSimdRegisterBase<ui64, simd_arch::registerSize>;
 
-		//float
 		using SimdRegisterF32 = StandardSimdRegisterBase<f32, simd_arch::registerSize>;
 		using SimdRegisterF64 = StandardSimdRegisterBase<f64, simd_arch::registerSize>;
 
-		//any
 		using SimdRegisterAny = StandardSimdRegisterBase<ui8, simd_arch::registerSize>;
 
-		//int
 		using SimdRegisterI8Info = StandardSimdRegisterBaseInfo<i8, simd_arch::registerSize>;
 		using SimdRegisterI16Info = StandardSimdRegisterBaseInfo<i16, simd_arch::registerSize>;
 		using SimdRegisterI32Info = StandardSimdRegisterBaseInfo<i32, simd_arch::registerSize>;
@@ -78,11 +80,9 @@ namespace natl::simd {
 		using SimdRegisterUI32Info = StandardSimdRegisterBaseInfo<ui32, simd_arch::registerSize>;
 		using SimdRegisterUI64Info = StandardSimdRegisterBaseInfo<ui64, simd_arch::registerSize>;
 
-		//float
 		using SimdRegisterF32Info = StandardSimdRegisterBaseInfo<f32, simd_arch::registerSize>;
 		using SimdRegisterF64Info = StandardSimdRegisterBaseInfo<f64, simd_arch::registerSize>;
 
-		//any
 		using SimdRegisterAnyInfo = StandardSimdRegisterBaseInfo<ui8, simd_arch::registerSize>;
 	};
 
@@ -105,7 +105,7 @@ namespace natl::simd {
 	//simd op//
 
 	template<Size RegisterSize>
-	struct ArchSimdOp<StandardArch<RegisterSize>> {
+	struct SimdArchOp<StandardArch<RegisterSize>> {
 	public:
 		using simd_arch = StandardArch<RegisterSize>;
 
@@ -199,7 +199,7 @@ namespace natl::simd {
 		//mmasked add
 		template<typename SimdRegisterType, typename SimdMaskType>
 		constexpr inline static SimdRegisterType mmaskedAdd(SimdRegisterType lhs, SimdRegisterType rhs, SimdMaskType mmask) noexcept {
-			SimdRegisterType output;
+			SimdRegisterType output{};
 			for (Size i = 0; i < SimdRegisterToInfo<SimdRegisterType>::count(); i++) {
 				if (mmask[i]) {
 					output[i] = lhs[i] + rhs[i];
@@ -244,13 +244,11 @@ namespace natl::simd {
 		//mmasked src add
 		template<typename SimdRegisterType, typename SimdMaskType>
 		constexpr inline static SimdRegisterType mmaskedSrcAdd(SimdRegisterType lhs, SimdRegisterType rhs, SimdRegisterType src, SimdMaskType mmask) noexcept {
-			SimdRegisterType output;
+			SimdRegisterType output = src;
 			for (Size i = 0; i < SimdRegisterToInfo<SimdRegisterType>::count(); i++) {
 				if (mmask[i]) {
 					output[i] = lhs[i] + rhs[i];
-				} else {
-					output[i] = src[i];
-				}
+				} 
 			}
 			return output;
 		}
@@ -334,7 +332,7 @@ namespace natl::simd {
 		//mmasked sub
 		template<typename SimdRegisterType, typename SimdMaskType>
 		constexpr inline static SimdRegisterType mmaskedSub(SimdRegisterType lhs, SimdRegisterType rhs, SimdMaskType mmask) noexcept {
-			SimdRegisterType output;
+			SimdRegisterType output{};
 			for (Size i = 0; i < SimdRegisterToInfo<SimdRegisterType>::count(); i++) {
 				if (mmask[i]) {
 					output[i] = lhs[i] - rhs[i];
@@ -379,12 +377,10 @@ namespace natl::simd {
 		//mmasked src sub
 		template<typename SimdRegisterType, typename SimdMaskType>
 		constexpr inline static SimdRegisterType mmaskedSrcSub(SimdRegisterType lhs, SimdRegisterType rhs, SimdRegisterType src, SimdMaskType mmask) noexcept {
-			SimdRegisterType output;
+			SimdRegisterType output = src;
 			for (Size i = 0; i < SimdRegisterToInfo<SimdRegisterType>::count(); i++) {
 				if (mmask[i]) {
 					output[i] = lhs[i] - rhs[i];
-				} else {
-					output[i] = src[i];
 				}
 			}
 			return output;
@@ -428,7 +424,7 @@ namespace natl::simd {
 		constexpr inline static SimdRegisterType mul(SimdRegisterType lhs, SimdRegisterType rhs) noexcept {
 			SimdRegisterType output;
 			for (Size i = 0; i < SimdRegisterToInfo<SimdRegisterType>::count(); i++) {
-				output[i] = lhs[i] - rhs[i];
+				output[i] = lhs[i] * rhs[i];
 			}
 			return output;
 		}
@@ -469,10 +465,10 @@ namespace natl::simd {
 		//mmasked mul
 		template<typename SimdRegisterType, typename SimdMaskType>
 		constexpr inline static SimdRegisterType mmaskedMul(SimdRegisterType lhs, SimdRegisterType rhs, SimdMaskType mmask) noexcept {
-			SimdRegisterType output;
+			SimdRegisterType output{};
 			for (Size i = 0; i < SimdRegisterToInfo<SimdRegisterType>::count(); i++) {
 				if (mmask[i]) {
-					output[i] = lhs[i] - rhs[i];
+					output[i] = lhs[i] * rhs[i];
 				}
 			}
 			return output;
@@ -514,13 +510,11 @@ namespace natl::simd {
 		//mmasked src mul
 		template<typename SimdRegisterType, typename SimdMaskType>
 		constexpr inline static SimdRegisterType mmaskedSrcMul(SimdRegisterType lhs, SimdRegisterType rhs, SimdRegisterType src, SimdMaskType mmask) noexcept {
-			SimdRegisterType output;
+			SimdRegisterType output = src;
 			for (Size i = 0; i < SimdRegisterToInfo<SimdRegisterType>::count(); i++) {
 				if (mmask[i]) {
-					output[i] = lhs[i] - rhs[i];
-				} else {
-					output[i] = src[i];
-				}
+					output[i] = lhs[i] * rhs[i];
+				} 
 			}
 			return output;
 		}
@@ -604,7 +598,7 @@ namespace natl::simd {
 		//mmasked div 
 		template<typename SimdRegisterType, typename SimdMaskType>
 		constexpr inline static SimdRegisterType mmaskedDiv(SimdRegisterType lhs, SimdRegisterType rhs, SimdMaskType mmask) noexcept {
-			SimdRegisterType output;
+			SimdRegisterType output{};
 			for (Size i = 0; i < SimdRegisterToInfo<SimdRegisterType>::count(); i++) {
 				if (mmask[i]) {
 					output[i] = lhs[i] / rhs[i];
@@ -649,12 +643,10 @@ namespace natl::simd {
 		//mmasked src div 
 		template<typename SimdRegisterType, typename SimdMaskType>
 		constexpr inline static SimdRegisterType mmaskedSrcDiv(SimdRegisterType lhs, SimdRegisterType rhs, SimdRegisterType src, SimdMaskType mmask) noexcept {
-			SimdRegisterType output;
+			SimdRegisterType output = src;
 			for (Size i = 0; i < SimdRegisterToInfo<SimdRegisterType>::count(); i++) {
 				if (mmask[i]) {
 					output[i] = lhs[i] / rhs[i];
-				} else {
-					output[i] = src[i];
 				}
 			}
 			return output;
@@ -732,7 +724,7 @@ namespace natl::simd {
 		//mmasked add sat 
 		template<typename SimdRegisterType, typename SimdMaskType>
 		constexpr inline static SimdRegisterType mmaskedAddSat(SimdRegisterType lhs, SimdRegisterType rhs, SimdMaskType mmask) noexcept {
-			SimdRegisterType output;
+			SimdRegisterType output{};
 			for (Size i = 0; i < SimdRegisterToInfo<SimdRegisterType>::count(); i++) {
 				if (mmask[i]) {
 					output[i] = natlm::addsat<typename SimdRegisterToInfo<SimdRegisterType>::value_type>(lhs[i], rhs[i]);
@@ -770,12 +762,10 @@ namespace natl::simd {
 		//mmasked src add sat 
 		template<typename SimdRegisterType, typename SimdMaskType>
 		constexpr inline static SimdRegisterType mmaskedSrcAddSat(SimdRegisterType lhs, SimdRegisterType rhs, SimdRegisterType src, SimdMaskType mmask) noexcept {
-			SimdRegisterType output;
+			SimdRegisterType output = src;
 			for (Size i = 0; i < SimdRegisterToInfo<SimdRegisterType>::count(); i++) {
 				if (mmask[i]) {
 					output[i] = natlm::addsat<typename SimdRegisterToInfo<SimdRegisterType>::value_type>(lhs[i], rhs[i]);
-				} else {
-					output[i] = src[i];
 				}
 			}
 			return output;
@@ -847,7 +837,7 @@ namespace natl::simd {
 		//mmasked sub sat 
 		template<typename SimdRegisterType, typename SimdMaskType>
 		constexpr inline static SimdRegisterType mmaskedSubSat(SimdRegisterType lhs, SimdRegisterType rhs, SimdMaskType mmask) noexcept {
-			SimdRegisterType output;
+			SimdRegisterType output{};
 			for (Size i = 0; i < SimdRegisterToInfo<SimdRegisterType>::count(); i++) {
 				if (mmask[i]) {
 					output[i] = natlm::subsat<typename SimdRegisterToInfo<SimdRegisterType>::value_type>(lhs[i], rhs[i]);
@@ -885,12 +875,10 @@ namespace natl::simd {
 		//mmasked src sub sat 
 		template<typename SimdRegisterType, typename SimdMaskType>
 		constexpr inline static SimdRegisterType mmaskedSrcSubSat(SimdRegisterType lhs, SimdRegisterType rhs, SimdRegisterType src, SimdMaskType mmask) noexcept {
-			SimdRegisterType output;
+			SimdRegisterType output = src;
 			for (Size i = 0; i < SimdRegisterToInfo<SimdRegisterType>::count(); i++) {
 				if (mmask[i]) {
 					output[i] = natlm::subsat<typename SimdRegisterToInfo<SimdRegisterType>::value_type>(lhs[i], rhs[i]);
-				} else {
-					output[i] = src[i];
 				}
 			}
 			return output;
@@ -961,7 +949,7 @@ namespace natl::simd {
 		//mmasked mul sat 
 		template<typename SimdRegisterType, typename SimdMaskType>
 		constexpr inline static SimdRegisterType mmaskedMulSat(SimdRegisterType lhs, SimdRegisterType rhs, SimdMaskType mmask) noexcept {
-			SimdRegisterType output;
+			SimdRegisterType output{};
 			for (Size i = 0; i < SimdRegisterToInfo<SimdRegisterType>::count(); i++) {
 				if (mmask[i]) {
 					output[i] = natlm::mulsat<typename SimdRegisterToInfo<SimdRegisterType>::value_type>(lhs[i], rhs[i]);
@@ -999,12 +987,10 @@ namespace natl::simd {
 		//mmasked src mul sat 
 		template<typename SimdRegisterType, typename SimdMaskType>
 		constexpr inline static SimdRegisterType mmaskedSrcMulSat(SimdRegisterType lhs, SimdRegisterType rhs, SimdRegisterType src, SimdMaskType mmask) noexcept {
-			SimdRegisterType output;
+			SimdRegisterType output = src;
 			for (Size i = 0; i < SimdRegisterToInfo<SimdRegisterType>::count(); i++) {
 				if (mmask[i]) {
 					output[i] = natlm::mulsat<typename SimdRegisterToInfo<SimdRegisterType>::value_type>(lhs[i], rhs[i]);
-				} else {
-					output[i] = src[i];
 				}
 			}
 			return output;
@@ -1075,7 +1061,7 @@ namespace natl::simd {
 		//mmasked div sat 
 		template<typename SimdRegisterType, typename SimdMaskType>
 		constexpr inline static SimdRegisterType mmaskedDivSat(SimdRegisterType lhs, SimdRegisterType rhs, SimdMaskType mmask) noexcept {
-			SimdRegisterType output;
+			SimdRegisterType output{};
 			for (Size i = 0; i < SimdRegisterToInfo<SimdRegisterType>::count(); i++) {
 				if (mmask[i]) {
 					output[i] = natlm::divsat<typename SimdRegisterToInfo<SimdRegisterType>::value_type>(lhs[i], rhs[i]);
@@ -1113,12 +1099,10 @@ namespace natl::simd {
 		//mmasked src div sat 
 		template<typename SimdRegisterType, typename SimdMaskType>
 		constexpr inline static SimdRegisterType mmaskedSrcDivSat(SimdRegisterType lhs, SimdRegisterType rhs, SimdRegisterType src, SimdMaskType mmask) noexcept {
-			SimdRegisterType output;
+			SimdRegisterType output = src;
 			for (Size i = 0; i < SimdRegisterToInfo<SimdRegisterType>::count(); i++) {
 				if (mmask[i]) {
 					output[i] = natlm::divsat<typename SimdRegisterToInfo<SimdRegisterType>::value_type>(lhs[i], rhs[i]);
-				} else {
-					output[i] = src[i];
 				}
 			}
 			return output;
@@ -1227,12 +1211,10 @@ namespace natl::simd {
 		//mmasked src remainder
 		template<typename SimdRegisterType, typename SimdMaskType>
 		constexpr inline static SimdRegisterType mmaskedSrcRemainder(SimdRegisterType lhs, SimdRegisterType rhs, SimdRegisterType src, SimdMaskType mmask) noexcept {
-			SimdRegisterType output;
+			SimdRegisterType output = src;
 			for (Size i = 0; i < SimdRegisterToInfo<SimdRegisterType>::count(); i++) {
 				if (mmask[i]) {
 					output[i] = lhs[i] % rhs[i];
-				} else {
-					output[i] = src[i];
 				}
 			}
 			return output;
@@ -1316,12 +1298,10 @@ namespace natl::simd {
 		constexpr inline static simd_register_f32 mmasked_src_fused_mul_add_f32(
 			simd_register_f32 mulLhs, simd_register_f32 mulRhs,
 			simd_register_f32 addRhs, simd_register_f32 src, simd_mmask_f32 mmask) noexcept {
-			simd_register_f32 output{};
+			simd_register_f32 output = src;
 			for (Size i = 0; i < SimdRegisterF32Info<simd_arch>::count(); i++) {
 				if (mmask[i]) {
 					output[i] = (mulLhs[i] * mulRhs[i]) + addRhs[i];
-				} else {
-					output[i] = src[i];
 				}
 			}
 			return output;
@@ -1330,12 +1310,10 @@ namespace natl::simd {
 		constexpr inline static simd_register_f64 mmasked_src_fused_mul_add_f64(
 			simd_register_f64 mulLhs, simd_register_f64 mulRhs,
 			simd_register_f64 addRhs, simd_register_f64 src, simd_mmask_f64 mmask) noexcept {
-			simd_register_f64 output{};
+			simd_register_f64 output = src;
 			for (Size i = 0; i < SimdRegisterF64Info<simd_arch>::count(); i++) {
 				if (mmask[i]) {
 					output[i] = (mulLhs[i] * mulRhs[i]) + addRhs[i];
-				} else {
-					output[i] = src[i];
 				}
 			}
 			return output;
@@ -1393,13 +1371,11 @@ namespace natl::simd {
 		constexpr inline static simd_register_f32 mmasked_src_fused_mul_sub_f32(
 			simd_register_f32 mulLhs, simd_register_f32 mulRhs,
 			simd_register_f32 subRhs, simd_register_f32 src, simd_mmask_f32 mmask) noexcept {
-			simd_register_f32 output{};
+			simd_register_f32 output = src;
 			for (Size i = 0; i < SimdRegisterF32Info<simd_arch>::count(); i++) {
 				if (mmask[i]) {
 					output[i] = (mulLhs[i] * mulRhs[i]) - subRhs[i];
-				} else {
-					output[i] = src[i];
-				}
+				} 
 			}
 			return output;
 		}
@@ -1407,13 +1383,11 @@ namespace natl::simd {
 		constexpr inline static simd_register_f64 mmasked_src_fused_mul_sub_f64(
 			simd_register_f64 mulLhs, simd_register_f64 mulRhs,
 			simd_register_f64 subRhs, simd_register_f64 src, simd_mmask_f64 mmask) noexcept {
-			simd_register_f64 output{};
+			simd_register_f64 output = src;
 			for (Size i = 0; i < SimdRegisterF64Info<simd_arch>::count(); i++) {
 				if (mmask[i]) {
 					output[i] = (mulLhs[i] * mulRhs[i]) - subRhs[i];
-				} else {
-					output[i] = src[i];
-				}
+				} 
 			}
 			return output;
 		}
@@ -1457,25 +1431,21 @@ namespace natl::simd {
 
 		//mmasked src square root
 		constexpr inline static simd_register_f32 mmasked_src_square_root_f32(simd_register_f32 value, simd_register_f32 src, simd_mmask_f32 mmask) noexcept {
-			simd_register_f32 output = value;
+			simd_register_f32 output = src;
 			for (Size i = 0; i < SimdRegisterF32Info<simd_arch>::count(); i++) {
 				if (mmask[i]) {
 					output[i] = math::sqrtF32(value[i]);
-				} else {
-					output[i] = src[i];
-				}
+				} 
 			}
 			return output;
 		}
 
 		constexpr inline static simd_register_f64 mmasked_src_square_root_f64(simd_register_f64 value, simd_register_f64 src, simd_mmask_f64 mmask) noexcept {
-			simd_register_f64 output = value;
+			simd_register_f64 output = src;
 			for (Size i = 0; i < SimdRegisterF64Info<simd_arch>::count(); i++) {
 				if (mmask[i]) {
 					output[i] = math::sqrtF64(value[i]);
-				} else {
-					output[i] = src[i];
-				}
+				} 
 			}
 			return output;
 		}
@@ -1519,25 +1489,21 @@ namespace natl::simd {
 
 		//mmasked src reciprocal
 		constexpr inline static simd_register_f32 mmasked_src_reciprocal_f32(simd_register_f32 value, simd_register_f32 src, simd_mmask_f32 mmask) noexcept {
-			simd_register_f32 output = value;
+			simd_register_f32 output = src;
 			for (Size i = 0; i < SimdRegisterF32Info<simd_arch>::count(); i++) {
 				if (mmask[i]) {
 					output[i] = math::reciprocalF32(value[i]);
-				} else {
-					output[i] = src[i];
-				}
+				} 
 			}
 			return output;
 		}
 
 		constexpr inline static simd_register_f64 mmasked_src_reciprocal_f64(simd_register_f64 value, simd_register_f64 src, simd_mmask_f64 mmask) noexcept {
-			simd_register_f64 output = value;
+			simd_register_f64 output = src;
 			for (Size i = 0; i < SimdRegisterF64Info<simd_arch>::count(); i++) {
 				if (mmask[i]) {
 					output[i] = math::reciprocalF64(value[i]);
-				} else {
-					output[i] = src[i];
-				}
+				} 
 			}
 			return output;
 		}
@@ -1652,7 +1618,7 @@ namespace natl::simd {
 		//mmasked min
 		template<typename SimdRegisterType, typename SimdMaskType>
 		constexpr inline static SimdRegisterType mmaskedMin(SimdRegisterType lhs, SimdRegisterType rhs, SimdMaskType mmask) noexcept {
-			SimdRegisterType output;
+			SimdRegisterType output{};
 			for (Size i = 0; i < SimdRegisterToInfo<SimdRegisterType>::count(); i++) {
 				if (mmask[i]) {
 					output[i] = (lhs[i] < rhs[i]) ? lhs[i] : rhs[i];
@@ -1697,12 +1663,10 @@ namespace natl::simd {
 		//mmasked src min
 		template<typename SimdRegisterType, typename SimdMaskType>
 		constexpr inline static SimdRegisterType mmaskedSrcMin(SimdRegisterType lhs, SimdRegisterType rhs, SimdRegisterType src, SimdMaskType mmask) noexcept {
-			SimdRegisterType output;
+			SimdRegisterType output = src;
 			for (Size i = 0; i < SimdRegisterToInfo<SimdRegisterType>::count(); i++) {
 				if (mmask[i]) {
 					output[i] = (lhs[i] < rhs[i]) ? lhs[i] : rhs[i];
-				} else {
-					output[i] = src[i];
 				}
 			}
 			return output;
@@ -1787,7 +1751,7 @@ namespace natl::simd {
 		//mmasked max
 		template<typename SimdRegisterType, typename SimdMaskType>
 		constexpr inline static SimdRegisterType mmaskedMax(SimdRegisterType lhs, SimdRegisterType rhs, SimdMaskType mmask) noexcept {
-			SimdRegisterType output;
+			SimdRegisterType output{};
 			for (Size i = 0; i < SimdRegisterToInfo<SimdRegisterType>::count(); i++) {
 				if (mmask[i]) {
 					output[i] = (lhs[i] < rhs[i]) ? rhs[i] : lhs[i];
@@ -1832,13 +1796,11 @@ namespace natl::simd {
 		//mmasked src max
 		template<typename SimdRegisterType, typename SimdMaskType>
 		constexpr inline static SimdRegisterType mmaskedSrcMax(SimdRegisterType lhs, SimdRegisterType rhs, SimdRegisterType src, SimdMaskType mmask) noexcept {
-			SimdRegisterType output;
+			SimdRegisterType output = src;
 			for (Size i = 0; i < SimdRegisterToInfo<SimdRegisterType>::count(); i++) {
 				if (mmask[i]) {
 					output[i] = (lhs[i] < rhs[i]) ? rhs[i] : lhs[i];
-				} else {
-					output[i] = src[i];
-				}
+				} 
 			}
 			return output;
 		}
@@ -2102,23 +2064,19 @@ namespace natl::simd {
 
 		//mmasked src ceil
 		constexpr inline static simd_register_f32 mmasked_src_ceil_f32(simd_register_f32 value, simd_register_f32 src, simd_mmask_f32 mmask) noexcept {
-			simd_register_f32 output;
+			simd_register_f32 output = src;
 			for (Size i = 0; i < SimdRegisterF32Info<simd_arch>::count(); i++) {
 				if (mmask[i]) {
 					output[i] = math::ceilF32(value[i]);
-				} else {
-					output[i] = src[i];
-				}
+				} 
 			}
 			return output;
 		}
 		constexpr inline static simd_register_f64 mmasked_src_ceil_f64(simd_register_f64 value, simd_register_f64 src, simd_mmask_f64 mmask) noexcept {
-			simd_register_f64 output;
+			simd_register_f64 output = src;
 			for (Size i = 0; i < SimdRegisterF64Info<simd_arch>::count(); i++) {
 				if (mmask[i]) {
 					output[i] = math::ceilF64(value[i]);
-				} else {
-					output[i] = src[i];
 				}
 			}
 			return output;
@@ -2163,23 +2121,19 @@ namespace natl::simd {
 
 		//mmasked src floor
 		constexpr inline static simd_register_f32 mmasked_src_floor_f32(simd_register_f32 value, simd_register_f32 src, simd_mmask_f32 mmask) noexcept {
-			simd_register_f32 output;
+			simd_register_f32 output = src;
 			for (Size i = 0; i < SimdRegisterF32Info<simd_arch>::count(); i++) {
 				if (mmask[i]) {
 					output[i] = math::floorF32(value[i]);
-				} else {
-					output[i] = src[i];
-				}
+				} 
 			}
 			return output;
 		}
 		constexpr inline static simd_register_f64 mmasked_src_floor_f64(simd_register_f64 value, simd_register_f64 src, simd_mmask_f64 mmask) noexcept {
-			simd_register_f64 output;
+			simd_register_f64 output = src;
 			for (Size i = 0; i < SimdRegisterF64Info<simd_arch>::count(); i++) {
 				if (mmask[i]) {
 					output[i] = math::floorF64(value[i]);
-				} else {
-					output[i] = src[i];
 				}
 			}
 			return output;
@@ -2224,24 +2178,20 @@ namespace natl::simd {
 
 		//mmasked src trunc
 		constexpr inline static simd_register_f32 mmasked_src_trunc_f32(simd_register_f32 value, simd_register_f32 src, simd_mmask_f32 mmask) noexcept {
-			simd_register_f32 output;
+			simd_register_f32 output = src;
 			for (Size i = 0; i < SimdRegisterF32Info<simd_arch>::count(); i++) {
 				if (mmask[i]) {
 					output[i] = math::truncF32(value[i]);
-				} else {
-					output[i] = src[i];
-				}
+				} 
 			}
 			return output;
 		}
 		constexpr inline static simd_register_f64 mmasked_src_trunc_f64(simd_register_f64 value, simd_register_f64 src, simd_mmask_f64 mmask) noexcept {
-			simd_register_f64 output;
+			simd_register_f64 output = src;
 			for (Size i = 0; i < SimdRegisterF64Info<simd_arch>::count(); i++) {
 				if (mmask[i]) {
 					output[i] = math::truncF64(value[i]);
-				} else {
-					output[i] = src[i];
-				}
+				} 
 			}
 			return output;
 		}
@@ -2285,31 +2235,27 @@ namespace natl::simd {
 
 		//mmasked src round
 		constexpr inline static simd_register_f32 mmasked_src_round_f32(simd_register_f32 value, simd_register_f32 src, simd_mmask_f32 mmask) noexcept {
-			simd_register_f32 output;
+			simd_register_f32 output = src;
 			for (Size i = 0; i < SimdRegisterF32Info<simd_arch>::count(); i++) {
 				if (mmask[i]) {
 					output[i] = math::roundF32(value[i]);
-				} else {
-					output[i] = src[i];
-				}
+				} 
 			}
 			return output;
 		}
 		constexpr inline static simd_register_f64 mmasked_src_round_f64(simd_register_f64 value, simd_register_f64 src, simd_mmask_f64 mmask) noexcept {
-			simd_register_f64 output;
+			simd_register_f64 output = src;
 			for (Size i = 0; i < SimdRegisterF64Info<simd_arch>::count(); i++) {
 				if (mmask[i]) {
 					output[i] = math::roundF64(value[i]);
-				} else {
-					output[i] = src[i];
-				}
+				} 
 			}
 			return output;
 		}
 
 		//trig//
 
-		//basic_sin
+				//basic_sin
 		constexpr inline static simd_register_f32 basic_sin_f32(simd_register_f32 value) noexcept {
 			simd_register_f32 output;
 			for (Size i = 0; i < SimdRegisterF32Info<simd_arch>::count(); i++) {
@@ -2347,23 +2293,19 @@ namespace natl::simd {
 
 		//mmasked src basic_sin
 		constexpr inline static simd_register_f32 mmasked_src_basic_sin_f32(simd_register_f32 value, simd_register_f32 src, simd_mmask_f32 mmask) noexcept {
-			simd_register_f32 output = value;
+			simd_register_f32 output = src;
 			for (Size i = 0; i < SimdRegisterF32Info<simd_arch>::count(); i++) {
 				if (mmask[i]) {
 					output[i] = math::basicSinF32(value[i]);
-				} else {
-					output[i] = src[i];
 				}
 			}
 			return output;
 		}
 		constexpr inline static simd_register_f64 mmasked_src_basic_sin_f64(simd_register_f64 value, simd_register_f64 src, simd_mmask_f64 mmask) noexcept {
-			simd_register_f64 output = value;
+			simd_register_f64 output = src;
 			for (Size i = 0; i < SimdRegisterF64Info<simd_arch>::count(); i++) {
 				if (mmask[i]) {
 					output[i] = math::basicSinF64(value[i]);
-				} else {
-					output[i] = src[i];
 				}
 			}
 			return output;
@@ -2407,23 +2349,19 @@ namespace natl::simd {
 
 		//mmasked src sin
 		constexpr inline static simd_register_f32 mmasked_src_sin_f32(simd_register_f32 value, simd_register_f32 src, simd_mmask_f32 mmask) noexcept {
-			simd_register_f32 output = value;
+			simd_register_f32 output = src;
 			for (Size i = 0; i < SimdRegisterF32Info<simd_arch>::count(); i++) {
 				if (mmask[i]) {
 					output[i] = math::sinF32(value[i]);
-				} else {
-					output[i] = src[i];
 				}
 			}
 			return output;
 		}
 		constexpr inline static simd_register_f64 mmasked_src_sin_f64(simd_register_f64 value, simd_register_f64 src, simd_mmask_f64 mmask) noexcept {
-			simd_register_f64 output = value;
+			simd_register_f64 output = src;
 			for (Size i = 0; i < SimdRegisterF64Info<simd_arch>::count(); i++) {
 				if (mmask[i]) {
 					output[i] = math::sinF64(value[i]);
-				} else {
-					output[i] = src[i];
 				}
 			}
 			return output;
@@ -2467,23 +2405,19 @@ namespace natl::simd {
 
 		//mmasked src basic_cos
 		constexpr inline static simd_register_f32 mmasked_src_basic_cos_f32(simd_register_f32 value, simd_register_f32 src, simd_mmask_f32 mmask) noexcept {
-			simd_register_f32 output = value;
+			simd_register_f32 output = src;
 			for (Size i = 0; i < SimdRegisterF32Info<simd_arch>::count(); i++) {
 				if (mmask[i]) {
 					output[i] = math::basicCosF32(value[i]);
-				} else {
-					output[i] = src[i];
 				}
 			}
 			return output;
 		}
 		constexpr inline static simd_register_f64 mmasked_src_basic_cos_f64(simd_register_f64 value, simd_register_f64 src, simd_mmask_f64 mmask) noexcept {
-			simd_register_f64 output = value;
+			simd_register_f64 output = src;
 			for (Size i = 0; i < SimdRegisterF64Info<simd_arch>::count(); i++) {
 				if (mmask[i]) {
 					output[i] = math::basicCosF64(value[i]);
-				} else {
-					output[i] = src[i];
 				}
 			}
 			return output;
@@ -2527,23 +2461,19 @@ namespace natl::simd {
 
 		//mmasked src cos
 		constexpr inline static simd_register_f32 mmasked_src_cos_f32(simd_register_f32 value, simd_register_f32 src, simd_mmask_f32 mmask) noexcept {
-			simd_register_f32 output = value;
+			simd_register_f32 output = src;
 			for (Size i = 0; i < SimdRegisterF32Info<simd_arch>::count(); i++) {
 				if (mmask[i]) {
 					output[i] = math::cosF32(value[i]);
-				} else {
-					output[i] = src[i];
 				}
 			}
 			return output;
 		}
 		constexpr inline static simd_register_f64 mmasked_src_cos_f64(simd_register_f64 value, simd_register_f64 src, simd_mmask_f64 mmask) noexcept {
-			simd_register_f64 output = value;
+			simd_register_f64 output = src;
 			for (Size i = 0; i < SimdRegisterF64Info<simd_arch>::count(); i++) {
 				if (mmask[i]) {
 					output[i] = math::cosF64(value[i]);
-				} else {
-					output[i] = src[i];
 				}
 			}
 			return output;
@@ -2587,23 +2517,19 @@ namespace natl::simd {
 
 		//mmasked src basic_tan
 		constexpr inline static simd_register_f32 mmasked_src_basic_tan_f32(simd_register_f32 value, simd_register_f32 src, simd_mmask_f32 mmask) noexcept {
-			simd_register_f32 output = value;
+			simd_register_f32 output = src;
 			for (Size i = 0; i < SimdRegisterF32Info<simd_arch>::count(); i++) {
 				if (mmask[i]) {
 					output[i] = math::basicTanF32(value[i]);
-				} else {
-					output[i] = src[i];
 				}
 			}
 			return output;
 		}
 		constexpr inline static simd_register_f64 mmasked_src_basic_tan_f64(simd_register_f64 value, simd_register_f64 src, simd_mmask_f64 mmask) noexcept {
-			simd_register_f64 output = value;
+			simd_register_f64 output = src;
 			for (Size i = 0; i < SimdRegisterF64Info<simd_arch>::count(); i++) {
 				if (mmask[i]) {
 					output[i] = math::basicTanF64(value[i]);
-				} else {
-					output[i] = src[i];
 				}
 			}
 			return output;
@@ -2647,23 +2573,19 @@ namespace natl::simd {
 
 		//mmasked src tan
 		constexpr inline static simd_register_f32 mmasked_src_tan_f32(simd_register_f32 value, simd_register_f32 src, simd_mmask_f32 mmask) noexcept {
-			simd_register_f32 output = value;
+			simd_register_f32 output = src;
 			for (Size i = 0; i < SimdRegisterF32Info<simd_arch>::count(); i++) {
 				if (mmask[i]) {
 					output[i] = math::tanF32(value[i]);
-				} else {
-					output[i] = src[i];
 				}
 			}
 			return output;
 		}
 		constexpr inline static simd_register_f64 mmasked_src_tan_f64(simd_register_f64 value, simd_register_f64 src, simd_mmask_f64 mmask) noexcept {
-			simd_register_f64 output = value;
+			simd_register_f64 output = src;
 			for (Size i = 0; i < SimdRegisterF64Info<simd_arch>::count(); i++) {
 				if (mmask[i]) {
 					output[i] = math::tanF64(value[i]);
-				} else {
-					output[i] = src[i];
 				}
 			}
 			return output;
@@ -2707,23 +2629,19 @@ namespace natl::simd {
 
 		//mmasked src basic_asin
 		constexpr inline static simd_register_f32 mmasked_src_basic_asin_f32(simd_register_f32 value, simd_register_f32 src, simd_mmask_f32 mmask) noexcept {
-			simd_register_f32 output = value;
+			simd_register_f32 output = src;
 			for (Size i = 0; i < SimdRegisterF32Info<simd_arch>::count(); i++) {
 				if (mmask[i]) {
 					output[i] = math::basicAsinF32(value[i]);
-				} else {
-					output[i] = src[i];
 				}
 			}
 			return output;
 		}
 		constexpr inline static simd_register_f64 mmasked_src_basic_asin_f64(simd_register_f64 value, simd_register_f64 src, simd_mmask_f64 mmask) noexcept {
-			simd_register_f64 output = value;
+			simd_register_f64 output = src;
 			for (Size i = 0; i < SimdRegisterF64Info<simd_arch>::count(); i++) {
 				if (mmask[i]) {
 					output[i] = math::basicAsinF64(value[i]);
-				} else {
-					output[i] = src[i];
 				}
 			}
 			return output;
@@ -2767,23 +2685,19 @@ namespace natl::simd {
 
 		//mmasked src asin
 		constexpr inline static simd_register_f32 mmasked_src_asin_f32(simd_register_f32 value, simd_register_f32 src, simd_mmask_f32 mmask) noexcept {
-			simd_register_f32 output = value;
+			simd_register_f32 output = src;
 			for (Size i = 0; i < SimdRegisterF32Info<simd_arch>::count(); i++) {
 				if (mmask[i]) {
 					output[i] = math::asinF32(value[i]);
-				} else {
-					output[i] = src[i];
 				}
 			}
 			return output;
 		}
 		constexpr inline static simd_register_f64 mmasked_src_asin_f64(simd_register_f64 value, simd_register_f64 src, simd_mmask_f64 mmask) noexcept {
-			simd_register_f64 output = value;
+			simd_register_f64 output = src;
 			for (Size i = 0; i < SimdRegisterF64Info<simd_arch>::count(); i++) {
 				if (mmask[i]) {
 					output[i] = math::asinF64(value[i]);
-				} else {
-					output[i] = src[i];
 				}
 			}
 			return output;
@@ -2827,23 +2741,19 @@ namespace natl::simd {
 
 		//mmasked src basic_acos
 		constexpr inline static simd_register_f32 mmasked_src_basic_acos_f32(simd_register_f32 value, simd_register_f32 src, simd_mmask_f32 mmask) noexcept {
-			simd_register_f32 output = value;
+			simd_register_f32 output = src;
 			for (Size i = 0; i < SimdRegisterF32Info<simd_arch>::count(); i++) {
 				if (mmask[i]) {
 					output[i] = math::basicAcosF32(value[i]);
-				} else {
-					output[i] = src[i];
 				}
 			}
 			return output;
 		}
 		constexpr inline static simd_register_f64 mmasked_src_basic_acos_f64(simd_register_f64 value, simd_register_f64 src, simd_mmask_f64 mmask) noexcept {
-			simd_register_f64 output = value;
+			simd_register_f64 output = src;
 			for (Size i = 0; i < SimdRegisterF64Info<simd_arch>::count(); i++) {
 				if (mmask[i]) {
 					output[i] = math::basicAcosF64(value[i]);
-				} else {
-					output[i] = src[i];
 				}
 			}
 			return output;
@@ -2887,23 +2797,19 @@ namespace natl::simd {
 
 		//mmasked src acos
 		constexpr inline static simd_register_f32 mmasked_src_acos_f32(simd_register_f32 value, simd_register_f32 src, simd_mmask_f32 mmask) noexcept {
-			simd_register_f32 output = value;
+			simd_register_f32 output = src;
 			for (Size i = 0; i < SimdRegisterF32Info<simd_arch>::count(); i++) {
 				if (mmask[i]) {
 					output[i] = math::acosF32(value[i]);
-				} else {
-					output[i] = src[i];
 				}
 			}
 			return output;
 		}
 		constexpr inline static simd_register_f64 mmasked_src_acos_f64(simd_register_f64 value, simd_register_f64 src, simd_mmask_f64 mmask) noexcept {
-			simd_register_f64 output = value;
+			simd_register_f64 output = src;
 			for (Size i = 0; i < SimdRegisterF64Info<simd_arch>::count(); i++) {
 				if (mmask[i]) {
 					output[i] = math::acosF64(value[i]);
-				} else {
-					output[i] = src[i];
 				}
 			}
 			return output;
@@ -2947,23 +2853,19 @@ namespace natl::simd {
 
 		//mmasked src basic_atan
 		constexpr inline static simd_register_f32 mmasked_src_basic_atan_f32(simd_register_f32 value, simd_register_f32 src, simd_mmask_f32 mmask) noexcept {
-			simd_register_f32 output = value;
+			simd_register_f32 output = src;
 			for (Size i = 0; i < SimdRegisterF32Info<simd_arch>::count(); i++) {
 				if (mmask[i]) {
 					output[i] = math::basicAtanF32(value[i]);
-				} else {
-					output[i] = src[i];
 				}
 			}
 			return output;
 		}
 		constexpr inline static simd_register_f64 mmasked_src_basic_atan_f64(simd_register_f64 value, simd_register_f64 src, simd_mmask_f64 mmask) noexcept {
-			simd_register_f64 output = value;
+			simd_register_f64 output = src;
 			for (Size i = 0; i < SimdRegisterF64Info<simd_arch>::count(); i++) {
 				if (mmask[i]) {
 					output[i] = math::basicAtanF64(value[i]);
-				} else {
-					output[i] = src[i];
 				}
 			}
 			return output;
@@ -3007,23 +2909,19 @@ namespace natl::simd {
 
 		//mmasked src atan
 		constexpr inline static simd_register_f32 mmasked_src_atan_f32(simd_register_f32 value, simd_register_f32 src, simd_mmask_f32 mmask) noexcept {
-			simd_register_f32 output = value;
+			simd_register_f32 output = src;
 			for (Size i = 0; i < SimdRegisterF32Info<simd_arch>::count(); i++) {
 				if (mmask[i]) {
 					output[i] = math::atanF32(value[i]);
-				} else {
-					output[i] = src[i];
 				}
 			}
 			return output;
 		}
 		constexpr inline static simd_register_f64 mmasked_src_atan_f64(simd_register_f64 value, simd_register_f64 src, simd_mmask_f64 mmask) noexcept {
-			simd_register_f64 output = value;
+			simd_register_f64 output = src;
 			for (Size i = 0; i < SimdRegisterF64Info<simd_arch>::count(); i++) {
 				if (mmask[i]) {
 					output[i] = math::atanF64(value[i]);
-				} else {
-					output[i] = src[i];
 				}
 			}
 			return output;
@@ -3067,23 +2965,19 @@ namespace natl::simd {
 
 		//mmasked src basic_sinh
 		constexpr inline static simd_register_f32 mmasked_src_basic_sinh_f32(simd_register_f32 value, simd_register_f32 src, simd_mmask_f32 mmask) noexcept {
-			simd_register_f32 output = value;
+			simd_register_f32 output = src;
 			for (Size i = 0; i < SimdRegisterF32Info<simd_arch>::count(); i++) {
 				if (mmask[i]) {
 					output[i] = math::basicSinhF32(value[i]);
-				} else {
-					output[i] = src[i];
 				}
 			}
 			return output;
 		}
 		constexpr inline static simd_register_f64 mmasked_src_basic_sinh_f64(simd_register_f64 value, simd_register_f64 src, simd_mmask_f64 mmask) noexcept {
-			simd_register_f64 output = value;
+			simd_register_f64 output = src;
 			for (Size i = 0; i < SimdRegisterF64Info<simd_arch>::count(); i++) {
 				if (mmask[i]) {
 					output[i] = math::basicSinhF64(value[i]);
-				} else {
-					output[i] = src[i];
 				}
 			}
 			return output;
@@ -3127,23 +3021,19 @@ namespace natl::simd {
 
 		//mmasked src sinh
 		constexpr inline static simd_register_f32 mmasked_src_sinh_f32(simd_register_f32 value, simd_register_f32 src, simd_mmask_f32 mmask) noexcept {
-			simd_register_f32 output = value;
+			simd_register_f32 output = src;
 			for (Size i = 0; i < SimdRegisterF32Info<simd_arch>::count(); i++) {
 				if (mmask[i]) {
 					output[i] = math::sinhF32(value[i]);
-				} else {
-					output[i] = src[i];
 				}
 			}
 			return output;
 		}
 		constexpr inline static simd_register_f64 mmasked_src_sinh_f64(simd_register_f64 value, simd_register_f64 src, simd_mmask_f64 mmask) noexcept {
-			simd_register_f64 output = value;
+			simd_register_f64 output = src;
 			for (Size i = 0; i < SimdRegisterF64Info<simd_arch>::count(); i++) {
 				if (mmask[i]) {
 					output[i] = math::sinhF64(value[i]);
-				} else {
-					output[i] = src[i];
 				}
 			}
 			return output;
@@ -3187,23 +3077,19 @@ namespace natl::simd {
 
 		//mmasked src basic_cosh
 		constexpr inline static simd_register_f32 mmasked_src_basic_cosh_f32(simd_register_f32 value, simd_register_f32 src, simd_mmask_f32 mmask) noexcept {
-			simd_register_f32 output = value;
+			simd_register_f32 output = src;
 			for (Size i = 0; i < SimdRegisterF32Info<simd_arch>::count(); i++) {
 				if (mmask[i]) {
 					output[i] = math::basicCoshF32(value[i]);
-				} else {
-					output[i] = src[i];
 				}
 			}
 			return output;
 		}
 		constexpr inline static simd_register_f64 mmasked_src_basic_cosh_f64(simd_register_f64 value, simd_register_f64 src, simd_mmask_f64 mmask) noexcept {
-			simd_register_f64 output = value;
+			simd_register_f64 output = src;
 			for (Size i = 0; i < SimdRegisterF64Info<simd_arch>::count(); i++) {
 				if (mmask[i]) {
 					output[i] = math::basicCoshF64(value[i]);
-				} else {
-					output[i] = src[i];
 				}
 			}
 			return output;
@@ -3247,23 +3133,19 @@ namespace natl::simd {
 
 		//mmasked src cosh
 		constexpr inline static simd_register_f32 mmasked_src_cosh_f32(simd_register_f32 value, simd_register_f32 src, simd_mmask_f32 mmask) noexcept {
-			simd_register_f32 output = value;
+			simd_register_f32 output = src;
 			for (Size i = 0; i < SimdRegisterF32Info<simd_arch>::count(); i++) {
 				if (mmask[i]) {
 					output[i] = math::coshF32(value[i]);
-				} else {
-					output[i] = src[i];
 				}
 			}
 			return output;
 		}
 		constexpr inline static simd_register_f64 mmasked_src_cosh_f64(simd_register_f64 value, simd_register_f64 src, simd_mmask_f64 mmask) noexcept {
-			simd_register_f64 output = value;
+			simd_register_f64 output = src;
 			for (Size i = 0; i < SimdRegisterF64Info<simd_arch>::count(); i++) {
 				if (mmask[i]) {
 					output[i] = math::coshF64(value[i]);
-				} else {
-					output[i] = src[i];
 				}
 			}
 			return output;
@@ -3307,23 +3189,19 @@ namespace natl::simd {
 
 		//mmasked src basic_tanh
 		constexpr inline static simd_register_f32 mmasked_src_basic_tanh_f32(simd_register_f32 value, simd_register_f32 src, simd_mmask_f32 mmask) noexcept {
-			simd_register_f32 output = value;
+			simd_register_f32 output = src;
 			for (Size i = 0; i < SimdRegisterF32Info<simd_arch>::count(); i++) {
 				if (mmask[i]) {
 					output[i] = math::basicTanhF32(value[i]);
-				} else {
-					output[i] = src[i];
 				}
 			}
 			return output;
 		}
 		constexpr inline static simd_register_f64 mmasked_src_basic_tanh_f64(simd_register_f64 value, simd_register_f64 src, simd_mmask_f64 mmask) noexcept {
-			simd_register_f64 output = value;
+			simd_register_f64 output = src;
 			for (Size i = 0; i < SimdRegisterF64Info<simd_arch>::count(); i++) {
 				if (mmask[i]) {
 					output[i] = math::basicTanhF64(value[i]);
-				} else {
-					output[i] = src[i];
 				}
 			}
 			return output;
@@ -3367,23 +3245,19 @@ namespace natl::simd {
 
 		//mmasked src tanh
 		constexpr inline static simd_register_f32 mmasked_src_tanh_f32(simd_register_f32 value, simd_register_f32 src, simd_mmask_f32 mmask) noexcept {
-			simd_register_f32 output = value;
+			simd_register_f32 output = src;
 			for (Size i = 0; i < SimdRegisterF32Info<simd_arch>::count(); i++) {
 				if (mmask[i]) {
 					output[i] = math::tanhF32(value[i]);
-				} else {
-					output[i] = src[i];
 				}
 			}
 			return output;
 		}
 		constexpr inline static simd_register_f64 mmasked_src_tanh_f64(simd_register_f64 value, simd_register_f64 src, simd_mmask_f64 mmask) noexcept {
-			simd_register_f64 output = value;
+			simd_register_f64 output = src;
 			for (Size i = 0; i < SimdRegisterF64Info<simd_arch>::count(); i++) {
 				if (mmask[i]) {
 					output[i] = math::tanhF64(value[i]);
-				} else {
-					output[i] = src[i];
 				}
 			}
 			return output;
@@ -3427,23 +3301,19 @@ namespace natl::simd {
 
 		//mmasked src basic_asinh
 		constexpr inline static simd_register_f32 mmasked_src_basic_asinh_f32(simd_register_f32 value, simd_register_f32 src, simd_mmask_f32 mmask) noexcept {
-			simd_register_f32 output = value;
+			simd_register_f32 output = src;
 			for (Size i = 0; i < SimdRegisterF32Info<simd_arch>::count(); i++) {
 				if (mmask[i]) {
 					output[i] = math::basicAsinhF32(value[i]);
-				} else {
-					output[i] = src[i];
 				}
 			}
 			return output;
 		}
 		constexpr inline static simd_register_f64 mmasked_src_basic_asinh_f64(simd_register_f64 value, simd_register_f64 src, simd_mmask_f64 mmask) noexcept {
-			simd_register_f64 output = value;
+			simd_register_f64 output = src;
 			for (Size i = 0; i < SimdRegisterF64Info<simd_arch>::count(); i++) {
 				if (mmask[i]) {
 					output[i] = math::basicAsinhF64(value[i]);
-				} else {
-					output[i] = src[i];
 				}
 			}
 			return output;
@@ -3487,23 +3357,19 @@ namespace natl::simd {
 
 		//mmasked src asinh
 		constexpr inline static simd_register_f32 mmasked_src_asinh_f32(simd_register_f32 value, simd_register_f32 src, simd_mmask_f32 mmask) noexcept {
-			simd_register_f32 output = value;
+			simd_register_f32 output = src;
 			for (Size i = 0; i < SimdRegisterF32Info<simd_arch>::count(); i++) {
 				if (mmask[i]) {
 					output[i] = math::asinhF32(value[i]);
-				} else {
-					output[i] = src[i];
 				}
 			}
 			return output;
 		}
 		constexpr inline static simd_register_f64 mmasked_src_asinh_f64(simd_register_f64 value, simd_register_f64 src, simd_mmask_f64 mmask) noexcept {
-			simd_register_f64 output = value;
+			simd_register_f64 output = src;
 			for (Size i = 0; i < SimdRegisterF64Info<simd_arch>::count(); i++) {
 				if (mmask[i]) {
 					output[i] = math::asinhF64(value[i]);
-				} else {
-					output[i] = src[i];
 				}
 			}
 			return output;
@@ -3547,23 +3413,19 @@ namespace natl::simd {
 
 		//mmasked src basic_acosh
 		constexpr inline static simd_register_f32 mmasked_src_basic_acosh_f32(simd_register_f32 value, simd_register_f32 src, simd_mmask_f32 mmask) noexcept {
-			simd_register_f32 output = value;
+			simd_register_f32 output = src;
 			for (Size i = 0; i < SimdRegisterF32Info<simd_arch>::count(); i++) {
 				if (mmask[i]) {
 					output[i] = math::basicAcoshF32(value[i]);
-				} else {
-					output[i] = src[i];
 				}
 			}
 			return output;
 		}
 		constexpr inline static simd_register_f64 mmasked_src_basic_acosh_f64(simd_register_f64 value, simd_register_f64 src, simd_mmask_f64 mmask) noexcept {
-			simd_register_f64 output = value;
+			simd_register_f64 output = src;
 			for (Size i = 0; i < SimdRegisterF64Info<simd_arch>::count(); i++) {
 				if (mmask[i]) {
 					output[i] = math::basicAcoshF64(value[i]);
-				} else {
-					output[i] = src[i];
 				}
 			}
 			return output;
@@ -3607,23 +3469,19 @@ namespace natl::simd {
 
 		//mmasked src acosh
 		constexpr inline static simd_register_f32 mmasked_src_acosh_f32(simd_register_f32 value, simd_register_f32 src, simd_mmask_f32 mmask) noexcept {
-			simd_register_f32 output = value;
+			simd_register_f32 output = src;
 			for (Size i = 0; i < SimdRegisterF32Info<simd_arch>::count(); i++) {
 				if (mmask[i]) {
 					output[i] = math::acoshF32(value[i]);
-				} else {
-					output[i] = src[i];
 				}
 			}
 			return output;
 		}
 		constexpr inline static simd_register_f64 mmasked_src_acosh_f64(simd_register_f64 value, simd_register_f64 src, simd_mmask_f64 mmask) noexcept {
-			simd_register_f64 output = value;
+			simd_register_f64 output = src;
 			for (Size i = 0; i < SimdRegisterF64Info<simd_arch>::count(); i++) {
 				if (mmask[i]) {
 					output[i] = math::acoshF64(value[i]);
-				} else {
-					output[i] = src[i];
 				}
 			}
 			return output;
@@ -3667,23 +3525,19 @@ namespace natl::simd {
 
 		//mmasked src basic_atanh
 		constexpr inline static simd_register_f32 mmasked_src_basic_atanh_f32(simd_register_f32 value, simd_register_f32 src, simd_mmask_f32 mmask) noexcept {
-			simd_register_f32 output = value;
+			simd_register_f32 output = src;
 			for (Size i = 0; i < SimdRegisterF32Info<simd_arch>::count(); i++) {
 				if (mmask[i]) {
 					output[i] = math::basicAtanhF32(value[i]);
-				} else {
-					output[i] = src[i];
 				}
 			}
 			return output;
 		}
 		constexpr inline static simd_register_f64 mmasked_src_basic_atanh_f64(simd_register_f64 value, simd_register_f64 src, simd_mmask_f64 mmask) noexcept {
-			simd_register_f64 output = value;
+			simd_register_f64 output = src;
 			for (Size i = 0; i < SimdRegisterF64Info<simd_arch>::count(); i++) {
 				if (mmask[i]) {
 					output[i] = math::basicAtanhF64(value[i]);
-				} else {
-					output[i] = src[i];
 				}
 			}
 			return output;
@@ -3727,23 +3581,19 @@ namespace natl::simd {
 
 		//mmasked src atanh
 		constexpr inline static simd_register_f32 mmasked_src_atanh_f32(simd_register_f32 value, simd_register_f32 src, simd_mmask_f32 mmask) noexcept {
-			simd_register_f32 output = value;
+			simd_register_f32 output = src;
 			for (Size i = 0; i < SimdRegisterF32Info<simd_arch>::count(); i++) {
 				if (mmask[i]) {
 					output[i] = math::atanhF32(value[i]);
-				} else {
-					output[i] = src[i];
 				}
 			}
 			return output;
 		}
 		constexpr inline static simd_register_f64 mmasked_src_atanh_f64(simd_register_f64 value, simd_register_f64 src, simd_mmask_f64 mmask) noexcept {
-			simd_register_f64 output = value;
+			simd_register_f64 output = src;
 			for (Size i = 0; i < SimdRegisterF64Info<simd_arch>::count(); i++) {
 				if (mmask[i]) {
 					output[i] = math::atanhF64(value[i]);
-				} else {
-					output[i] = src[i];
 				}
 			}
 			return output;
@@ -6117,9 +5967,9 @@ namespace natl::simd {
 
 		//compare//
 
-		//compare equal mmask
+		//compare equal
 		template<typename SimdRegisterType, typename SimdMaskType>
-		constexpr inline static SimdMaskType compareEqualMmask(SimdRegisterType lhs, SimdRegisterType rhs) noexcept {
+		constexpr inline static SimdMaskType compareEqual(SimdRegisterType lhs, SimdRegisterType rhs) noexcept {
 			SimdMaskType output{};
 			for (Size i = 0; i < SimdRegisterToInfo<SimdRegisterType>::count(); i++) {
 				output.setAtIndex(i, lhs[i] == rhs[i]);
@@ -6127,42 +5977,132 @@ namespace natl::simd {
 			return output;
 		}
 
-		constexpr inline static simd_mmask_i8 compare_equal_mmask_i8(simd_register_i8 lhs, simd_register_i8 rhs) noexcept {
-			return compareEqualMmask<simd_register_i8, simd_mmask_i8>(lhs, rhs);
+		constexpr inline static simd_mmask_i8 compare_equal_i8(simd_register_i8 lhs, simd_register_i8 rhs) noexcept {
+			return compareEqual<simd_register_i8, simd_mmask_i8>(lhs, rhs);
 		}
-		constexpr inline static simd_mmask_i16 compare_equal_mmask_i16(simd_register_i16 lhs, simd_register_i16 rhs) noexcept {
-			return compareEqualMmask<simd_register_i16, simd_mmask_i16>(lhs, rhs);
+		constexpr inline static simd_mmask_i16 compare_equal_i16(simd_register_i16 lhs, simd_register_i16 rhs) noexcept {
+			return compareEqual<simd_register_i16, simd_mmask_i16>(lhs, rhs);
 		}
-		constexpr inline static simd_mmask_i32 compare_equal_mmask_i32(simd_register_i32 lhs, simd_register_i32 rhs) noexcept {
-			return compareEqualMmask<simd_register_i32, simd_mmask_i32>(lhs, rhs);
+		constexpr inline static simd_mmask_i32 compare_equal_i32(simd_register_i32 lhs, simd_register_i32 rhs) noexcept {
+			return compareEqual<simd_register_i32, simd_mmask_i32>(lhs, rhs);
 		}
-		constexpr inline static simd_mmask_i64 compare_equal_mmask_i64(simd_register_i64 lhs, simd_register_i64 rhs) noexcept {
-			return compareEqualMmask<simd_register_i64, simd_mmask_i64>(lhs, rhs);
-		}
-
-		constexpr inline static simd_mmask_ui8 compare_equal_mmask_ui8(simd_register_ui8 lhs, simd_register_ui8 rhs) noexcept {
-			return compareEqualMmask<simd_register_ui8, simd_mmask_ui8>(lhs, rhs);
-		}
-		constexpr inline static simd_mmask_ui16 compare_equal_mmask_ui16(simd_register_ui16 lhs, simd_register_ui16 rhs) noexcept {
-			return compareEqualMmask<simd_register_ui16, simd_mmask_ui16>(lhs, rhs);
-		}
-		constexpr inline static simd_mmask_ui32 compare_equal_mmask_ui32(simd_register_ui32 lhs, simd_register_ui32 rhs) noexcept {
-			return compareEqualMmask<simd_register_ui32, simd_mmask_ui32>(lhs, rhs);
-		}
-		constexpr inline static simd_mmask_ui64 compare_equal_mmask_ui64(simd_register_ui64 lhs, simd_register_ui64 rhs) noexcept {
-			return compareEqualMmask<simd_register_ui64, simd_mmask_ui64>(lhs, rhs);
+		constexpr inline static simd_mmask_i64 compare_equal_i64(simd_register_i64 lhs, simd_register_i64 rhs) noexcept {
+			return compareEqual<simd_register_i64, simd_mmask_i64>(lhs, rhs);
 		}
 
-		constexpr inline static simd_mmask_f32 compare_equal_mmask_f32(simd_register_f32 lhs, simd_register_f32 rhs) noexcept {
-			return compareEqualMmask<simd_register_f32, simd_mmask_f32>(lhs, rhs);
+		constexpr inline static simd_mmask_ui8 compare_equal_ui8(simd_register_ui8 lhs, simd_register_ui8 rhs) noexcept {
+			return compareEqual<simd_register_ui8, simd_mmask_ui8>(lhs, rhs);
 		}
-		constexpr inline static simd_mmask_f64 compare_equal_mmask_f64(simd_register_f64 lhs, simd_register_f64 rhs) noexcept {
-			return compareEqualMmask<simd_register_f64, simd_mmask_f64>(lhs, rhs);
+		constexpr inline static simd_mmask_ui16 compare_equal_ui16(simd_register_ui16 lhs, simd_register_ui16 rhs) noexcept {
+			return compareEqual<simd_register_ui16, simd_mmask_ui16>(lhs, rhs);
+		}
+		constexpr inline static simd_mmask_ui32 compare_equal_ui32(simd_register_ui32 lhs, simd_register_ui32 rhs) noexcept {
+			return compareEqual<simd_register_ui32, simd_mmask_ui32>(lhs, rhs);
+		}
+		constexpr inline static simd_mmask_ui64 compare_equal_ui64(simd_register_ui64 lhs, simd_register_ui64 rhs) noexcept {
+			return compareEqual<simd_register_ui64, simd_mmask_ui64>(lhs, rhs);
 		}
 
-		//compare not equal mmask
+		constexpr inline static simd_mmask_f32 compare_equal_f32(simd_register_f32 lhs, simd_register_f32 rhs) noexcept {
+			return compareEqual<simd_register_f32, simd_mmask_f32>(lhs, rhs);
+		}
+		constexpr inline static simd_mmask_f64 compare_equal_f64(simd_register_f64 lhs, simd_register_f64 rhs) noexcept {
+			return compareEqual<simd_register_f64, simd_mmask_f64>(lhs, rhs);
+		}
+
+		//mmasked compare equal
 		template<typename SimdRegisterType, typename SimdMaskType>
-		constexpr inline static SimdMaskType compareNotEqualMmask(SimdRegisterType lhs, SimdRegisterType rhs) noexcept {
+		constexpr inline static SimdMaskType mmaskedCompareEqual(SimdRegisterType lhs, SimdRegisterType rhs, SimdMaskType mmask) noexcept {
+			SimdMaskType output{};
+			for (Size i = 0; i < SimdRegisterToInfo<SimdRegisterType>::count(); i++) {
+				if (mmask[i]) {
+					output.setAtIndex(i, lhs[i] == rhs[i]);
+				}
+			}
+			return output;
+		}
+
+		constexpr inline static simd_mmask_i8 mmasked_compare_equal_i8(simd_register_i8 lhs, simd_register_i8 rhs, simd_mmask_i8 mmask) noexcept {
+			return mmaskedCompareEqual<simd_register_i8, simd_mmask_i8>(lhs, rhs, mmask);
+		}
+		constexpr inline static simd_mmask_i16 mmasked_compare_equal_i16(simd_register_i16 lhs, simd_register_i16 rhs, simd_mmask_i16 mmask) noexcept {
+			return mmaskedCompareEqual<simd_register_i16, simd_mmask_i16>(lhs, rhs, mmask);
+		}
+		constexpr inline static simd_mmask_i32 mmasked_compare_equal_i32(simd_register_i32 lhs, simd_register_i32 rhs, simd_mmask_i32 mmask) noexcept {
+			return mmaskedCompareEqual<simd_register_i32, simd_mmask_i32>(lhs, rhs, mmask);
+		}
+		constexpr inline static simd_mmask_i64 mmasked_compare_equal_i64(simd_register_i64 lhs, simd_register_i64 rhs, simd_mmask_i64 mmask) noexcept {
+			return mmaskedCompareEqual<simd_register_i64, simd_mmask_i64>(lhs, rhs, mmask);
+		}
+
+		constexpr inline static simd_mmask_ui8 mmasked_compare_equal_ui8(simd_register_ui8 lhs, simd_register_ui8 rhs, simd_mmask_ui8 mmask) noexcept {
+			return mmaskedCompareEqual<simd_register_ui8, simd_mmask_ui8>(lhs, rhs, mmask);
+		}
+		constexpr inline static simd_mmask_ui16 mmasked_compare_equal_ui16(simd_register_ui16 lhs, simd_register_ui16 rhs, simd_mmask_ui16 mmask) noexcept {
+			return mmaskedCompareEqual<simd_register_ui16, simd_mmask_ui16>(lhs, rhs, mmask);
+		}
+		constexpr inline static simd_mmask_ui32 mmasked_compare_equal_ui32(simd_register_ui32 lhs, simd_register_ui32 rhs, simd_mmask_ui32 mmask) noexcept {
+			return mmaskedCompareEqual<simd_register_ui32, simd_mmask_ui32>(lhs, rhs, mmask);
+		}
+		constexpr inline static simd_mmask_ui64 mmasked_compare_equal_ui64(simd_register_ui64 lhs, simd_register_ui64 rhs, simd_mmask_ui64 mmask) noexcept {
+			return mmaskedCompareEqual<simd_register_ui64, simd_mmask_ui64>(lhs, rhs, mmask);
+		}
+
+		constexpr inline static simd_mmask_f32 mmasked_compare_equal_f32(simd_register_f32 lhs, simd_register_f32 rhs, simd_mmask_f32 mmask) noexcept {
+			return mmaskedCompareEqual<simd_register_f32, simd_mmask_f32>(lhs, rhs, mmask);
+		}
+		constexpr inline static simd_mmask_f64 mmasked_compare_equal_f64(simd_register_f64 lhs, simd_register_f64 rhs, simd_mmask_f64 mmask) noexcept {
+			return mmaskedCompareEqual<simd_register_f64, simd_mmask_f64>(lhs, rhs, mmask);
+		}
+
+		//mmasked src compare equal
+		template<typename SimdRegisterType, typename SimdMaskType>
+		constexpr inline static SimdMaskType mmaskedSrcCompareEqual(SimdRegisterType lhs, SimdRegisterType rhs, SimdMaskType src, SimdMaskType mmask) noexcept {
+			SimdMaskType output = src;
+			for (Size i = 0; i < SimdRegisterToInfo<SimdRegisterType>::count(); i++) {
+				if (mmask[i]) {
+					output.setAtIndex(i, lhs[i] == rhs[i]);
+				}
+			}
+			return output;
+		}
+
+		constexpr inline static simd_mmask_i8 mmasked_src_compare_equal_i8(simd_register_i8 lhs, simd_register_i8 rhs, simd_mmask_i8 src, simd_mmask_i8 mmask) noexcept {
+			return mmaskedSrcCompareEqual<simd_register_i8, simd_mmask_i8>(lhs, rhs, src, mmask);
+		}
+		constexpr inline static simd_mmask_i16 mmasked_src_compare_equal_i16(simd_register_i16 lhs, simd_register_i16 rhs, simd_mmask_i16 src, simd_mmask_i16 mmask) noexcept {
+			return mmaskedSrcCompareEqual<simd_register_i16, simd_mmask_i16>(lhs, rhs, src, mmask);
+		}
+		constexpr inline static simd_mmask_i32 mmasked_src_compare_equal_i32(simd_register_i32 lhs, simd_register_i32 rhs, simd_mmask_i32 src, simd_mmask_i32 mmask) noexcept {
+			return mmaskedSrcCompareEqual<simd_register_i32, simd_mmask_i32>(lhs, rhs, src, mmask);
+		}
+		constexpr inline static simd_mmask_i64 mmasked_src_compare_equal_i64(simd_register_i64 lhs, simd_register_i64 rhs, simd_mmask_i64 src, simd_mmask_i64 mmask) noexcept {
+			return mmaskedSrcCompareEqual<simd_register_i64, simd_mmask_i64>(lhs, rhs, src, mmask);
+		}
+
+		constexpr inline static simd_mmask_ui8 mmasked_src_compare_equal_ui8(simd_register_ui8 lhs, simd_register_ui8 rhs, simd_mmask_ui8 src, simd_mmask_ui8 mmask) noexcept {
+			return mmaskedSrcCompareEqual<simd_register_ui8, simd_mmask_ui8>(lhs, rhs, src, mmask);
+		}
+		constexpr inline static simd_mmask_ui16 mmasked_src_compare_equal_ui16(simd_register_ui16 lhs, simd_register_ui16 rhs, simd_mmask_ui16 src, simd_mmask_ui16 mmask) noexcept {
+			return mmaskedSrcCompareEqual<simd_register_ui16, simd_mmask_ui16>(lhs, rhs, src, mmask);
+		}
+		constexpr inline static simd_mmask_ui32 mmasked_src_compare_equal_ui32(simd_register_ui32 lhs, simd_register_ui32 rhs, simd_mmask_ui32 src, simd_mmask_ui32 mmask) noexcept {
+			return mmaskedSrcCompareEqual<simd_register_ui32, simd_mmask_ui32>(lhs, rhs, src, mmask);
+		}
+		constexpr inline static simd_mmask_ui64 mmasked_src_compare_equal_ui64(simd_register_ui64 lhs, simd_register_ui64 rhs, simd_mmask_ui64 src, simd_mmask_ui64 mmask) noexcept {
+			return mmaskedSrcCompareEqual<simd_register_ui64, simd_mmask_ui64>(lhs, rhs, src, mmask);
+		}
+
+		constexpr inline static simd_mmask_f32 mmasked_src_compare_equal_f32(simd_register_f32 lhs, simd_register_f32 rhs, simd_mmask_f32 src, simd_mmask_f32 mmask) noexcept {
+			return mmaskedSrcCompareEqual<simd_register_f32, simd_mmask_f32>(lhs, rhs, src, mmask);
+		}
+		constexpr inline static simd_mmask_f64 mmasked_src_compare_equal_f64(simd_register_f64 lhs, simd_register_f64 rhs, simd_mmask_f64 src, simd_mmask_f64 mmask) noexcept {
+			return mmaskedSrcCompareEqual<simd_register_f64, simd_mmask_f64>(lhs, rhs, src, mmask);
+		}
+
+		//compare not equal 
+		template<typename SimdRegisterType, typename SimdMaskType>
+		constexpr inline static SimdMaskType compareNotEqual(SimdRegisterType lhs, SimdRegisterType rhs) noexcept {
 			SimdMaskType output{};
 			for (Size i = 0; i < SimdRegisterToInfo<SimdRegisterType>::count(); i++) {
 				output.setAtIndex(i, lhs[i] != rhs[i]);
@@ -6170,42 +6110,132 @@ namespace natl::simd {
 			return output;
 		}
 
-		constexpr inline static simd_mmask_i8 compare_not_equal_mmask_i8(simd_register_i8 lhs, simd_register_i8 rhs) noexcept {
-			return compareNotEqualMmask<simd_register_i8, simd_mmask_i8>(lhs, rhs);
+		constexpr inline static simd_mmask_i8 compare_not_equal_i8(simd_register_i8 lhs, simd_register_i8 rhs) noexcept {
+			return compareNotEqual<simd_register_i8, simd_mmask_i8>(lhs, rhs);
 		}
-		constexpr inline static simd_mmask_i16 compare_not_equal_mmask_i16(simd_register_i16 lhs, simd_register_i16 rhs) noexcept {
-			return compareNotEqualMmask<simd_register_i16, simd_mmask_i16>(lhs, rhs);
+		constexpr inline static simd_mmask_i16 compare_not_equal_i16(simd_register_i16 lhs, simd_register_i16 rhs) noexcept {
+			return compareNotEqual<simd_register_i16, simd_mmask_i16>(lhs, rhs);
 		}
-		constexpr inline static simd_mmask_i32 compare_not_equal_mmask_i32(simd_register_i32 lhs, simd_register_i32 rhs) noexcept {
-			return compareNotEqualMmask<simd_register_i32, simd_mmask_i32>(lhs, rhs);
+		constexpr inline static simd_mmask_i32 compare_not_equal_i32(simd_register_i32 lhs, simd_register_i32 rhs) noexcept {
+			return compareNotEqual<simd_register_i32, simd_mmask_i32>(lhs, rhs);
 		}
-		constexpr inline static simd_mmask_i64 compare_not_equal_mmask_i64(simd_register_i64 lhs, simd_register_i64 rhs) noexcept {
-			return compareNotEqualMmask<simd_register_i64, simd_mmask_i64>(lhs, rhs);
-		}
-
-		constexpr inline static simd_mmask_ui8 compare_not_equal_mmask_ui8(simd_register_ui8 lhs, simd_register_ui8 rhs) noexcept {
-			return compareNotEqualMmask<simd_register_ui8, simd_mmask_ui8>(lhs, rhs);
-		}
-		constexpr inline static simd_mmask_ui16 compare_not_equal_mmask_ui16(simd_register_ui16 lhs, simd_register_ui16 rhs) noexcept {
-			return compareNotEqualMmask<simd_register_ui16, simd_mmask_ui16>(lhs, rhs);
-		}
-		constexpr inline static simd_mmask_ui32 compare_not_equal_mmask_ui32(simd_register_ui32 lhs, simd_register_ui32 rhs) noexcept {
-			return compareNotEqualMmask<simd_register_ui32, simd_mmask_ui32>(lhs, rhs);
-		}
-		constexpr inline static simd_mmask_ui64 compare_not_equal_mmask_ui64(simd_register_ui64 lhs, simd_register_ui64 rhs) noexcept {
-			return compareNotEqualMmask<simd_register_ui64, simd_mmask_ui64>(lhs, rhs);
+		constexpr inline static simd_mmask_i64 compare_not_equal_i64(simd_register_i64 lhs, simd_register_i64 rhs) noexcept {
+			return compareNotEqual<simd_register_i64, simd_mmask_i64>(lhs, rhs);
 		}
 
-		constexpr inline static simd_mmask_f32 compare_not_equal_mmask_f32(simd_register_f32 lhs, simd_register_f32 rhs) noexcept {
-			return compareNotEqualMmask<simd_register_f32, simd_mmask_f32>(lhs, rhs);
+		constexpr inline static simd_mmask_ui8 compare_not_equal_ui8(simd_register_ui8 lhs, simd_register_ui8 rhs) noexcept {
+			return compareNotEqual<simd_register_ui8, simd_mmask_ui8>(lhs, rhs);
 		}
-		constexpr inline static simd_mmask_f64 compare_not_equal_mmask_f64(simd_register_f64 lhs, simd_register_f64 rhs) noexcept {
-			return compareNotEqualMmask<simd_register_f64, simd_mmask_f64>(lhs, rhs);
+		constexpr inline static simd_mmask_ui16 compare_not_equal_ui16(simd_register_ui16 lhs, simd_register_ui16 rhs) noexcept {
+			return compareNotEqual<simd_register_ui16, simd_mmask_ui16>(lhs, rhs);
+		}
+		constexpr inline static simd_mmask_ui32 compare_not_equal_ui32(simd_register_ui32 lhs, simd_register_ui32 rhs) noexcept {
+			return compareNotEqual<simd_register_ui32, simd_mmask_ui32>(lhs, rhs);
+		}
+		constexpr inline static simd_mmask_ui64 compare_not_equal_ui64(simd_register_ui64 lhs, simd_register_ui64 rhs) noexcept {
+			return compareNotEqual<simd_register_ui64, simd_mmask_ui64>(lhs, rhs);
 		}
 
-		//compare less than mmask
+		constexpr inline static simd_mmask_f32 compare_not_equal_f32(simd_register_f32 lhs, simd_register_f32 rhs) noexcept {
+			return compareNotEqual<simd_register_f32, simd_mmask_f32>(lhs, rhs);
+		}
+		constexpr inline static simd_mmask_f64 compare_not_equal_f64(simd_register_f64 lhs, simd_register_f64 rhs) noexcept {
+			return compareNotEqual<simd_register_f64, simd_mmask_f64>(lhs, rhs);
+		}
+
+		//mmasked compare not equal
 		template<typename SimdRegisterType, typename SimdMaskType>
-		constexpr inline static SimdMaskType compareLessThanMmask(SimdRegisterType lhs, SimdRegisterType rhs) noexcept {
+		constexpr inline static SimdMaskType mmaskedCompareNotEqual(SimdRegisterType lhs, SimdRegisterType rhs, SimdMaskType mmask) noexcept {
+			SimdMaskType output{};
+			for (Size i = 0; i < SimdRegisterToInfo<SimdRegisterType>::count(); i++) {
+				if (mmask[i]) {
+					output.setAtIndex(i, lhs[i] != rhs[i]);
+				}
+			}
+			return output;
+		}
+
+		constexpr inline static simd_mmask_i8 mmasked_compare_not_equal_i8(simd_register_i8 lhs, simd_register_i8 rhs, simd_mmask_i8 mmask) noexcept {
+			return mmaskedCompareNotEqual<simd_register_i8, simd_mmask_i8>(lhs, rhs, mmask);
+		}
+		constexpr inline static simd_mmask_i16 mmasked_compare_not_equal_i16(simd_register_i16 lhs, simd_register_i16 rhs, simd_mmask_i16 mmask) noexcept {
+			return mmaskedCompareNotEqual<simd_register_i16, simd_mmask_i16>(lhs, rhs, mmask);
+		}
+		constexpr inline static simd_mmask_i32 mmasked_compare_not_equal_i32(simd_register_i32 lhs, simd_register_i32 rhs, simd_mmask_i32 mmask) noexcept {
+			return mmaskedCompareNotEqual<simd_register_i32, simd_mmask_i32>(lhs, rhs, mmask);
+		}
+		constexpr inline static simd_mmask_i64 mmasked_compare_not_equal_i64(simd_register_i64 lhs, simd_register_i64 rhs, simd_mmask_i64 mmask) noexcept {
+			return mmaskedCompareNotEqual<simd_register_i64, simd_mmask_i64>(lhs, rhs, mmask);
+		}
+
+		constexpr inline static simd_mmask_ui8 mmasked_compare_not_equal_ui8(simd_register_ui8 lhs, simd_register_ui8 rhs, simd_mmask_ui8 mmask) noexcept {
+			return mmaskedCompareNotEqual<simd_register_ui8, simd_mmask_ui8>(lhs, rhs, mmask);
+		}
+		constexpr inline static simd_mmask_ui16 mmasked_compare_not_equal_ui16(simd_register_ui16 lhs, simd_register_ui16 rhs, simd_mmask_ui16 mmask) noexcept {
+			return mmaskedCompareNotEqual<simd_register_ui16, simd_mmask_ui16>(lhs, rhs, mmask);
+		}
+		constexpr inline static simd_mmask_ui32 mmasked_compare_not_equal_ui32(simd_register_ui32 lhs, simd_register_ui32 rhs, simd_mmask_ui32 mmask) noexcept {
+			return mmaskedCompareNotEqual<simd_register_ui32, simd_mmask_ui32>(lhs, rhs, mmask);
+		}
+		constexpr inline static simd_mmask_ui64 mmasked_compare_not_equal_ui64(simd_register_ui64 lhs, simd_register_ui64 rhs, simd_mmask_ui64 mmask) noexcept {
+			return mmaskedCompareNotEqual<simd_register_ui64, simd_mmask_ui64>(lhs, rhs, mmask);
+		}
+
+		constexpr inline static simd_mmask_f32 mmasked_compare_not_equal_f32(simd_register_f32 lhs, simd_register_f32 rhs, simd_mmask_f32 mmask) noexcept {
+			return mmaskedCompareNotEqual<simd_register_f32, simd_mmask_f32>(lhs, rhs, mmask);
+		}
+		constexpr inline static simd_mmask_f64 mmasked_compare_not_equal_f64(simd_register_f64 lhs, simd_register_f64 rhs, simd_mmask_f64 mmask) noexcept {
+			return mmaskedCompareNotEqual<simd_register_f64, simd_mmask_f64>(lhs, rhs, mmask);
+		}
+
+		//mmasked src compare not equal
+		template<typename SimdRegisterType, typename SimdMaskType>
+		constexpr inline static SimdMaskType mmaskedSrcCompareNotEqual(SimdRegisterType lhs, SimdRegisterType rhs, SimdMaskType src, SimdMaskType mmask) noexcept {
+			SimdMaskType output = src;
+			for (Size i = 0; i < SimdRegisterToInfo<SimdRegisterType>::count(); i++) {
+				if (mmask[i]) {
+					output.setAtIndex(i, lhs[i] != rhs[i]);
+				}
+			}
+			return output;
+		}
+
+		constexpr inline static simd_mmask_i8 mmasked_src_compare_not_equal_i8(simd_register_i8 lhs, simd_register_i8 rhs, simd_mmask_i8 src, simd_mmask_i8 mmask) noexcept {
+			return mmaskedSrcCompareNotEqual<simd_register_i8, simd_mmask_i8>(lhs, rhs, src, mmask);
+		}
+		constexpr inline static simd_mmask_i16 mmasked_src_compare_not_equal_i16(simd_register_i16 lhs, simd_register_i16 rhs, simd_mmask_i16 src, simd_mmask_i16 mmask) noexcept {
+			return mmaskedSrcCompareNotEqual<simd_register_i16, simd_mmask_i16>(lhs, rhs, src, mmask);
+		}
+		constexpr inline static simd_mmask_i32 mmasked_src_compare_not_equal_i32(simd_register_i32 lhs, simd_register_i32 rhs, simd_mmask_i32 src, simd_mmask_i32 mmask) noexcept {
+			return mmaskedSrcCompareNotEqual<simd_register_i32, simd_mmask_i32>(lhs, rhs, src, mmask);
+		}
+		constexpr inline static simd_mmask_i64 mmasked_src_compare_not_equal_i64(simd_register_i64 lhs, simd_register_i64 rhs, simd_mmask_i64 src, simd_mmask_i64 mmask) noexcept {
+			return mmaskedSrcCompareNotEqual<simd_register_i64, simd_mmask_i64>(lhs, rhs, src, mmask);
+		}
+
+		constexpr inline static simd_mmask_ui8 mmasked_src_compare_not_equal_ui8(simd_register_ui8 lhs, simd_register_ui8 rhs, simd_mmask_ui8 src, simd_mmask_ui8 mmask) noexcept {
+			return mmaskedSrcCompareNotEqual<simd_register_ui8, simd_mmask_ui8>(lhs, rhs, src, mmask);
+		}
+		constexpr inline static simd_mmask_ui16 mmasked_src_compare_not_equal_ui16(simd_register_ui16 lhs, simd_register_ui16 rhs, simd_mmask_ui16 src, simd_mmask_ui16 mmask) noexcept {
+			return mmaskedSrcCompareNotEqual<simd_register_ui16, simd_mmask_ui16>(lhs, rhs, src, mmask);
+		}
+		constexpr inline static simd_mmask_ui32 mmasked_src_compare_not_equal_ui32(simd_register_ui32 lhs, simd_register_ui32 rhs, simd_mmask_ui32 src, simd_mmask_ui32 mmask) noexcept {
+			return mmaskedSrcCompareNotEqual<simd_register_ui32, simd_mmask_ui32>(lhs, rhs, src, mmask);
+		}
+		constexpr inline static simd_mmask_ui64 mmasked_src_compare_not_equal_ui64(simd_register_ui64 lhs, simd_register_ui64 rhs, simd_mmask_ui64 src, simd_mmask_ui64 mmask) noexcept {
+			return mmaskedSrcCompareNotEqual<simd_register_ui64, simd_mmask_ui64>(lhs, rhs, src, mmask);
+		}
+
+		constexpr inline static simd_mmask_f32 mmasked_src_compare_not_equal_f32(simd_register_f32 lhs, simd_register_f32 rhs, simd_mmask_f32 src, simd_mmask_f32 mmask) noexcept {
+			return mmaskedSrcCompareNotEqual<simd_register_f32, simd_mmask_f32>(lhs, rhs, src, mmask);
+		}
+		constexpr inline static simd_mmask_f64 mmasked_src_compare_not_equal_f64(simd_register_f64 lhs, simd_register_f64 rhs, simd_mmask_f64 src, simd_mmask_f64 mmask) noexcept {
+			return mmaskedSrcCompareNotEqual<simd_register_f64, simd_mmask_f64>(lhs, rhs, src, mmask);
+		}
+
+		//compare less than 
+		template<typename SimdRegisterType, typename SimdMaskType>
+		constexpr inline static SimdMaskType compareLessThen(SimdRegisterType lhs, SimdRegisterType rhs) noexcept {
 			SimdMaskType output{};
 			for (Size i = 0; i < SimdRegisterToInfo<SimdRegisterType>::count(); i++) {
 				output.setAtIndex(i, lhs[i] < rhs[i]);
@@ -6213,42 +6243,132 @@ namespace natl::simd {
 			return output;
 		}
 
-		constexpr inline static simd_mmask_i8 compare_less_than_mmask_i8(simd_register_i8 lhs, simd_register_i8 rhs) noexcept {
-			return compareLessThanMmask<simd_register_i8, simd_mmask_i8>(lhs, rhs);
+		constexpr inline static simd_mmask_i8 compare_less_than_i8(simd_register_i8 lhs, simd_register_i8 rhs) noexcept {
+			return compareLessThen<simd_register_i8, simd_mmask_i8>(lhs, rhs);
 		}
-		constexpr inline static simd_mmask_i16 compare_less_than_mmask_i16(simd_register_i16 lhs, simd_register_i16 rhs) noexcept {
-			return compareLessThanMmask<simd_register_i16, simd_mmask_i16>(lhs, rhs);
+		constexpr inline static simd_mmask_i16 compare_less_than_i16(simd_register_i16 lhs, simd_register_i16 rhs) noexcept {
+			return compareLessThen<simd_register_i16, simd_mmask_i16>(lhs, rhs);
 		}
-		constexpr inline static simd_mmask_i32 compare_less_than_mmask_i32(simd_register_i32 lhs, simd_register_i32 rhs) noexcept {
-			return compareLessThanMmask<simd_register_i32, simd_mmask_i32>(lhs, rhs);
+		constexpr inline static simd_mmask_i32 compare_less_than_i32(simd_register_i32 lhs, simd_register_i32 rhs) noexcept {
+			return compareLessThen<simd_register_i32, simd_mmask_i32>(lhs, rhs);
 		}
-		constexpr inline static simd_mmask_i64 compare_less_than_mmask_i64(simd_register_i64 lhs, simd_register_i64 rhs) noexcept {
-			return compareLessThanMmask<simd_register_i64, simd_mmask_i64>(lhs, rhs);
-		}
-
-		constexpr inline static simd_mmask_ui8 compare_less_than_mmask_ui8(simd_register_ui8 lhs, simd_register_ui8 rhs) noexcept {
-			return compareLessThanMmask<simd_register_ui8, simd_mmask_ui8>(lhs, rhs);
-		}
-		constexpr inline static simd_mmask_ui16 compare_less_than_mmask_ui16(simd_register_ui16 lhs, simd_register_ui16 rhs) noexcept {
-			return compareLessThanMmask<simd_register_ui16, simd_mmask_ui16>(lhs, rhs);
-		}
-		constexpr inline static simd_mmask_ui32 compare_less_than_mmask_ui32(simd_register_ui32 lhs, simd_register_ui32 rhs) noexcept {
-			return compareLessThanMmask<simd_register_ui32, simd_mmask_ui32>(lhs, rhs);
-		}
-		constexpr inline static simd_mmask_ui64 compare_less_than_mmask_ui64(simd_register_ui64 lhs, simd_register_ui64 rhs) noexcept {
-			return compareLessThanMmask<simd_register_ui64, simd_mmask_ui64>(lhs, rhs);
+		constexpr inline static simd_mmask_i64 compare_less_than_i64(simd_register_i64 lhs, simd_register_i64 rhs) noexcept {
+			return compareLessThen<simd_register_i64, simd_mmask_i64>(lhs, rhs);
 		}
 
-		constexpr inline static simd_mmask_f32 compare_less_than_mmask_f32(simd_register_f32 lhs, simd_register_f32 rhs) noexcept {
-			return compareLessThanMmask<simd_register_f32, simd_mmask_f32>(lhs, rhs);
+		constexpr inline static simd_mmask_ui8 compare_less_than_ui8(simd_register_ui8 lhs, simd_register_ui8 rhs) noexcept {
+			return compareLessThen<simd_register_ui8, simd_mmask_ui8>(lhs, rhs);
 		}
-		constexpr inline static simd_mmask_f64 compare_less_than_mmask_f64(simd_register_f64 lhs, simd_register_f64 rhs) noexcept {
-			return compareLessThanMmask<simd_register_f64, simd_mmask_f64>(lhs, rhs);
+		constexpr inline static simd_mmask_ui16 compare_less_than_ui16(simd_register_ui16 lhs, simd_register_ui16 rhs) noexcept {
+			return compareLessThen<simd_register_ui16, simd_mmask_ui16>(lhs, rhs);
+		}
+		constexpr inline static simd_mmask_ui32 compare_less_than_ui32(simd_register_ui32 lhs, simd_register_ui32 rhs) noexcept {
+			return compareLessThen<simd_register_ui32, simd_mmask_ui32>(lhs, rhs);
+		}
+		constexpr inline static simd_mmask_ui64 compare_less_than_ui64(simd_register_ui64 lhs, simd_register_ui64 rhs) noexcept {
+			return compareLessThen<simd_register_ui64, simd_mmask_ui64>(lhs, rhs);
 		}
 
-		//compare greater than mmask
+		constexpr inline static simd_mmask_f32 compare_less_than_f32(simd_register_f32 lhs, simd_register_f32 rhs) noexcept {
+			return compareLessThen<simd_register_f32, simd_mmask_f32>(lhs, rhs);
+		}
+		constexpr inline static simd_mmask_f64 compare_less_than_f64(simd_register_f64 lhs, simd_register_f64 rhs) noexcept {
+			return compareLessThen<simd_register_f64, simd_mmask_f64>(lhs, rhs);
+		}
+
+		//mmasked compare less than
 		template<typename SimdRegisterType, typename SimdMaskType>
-		constexpr inline static SimdMaskType compareGreaterThanMmask(SimdRegisterType lhs, SimdRegisterType rhs) noexcept {
+		constexpr inline static SimdMaskType mmaskedCompareLessThen(SimdRegisterType lhs, SimdRegisterType rhs, SimdMaskType mmask) noexcept {
+			SimdMaskType output{};
+			for (Size i = 0; i < SimdRegisterToInfo<SimdRegisterType>::count(); i++) {
+				if (mmask[i]) {
+					output.setAtIndex(i, lhs[i] < rhs[i]);
+				}
+			}
+			return output;
+		}
+
+		constexpr inline static simd_mmask_i8 mmasked_compare_less_than_i8(simd_register_i8 lhs, simd_register_i8 rhs, simd_mmask_i8 mmask) noexcept {
+			return mmaskedCompareLessThen<simd_register_i8, simd_mmask_i8>(lhs, rhs, mmask);
+		}
+		constexpr inline static simd_mmask_i16 mmasked_compare_less_than_i16(simd_register_i16 lhs, simd_register_i16 rhs, simd_mmask_i16 mmask) noexcept {
+			return mmaskedCompareLessThen<simd_register_i16, simd_mmask_i16>(lhs, rhs, mmask);
+		}
+		constexpr inline static simd_mmask_i32 mmasked_compare_less_than_i32(simd_register_i32 lhs, simd_register_i32 rhs, simd_mmask_i32 mmask) noexcept {
+			return mmaskedCompareLessThen<simd_register_i32, simd_mmask_i32>(lhs, rhs, mmask);
+		}
+		constexpr inline static simd_mmask_i64 mmasked_compare_less_than_i64(simd_register_i64 lhs, simd_register_i64 rhs, simd_mmask_i64 mmask) noexcept {
+			return mmaskedCompareLessThen<simd_register_i64, simd_mmask_i64>(lhs, rhs, mmask);
+		}
+
+		constexpr inline static simd_mmask_ui8 mmasked_compare_less_than_ui8(simd_register_ui8 lhs, simd_register_ui8 rhs, simd_mmask_ui8 mmask) noexcept {
+			return mmaskedCompareLessThen<simd_register_ui8, simd_mmask_ui8>(lhs, rhs, mmask);
+		}
+		constexpr inline static simd_mmask_ui16 mmasked_compare_less_than_ui16(simd_register_ui16 lhs, simd_register_ui16 rhs, simd_mmask_ui16 mmask) noexcept {
+			return mmaskedCompareLessThen<simd_register_ui16, simd_mmask_ui16>(lhs, rhs, mmask);
+		}
+		constexpr inline static simd_mmask_ui32 mmasked_compare_less_than_ui32(simd_register_ui32 lhs, simd_register_ui32 rhs, simd_mmask_ui32 mmask) noexcept {
+			return mmaskedCompareLessThen<simd_register_ui32, simd_mmask_ui32>(lhs, rhs, mmask);
+		}
+		constexpr inline static simd_mmask_ui64 mmasked_compare_less_than_ui64(simd_register_ui64 lhs, simd_register_ui64 rhs, simd_mmask_ui64 mmask) noexcept {
+			return mmaskedCompareLessThen<simd_register_ui64, simd_mmask_ui64>(lhs, rhs, mmask);
+		}
+
+		constexpr inline static simd_mmask_f32 mmasked_compare_less_than_f32(simd_register_f32 lhs, simd_register_f32 rhs, simd_mmask_f32 mmask) noexcept {
+			return mmaskedCompareLessThen<simd_register_f32, simd_mmask_f32>(lhs, rhs, mmask);
+		}
+		constexpr inline static simd_mmask_f64 mmasked_compare_less_than_f64(simd_register_f64 lhs, simd_register_f64 rhs, simd_mmask_f64 mmask) noexcept {
+			return mmaskedCompareLessThen<simd_register_f64, simd_mmask_f64>(lhs, rhs, mmask);
+		}
+
+		//mmasked src compare less than 
+		template<typename SimdRegisterType, typename SimdMaskType>
+		constexpr inline static SimdMaskType mmaskedSrcCompareLessThen(SimdRegisterType lhs, SimdRegisterType rhs, SimdMaskType src, SimdMaskType mmask) noexcept {
+			SimdMaskType output = src;
+			for (Size i = 0; i < SimdRegisterToInfo<SimdRegisterType>::count(); i++) {
+				if (mmask[i]) {
+					output.setAtIndex(i, lhs[i] < rhs[i]);
+				}
+			}
+			return output;
+		}
+
+		constexpr inline static simd_mmask_i8 mmasked_src_compare_less_than_i8(simd_register_i8 lhs, simd_register_i8 rhs, simd_mmask_i8 src, simd_mmask_i8 mmask) noexcept {
+			return mmaskedSrcCompareLessThen<simd_register_i8, simd_mmask_i8>(lhs, rhs, src, mmask);
+		}
+		constexpr inline static simd_mmask_i16 mmasked_src_compare_less_than_i16(simd_register_i16 lhs, simd_register_i16 rhs, simd_mmask_i16 src, simd_mmask_i16 mmask) noexcept {
+			return mmaskedSrcCompareLessThen<simd_register_i16, simd_mmask_i16>(lhs, rhs, src, mmask);
+		}
+		constexpr inline static simd_mmask_i32 mmasked_src_compare_less_than_i32(simd_register_i32 lhs, simd_register_i32 rhs, simd_mmask_i32 src, simd_mmask_i32 mmask) noexcept {
+			return mmaskedSrcCompareLessThen<simd_register_i32, simd_mmask_i32>(lhs, rhs, src, mmask);
+		}
+		constexpr inline static simd_mmask_i64 mmasked_src_compare_less_than_i64(simd_register_i64 lhs, simd_register_i64 rhs, simd_mmask_i64 src, simd_mmask_i64 mmask) noexcept {
+			return mmaskedSrcCompareLessThen<simd_register_i64, simd_mmask_i64>(lhs, rhs, src, mmask);
+		}
+
+		constexpr inline static simd_mmask_ui8 mmasked_src_compare_less_than_ui8(simd_register_ui8 lhs, simd_register_ui8 rhs, simd_mmask_ui8 src, simd_mmask_ui8 mmask) noexcept {
+			return mmaskedSrcCompareLessThen<simd_register_ui8, simd_mmask_ui8>(lhs, rhs, src, mmask);
+		}
+		constexpr inline static simd_mmask_ui16 mmasked_src_compare_less_than_ui16(simd_register_ui16 lhs, simd_register_ui16 rhs, simd_mmask_ui16 src, simd_mmask_ui16 mmask) noexcept {
+			return mmaskedSrcCompareLessThen<simd_register_ui16, simd_mmask_ui16>(lhs, rhs, src, mmask);
+		}
+		constexpr inline static simd_mmask_ui32 mmasked_src_compare_less_than_ui32(simd_register_ui32 lhs, simd_register_ui32 rhs, simd_mmask_ui32 src, simd_mmask_ui32 mmask) noexcept {
+			return mmaskedSrcCompareLessThen<simd_register_ui32, simd_mmask_ui32>(lhs, rhs, src, mmask);
+		}
+		constexpr inline static simd_mmask_ui64 mmasked_src_compare_less_than_ui64(simd_register_ui64 lhs, simd_register_ui64 rhs, simd_mmask_ui64 src, simd_mmask_ui64 mmask) noexcept {
+			return mmaskedSrcCompareLessThen<simd_register_ui64, simd_mmask_ui64>(lhs, rhs, src, mmask);
+		}
+
+		constexpr inline static simd_mmask_f32 mmasked_src_compare_less_than_f32(simd_register_f32 lhs, simd_register_f32 rhs, simd_mmask_f32 src, simd_mmask_f32 mmask) noexcept {
+			return mmaskedSrcCompareLessThen<simd_register_f32, simd_mmask_f32>(lhs, rhs, src, mmask);
+		}
+		constexpr inline static simd_mmask_f64 mmasked_src_compare_less_than_f64(simd_register_f64 lhs, simd_register_f64 rhs, simd_mmask_f64 src, simd_mmask_f64 mmask) noexcept {
+			return mmaskedSrcCompareLessThen<simd_register_f64, simd_mmask_f64>(lhs, rhs, src, mmask);
+		}
+
+		//compare greater than 
+		template<typename SimdRegisterType, typename SimdMaskType>
+		constexpr inline static SimdMaskType compareGreaterThan(SimdRegisterType lhs, SimdRegisterType rhs) noexcept {
 			SimdMaskType output{};
 			for (Size i = 0; i < SimdRegisterToInfo<SimdRegisterType>::count(); i++) {
 				output.setAtIndex(i, lhs[i] > rhs[i]);
@@ -6256,42 +6376,132 @@ namespace natl::simd {
 			return output;
 		}
 
-		constexpr inline static simd_mmask_i8 compare_greater_than_mmask_i8(simd_register_i8 lhs, simd_register_i8 rhs) noexcept {
-			return compareGreaterThanMmask<simd_register_i8, simd_mmask_i8>(lhs, rhs);
+		constexpr inline static simd_mmask_i8 compare_greater_than_i8(simd_register_i8 lhs, simd_register_i8 rhs) noexcept {
+			return compareGreaterThan<simd_register_i8, simd_mmask_i8>(lhs, rhs);
 		}
-		constexpr inline static simd_mmask_i16 compare_greater_than_mmask_i16(simd_register_i16 lhs, simd_register_i16 rhs) noexcept {
-			return compareGreaterThanMmask<simd_register_i16, simd_mmask_i16>(lhs, rhs);
+		constexpr inline static simd_mmask_i16 compare_greater_than_i16(simd_register_i16 lhs, simd_register_i16 rhs) noexcept {
+			return compareGreaterThan<simd_register_i16, simd_mmask_i16>(lhs, rhs);
 		}
-		constexpr inline static simd_mmask_i32 compare_greater_than_mmask_i32(simd_register_i32 lhs, simd_register_i32 rhs) noexcept {
-			return compareGreaterThanMmask<simd_register_i32, simd_mmask_i32>(lhs, rhs);
+		constexpr inline static simd_mmask_i32 compare_greater_than_i32(simd_register_i32 lhs, simd_register_i32 rhs) noexcept {
+			return compareGreaterThan<simd_register_i32, simd_mmask_i32>(lhs, rhs);
 		}
-		constexpr inline static simd_mmask_i64 compare_greater_than_mmask_i64(simd_register_i64 lhs, simd_register_i64 rhs) noexcept {
-			return compareGreaterThanMmask<simd_register_i64, simd_mmask_i64>(lhs, rhs);
-		}
-
-		constexpr inline static simd_mmask_ui8 compare_greater_than_mmask_ui8(simd_register_ui8 lhs, simd_register_ui8 rhs) noexcept {
-			return compareGreaterThanMmask<simd_register_ui8, simd_mmask_ui8>(lhs, rhs);
-		}
-		constexpr inline static simd_mmask_ui16 compare_greater_than_mmask_ui16(simd_register_ui16 lhs, simd_register_ui16 rhs) noexcept {
-			return compareGreaterThanMmask<simd_register_ui16, simd_mmask_ui16>(lhs, rhs);
-		}
-		constexpr inline static simd_mmask_ui32 compare_greater_than_mmask_ui32(simd_register_ui32 lhs, simd_register_ui32 rhs) noexcept {
-			return compareGreaterThanMmask<simd_register_ui32, simd_mmask_ui32>(lhs, rhs);
-		}
-		constexpr inline static simd_mmask_ui64 compare_greater_than_mmask_ui64(simd_register_ui64 lhs, simd_register_ui64 rhs) noexcept {
-			return compareGreaterThanMmask<simd_register_ui64, simd_mmask_ui64>(lhs, rhs);
+		constexpr inline static simd_mmask_i64 compare_greater_than_i64(simd_register_i64 lhs, simd_register_i64 rhs) noexcept {
+			return compareGreaterThan<simd_register_i64, simd_mmask_i64>(lhs, rhs);
 		}
 
-		constexpr inline static simd_mmask_f32 compare_greater_than_mmask_f32(simd_register_f32 lhs, simd_register_f32 rhs) noexcept {
-			return compareGreaterThanMmask<simd_register_f32, simd_mmask_f32>(lhs, rhs);
+		constexpr inline static simd_mmask_ui8 compare_greater_than_ui8(simd_register_ui8 lhs, simd_register_ui8 rhs) noexcept {
+			return compareGreaterThan<simd_register_ui8, simd_mmask_ui8>(lhs, rhs);
 		}
-		constexpr inline static simd_mmask_f64 compare_greater_than_mmask_f64(simd_register_f64 lhs, simd_register_f64 rhs) noexcept {
-			return compareGreaterThanMmask<simd_register_f64, simd_mmask_f64>(lhs, rhs);
+		constexpr inline static simd_mmask_ui16 compare_greater_than_ui16(simd_register_ui16 lhs, simd_register_ui16 rhs) noexcept {
+			return compareGreaterThan<simd_register_ui16, simd_mmask_ui16>(lhs, rhs);
+		}
+		constexpr inline static simd_mmask_ui32 compare_greater_than_ui32(simd_register_ui32 lhs, simd_register_ui32 rhs) noexcept {
+			return compareGreaterThan<simd_register_ui32, simd_mmask_ui32>(lhs, rhs);
+		}
+		constexpr inline static simd_mmask_ui64 compare_greater_than_ui64(simd_register_ui64 lhs, simd_register_ui64 rhs) noexcept {
+			return compareGreaterThan<simd_register_ui64, simd_mmask_ui64>(lhs, rhs);
 		}
 
-		//compare less than or equal mmask
+		constexpr inline static simd_mmask_f32 compare_greater_than_f32(simd_register_f32 lhs, simd_register_f32 rhs) noexcept {
+			return compareGreaterThan<simd_register_f32, simd_mmask_f32>(lhs, rhs);
+		}
+		constexpr inline static simd_mmask_f64 compare_greater_than_f64(simd_register_f64 lhs, simd_register_f64 rhs) noexcept {
+			return compareGreaterThan<simd_register_f64, simd_mmask_f64>(lhs, rhs);
+		}
+
+		//mmasked compare greater than
 		template<typename SimdRegisterType, typename SimdMaskType>
-		constexpr inline static SimdMaskType compareLessThanOrEqualMmask(SimdRegisterType lhs, SimdRegisterType rhs) noexcept {
+		constexpr inline static SimdMaskType mmaskedCompareGreaterThan(SimdRegisterType lhs, SimdRegisterType rhs, SimdMaskType mmask) noexcept {
+			SimdMaskType output{};
+			for (Size i = 0; i < SimdRegisterToInfo<SimdRegisterType>::count(); i++) {
+				if (mmask[i]) {
+					output.setAtIndex(i, lhs[i] > rhs[i]);
+				}
+			}
+			return output;
+		}
+
+		constexpr inline static simd_mmask_i8 mmasked_compare_greater_than_i8(simd_register_i8 lhs, simd_register_i8 rhs, simd_mmask_i8 mmask) noexcept {
+			return mmaskedCompareGreaterThan<simd_register_i8, simd_mmask_i8>(lhs, rhs, mmask);
+		}
+		constexpr inline static simd_mmask_i16 mmasked_compare_greater_than_i16(simd_register_i16 lhs, simd_register_i16 rhs, simd_mmask_i16 mmask) noexcept {
+			return mmaskedCompareGreaterThan<simd_register_i16, simd_mmask_i16>(lhs, rhs, mmask);
+		}
+		constexpr inline static simd_mmask_i32 mmasked_compare_greater_than_i32(simd_register_i32 lhs, simd_register_i32 rhs, simd_mmask_i32 mmask) noexcept {
+			return mmaskedCompareGreaterThan<simd_register_i32, simd_mmask_i32>(lhs, rhs, mmask);
+		}
+		constexpr inline static simd_mmask_i64 mmasked_compare_greater_than_i64(simd_register_i64 lhs, simd_register_i64 rhs, simd_mmask_i64 mmask) noexcept {
+			return mmaskedCompareGreaterThan<simd_register_i64, simd_mmask_i64>(lhs, rhs, mmask);
+		}
+
+		constexpr inline static simd_mmask_ui8 mmasked_compare_greater_than_ui8(simd_register_ui8 lhs, simd_register_ui8 rhs, simd_mmask_ui8 mmask) noexcept {
+			return mmaskedCompareGreaterThan<simd_register_ui8, simd_mmask_ui8>(lhs, rhs, mmask);
+		}
+		constexpr inline static simd_mmask_ui16 mmasked_compare_greater_than_ui16(simd_register_ui16 lhs, simd_register_ui16 rhs, simd_mmask_ui16 mmask) noexcept {
+			return mmaskedCompareGreaterThan<simd_register_ui16, simd_mmask_ui16>(lhs, rhs, mmask);
+		}
+		constexpr inline static simd_mmask_ui32 mmasked_compare_greater_than_ui32(simd_register_ui32 lhs, simd_register_ui32 rhs, simd_mmask_ui32 mmask) noexcept {
+			return mmaskedCompareGreaterThan<simd_register_ui32, simd_mmask_ui32>(lhs, rhs, mmask);
+		}
+		constexpr inline static simd_mmask_ui64 mmasked_compare_greater_than_ui64(simd_register_ui64 lhs, simd_register_ui64 rhs, simd_mmask_ui64 mmask) noexcept {
+			return mmaskedCompareGreaterThan<simd_register_ui64, simd_mmask_ui64>(lhs, rhs, mmask);
+		}
+
+		constexpr inline static simd_mmask_f32 mmasked_compare_greater_than_f32(simd_register_f32 lhs, simd_register_f32 rhs, simd_mmask_f32 mmask) noexcept {
+			return mmaskedCompareGreaterThan<simd_register_f32, simd_mmask_f32>(lhs, rhs, mmask);
+		}
+		constexpr inline static simd_mmask_f64 mmasked_compare_greater_than_f64(simd_register_f64 lhs, simd_register_f64 rhs, simd_mmask_f64 mmask) noexcept {
+			return mmaskedCompareGreaterThan<simd_register_f64, simd_mmask_f64>(lhs, rhs, mmask);
+		}
+
+		//mmasked src compare greater than 
+		template<typename SimdRegisterType, typename SimdMaskType>
+		constexpr inline static SimdMaskType mmaskedSrcCompareGreaterThan(SimdRegisterType lhs, SimdRegisterType rhs, SimdMaskType src, SimdMaskType mmask) noexcept {
+			SimdMaskType output = src;
+			for (Size i = 0; i < SimdRegisterToInfo<SimdRegisterType>::count(); i++) {
+				if (mmask[i]) {
+					output.setAtIndex(i, lhs[i] > rhs[i]);
+				}
+			}
+			return output;
+		}
+
+		constexpr inline static simd_mmask_i8 mmasked_src_compare_greater_than_i8(simd_register_i8 lhs, simd_register_i8 rhs, simd_mmask_i8 src, simd_mmask_i8 mmask) noexcept {
+			return mmaskedSrcCompareGreaterThan<simd_register_i8, simd_mmask_i8>(lhs, rhs, src, mmask);
+		}
+		constexpr inline static simd_mmask_i16 mmasked_src_compare_greater_than_i16(simd_register_i16 lhs, simd_register_i16 rhs, simd_mmask_i16 src, simd_mmask_i16 mmask) noexcept {
+			return mmaskedSrcCompareGreaterThan<simd_register_i16, simd_mmask_i16>(lhs, rhs, src, mmask);
+		}
+		constexpr inline static simd_mmask_i32 mmasked_src_compare_greater_than_i32(simd_register_i32 lhs, simd_register_i32 rhs, simd_mmask_i32 src, simd_mmask_i32 mmask) noexcept {
+			return mmaskedSrcCompareGreaterThan<simd_register_i32, simd_mmask_i32>(lhs, rhs, src, mmask);
+		}
+		constexpr inline static simd_mmask_i64 mmasked_src_compare_greater_than_i64(simd_register_i64 lhs, simd_register_i64 rhs, simd_mmask_i64 src, simd_mmask_i64 mmask) noexcept {
+			return mmaskedSrcCompareGreaterThan<simd_register_i64, simd_mmask_i64>(lhs, rhs, src, mmask);
+		}
+
+		constexpr inline static simd_mmask_ui8 mmasked_src_compare_greater_than_ui8(simd_register_ui8 lhs, simd_register_ui8 rhs, simd_mmask_ui8 src, simd_mmask_ui8 mmask) noexcept {
+			return mmaskedSrcCompareGreaterThan<simd_register_ui8, simd_mmask_ui8>(lhs, rhs, src, mmask);
+		}
+		constexpr inline static simd_mmask_ui16 mmasked_src_compare_greater_than_ui16(simd_register_ui16 lhs, simd_register_ui16 rhs, simd_mmask_ui16 src, simd_mmask_ui16 mmask) noexcept {
+			return mmaskedSrcCompareGreaterThan<simd_register_ui16, simd_mmask_ui16>(lhs, rhs, src, mmask);
+		}
+		constexpr inline static simd_mmask_ui32 mmasked_src_compare_greater_than_ui32(simd_register_ui32 lhs, simd_register_ui32 rhs, simd_mmask_ui32 src, simd_mmask_ui32 mmask) noexcept {
+			return mmaskedSrcCompareGreaterThan<simd_register_ui32, simd_mmask_ui32>(lhs, rhs, src, mmask);
+		}
+		constexpr inline static simd_mmask_ui64 mmasked_src_compare_greater_than_ui64(simd_register_ui64 lhs, simd_register_ui64 rhs, simd_mmask_ui64 src, simd_mmask_ui64 mmask) noexcept {
+			return mmaskedSrcCompareGreaterThan<simd_register_ui64, simd_mmask_ui64>(lhs, rhs, src, mmask);
+		}
+
+		constexpr inline static simd_mmask_f32 mmasked_src_compare_greater_than_f32(simd_register_f32 lhs, simd_register_f32 rhs, simd_mmask_f32 src, simd_mmask_f32 mmask) noexcept {
+			return mmaskedSrcCompareGreaterThan<simd_register_f32, simd_mmask_f32>(lhs, rhs, src, mmask);
+		}
+		constexpr inline static simd_mmask_f64 mmasked_src_compare_greater_than_f64(simd_register_f64 lhs, simd_register_f64 rhs, simd_mmask_f64 src, simd_mmask_f64 mmask) noexcept {
+			return mmaskedSrcCompareGreaterThan<simd_register_f64, simd_mmask_f64>(lhs, rhs, src, mmask);
+		}
+
+		//compare less than or equal 
+		template<typename SimdRegisterType, typename SimdMaskType>
+		constexpr inline static SimdMaskType compareLessThanOrEqual(SimdRegisterType lhs, SimdRegisterType rhs) noexcept {
 			SimdMaskType output{};
 			for (Size i = 0; i < SimdRegisterToInfo<SimdRegisterType>::count(); i++) {
 				output.setAtIndex(i, lhs[i] <= rhs[i]);
@@ -6299,42 +6509,132 @@ namespace natl::simd {
 			return output;
 		}
 
-		constexpr inline static simd_mmask_i8 compare_less_than_or_equal_mmask_i8(simd_register_i8 lhs, simd_register_i8 rhs) noexcept {
-			return compareLessThanOrEqualMmask<simd_register_i8, simd_mmask_i8>(lhs, rhs);
+		constexpr inline static simd_mmask_i8 compare_less_than_or_equal_i8(simd_register_i8 lhs, simd_register_i8 rhs) noexcept {
+			return compareLessThanOrEqual<simd_register_i8, simd_mmask_i8>(lhs, rhs);
 		}
-		constexpr inline static simd_mmask_i16 compare_less_than_or_equal_mmask_i16(simd_register_i16 lhs, simd_register_i16 rhs) noexcept {
-			return compareLessThanOrEqualMmask<simd_register_i16, simd_mmask_i16>(lhs, rhs);
+		constexpr inline static simd_mmask_i16 compare_less_than_or_equal_i16(simd_register_i16 lhs, simd_register_i16 rhs) noexcept {
+			return compareLessThanOrEqual<simd_register_i16, simd_mmask_i16>(lhs, rhs);
 		}
-		constexpr inline static simd_mmask_i32 compare_less_than_or_equal_mmask_i32(simd_register_i32 lhs, simd_register_i32 rhs) noexcept {
-			return compareLessThanOrEqualMmask<simd_register_i32, simd_mmask_i32>(lhs, rhs);
+		constexpr inline static simd_mmask_i32 compare_less_than_or_equal_i32(simd_register_i32 lhs, simd_register_i32 rhs) noexcept {
+			return compareLessThanOrEqual<simd_register_i32, simd_mmask_i32>(lhs, rhs);
 		}
-		constexpr inline static simd_mmask_i64 compare_less_than_or_equal_mmask_i64(simd_register_i64 lhs, simd_register_i64 rhs) noexcept {
-			return compareLessThanOrEqualMmask<simd_register_i64, simd_mmask_i64>(lhs, rhs);
-		}
-
-		constexpr inline static simd_mmask_ui8 compare_less_than_or_equal_mmask_ui8(simd_register_ui8 lhs, simd_register_ui8 rhs) noexcept {
-			return compareLessThanOrEqualMmask<simd_register_ui8, simd_mmask_ui8>(lhs, rhs);
-		}
-		constexpr inline static simd_mmask_ui16 compare_less_than_or_equal_mmask_ui16(simd_register_ui16 lhs, simd_register_ui16 rhs) noexcept {
-			return compareLessThanOrEqualMmask<simd_register_ui16, simd_mmask_ui16>(lhs, rhs);
-		}
-		constexpr inline static simd_mmask_ui32 compare_less_than_or_equal_mmask_ui32(simd_register_ui32 lhs, simd_register_ui32 rhs) noexcept {
-			return compareLessThanOrEqualMmask<simd_register_ui32, simd_mmask_ui32>(lhs, rhs);
-		}
-		constexpr inline static simd_mmask_ui64 compare_less_than_or_equal_mmask_ui64(simd_register_ui64 lhs, simd_register_ui64 rhs) noexcept {
-			return compareLessThanOrEqualMmask<simd_register_ui64, simd_mmask_ui64>(lhs, rhs);
+		constexpr inline static simd_mmask_i64 compare_less_than_or_equal_i64(simd_register_i64 lhs, simd_register_i64 rhs) noexcept {
+			return compareLessThanOrEqual<simd_register_i64, simd_mmask_i64>(lhs, rhs);
 		}
 
-		constexpr inline static simd_mmask_f32 compare_less_than_or_equal_mmask_f32(simd_register_f32 lhs, simd_register_f32 rhs) noexcept {
-			return compareLessThanOrEqualMmask<simd_register_f32, simd_mmask_f32>(lhs, rhs);
+		constexpr inline static simd_mmask_ui8 compare_less_than_or_equal_ui8(simd_register_ui8 lhs, simd_register_ui8 rhs) noexcept {
+			return compareLessThanOrEqual<simd_register_ui8, simd_mmask_ui8>(lhs, rhs);
 		}
-		constexpr inline static simd_mmask_f64 compare_less_than_or_equal_mmask_f64(simd_register_f64 lhs, simd_register_f64 rhs) noexcept {
-			return compareLessThanOrEqualMmask<simd_register_f64, simd_mmask_f64>(lhs, rhs);
+		constexpr inline static simd_mmask_ui16 compare_less_than_or_equal_ui16(simd_register_ui16 lhs, simd_register_ui16 rhs) noexcept {
+			return compareLessThanOrEqual<simd_register_ui16, simd_mmask_ui16>(lhs, rhs);
+		}
+		constexpr inline static simd_mmask_ui32 compare_less_than_or_equal_ui32(simd_register_ui32 lhs, simd_register_ui32 rhs) noexcept {
+			return compareLessThanOrEqual<simd_register_ui32, simd_mmask_ui32>(lhs, rhs);
+		}
+		constexpr inline static simd_mmask_ui64 compare_less_than_or_equal_ui64(simd_register_ui64 lhs, simd_register_ui64 rhs) noexcept {
+			return compareLessThanOrEqual<simd_register_ui64, simd_mmask_ui64>(lhs, rhs);
 		}
 
-		//compare greater than or equal mmask
+		constexpr inline static simd_mmask_f32 compare_less_than_or_equal_f32(simd_register_f32 lhs, simd_register_f32 rhs) noexcept {
+			return compareLessThanOrEqual<simd_register_f32, simd_mmask_f32>(lhs, rhs);
+		}
+		constexpr inline static simd_mmask_f64 compare_less_than_or_equal_f64(simd_register_f64 lhs, simd_register_f64 rhs) noexcept {
+			return compareLessThanOrEqual<simd_register_f64, simd_mmask_f64>(lhs, rhs);
+		}
+
+		//mmasked compare less than or equal
 		template<typename SimdRegisterType, typename SimdMaskType>
-		constexpr inline static SimdMaskType compareGreaterThanOrEqualMmask(SimdRegisterType lhs, SimdRegisterType rhs) noexcept {
+		constexpr inline static SimdMaskType mmaskedCompareLessThanOrEqual(SimdRegisterType lhs, SimdRegisterType rhs, SimdMaskType mmask) noexcept {
+			SimdMaskType output{};
+			for (Size i = 0; i < SimdRegisterToInfo<SimdRegisterType>::count(); i++) {
+				if (mmask[i]) {
+					output.setAtIndex(i, lhs[i] <= rhs[i]);
+				}
+			}
+			return output;
+		}
+
+		constexpr inline static simd_mmask_i8 mmasked_compare_less_than_or_equal_i8(simd_register_i8 lhs, simd_register_i8 rhs, simd_mmask_i8 mmask) noexcept {
+			return mmaskedCompareLessThanOrEqual<simd_register_i8, simd_mmask_i8>(lhs, rhs, mmask);
+		}
+		constexpr inline static simd_mmask_i16 mmasked_compare_less_than_or_equal_i16(simd_register_i16 lhs, simd_register_i16 rhs, simd_mmask_i16 mmask) noexcept {
+			return mmaskedCompareLessThanOrEqual<simd_register_i16, simd_mmask_i16>(lhs, rhs, mmask);
+		}
+		constexpr inline static simd_mmask_i32 mmasked_compare_less_than_or_equal_i32(simd_register_i32 lhs, simd_register_i32 rhs, simd_mmask_i32 mmask) noexcept {
+			return mmaskedCompareLessThanOrEqual<simd_register_i32, simd_mmask_i32>(lhs, rhs, mmask);
+		}
+		constexpr inline static simd_mmask_i64 mmasked_compare_less_than_or_equal_i64(simd_register_i64 lhs, simd_register_i64 rhs, simd_mmask_i64 mmask) noexcept {
+			return mmaskedCompareLessThanOrEqual<simd_register_i64, simd_mmask_i64>(lhs, rhs, mmask);
+		}
+
+		constexpr inline static simd_mmask_ui8 mmasked_compare_less_than_or_equal_ui8(simd_register_ui8 lhs, simd_register_ui8 rhs, simd_mmask_ui8 mmask) noexcept {
+			return mmaskedCompareLessThanOrEqual<simd_register_ui8, simd_mmask_ui8>(lhs, rhs, mmask);
+		}
+		constexpr inline static simd_mmask_ui16 mmasked_compare_less_than_or_equal_ui16(simd_register_ui16 lhs, simd_register_ui16 rhs, simd_mmask_ui16 mmask) noexcept {
+			return mmaskedCompareLessThanOrEqual<simd_register_ui16, simd_mmask_ui16>(lhs, rhs, mmask);
+		}
+		constexpr inline static simd_mmask_ui32 mmasked_compare_less_than_or_equal_ui32(simd_register_ui32 lhs, simd_register_ui32 rhs, simd_mmask_ui32 mmask) noexcept {
+			return mmaskedCompareLessThanOrEqual<simd_register_ui32, simd_mmask_ui32>(lhs, rhs, mmask);
+		}
+		constexpr inline static simd_mmask_ui64 mmasked_compare_less_than_or_equal_ui64(simd_register_ui64 lhs, simd_register_ui64 rhs, simd_mmask_ui64 mmask) noexcept {
+			return mmaskedCompareLessThanOrEqual<simd_register_ui64, simd_mmask_ui64>(lhs, rhs, mmask);
+		}
+
+		constexpr inline static simd_mmask_f32 mmasked_compare_less_than_or_equal_f32(simd_register_f32 lhs, simd_register_f32 rhs, simd_mmask_f32 mmask) noexcept {
+			return mmaskedCompareLessThanOrEqual<simd_register_f32, simd_mmask_f32>(lhs, rhs, mmask);
+		}
+		constexpr inline static simd_mmask_f64 mmasked_compare_less_than_or_equal_f64(simd_register_f64 lhs, simd_register_f64 rhs, simd_mmask_f64 mmask) noexcept {
+			return mmaskedCompareLessThanOrEqual<simd_register_f64, simd_mmask_f64>(lhs, rhs, mmask);
+		}
+
+		//mmasked src compare less than or equal 
+		template<typename SimdRegisterType, typename SimdMaskType>
+		constexpr inline static SimdMaskType mmaskedSrcCompareLessThanOrEqual(SimdRegisterType lhs, SimdRegisterType rhs, SimdMaskType src, SimdMaskType mmask) noexcept {
+			SimdMaskType output = src;
+			for (Size i = 0; i < SimdRegisterToInfo<SimdRegisterType>::count(); i++) {
+				if (mmask[i]) {
+					output.setAtIndex(i, lhs[i] <= rhs[i]);
+				}
+			}
+			return output;
+		}
+
+		constexpr inline static simd_mmask_i8 mmasked_src_compare_less_than_or_equal_i8(simd_register_i8 lhs, simd_register_i8 rhs, simd_mmask_i8 src, simd_mmask_i8 mmask) noexcept {
+			return mmaskedSrcCompareLessThanOrEqual<simd_register_i8, simd_mmask_i8>(lhs, rhs, src, mmask);
+		}
+		constexpr inline static simd_mmask_i16 mmasked_src_compare_less_than_or_equal_i16(simd_register_i16 lhs, simd_register_i16 rhs, simd_mmask_i16 src, simd_mmask_i16 mmask) noexcept {
+			return mmaskedSrcCompareLessThanOrEqual<simd_register_i16, simd_mmask_i16>(lhs, rhs, src, mmask);
+		}
+		constexpr inline static simd_mmask_i32 mmasked_src_compare_less_than_or_equal_i32(simd_register_i32 lhs, simd_register_i32 rhs, simd_mmask_i32 src, simd_mmask_i32 mmask) noexcept {
+			return mmaskedSrcCompareLessThanOrEqual<simd_register_i32, simd_mmask_i32>(lhs, rhs, src, mmask);
+		}
+		constexpr inline static simd_mmask_i64 mmasked_src_compare_less_than_or_equal_i64(simd_register_i64 lhs, simd_register_i64 rhs, simd_mmask_i64 src, simd_mmask_i64 mmask) noexcept {
+			return mmaskedSrcCompareLessThanOrEqual<simd_register_i64, simd_mmask_i64>(lhs, rhs, src, mmask);
+		}
+
+		constexpr inline static simd_mmask_ui8 mmasked_src_compare_less_than_or_equal_ui8(simd_register_ui8 lhs, simd_register_ui8 rhs, simd_mmask_ui8 src, simd_mmask_ui8 mmask) noexcept {
+			return mmaskedSrcCompareLessThanOrEqual<simd_register_ui8, simd_mmask_ui8>(lhs, rhs, src, mmask);
+		}
+		constexpr inline static simd_mmask_ui16 mmasked_src_compare_less_than_or_equal_ui16(simd_register_ui16 lhs, simd_register_ui16 rhs, simd_mmask_ui16 src, simd_mmask_ui16 mmask) noexcept {
+			return mmaskedSrcCompareLessThanOrEqual<simd_register_ui16, simd_mmask_ui16>(lhs, rhs, src, mmask);
+		}
+		constexpr inline static simd_mmask_ui32 mmasked_src_compare_less_than_or_equal_ui32(simd_register_ui32 lhs, simd_register_ui32 rhs, simd_mmask_ui32 src, simd_mmask_ui32 mmask) noexcept {
+			return mmaskedSrcCompareLessThanOrEqual<simd_register_ui32, simd_mmask_ui32>(lhs, rhs, src, mmask);
+		}
+		constexpr inline static simd_mmask_ui64 mmasked_src_compare_less_than_or_equal_ui64(simd_register_ui64 lhs, simd_register_ui64 rhs, simd_mmask_ui64 src, simd_mmask_ui64 mmask) noexcept {
+			return mmaskedSrcCompareLessThanOrEqual<simd_register_ui64, simd_mmask_ui64>(lhs, rhs, src, mmask);
+		}
+
+		constexpr inline static simd_mmask_f32 mmasked_src_compare_less_than_or_equal_f32(simd_register_f32 lhs, simd_register_f32 rhs, simd_mmask_f32 src, simd_mmask_f32 mmask) noexcept {
+			return mmaskedSrcCompareLessThanOrEqual<simd_register_f32, simd_mmask_f32>(lhs, rhs, src, mmask);
+		}
+		constexpr inline static simd_mmask_f64 mmasked_src_compare_less_than_or_equal_f64(simd_register_f64 lhs, simd_register_f64 rhs, simd_mmask_f64 src, simd_mmask_f64 mmask) noexcept {
+			return mmaskedSrcCompareLessThanOrEqual<simd_register_f64, simd_mmask_f64>(lhs, rhs, src, mmask);
+		}
+
+		//compare greater than or equal 
+		template<typename SimdRegisterType, typename SimdMaskType>
+		constexpr inline static SimdMaskType compareGreaterThanOrEqual(SimdRegisterType lhs, SimdRegisterType rhs) noexcept {
 			SimdMaskType output{};
 			for (Size i = 0; i < SimdRegisterToInfo<SimdRegisterType>::count(); i++) {
 				output.setAtIndex(i, lhs[i] >= rhs[i]);
@@ -6342,337 +6642,127 @@ namespace natl::simd {
 			return output;
 		}
 
-		constexpr inline static simd_mmask_i8 compare_greater_than_or_equal_mmask_i8(simd_register_i8 lhs, simd_register_i8 rhs) noexcept {
-			return compareGreaterThanOrEqualMmask<simd_register_i8, simd_mmask_i8>(lhs, rhs);
+		constexpr inline static simd_mmask_i8 compare_greater_than_or_equal_i8(simd_register_i8 lhs, simd_register_i8 rhs) noexcept {
+			return compareGreaterThanOrEqual<simd_register_i8, simd_mmask_i8>(lhs, rhs);
 		}
-		constexpr inline static simd_mmask_i16 compare_greater_than_or_equal_mmask_i16(simd_register_i16 lhs, simd_register_i16 rhs) noexcept {
-			return compareGreaterThanOrEqualMmask<simd_register_i16, simd_mmask_i16>(lhs, rhs);
+		constexpr inline static simd_mmask_i16 compare_greater_than_or_equal_i16(simd_register_i16 lhs, simd_register_i16 rhs) noexcept {
+			return compareGreaterThanOrEqual<simd_register_i16, simd_mmask_i16>(lhs, rhs);
 		}
-		constexpr inline static simd_mmask_i32 compare_greater_than_or_equal_mmask_i32(simd_register_i32 lhs, simd_register_i32 rhs) noexcept {
-			return compareGreaterThanOrEqualMmask<simd_register_i32, simd_mmask_i32>(lhs, rhs);
+		constexpr inline static simd_mmask_i32 compare_greater_than_or_equal_i32(simd_register_i32 lhs, simd_register_i32 rhs) noexcept {
+			return compareGreaterThanOrEqual<simd_register_i32, simd_mmask_i32>(lhs, rhs);
 		}
-		constexpr inline static simd_mmask_i64 compare_greater_than_or_equal_mmask_i64(simd_register_i64 lhs, simd_register_i64 rhs) noexcept {
-			return compareGreaterThanOrEqualMmask<simd_register_i64, simd_mmask_i64>(lhs, rhs);
-		}
-
-		constexpr inline static simd_mmask_ui8 compare_greater_than_or_equal_mmask_ui8(simd_register_ui8 lhs, simd_register_ui8 rhs) noexcept {
-			return compareGreaterThanOrEqualMmask<simd_register_ui8, simd_mmask_ui8>(lhs, rhs);
-		}
-		constexpr inline static simd_mmask_ui16 compare_greater_than_or_equal_mmask_ui16(simd_register_ui16 lhs, simd_register_ui16 rhs) noexcept {
-			return compareGreaterThanOrEqualMmask<simd_register_ui16, simd_mmask_ui16>(lhs, rhs);
-		}
-		constexpr inline static simd_mmask_ui32 compare_greater_than_or_equal_mmask_ui32(simd_register_ui32 lhs, simd_register_ui32 rhs) noexcept {
-			return compareGreaterThanOrEqualMmask<simd_register_ui32, simd_mmask_ui32>(lhs, rhs);
-		}
-		constexpr inline static simd_mmask_ui64 compare_greater_than_or_equal_mmask_ui64(simd_register_ui64 lhs, simd_register_ui64 rhs) noexcept {
-			return compareGreaterThanOrEqualMmask<simd_register_ui64, simd_mmask_ui64>(lhs, rhs);
+		constexpr inline static simd_mmask_i64 compare_greater_than_or_equal_i64(simd_register_i64 lhs, simd_register_i64 rhs) noexcept {
+			return compareGreaterThanOrEqual<simd_register_i64, simd_mmask_i64>(lhs, rhs);
 		}
 
-		constexpr inline static simd_mmask_f32 compare_greater_than_or_equal_mmask_f32(simd_register_f32 lhs, simd_register_f32 rhs) noexcept {
-			return compareGreaterThanOrEqualMmask<simd_register_f32, simd_mmask_f32>(lhs, rhs);
+		constexpr inline static simd_mmask_ui8 compare_greater_than_or_equal_ui8(simd_register_ui8 lhs, simd_register_ui8 rhs) noexcept {
+			return compareGreaterThanOrEqual<simd_register_ui8, simd_mmask_ui8>(lhs, rhs);
 		}
-		constexpr inline static simd_mmask_f64 compare_greater_than_or_equal_mmask_f64(simd_register_f64 lhs, simd_register_f64 rhs) noexcept {
-			return compareGreaterThanOrEqualMmask<simd_register_f64, simd_mmask_f64>(lhs, rhs);
+		constexpr inline static simd_mmask_ui16 compare_greater_than_or_equal_ui16(simd_register_ui16 lhs, simd_register_ui16 rhs) noexcept {
+			return compareGreaterThanOrEqual<simd_register_ui16, simd_mmask_ui16>(lhs, rhs);
+		}
+		constexpr inline static simd_mmask_ui32 compare_greater_than_or_equal_ui32(simd_register_ui32 lhs, simd_register_ui32 rhs) noexcept {
+			return compareGreaterThanOrEqual<simd_register_ui32, simd_mmask_ui32>(lhs, rhs);
+		}
+		constexpr inline static simd_mmask_ui64 compare_greater_than_or_equal_ui64(simd_register_ui64 lhs, simd_register_ui64 rhs) noexcept {
+			return compareGreaterThanOrEqual<simd_register_ui64, simd_mmask_ui64>(lhs, rhs);
 		}
 
-		//compare equal rmask
-		template<typename SimdRegisterType>
-		constexpr inline static SimdRegisterType compareEqualRmask(SimdRegisterType lhs, SimdRegisterType rhs) noexcept {
-			SimdRegisterType output;
-			using simd_register_value_type = SimdRegisterToInfo<SimdRegisterType>::value_type;
+		constexpr inline static simd_mmask_f32 compare_greater_than_or_equal_f32(simd_register_f32 lhs, simd_register_f32 rhs) noexcept {
+			return compareGreaterThanOrEqual<simd_register_f32, simd_mmask_f32>(lhs, rhs);
+		}
+		constexpr inline static simd_mmask_f64 compare_greater_than_or_equal_f64(simd_register_f64 lhs, simd_register_f64 rhs) noexcept {
+			return compareGreaterThanOrEqual<simd_register_f64, simd_mmask_f64>(lhs, rhs);
+		}
+
+		//mmasked compare greater than or equal
+		template<typename SimdRegisterType, typename SimdMaskType>
+		constexpr inline static SimdMaskType mmaskedCompareGreaterThanOrEqual(SimdRegisterType lhs, SimdRegisterType rhs, SimdMaskType mmask) noexcept {
+			SimdMaskType output{};
 			for (Size i = 0; i < SimdRegisterToInfo<SimdRegisterType>::count(); i++) {
-				if constexpr (IsSame<simd_register_value_type, f32>) {
-					output[i] = lhs[i] == rhs[i] ? bitCast<f32, ui32>(~ui32{ 0 }) : bitCast<f32, ui32>(ui32{ 0 });
-				} else if constexpr (IsSame<simd_register_value_type, f64>) {
-					output[i] = lhs[i] == rhs[i] ? bitCast<f64, ui64>(~ui64{ 0 }) : bitCast<f64, ui64>(ui64{ 0 });
-				} else {
-					output[i] = lhs[i] == rhs[i] ? ~simd_register_value_type{ 0 } : simd_register_value_type{ 0 };
+				if (mmask[i]) {
+					output.setAtIndex(i, lhs[i] >= rhs[i]);
 				}
 			}
 			return output;
 		}
 
-		constexpr inline static simd_register_i8 compare_equal_rmask_i8(simd_register_i8 lhs, simd_register_i8 rhs) noexcept {
-			return compareEqualRmask<simd_register_i8>(lhs, rhs);
+		constexpr inline static simd_mmask_i8 mmasked_compare_greater_than_or_equal_i8(simd_register_i8 lhs, simd_register_i8 rhs, simd_mmask_i8 mmask) noexcept {
+			return mmaskedCompareGreaterThanOrEqual<simd_register_i8, simd_mmask_i8>(lhs, rhs, mmask);
 		}
-		constexpr inline static simd_register_i16 compare_equal_rmask_i16(simd_register_i16 lhs, simd_register_i16 rhs) noexcept {
-			return compareEqualRmask<simd_register_i16>(lhs, rhs);
+		constexpr inline static simd_mmask_i16 mmasked_compare_greater_than_or_equal_i16(simd_register_i16 lhs, simd_register_i16 rhs, simd_mmask_i16 mmask) noexcept {
+			return mmaskedCompareGreaterThanOrEqual<simd_register_i16, simd_mmask_i16>(lhs, rhs, mmask);
 		}
-		constexpr inline static simd_register_i32 compare_equal_rmask_i32(simd_register_i32 lhs, simd_register_i32 rhs) noexcept {
-			return compareEqualRmask<simd_register_i32>(lhs, rhs);
+		constexpr inline static simd_mmask_i32 mmasked_compare_greater_than_or_equal_i32(simd_register_i32 lhs, simd_register_i32 rhs, simd_mmask_i32 mmask) noexcept {
+			return mmaskedCompareGreaterThanOrEqual<simd_register_i32, simd_mmask_i32>(lhs, rhs, mmask);
 		}
-		constexpr inline static simd_register_i64 compare_equal_rmask_i64(simd_register_i64 lhs, simd_register_i64 rhs) noexcept {
-			return compareEqualRmask<simd_register_i64>(lhs, rhs);
-		}
-
-		constexpr inline static simd_register_ui8 compare_equal_rmask_ui8(simd_register_ui8 lhs, simd_register_ui8 rhs) noexcept {
-			return compareEqualRmask<simd_register_ui8>(lhs, rhs);
-		}
-		constexpr inline static simd_register_ui16 compare_equal_rmask_ui16(simd_register_ui16 lhs, simd_register_ui16 rhs) noexcept {
-			return compareEqualRmask<simd_register_ui16>(lhs, rhs);
-		}
-		constexpr inline static simd_register_ui32 compare_equal_rmask_ui32(simd_register_ui32 lhs, simd_register_ui32 rhs) noexcept {
-			return compareEqualRmask<simd_register_ui32>(lhs, rhs);
-		}
-		constexpr inline static simd_register_ui64 compare_equal_rmask_ui64(simd_register_ui64 lhs, simd_register_ui64 rhs) noexcept {
-			return compareEqualRmask<simd_register_ui64>(lhs, rhs);
+		constexpr inline static simd_mmask_i64 mmasked_compare_greater_than_or_equal_i64(simd_register_i64 lhs, simd_register_i64 rhs, simd_mmask_i64 mmask) noexcept {
+			return mmaskedCompareGreaterThanOrEqual<simd_register_i64, simd_mmask_i64>(lhs, rhs, mmask);
 		}
 
-		constexpr inline static simd_register_f32 compare_equal_rmask_f32(simd_register_f32 lhs, simd_register_f32 rhs) noexcept {
-			return compareEqualRmask<simd_register_f32>(lhs, rhs);
+		constexpr inline static simd_mmask_ui8 mmasked_compare_greater_than_or_equal_ui8(simd_register_ui8 lhs, simd_register_ui8 rhs, simd_mmask_ui8 mmask) noexcept {
+			return mmaskedCompareGreaterThanOrEqual<simd_register_ui8, simd_mmask_ui8>(lhs, rhs, mmask);
 		}
-		constexpr inline static simd_register_f64 compare_equal_rmask_f64(simd_register_f64 lhs, simd_register_f64 rhs) noexcept {
-			return compareEqualRmask<simd_register_f64>(lhs, rhs);
+		constexpr inline static simd_mmask_ui16 mmasked_compare_greater_than_or_equal_ui16(simd_register_ui16 lhs, simd_register_ui16 rhs, simd_mmask_ui16 mmask) noexcept {
+			return mmaskedCompareGreaterThanOrEqual<simd_register_ui16, simd_mmask_ui16>(lhs, rhs, mmask);
+		}
+		constexpr inline static simd_mmask_ui32 mmasked_compare_greater_than_or_equal_ui32(simd_register_ui32 lhs, simd_register_ui32 rhs, simd_mmask_ui32 mmask) noexcept {
+			return mmaskedCompareGreaterThanOrEqual<simd_register_ui32, simd_mmask_ui32>(lhs, rhs, mmask);
+		}
+		constexpr inline static simd_mmask_ui64 mmasked_compare_greater_than_or_equal_ui64(simd_register_ui64 lhs, simd_register_ui64 rhs, simd_mmask_ui64 mmask) noexcept {
+			return mmaskedCompareGreaterThanOrEqual<simd_register_ui64, simd_mmask_ui64>(lhs, rhs, mmask);
 		}
 
-		//compare not equal rmask
-		template<typename SimdRegisterType>
-		constexpr inline static SimdRegisterType compareNotEqualRmask(SimdRegisterType lhs, SimdRegisterType rhs) noexcept {
-			SimdRegisterType output;
-			using simd_register_value_type = SimdRegisterToInfo<SimdRegisterType>::value_type;
+		constexpr inline static simd_mmask_f32 mmasked_compare_greater_than_or_equal_f32(simd_register_f32 lhs, simd_register_f32 rhs, simd_mmask_f32 mmask) noexcept {
+			return mmaskedCompareGreaterThanOrEqual<simd_register_f32, simd_mmask_f32>(lhs, rhs, mmask);
+		}
+		constexpr inline static simd_mmask_f64 mmasked_compare_greater_than_or_equal_f64(simd_register_f64 lhs, simd_register_f64 rhs, simd_mmask_f64 mmask) noexcept {
+			return mmaskedCompareGreaterThanOrEqual<simd_register_f64, simd_mmask_f64>(lhs, rhs, mmask);
+		}
+
+		//mmasked src compare greater than or equal 
+		template<typename SimdRegisterType, typename SimdMaskType>
+		constexpr inline static SimdMaskType mmaskedSrcCompareGreaterThanOrEqual(SimdRegisterType lhs, SimdRegisterType rhs, SimdMaskType src, SimdMaskType mmask) noexcept {
+			SimdMaskType output = src;
 			for (Size i = 0; i < SimdRegisterToInfo<SimdRegisterType>::count(); i++) {
-				if constexpr (IsSame<simd_register_value_type, f32>) {
-					output[i] = lhs[i] != rhs[i] ? bitCast<f32, ui32>(~ui32{ 0 }) : bitCast<f32, ui32>(ui32{ 0 });
-				} else if constexpr (IsSame<simd_register_value_type, f64>) {
-					output[i] = lhs[i] != rhs[i] ? bitCast<f64, ui64>(~ui64{ 0 }) : bitCast<f64, ui64>(ui64{ 0 });
-				} else {
-					output[i] = lhs[i] != rhs[i] ? ~simd_register_value_type{ 0 } : simd_register_value_type{ 0 };
+				if (mmask[i]) {
+					output.setAtIndex(i, lhs[i] >= rhs[i]);
 				}
 			}
 			return output;
 		}
 
-		constexpr inline static simd_register_i8 compare_not_equal_rmask_i8(simd_register_i8 lhs, simd_register_i8 rhs) noexcept {
-			return compareNotEqualRmask<simd_register_i8>(lhs, rhs);
+		constexpr inline static simd_mmask_i8 mmasked_src_compare_greater_than_or_equal_i8(simd_register_i8 lhs, simd_register_i8 rhs, simd_mmask_i8 src, simd_mmask_i8 mmask) noexcept {
+			return mmaskedSrcCompareGreaterThanOrEqual<simd_register_i8, simd_mmask_i8>(lhs, rhs, src, mmask);
 		}
-		constexpr inline static simd_register_i16 compare_not_equal_rmask_i16(simd_register_i16 lhs, simd_register_i16 rhs) noexcept {
-			return compareNotEqualRmask<simd_register_i16>(lhs, rhs);
+		constexpr inline static simd_mmask_i16 mmasked_src_compare_greater_than_or_equal_i16(simd_register_i16 lhs, simd_register_i16 rhs, simd_mmask_i16 src, simd_mmask_i16 mmask) noexcept {
+			return mmaskedSrcCompareGreaterThanOrEqual<simd_register_i16, simd_mmask_i16>(lhs, rhs, src, mmask);
 		}
-		constexpr inline static simd_register_i32 compare_not_equal_rmask_i32(simd_register_i32 lhs, simd_register_i32 rhs) noexcept {
-			return compareNotEqualRmask<simd_register_i32>(lhs, rhs);
+		constexpr inline static simd_mmask_i32 mmasked_src_compare_greater_than_or_equal_i32(simd_register_i32 lhs, simd_register_i32 rhs, simd_mmask_i32 src, simd_mmask_i32 mmask) noexcept {
+			return mmaskedSrcCompareGreaterThanOrEqual<simd_register_i32, simd_mmask_i32>(lhs, rhs, src, mmask);
 		}
-		constexpr inline static simd_register_i64 compare_not_equal_rmask_i64(simd_register_i64 lhs, simd_register_i64 rhs) noexcept {
-			return compareNotEqualRmask<simd_register_i64>(lhs, rhs);
-		}
-
-		constexpr inline static simd_register_ui8 compare_not_equal_rmask_ui8(simd_register_ui8 lhs, simd_register_ui8 rhs) noexcept {
-			return compareNotEqualRmask<simd_register_ui8>(lhs, rhs);
-		}
-		constexpr inline static simd_register_ui16 compare_not_equal_rmask_ui16(simd_register_ui16 lhs, simd_register_ui16 rhs) noexcept {
-			return compareNotEqualRmask<simd_register_ui16>(lhs, rhs);
-		}
-		constexpr inline static simd_register_ui32 compare_not_equal_rmask_ui32(simd_register_ui32 lhs, simd_register_ui32 rhs) noexcept {
-			return compareNotEqualRmask<simd_register_ui32>(lhs, rhs);
-		}
-		constexpr inline static simd_register_ui64 compare_not_equal_rmask_ui64(simd_register_ui64 lhs, simd_register_ui64 rhs) noexcept {
-			return compareNotEqualRmask<simd_register_ui64>(lhs, rhs);
+		constexpr inline static simd_mmask_i64 mmasked_src_compare_greater_than_or_equal_i64(simd_register_i64 lhs, simd_register_i64 rhs, simd_mmask_i64 src, simd_mmask_i64 mmask) noexcept {
+			return mmaskedSrcCompareGreaterThanOrEqual<simd_register_i64, simd_mmask_i64>(lhs, rhs, src, mmask);
 		}
 
-		constexpr inline static simd_register_f32 compare_not_equal_rmask_f32(simd_register_f32 lhs, simd_register_f32 rhs) noexcept {
-			return compareNotEqualRmask<simd_register_f32>(lhs, rhs);
+		constexpr inline static simd_mmask_ui8 mmasked_src_compare_greater_than_or_equal_ui8(simd_register_ui8 lhs, simd_register_ui8 rhs, simd_mmask_ui8 src, simd_mmask_ui8 mmask) noexcept {
+			return mmaskedSrcCompareGreaterThanOrEqual<simd_register_ui8, simd_mmask_ui8>(lhs, rhs, src, mmask);
 		}
-		constexpr inline static simd_register_f64 compare_not_equal_rmask_f64(simd_register_f64 lhs, simd_register_f64 rhs) noexcept {
-			return compareNotEqualRmask<simd_register_f64>(lhs, rhs);
+		constexpr inline static simd_mmask_ui16 mmasked_src_compare_greater_than_or_equal_ui16(simd_register_ui16 lhs, simd_register_ui16 rhs, simd_mmask_ui16 src, simd_mmask_ui16 mmask) noexcept {
+			return mmaskedSrcCompareGreaterThanOrEqual<simd_register_ui16, simd_mmask_ui16>(lhs, rhs, src, mmask);
 		}
-
-		//compare less than rmask
-		template<typename SimdRegisterType>
-		constexpr inline static SimdRegisterType compareLessThanRmask(SimdRegisterType lhs, SimdRegisterType rhs) noexcept {
-			SimdRegisterType output;
-			using simd_register_value_type = SimdRegisterToInfo<SimdRegisterType>::value_type;
-			for (Size i = 0; i < SimdRegisterToInfo<SimdRegisterType>::count(); i++) {
-				if constexpr (IsSame<simd_register_value_type, f32>) {
-					output[i] = lhs[i] < rhs[i] ? bitCast<f32, ui32>(~ui32{ 0 }) : bitCast<f32, ui32>(ui32{ 0 });
-				} else if constexpr (IsSame<simd_register_value_type, f64>) {
-					output[i] = lhs[i] < rhs[i] ? bitCast<f64, ui64>(~ui64{ 0 }) : bitCast<f64, ui64>(ui64{ 0 });
-				} else {
-					output[i] = lhs[i] < rhs[i] ? ~simd_register_value_type{ 0 } : simd_register_value_type{ 0 };
-				}
-			}
-			return output;
+		constexpr inline static simd_mmask_ui32 mmasked_src_compare_greater_than_or_equal_ui32(simd_register_ui32 lhs, simd_register_ui32 rhs, simd_mmask_ui32 src, simd_mmask_ui32 mmask) noexcept {
+			return mmaskedSrcCompareGreaterThanOrEqual<simd_register_ui32, simd_mmask_ui32>(lhs, rhs, src, mmask);
+		}
+		constexpr inline static simd_mmask_ui64 mmasked_src_compare_greater_than_or_equal_ui64(simd_register_ui64 lhs, simd_register_ui64 rhs, simd_mmask_ui64 src, simd_mmask_ui64 mmask) noexcept {
+			return mmaskedSrcCompareGreaterThanOrEqual<simd_register_ui64, simd_mmask_ui64>(lhs, rhs, src, mmask);
 		}
 
-		constexpr inline static simd_register_i8 compare_less_than_rmask_i8(simd_register_i8 lhs, simd_register_i8 rhs) noexcept {
-			return compareLessThanRmask<simd_register_i8>(lhs, rhs);
+		constexpr inline static simd_mmask_f32 mmasked_src_compare_greater_than_or_equal_f32(simd_register_f32 lhs, simd_register_f32 rhs, simd_mmask_f32 src, simd_mmask_f32 mmask) noexcept {
+			return mmaskedSrcCompareGreaterThanOrEqual<simd_register_f32, simd_mmask_f32>(lhs, rhs, src, mmask);
 		}
-		constexpr inline static simd_register_i16 compare_less_than_rmask_i16(simd_register_i16 lhs, simd_register_i16 rhs) noexcept {
-			return compareLessThanRmask<simd_register_i16>(lhs, rhs);
-		}
-		constexpr inline static simd_register_i32 compare_less_than_rmask_i32(simd_register_i32 lhs, simd_register_i32 rhs) noexcept {
-			return compareLessThanRmask<simd_register_i32>(lhs, rhs);
-		}
-		constexpr inline static simd_register_i64 compare_less_than_rmask_i64(simd_register_i64 lhs, simd_register_i64 rhs) noexcept {
-			return compareLessThanRmask<simd_register_i64>(lhs, rhs);
-		}
-
-		constexpr inline static simd_register_ui8 compare_less_than_rmask_ui8(simd_register_ui8 lhs, simd_register_ui8 rhs) noexcept {
-			return compareLessThanRmask<simd_register_ui8>(lhs, rhs);
-		}
-		constexpr inline static simd_register_ui16 compare_less_than_rmask_ui16(simd_register_ui16 lhs, simd_register_ui16 rhs) noexcept {
-			return compareLessThanRmask<simd_register_ui16>(lhs, rhs);
-		}
-		constexpr inline static simd_register_ui32 compare_less_than_rmask_ui32(simd_register_ui32 lhs, simd_register_ui32 rhs) noexcept {
-			return compareLessThanRmask<simd_register_ui32>(lhs, rhs);
-		}
-		constexpr inline static simd_register_ui64 compare_less_than_rmask_ui64(simd_register_ui64 lhs, simd_register_ui64 rhs) noexcept {
-			return compareLessThanRmask<simd_register_ui64>(lhs, rhs);
-		}
-
-		constexpr inline static simd_register_f32 compare_less_than_rmask_f32(simd_register_f32 lhs, simd_register_f32 rhs) noexcept {
-			return compareLessThanRmask<simd_register_f32>(lhs, rhs);
-		}
-		constexpr inline static simd_register_f64 compare_less_than_rmask_f64(simd_register_f64 lhs, simd_register_f64 rhs) noexcept {
-			return compareLessThanRmask<simd_register_f64>(lhs, rhs);
-		}
-
-		//compare greater than rmask
-		template<typename SimdRegisterType>
-		constexpr inline static SimdRegisterType compareGreaterThanRmask(SimdRegisterType lhs, SimdRegisterType rhs) noexcept {
-			SimdRegisterType output;
-			using simd_register_value_type = SimdRegisterToInfo<SimdRegisterType>::value_type;
-			for (Size i = 0; i < SimdRegisterToInfo<SimdRegisterType>::count(); i++) {
-				if constexpr (IsSame<simd_register_value_type, f32>) {
-					output[i] = lhs[i] > rhs[i] ? bitCast<f32, ui32>(~ui32{ 0 }) : bitCast<f32, ui32>(ui32{ 0 });
-				} else if constexpr (IsSame<simd_register_value_type, f64>) {
-					output[i] = lhs[i] > rhs[i] ? bitCast<f64, ui64>(~ui64{ 0 }) : bitCast<f64, ui64>(ui64{ 0 });
-				} else {
-					output[i] = lhs[i] > rhs[i] ? ~simd_register_value_type{ 0 } : simd_register_value_type{ 0 };
-				}
-			}
-			return output;
-		}
-
-		constexpr inline static simd_register_i8 compare_greater_than_rmask_i8(simd_register_i8 lhs, simd_register_i8 rhs) noexcept {
-			return compareGreaterThanRmask<simd_register_i8>(lhs, rhs);
-		}
-		constexpr inline static simd_register_i16 compare_greater_than_rmask_i16(simd_register_i16 lhs, simd_register_i16 rhs) noexcept {
-			return compareGreaterThanRmask<simd_register_i16>(lhs, rhs);
-		}
-		constexpr inline static simd_register_i32 compare_greater_than_rmask_i32(simd_register_i32 lhs, simd_register_i32 rhs) noexcept {
-			return compareGreaterThanRmask<simd_register_i32>(lhs, rhs);
-		}
-		constexpr inline static simd_register_i64 compare_greater_than_rmask_i64(simd_register_i64 lhs, simd_register_i64 rhs) noexcept {
-			return compareGreaterThanRmask<simd_register_i64>(lhs, rhs);
-		}
-
-		constexpr inline static simd_register_ui8 compare_greater_than_rmask_ui8(simd_register_ui8 lhs, simd_register_ui8 rhs) noexcept {
-			return compareGreaterThanRmask<simd_register_ui8>(lhs, rhs);
-		}
-		constexpr inline static simd_register_ui16 compare_greater_than_rmask_ui16(simd_register_ui16 lhs, simd_register_ui16 rhs) noexcept {
-			return compareGreaterThanRmask<simd_register_ui16>(lhs, rhs);
-		}
-		constexpr inline static simd_register_ui32 compare_greater_than_rmask_ui32(simd_register_ui32 lhs, simd_register_ui32 rhs) noexcept {
-			return compareGreaterThanRmask<simd_register_ui32>(lhs, rhs);
-		}
-		constexpr inline static simd_register_ui64 compare_greater_than_rmask_ui64(simd_register_ui64 lhs, simd_register_ui64 rhs) noexcept {
-			return compareGreaterThanRmask<simd_register_ui64>(lhs, rhs);
-		}
-
-		constexpr inline static simd_register_f32 compare_greater_than_rmask_f32(simd_register_f32 lhs, simd_register_f32 rhs) noexcept {
-			return compareGreaterThanRmask<simd_register_f32>(lhs, rhs);
-		}
-		constexpr inline static simd_register_f64 compare_greater_than_rmask_f64(simd_register_f64 lhs, simd_register_f64 rhs) noexcept {
-			return compareGreaterThanRmask<simd_register_f64>(lhs, rhs);
-		}
-
-		//compare less than or equal rmask
-		template<typename SimdRegisterType>
-		constexpr inline static SimdRegisterType compareLessThanOrEqualRmask(SimdRegisterType lhs, SimdRegisterType rhs) noexcept {
-			SimdRegisterType output;
-			using simd_register_value_type = SimdRegisterToInfo<SimdRegisterType>::value_type;
-			for (Size i = 0; i < SimdRegisterToInfo<SimdRegisterType>::count(); i++) {
-				if constexpr (IsSame<simd_register_value_type, f32>) {
-					output[i] = lhs[i] <= rhs[i] ? bitCast<f32, ui32>(~ui32{ 0 }) : bitCast<f32, ui32>(ui32{ 0 });
-				} else if constexpr (IsSame<simd_register_value_type, f64>) {
-					output[i] = lhs[i] <= rhs[i] ? bitCast<f64, ui64>(~ui64{ 0 }) : bitCast<f64, ui64>(ui64{ 0 });
-				} else {
-					output[i] = lhs[i] <= rhs[i] ? ~simd_register_value_type{ 0 } : simd_register_value_type{ 0 };
-				}
-			}
-			return output;
-		}
-
-		constexpr inline static simd_register_i8 compare_less_than_or_equal_rmask_i8(simd_register_i8 lhs, simd_register_i8 rhs) noexcept {
-			return compareLessThanOrEqualRmask<simd_register_i8>(lhs, rhs);
-		}
-		constexpr inline static simd_register_i16 compare_less_than_or_equal_rmask_i16(simd_register_i16 lhs, simd_register_i16 rhs) noexcept {
-			return compareLessThanOrEqualRmask<simd_register_i16>(lhs, rhs);
-		}
-		constexpr inline static simd_register_i32 compare_less_than_or_equal_rmask_i32(simd_register_i32 lhs, simd_register_i32 rhs) noexcept {
-			return compareLessThanOrEqualRmask<simd_register_i32>(lhs, rhs);
-		}
-		constexpr inline static simd_register_i64 compare_less_than_or_equal_rmask_i64(simd_register_i64 lhs, simd_register_i64 rhs) noexcept {
-			return compareLessThanOrEqualRmask<simd_register_i64>(lhs, rhs);
-		}
-
-		constexpr inline static simd_register_ui8 compare_less_than_or_equal_rmask_ui8(simd_register_ui8 lhs, simd_register_ui8 rhs) noexcept {
-			return compareLessThanOrEqualRmask<simd_register_ui8>(lhs, rhs);
-		}
-		constexpr inline static simd_register_ui16 compare_less_than_or_equal_rmask_ui16(simd_register_ui16 lhs, simd_register_ui16 rhs) noexcept {
-			return compareLessThanOrEqualRmask<simd_register_ui16>(lhs, rhs);
-		}
-		constexpr inline static simd_register_ui32 compare_less_than_or_equal_rmask_ui32(simd_register_ui32 lhs, simd_register_ui32 rhs) noexcept {
-			return compareLessThanOrEqualRmask<simd_register_ui32>(lhs, rhs);
-		}
-		constexpr inline static simd_register_ui64 compare_less_than_or_equal_rmask_ui64(simd_register_ui64 lhs, simd_register_ui64 rhs) noexcept {
-			return compareLessThanOrEqualRmask<simd_register_ui64>(lhs, rhs);
-		}
-
-		constexpr inline static simd_register_f32 compare_less_than_or_equal_rmask_f32(simd_register_f32 lhs, simd_register_f32 rhs) noexcept {
-			return compareLessThanOrEqualRmask<simd_register_f32>(lhs, rhs);
-		}
-		constexpr inline static simd_register_f64 compare_less_than_or_equal_rmask_f64(simd_register_f64 lhs, simd_register_f64 rhs) noexcept {
-			return compareLessThanOrEqualRmask<simd_register_f64>(lhs, rhs);
-		}
-
-		//compare greater than or equal rmask
-		template<typename SimdRegisterType>
-		constexpr inline static SimdRegisterType compareGreaterThanOrEqualRmask(SimdRegisterType lhs, SimdRegisterType rhs) noexcept {
-			SimdRegisterType output;
-			using simd_register_value_type = SimdRegisterToInfo<SimdRegisterType>::value_type;
-			for (Size i = 0; i < SimdRegisterToInfo<SimdRegisterType>::count(); i++) {
-				if constexpr (IsSame<simd_register_value_type, f32>) {
-					output[i] = lhs[i] >= rhs[i] ? bitCast<f32, ui32>(~ui32{ 0 }) : bitCast<f32, ui32>(ui32{ 0 });
-				} else if constexpr (IsSame<simd_register_value_type, f64>) {
-					output[i] = lhs[i] >= rhs[i] ? bitCast<f64, ui64>(~ui64{ 0 }) : bitCast<f64, ui64>(ui64{ 0 });
-				} else {
-					output[i] = lhs[i] >= rhs[i] ? ~simd_register_value_type{ 0 } : simd_register_value_type{ 0 };
-				}
-			}
-			return output;
-		}
-
-		constexpr inline static simd_register_i8 compare_greater_than_or_equal_rmask_i8(simd_register_i8 lhs, simd_register_i8 rhs) noexcept {
-			return compareGreaterThanOrEqualRmask<simd_register_i8>(lhs, rhs);
-		}
-		constexpr inline static simd_register_i16 compare_greater_than_or_equal_rmask_i16(simd_register_i16 lhs, simd_register_i16 rhs) noexcept {
-			return compareGreaterThanOrEqualRmask<simd_register_i16>(lhs, rhs);
-		}
-		constexpr inline static simd_register_i32 compare_greater_than_or_equal_rmask_i32(simd_register_i32 lhs, simd_register_i32 rhs) noexcept {
-			return compareGreaterThanOrEqualRmask<simd_register_i32>(lhs, rhs);
-		}
-		constexpr inline static simd_register_i64 compare_greater_than_or_equal_rmask_i64(simd_register_i64 lhs, simd_register_i64 rhs) noexcept {
-			return compareGreaterThanOrEqualRmask<simd_register_i64>(lhs, rhs);
-		}
-
-		constexpr inline static simd_register_ui8 compare_greater_than_or_equal_rmask_ui8(simd_register_ui8 lhs, simd_register_ui8 rhs) noexcept {
-			return compareGreaterThanOrEqualRmask<simd_register_ui8>(lhs, rhs);
-		}
-		constexpr inline static simd_register_ui16 compare_greater_than_or_equal_rmask_ui16(simd_register_ui16 lhs, simd_register_ui16 rhs) noexcept {
-			return compareGreaterThanOrEqualRmask<simd_register_ui16>(lhs, rhs);
-		}
-		constexpr inline static simd_register_ui32 compare_greater_than_or_equal_rmask_ui32(simd_register_ui32 lhs, simd_register_ui32 rhs) noexcept {
-			return compareGreaterThanOrEqualRmask<simd_register_ui32>(lhs, rhs);
-		}
-		constexpr inline static simd_register_ui64 compare_greater_than_or_equal_rmask_ui64(simd_register_ui64 lhs, simd_register_ui64 rhs) noexcept {
-			return compareGreaterThanOrEqualRmask<simd_register_ui64>(lhs, rhs);
-		}
-
-		constexpr inline static simd_register_f32 compare_greater_than_or_equal_rmask_f32(simd_register_f32 lhs, simd_register_f32 rhs) noexcept {
-			return compareGreaterThanOrEqualRmask<simd_register_f32>(lhs, rhs);
-		}
-		constexpr inline static simd_register_f64 compare_greater_than_or_equal_rmask_f64(simd_register_f64 lhs, simd_register_f64 rhs) noexcept {
-			return compareGreaterThanOrEqualRmask<simd_register_f64>(lhs, rhs);
+		constexpr inline static simd_mmask_f64 mmasked_src_compare_greater_than_or_equal_f64(simd_register_f64 lhs, simd_register_f64 rhs, simd_mmask_f64 src, simd_mmask_f64 mmask) noexcept {
+			return mmaskedSrcCompareGreaterThanOrEqual<simd_register_f64, simd_mmask_f64>(lhs, rhs, src, mmask);
 		}
 
 		//load//
@@ -7233,7 +7323,7 @@ namespace natl::simd {
 		template<typename SimdRegisterType>
 		constexpr inline static SimdRegisterType set(typename SimdRegisterToInfo<SimdRegisterType>::value_type value) noexcept {
 			SimdRegisterType output;
-			for (Size i = 0; i < SimdRegisterI8Info<simd_arch>::count(); i++) {
+			for (Size i = 0; i < SimdRegisterToInfo<SimdRegisterType>::count(); i++) {
 				output[i] = value;
 			}
 			return output;
@@ -7276,7 +7366,7 @@ namespace natl::simd {
 		template<typename SimdRegisterType, typename SimdMaskType>
 		constexpr inline static SimdRegisterType mmaskedSet(typename SimdRegisterToInfo<SimdRegisterType>::value_type value, SimdMaskType mmask) noexcept {
 			SimdRegisterType output{};
-			for (Size i = 0; i < SimdRegisterI8Info<simd_arch>::count(); i++) {
+			for (Size i = 0; i < SimdRegisterToInfo<SimdRegisterType>::count(); i++) {
 				if (mmask[i]) {
 					output[i] = value;
 				}
@@ -7321,7 +7411,7 @@ namespace natl::simd {
 		template<typename SimdRegisterType, typename SimdMaskType>
 		constexpr inline static SimdRegisterType mmaskedSrcSet(typename SimdRegisterToInfo<SimdRegisterType>::value_type value, SimdRegisterType src, SimdMaskType mmask) noexcept {
 			SimdRegisterType output = src;
-			for (Size i = 0; i < SimdRegisterI8Info<simd_arch>::count(); i++) {
+			for (Size i = 0; i < SimdRegisterToInfo<SimdRegisterType>::count(); i++) {
 				if (mmask[i]) {
 					output[i] = value;
 				}

@@ -24,6 +24,12 @@ static_assert(false, "natl: unknown architecture");
 namespace natl {
     template<typename Integer>
         requires(IsBuiltInUnsignedIntegerC<Integer>)
+    NATL_FORCE_INLINE constexpr Integer maskOfFirstBits(const Integer number) noexcept {
+        return ~(Limits<Integer>::max() << number);
+    }
+
+    template<typename Integer>
+        requires(IsBuiltInUnsignedIntegerC<Integer>)
     NATL_FORCE_INLINE constexpr Integer setNthBitToZero(const Integer num, const Integer n) noexcept {
         const Integer mask = ~(Integer(1) << n);
         const Integer result = num & mask;

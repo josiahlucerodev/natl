@@ -4,9 +4,20 @@
 #include "../util/basicTypes.h"
 #include "../system/printFormatted.h"
 #include "../system/printColor.h"
+#include "../system/timer.h"
 
 //interface
 namespace natl {
+	struct TestTimer {
+		ConstAsciiStringView testFrom;
+		Timer timer;
+		TestTimer(ConstAsciiStringView testFromIn) noexcept : testFrom(testFromIn) {}
+		~TestTimer() noexcept {
+			natl::printlnf("natl: ", testFrom, " time: ", timer.getMillisecondsInt());
+		}
+	};
+
+
 	class TestTypeStdOut {
 	public:
 		//constructor
@@ -128,6 +139,30 @@ namespace natl {
 		constexpr Bool noFailures() noexcept { return failureCount == 0; }
 		constexpr operator Bool() noexcept { return noFailures(); }
 	};
+
+	template<typename... AssertArgs>
+	constexpr void testAssert(Test& test, Bool condition, AssertArgs&&... assertArgs) noexcept {
+		if (condition) {
+			test.passedTest();
+		} else {
+			if (natl::isConstantEvaluated()) {
+				natl::constantEvaluatedError();
+			} else {
+				test.failedTest();
+				natl::printlnfc("natl: ", test.from, natl::PrintColor::red, " test failed: ", assertArgs...);
+			}
+		}
+	}
+
+	template<typename... AssertArgs>
+	constexpr void subTestAssert(Test& test, Bool condition) noexcept {
+		if (condition) {
+			test.passedTest(); 
+		} else {
+			test.failedTest();
+		}
+	}
+
 
 #define NATL_TEST_ASSERT(condition, ...) \
     if (condition) { \

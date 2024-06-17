@@ -789,6 +789,7 @@ natl::Bool hyperbolicTests() noexcept {
 }
 
 natl::Bool tests() noexcept {
+	natl::TestTimer timer(NATL_TEST_FROM);
 	natl::Test test(NATL_TEST_FROM, "all", natl::TestType::root);
 	NATL_SUB_TEST_ASSERT(saturatedArithmeticTests());
 	NATL_SUB_TEST_ASSERT(floatOperationTests());
@@ -800,7 +801,5 @@ natl::Bool tests() noexcept {
 }
 
 int main() noexcept {
-	natl::Timer timer;
 	tests();
-	natl::printlnf("natl: ", NATL_TEST_FROM, " time: ", timer.getMillisecondsInt());
 }
