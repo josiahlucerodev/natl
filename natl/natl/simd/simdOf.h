@@ -5,10 +5,12 @@
 
 //interface
 namespace natl::simd {
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
+		requires(IsSimdArch<Arch>)
 	struct SimdOfType;
 
-	template <class Arch>
+	template <typename Arch>
+		requires(IsSimdArch<Arch>)
 	struct SimdOfType<i8, Arch> {
 		public:
 		using value_type = i8;
@@ -231,7 +233,8 @@ namespace natl::simd {
 		//reg i8
 	};
 
-	template <class Arch>
+	template <typename Arch>
+		requires(IsSimdArch<Arch>)
 	struct SimdOfType<i16, Arch> {
 	public:
 		using value_type = i16;
@@ -454,7 +457,8 @@ namespace natl::simd {
 		//reg i16
 	};
 
-	template <class Arch>
+	template <typename Arch>
+		requires(IsSimdArch<Arch>)
 	struct SimdOfType<i32, Arch> {
 	public:
 		using value_type = i32;
@@ -689,7 +693,8 @@ namespace natl::simd {
 	};
 
 
-	template <class Arch>
+	template <typename Arch>
+		requires(IsSimdArch<Arch>)
 	struct SimdOfType<i64, Arch> {
 	public:
 		using value_type = i64;
@@ -923,7 +928,8 @@ namespace natl::simd {
 		//reg i64
 	};
 
-	template <class Arch>
+	template <typename Arch>
+		requires(IsSimdArch<Arch>)
 	struct SimdOfType<ui8, Arch> {
 	public:
 		using value_type = ui8;
@@ -1140,7 +1146,8 @@ namespace natl::simd {
 		//reg ui8
 	};
 
-	template <class Arch>
+	template <typename Arch>
+		requires(IsSimdArch<Arch>)
 	struct SimdOfType<ui16, Arch> {
 	public:
 		using value_type = ui16;
@@ -1357,7 +1364,8 @@ namespace natl::simd {
 		//reg ui16
 	};
 
-	template <class Arch>
+	template <typename Arch>
+		requires(IsSimdArch<Arch>)
 	struct SimdOfType<ui32, Arch> {
 	public:
 		using value_type = ui32;
@@ -1586,7 +1594,8 @@ namespace natl::simd {
 		//reg ui32
 	};
 
-	template <class Arch>
+	template <typename Arch>
+		requires(IsSimdArch<Arch>)
 	struct SimdOfType<ui64, Arch> {
 	public:
 		using value_type = ui64;
@@ -1814,7 +1823,8 @@ namespace natl::simd {
 		//reg ui64
 	};
 
-	template <class Arch>
+	template <typename Arch>
+		requires(IsSimdArch<Arch>)
 	struct SimdOfType<f32, Arch> {
 	public:
 		using value_type = f32;
@@ -2137,7 +2147,8 @@ namespace natl::simd {
 		//reg f32
 	};
 
-	template <class Arch>
+	template <typename Arch>
+		requires(IsSimdArch<Arch>)
 	struct SimdOfType<f64, Arch> {
 	public:
 		using value_type = f64;

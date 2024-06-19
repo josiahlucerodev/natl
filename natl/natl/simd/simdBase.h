@@ -5,7 +5,6 @@
 #include "../util/typeTraits.h"
 #include "../util/bits.h"
 #include "../container/stringView.h"
-#include "math.h"
 
 //interface
 namespace natl::simd {
@@ -879,3 +878,5 @@ namespace natl::simd {
 		requires(IsSimdArch<Arch>&& requires() { typename ArchSimdMaskInfo<Arch>::SimdMaskF64Info; })
 	using SimdCMaskF64Info = typename ArchSimdCMaskInfo<Arch>::SimdCMaskF64Info;
 }
+
+namespace nasimd = natl::simd;

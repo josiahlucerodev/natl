@@ -7,5 +7,4 @@
 #include "simd/simdClass.h"
 #include "simd/simdOf.h"
 #include "simd/standardArch.h"
-
-namespace nasimd = natl::simd;
+#include "simd/math.h"

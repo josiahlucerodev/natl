@@ -162,24 +162,4 @@ namespace natl {
 			test.failedTest();
 		}
 	}
-
-
-#define NATL_TEST_ASSERT(condition, ...) \
-    if (condition) { \
-		test.passedTest(); \
-    } else { \
-		if (natl::isConstantEvaluated()) { \
-			natl::constantEvaluatedError(); \
-		} else { \
-			test.failedTest(); \
-			natl::printlnfc("natl: ", test.from, natl::PrintColor::red, " test failed: ", __VA_ARGS__); \
-		} \
-	}
-
-#define NATL_SUB_TEST_ASSERT(condition) \
-	if (condition) { \
-		test.passedTest(); \
-	} else { \
-		test.failedTest(); \
-	}
 }

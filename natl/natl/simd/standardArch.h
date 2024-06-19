@@ -1337,7 +1337,7 @@ namespace natl::simd {
 			simd_register_f64 subRhs) noexcept {
 			simd_register_f64 output;
 			for (Size i = 0; i < SimdRegisterF64Info<simd_arch>::count(); i++) {
-				output[i] = (mulLhs[i] * mulRhs[i]) + subRhs[i];
+				output[i] = (mulLhs[i] * mulRhs[i]) - subRhs[i];
 			}
 			return output;
 		}

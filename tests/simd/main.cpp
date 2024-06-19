@@ -298,6 +298,7 @@ constexpr natl::Bool arithmeticTest() noexcept {
 	simd_register constant2 = nasimd::simd_set<DataType, SimdArchType>(2);
 	simd_register constant3 = nasimd::simd_set<DataType, SimdArchType>(3);
 	simd_register constant4 = nasimd::simd_set<DataType, SimdArchType>(4);
+	simd_register constant5 = nasimd::simd_set<DataType, SimdArchType>(5);
 
 	simd_register constantMax = nasimd::simd_set<DataType, SimdArchType>(natl::Limits<DataType>::max());
 	simd_register constantMin = nasimd::simd_set<DataType, SimdArchType>(natl::Limits<DataType>::min());
@@ -521,16 +522,177 @@ constexpr natl::Bool arithmeticTest() noexcept {
 		testOpIfEqaulMaskedCount<DataType, SimdArchType>(test, mmaskedSrcRemainderResult, constant4, oddMask, halfCount, "mmasked src add sat remain");
 	}
 
+	//fused mul add
+	if constexpr (natl::IsBuiltInFloatingPointC<DataType>) {
+		simd_register fusedMulAddResult = nasimd::simd_fused_mul_add<DataType, SimdArchType>(constant2, constant2, constant1);
+		testOpIfEqaul<DataType, SimdArchType>(test, fusedMulAddResult, constant5, "fused mul add");
+
+		simd_register mmaskedFusedMulAddResult = nasimd::simd_mmasked_fused_mul_add<DataType, SimdArchType>(constant2, constant2, constant1, evenMask);
+		testOpIfEqaulCount<DataType, SimdArchType>(test, mmaskedFusedMulAddResult, constant5, halfCount, "mmasked fused mul add");
+		testOpIfEqaulMaskedCount<DataType, SimdArchType>(test, mmaskedFusedMulAddResult, constant0, oddMask, halfCount, "mmasked fused mul add remain");
+
+		simd_register mmaskedSrcFusedMulAddResult = nasimd::simd_mmasked_src_fused_mul_add<DataType, SimdArchType>(constant2, constant2, constant1, constant4, evenMask);
+		testOpIfEqaulCount<DataType, SimdArchType>(test, mmaskedSrcFusedMulAddResult, constant5, halfCount, "mmasked src fused mul add");
+		testOpIfEqaulMaskedCount<DataType, SimdArchType>(test, mmaskedSrcFusedMulAddResult, constant4, oddMask, halfCount, "mmasked src fused mul add remain");
+	}
+
+	//fused mul sub
+	if constexpr (natl::IsBuiltInFloatingPointC<DataType>) {
+		simd_register fusedMulSubResult = nasimd::simd_fused_mul_sub<DataType, SimdArchType>(constant2, constant2, constant1);
+		testOpIfEqaul<DataType, SimdArchType>(test, fusedMulSubResult, constant3, "fused mul sub");
+
+		simd_register mmaskedFusedMulSubResult = nasimd::simd_mmasked_fused_mul_sub<DataType, SimdArchType>(constant2, constant2, constant1, evenMask);
+		testOpIfEqaulCount<DataType, SimdArchType>(test, mmaskedFusedMulSubResult, constant3, halfCount, "mmasked fused mul sub");
+		testOpIfEqaulMaskedCount<DataType, SimdArchType>(test, mmaskedFusedMulSubResult, constant0, oddMask, halfCount, "mmasked fused mul sub remain");
+
+		simd_register mmaskedSrcFusedMulSubResult = nasimd::simd_mmasked_src_fused_mul_sub<DataType, SimdArchType>(constant2, constant2, constant1, constant4, evenMask);
+		testOpIfEqaulCount<DataType, SimdArchType>(test, mmaskedSrcFusedMulSubResult, constant3, halfCount, "mmasked src fused mul sub");
+		testOpIfEqaulMaskedCount<DataType, SimdArchType>(test, mmaskedSrcFusedMulSubResult, constant4, oddMask, halfCount, "mmasked src fused mul sub remain");
+	}
+
 	return test;
 }
 
 
 template<typename DataType, typename SimdArchType>
+constexpr natl::Bool testMathFunction(natl::ConstAsciiStringView testName, 
+	nasimd::SimdRegister<DataType, SimdArchType>(*customFunc)(nasimd::SimdRegister<DataType, SimdArchType>), 
+	nasimd::SimdRegister<DataType, SimdArchType>(*mmaskedCustomFunc)(nasimd::SimdRegister<DataType, SimdArchType>, nasimd::SimdMask<DataType, SimdArchType>),
+	nasimd::SimdRegister<DataType, SimdArchType>(*mmaskedSrcCustomFunc)(nasimd::SimdRegister<DataType, SimdArchType>, nasimd::SimdRegister<DataType, SimdArchType>, nasimd::SimdMask<DataType, SimdArchType>),
+	DataType(*testFunc)(DataType),
+	DataType testStart, DataType testEnd, DataType incrementNum, 
+	DataType relativeTolorance, DataType discardSmallDif) noexcept {
+
+	constexpr natl::Size count = nasimd::SimdRegisterInfo<DataType, SimdArchType>::count();
+	constexpr natl::Size halfCount = count / 2;
+
+	using simd_register = nasimd::SimdRegister<DataType, SimdArchType>;
+	using simd_mmask = nasimd::SimdMask<DataType, SimdArchType>;
+
+	simd_mmask evenMask = nasimd::createEvenMMask<DataType, SimdArchType>();
+	simd_mmask oddMask = nasimd::createOddMMask<DataType, SimdArchType>();
+	simd_register constantMax = nasimd::simd_set<DataType, SimdArchType>(natl::Limits<DataType>::max());
+
+	natl::Test test(natlTestFrom, testName, natl::TestType::leaf);
+	for (DataType testValue = testStart; testValue < testEnd; testValue += (incrementNum * count)) {
+
+		natl::Array<DataType, count> accurateValuesArray;
+		natl::Array<DataType, count> testValuesArray;
+		for (natl::Size i = 0; i < count; i++) {
+			testValuesArray[i] = testValue + (incrementNum * static_cast<DataType>(i));
+			accurateValuesArray[i] = testFunc(testValuesArray[i]);
+		}
+		simd_register testValues = nasimd::simd_load<DataType, SimdArchType>(testValuesArray.data());
+		simd_register accurateValues = nasimd::simd_load<DataType, SimdArchType>(accurateValuesArray.data());
+		simd_register customValues = customFunc(testValues);
+
+		simd_mmask relativelyCloseMask = natlm::isRelativelyClose<DataType, SimdArchType>(customValues, accurateValues, relativeTolorance);
+		simd_mmask roughtlyEqualMask = natlm::isRoughtlyEqual<DataType, SimdArchType>(customValues, accurateValues, discardSmallDif);
+		simd_mmask closeEnoughMask = nasimd::simd_mask_bitwise_or<DataType, SimdArchType>(relativelyCloseMask, roughtlyEqualMask);
+		natl::Bool condition = nasimd::simd_mask_test_all_active<DataType, SimdArchType>(closeEnoughMask);
+		natl::testAssert(test, condition, testName);
+
+		simd_register mmaskedCustomValues = mmaskedCustomFunc(testValues, evenMask);
+		simd_mmask mmaskedRelativelyCloseMask = natlm::isRelativelyClose<DataType, SimdArchType>(mmaskedCustomValues, accurateValues, relativeTolorance);
+		simd_mmask mmaskedRoughtlyEqualMask = natlm::isRoughtlyEqual<DataType, SimdArchType>(mmaskedCustomValues, accurateValues, discardSmallDif);
+		simd_mmask mmaskedCloseEnoughMask = nasimd::simd_mask_bitwise_or<DataType, SimdArchType>(mmaskedRelativelyCloseMask, mmaskedRoughtlyEqualMask);
+		mmaskedCloseEnoughMask = nasimd::simd_mask_bitwise_and<DataType, SimdArchType>(mmaskedCloseEnoughMask, evenMask);
+		natl::Bool mmaskedCondition = nasimd::simd_mask_popcount<DataType, SimdArchType>(mmaskedCloseEnoughMask) == halfCount;
+		natl::testAssert(test, mmaskedCondition, "mmasked ", testName);
+
+		simd_mmask mmaskedRemainMask = nasimd::simd_mmasked_compare_equal<DataType, SimdArchType>(mmaskedCustomValues, testValues, oddMask);
+		natl::Bool mmaskedRemainCondition = nasimd::simd_mask_popcount<DataType, SimdArchType>(mmaskedRemainMask) == halfCount;
+		natl::testAssert(test, mmaskedRemainCondition, "mmasked remain ", testName);
+
+		simd_register mmaskedSrcCustomValues = mmaskedSrcCustomFunc(testValues, constantMax, evenMask);
+		simd_mmask mmaskedSrcRelativelyCloseMask = natlm::isRelativelyClose<DataType, SimdArchType>(mmaskedSrcCustomValues, accurateValues, relativeTolorance);
+		simd_mmask mmaskedSrcRoughtlyEqualMask = natlm::isRoughtlyEqual<DataType, SimdArchType>(mmaskedSrcCustomValues, accurateValues, discardSmallDif);
+		simd_mmask mmaskedSrcCloseEnoughMask = nasimd::simd_mask_bitwise_or<DataType, SimdArchType>(mmaskedSrcRelativelyCloseMask, mmaskedSrcRoughtlyEqualMask);
+		mmaskedSrcCloseEnoughMask = nasimd::simd_mask_bitwise_and<DataType, SimdArchType>(mmaskedSrcCloseEnoughMask, evenMask);
+		natl::Bool mmaskedSrcCondition = nasimd::simd_mask_popcount<DataType, SimdArchType>(mmaskedSrcCloseEnoughMask) == halfCount;
+		natl::testAssert(test, mmaskedSrcCondition, "mmasked src ", testName);
+
+		simd_mmask mmaskedSrcRemainMask = nasimd::simd_mmasked_compare_equal<DataType, SimdArchType>(mmaskedSrcCustomValues, constantMax, oddMask);
+		natl::Bool mmaskedSrcRemainCondition = nasimd::simd_mask_popcount<DataType, SimdArchType>(mmaskedSrcRemainMask) == halfCount;
+		natl::testAssert(test, mmaskedSrcRemainCondition, "mmasked src remain ", testName);
+	}
+
+	return test;
+}
+
+template<typename DataType, typename SimdArchType>
+natl::Bool powerTests() noexcept {
+	natl::Test test(natlTestFrom, "power", natl::TestType::node);
+	using namespace natl::literals;
+
+	if constexpr (sizeof(DataType) == 4) {
+		natl::subTestAssert(test, 
+			testMathFunction<DataType, SimdArchType>("sqrt f32", 
+				nasimd::simd_square_root<DataType, SimdArchType>, 
+				nasimd::simd_mmasked_square_root<DataType, SimdArchType>,
+				nasimd::simd_mmasked_src_square_root<DataType, SimdArchType>,
+				std::sqrtf,
+				0.0_f32, 1000.0_f32, 0.1_f32, 0.05_f32, 0.1_f32)
+		);
+
+		natl::subTestAssert(test,
+			testMathFunction<DataType, SimdArchType>("rsqrt f32",
+				nasimd::simd_reciprocal_square_root<DataType, SimdArchType>,
+				nasimd::simd_mmasked_reciprocal_square_root<DataType, SimdArchType>,
+				nasimd::simd_mmasked_src_reciprocal_square_root<DataType, SimdArchType>,
+				[](const natl::f32 value) -> natl::f32 { return 1.0_f32 / std::sqrtf(value); },
+				0.00001_f32, 1000.0_f32, 0.1_f32, 0.05_f32, 0.1_f32)
+		);
+
+		natl::subTestAssert(test,
+			testMathFunction<DataType, SimdArchType>("reciprocal f32",
+				nasimd::simd_reciprocal<DataType, SimdArchType>,
+				nasimd::simd_mmasked_reciprocal<DataType, SimdArchType>,
+				nasimd::simd_mmasked_src_reciprocal<DataType, SimdArchType>,
+				[](const natl::f32 value) -> natl::f32 { return 1.0_f32 / value; },
+				0.00001_f32, 1000.0_f32, 0.1_f32, 0.05_f32, 0.1_f32)
+		);
+
+	} else {
+		natl::subTestAssert(test,
+			testMathFunction<DataType, SimdArchType>("sqrt f64",
+				nasimd::simd_square_root<DataType, SimdArchType>, 
+				nasimd::simd_mmasked_square_root<DataType, SimdArchType>,
+				nasimd::simd_mmasked_src_square_root<DataType, SimdArchType>,
+				std::sqrt,
+				0.0_f64, 1000.0_f64, 0.1_f64, 0.05_f64, 0.1_f64)
+		);
+
+		natl::subTestAssert(test,
+			testMathFunction<DataType, SimdArchType>("sqrt f64",
+				nasimd::simd_reciprocal_square_root<DataType, SimdArchType>,
+				nasimd::simd_mmasked_reciprocal_square_root<DataType, SimdArchType>,
+				nasimd::simd_mmasked_src_reciprocal_square_root<DataType, SimdArchType>,
+				[](const natl::f64 value) -> natl::f64 { return 1.0 / std::sqrt(value); },
+				0.00001_f64, 1000.0_f64, 0.1_f64, 0.05_f64, 0.1_f64)
+		);
+
+		natl::subTestAssert(test,
+			testMathFunction<DataType, SimdArchType>("reciprocal f64",
+				nasimd::simd_reciprocal<DataType, SimdArchType>,
+				nasimd::simd_mmasked_reciprocal<DataType, SimdArchType>,
+				nasimd::simd_mmasked_src_reciprocal<DataType, SimdArchType>,
+				[](const natl::f64 value) -> natl::f64 { return 1.0 / value; },
+				0.00001_f64, 1000.0_f64, 0.1_f64, 0.05_f64, 0.1_f64)
+		);
+	}
+	return test;
+}
+
+template<typename DataType, typename SimdArchType>
 constexpr natl::Bool genericTypeSimdTest() noexcept {
 	natl::Test test(natlTestFrom, natl::getNameOfBuiltInNumeric<DataType>(), natl::TestType::node);
 	constructionTest<DataType, SimdArchType>();
-	compareTest<DataType, SimdArchType>();
-	arithmeticTest<DataType, SimdArchType>();
+	natl::subTestAssert(test, compareTest<DataType, SimdArchType>());
+	natl::subTestAssert(test, arithmeticTest<DataType, SimdArchType>());
+	if constexpr (natl::IsBuiltInFloatingPointC<DataType>) {
+		natl::subTestAssert(test, powerTests<DataType, SimdArchType>());
+	}
 	return test;
 }
 

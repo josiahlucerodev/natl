@@ -3,7 +3,7 @@
 #include <natl/util/test.h>
 #include <natl/container/flatHashMap.h>
 
-#define NATL_TEST_FROM "NatlFlatHashMapTest"
+constexpr inline natl::ConstAsciiStringView natlTestFrom = "NatlFlatHashMapTest";
 
 constexpr natl::FlatHashMap<natl::Size, natl::Size> getTestHashMap() noexcept {
 	natl::FlatHashMap<natl::Size, natl::Size> map;
@@ -79,12 +79,13 @@ static_assert(testErase());
 static_assert(testFind());
 
 natl::Bool tests() noexcept {
-	natl::Test test(NATL_TEST_FROM, "all", natl::TestType::root);
-	NATL_TEST_ASSERT(testIteration(), "iteration");
-	NATL_TEST_ASSERT(testConstIteration(), "const iteration");
-	NATL_TEST_ASSERT(testFormatter(), "formatter");
-	NATL_TEST_ASSERT(testErase(), "erase");
-	NATL_TEST_ASSERT(testFind(), "find");
+	natl::TestTimer timer(natlTestFrom);
+	natl::Test test(natlTestFrom, "all", natl::TestType::root);
+	natl::testAssert(test, testIteration(), "iteration");
+	natl::testAssert(test, testConstIteration(), "const iteration");
+	natl::testAssert(test, testFormatter(), "formatter");
+	natl::testAssert(test, testErase(), "erase");
+	natl::testAssert(test, testFind(), "find");
 	return test;
 }
 

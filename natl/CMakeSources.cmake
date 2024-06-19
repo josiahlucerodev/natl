@@ -40,6 +40,8 @@ natl/processing/generator.h
 natl/processing/serialization.h
 natl/processing.h
 natl/simd/cmaskOperations.h
+natl/simd/math/basicFloatOperations.h
+natl/simd/math.h
 natl/simd/operations.h
 natl/simd/simdBase.h
 natl/simd/simdClass.h

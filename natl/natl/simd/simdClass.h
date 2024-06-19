@@ -1,12 +1,13 @@
 #pragma once 
 
+//own
 #include "simdBase.h"
 #include "simdOf.h"
 
 //interface 
 namespace natl::simd {
 	template<typename DataType, typename Arch>
-		requires(IsBuiltInNumericC<DataType>&& IsSimdArch<Arch>)
+		requires(IsBuiltInNumericC<DataType> && IsSimdArch<Arch>)
 	class SimdMMaskClass {
 	public:
 		using simd_arch = Arch;
@@ -162,7 +163,38 @@ namespace natl::simd {
 			return simd_impl::mmask_to_rmask(simdMmask); 
 		}
 	};
-	
+
+	template<typename SimdArchType>
+		requires(IsSimdArch<SimdArchType>)
+	using SimdMMaskClassI8 = SimdMMaskClass<i8, SimdArchType>;
+	template<typename SimdArchType>
+		requires(IsSimdArch<SimdArchType>)
+	using SimdMMaskClassI16 = SimdMMaskClass<i16, SimdArchType>;
+	template<typename SimdArchType>
+		requires(IsSimdArch<SimdArchType>)
+	using SimdMMaskClassI32 = SimdMMaskClass<i32, SimdArchType>;
+	template<typename SimdArchType>
+		requires(IsSimdArch<SimdArchType>)
+	using SimdMMaskClassI64 = SimdMMaskClass<i64, SimdArchType>;
+	template<typename SimdArchType>
+		requires(IsSimdArch<SimdArchType>)
+	using SimdMMaskClassUI8 = SimdMMaskClass<ui8, SimdArchType>;
+	template<typename SimdArchType>
+		requires(IsSimdArch<SimdArchType>)
+	using SimdMMaskClassUI16 = SimdMMaskClass<ui16, SimdArchType>;
+	template<typename SimdArchType>
+		requires(IsSimdArch<SimdArchType>)
+	using SimdMMaskClassUI32 = SimdMMaskClass<ui32, SimdArchType>;
+	template<typename SimdArchType>
+		requires(IsSimdArch<SimdArchType>)
+	using SimdMMaskClassUI64 = SimdMMaskClass<ui64, SimdArchType>;
+	template<typename SimdArchType>
+		requires(IsSimdArch<SimdArchType>)
+	using SimdMMaskClassF32 = SimdMMaskClass<f32, SimdArchType>;
+	template<typename SimdArchType>
+		requires(IsSimdArch<SimdArchType>)
+	using SimdMMaskClassF64 = SimdMMaskClass<f64, SimdArchType>;
+
 	struct SimdAlignedLoad {};
 	template<typename DataType, typename Arch> 
 		requires(IsBuiltInNumericC<DataType> && IsSimdArch<Arch>)
@@ -362,7 +394,42 @@ namespace natl::simd {
 		constexpr simd_mmask_class operator>=(const SimdRegisterClass& rhs) const noexcept {
 			return simd_mmask_class(simd_impl::compare_equal(self().simdRegister, rhs.simdRegister));
 		}
+
+		//convert 
+		constexpr simd_register& getRegister() noexcept { return simdRegister; }
+		constexpr const simd_register& getRegister() const noexcept { return simdRegister; }
 	};
+
+	template<typename SimdArchType>
+		requires(IsSimdArch<SimdArchType>)
+	using SimdRegisterClassI8 = SimdRegisterClass<i8, SimdArchType>;
+	template<typename SimdArchType>
+		requires(IsSimdArch<SimdArchType>)
+	using SimdRegisterClassI16 = SimdRegisterClass<i16, SimdArchType>;
+	template<typename SimdArchType>
+		requires(IsSimdArch<SimdArchType>)
+	using SimdRegisterClassI32 = SimdRegisterClass<i32, SimdArchType>;
+	template<typename SimdArchType>
+		requires(IsSimdArch<SimdArchType>)
+	using SimdRegisterClassI64 = SimdRegisterClass<i64, SimdArchType>;
+	template<typename SimdArchType>
+		requires(IsSimdArch<SimdArchType>)
+	using SimdRegisterClassUI8 = SimdRegisterClass<ui8, SimdArchType>;
+	template<typename SimdArchType>
+		requires(IsSimdArch<SimdArchType>)
+	using SimdRegisterClassUI16 = SimdRegisterClass<ui16, SimdArchType>;
+	template<typename SimdArchType>
+		requires(IsSimdArch<SimdArchType>)
+	using SimdRegisterClassUI32 = SimdRegisterClass<ui32, SimdArchType>;
+	template<typename SimdArchType>
+		requires(IsSimdArch<SimdArchType>)
+	using SimdRegisterClassUI64 = SimdRegisterClass<ui64, SimdArchType>;
+	template<typename SimdArchType>
+		requires(IsSimdArch<SimdArchType>)
+	using SimdRegisterClassF32 = SimdRegisterClass<f32, SimdArchType>;
+	template<typename SimdArchType>
+		requires(IsSimdArch<SimdArchType>)
+	using SimdRegisterClassF64 = SimdRegisterClass<f64, SimdArchType>;
 
 	template<typename Type>
 	class IsSimdMMaskClassV : FalseType {};
