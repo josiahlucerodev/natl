@@ -11,17 +11,38 @@ namespace natl {
 	struct TemplateStringLiteral {
 		Ascii stringStorage[StringSize];
 		constexpr static Size stringSize = StringSize;
-		constexpr TemplateStringLiteral(const Ascii(&str)[StringSize]) { uninitializedCopyCountNoOverlap<const Ascii*>(str, stringStorage, StringSize); }
+		constexpr TemplateStringLiteral() noexcept = default;
+		constexpr ~TemplateStringLiteral() noexcept = default;
+		constexpr TemplateStringLiteral(const Ascii(&str)[StringSize]) noexcept { uninitializedCopyCountNoOverlap<const Ascii*>(str, stringStorage, StringSize); }
 		template<typename StringPtrType>
 			requires(IsSame<StringPtrType, const Ascii*>)
-		constexpr TemplateStringLiteral(StringPtrType str) { uninitializedCopyCountNoOverlap<const Ascii*>(str, stringStorage, StringSize); }
+		constexpr TemplateStringLiteral(StringPtrType str) noexcept { uninitializedCopyCountNoOverlap<const Ascii*>(str, stringStorage, StringSize); }
 		constexpr const Ascii* c_str() const noexcept { return stringStorage; }
 		constexpr Size size() const noexcept { return StringSize; }
 	};
 
+	namespace impl {
+		template<typename TemplateStringLiteralType, TemplateStringLiteral TemplatStringLiteralArg>
+		constexpr void concatTemplateStringLiteralArg(TemplateStringLiteralType& storage, natl::Size& index) noexcept {
+			for (natl::Size i = 0; i < TemplatStringLiteralArg.size() - 1; i++, index++) {
+				storage.stringStorage[index] = TemplatStringLiteralArg.c_str()[i];
+			}
+		}
+	}
+	
+	template<TemplateStringLiteral... TemplatStringLiterals>
+	constexpr TemplateStringLiteral<(TemplatStringLiterals.size() + ...) - sizeof...(TemplatStringLiterals) + 1 > concatTemplateStringLiterals() noexcept {
+		using concat_string_literal_type = TemplateStringLiteral<(TemplatStringLiterals.size() + ...) - sizeof...(TemplatStringLiterals) + 1>;
+		natl::Size index = 0;
+		concat_string_literal_type stringLiteral{};
+		(impl::concatTemplateStringLiteralArg<concat_string_literal_type, TemplatStringLiterals>(stringLiteral, index), ...);
+		return stringLiteral;
+	}
+
+
 	template <Size Number>
 		requires (Number > 0)
-	constexpr TemplateStringLiteral<Number> makeTStringLiteral(const Ascii(&str)[Number]) noexcept {
+	constexpr TemplateStringLiteral<Number> makeTemplateStringLiteral(const Ascii(&str)[Number]) noexcept {
 		return TemplateStringLiteral<Number>(str);
 	}
 
@@ -29,6 +50,7 @@ namespace natl {
 	struct StringLiteral {
 		using size_type = Size;
 		static constexpr size_type npos = size_type(-1);
+		constexpr static TemplateStringLiteral value = StringL;
 	public:
 		constexpr static Ascii stringStorage[StringL.stringSize] = StringL.stringStorage;
 		constexpr static const Ascii* string = &StringL.stringStorage[0];
@@ -43,6 +65,12 @@ namespace natl {
 
 		template<size_type Pos = 0, size_type Count = npos, size_type UsedCount = natl::min<size_type>(size() - Pos, Count)>
 		using Substr = StringLiteral<TemplateStringLiteral<UsedCount>(c_str() + Pos)>;
+
+		
+		template<TemplateStringLiteral... StringLiteralsRhs>
+		using ConcatV = StringLiteral<concatTemplateStringLiterals<StringL, StringLiteralsRhs...>()>;
+		template<TemplateStringLiteral... StringLiteralsRhs>
+		constexpr static TemplateStringLiteral Concat = ConcatV<StringLiteralsRhs...>::value;
 	};
 
 	template<typename Type>

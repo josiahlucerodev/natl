@@ -14,13 +14,6 @@
 
 //interface
 namespace natl {
-	template <typename StringView, class CharType>
-	concept IsStringViewLike = requires(StringView stringView) {
-		{ stringView.data() } -> std::convertible_to<const CharType*>;
-		{ stringView.size() } -> std::convertible_to<Size>;
-		{ stringView[std::declval<Size>()] } -> std::convertible_to<CharType>;
-	};
-
 	template<class CharType>
 	class BaseStringView {
 	public:
@@ -875,7 +868,7 @@ namespace natl {
 		}
 	};
 
-	using StringView = BaseStringView<const char>;
+	using StringView = BaseStringView<char>;
 	using ConstStringView = BaseStringView<const char>;
 	using AsciiStringView = StringView;
 	using ConstAsciiStringView = ConstStringView;

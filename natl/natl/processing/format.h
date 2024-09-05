@@ -551,7 +551,7 @@ namespace natl {
 
 			template<typename OutputIter>
 			constexpr static void formatHexadecimal(OutputIter& outputIter, const value_type number) noexcept {
-				natl::String numberAsString = intToStringHexadecimalType<value_type>(number);
+				natl::String numberAsString = intToStringHexadecimal<value_type>(number);
 				outputIter = copyNoOverlap<natl::String::const_iterator, OutputIter>(
 					numberAsString.cbegin(),
 					numberAsString.cend(),
@@ -559,7 +559,7 @@ namespace natl {
 			}
 			template<typename OutputIter>
 			constexpr static void formatBinary(OutputIter& outputIter, const value_type number) noexcept {
-				natl::String numberAsString = intToStringBinaryType<value_type>(number);
+				natl::String numberAsString = intToStringBinary<value_type>(number);
 				outputIter = copyNoOverlap<natl::String::const_iterator, OutputIter>(
 					numberAsString.cbegin(),
 					numberAsString.cend(),
@@ -567,7 +567,7 @@ namespace natl {
 			}
 			template<typename OutputIter>
 			constexpr static void formatDecimal(OutputIter& outputIter, const value_type number) noexcept {
-				natl::String numberAsString = intToStringDecimalType<value_type>(number);
+				natl::String numberAsString = intToStringDecimal<value_type>(number);
 				outputIter = copyNoOverlap<natl::String::const_iterator, OutputIter>(
 					numberAsString.cbegin(),
 					numberAsString.cend(),

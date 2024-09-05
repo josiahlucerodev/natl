@@ -211,7 +211,7 @@ namespace natl {
 			//decomposition
 		private:
 			constexpr Bool internalHasRootName() const noexcept {
-				return isAlphabetic(pathStringView[0]) && pathStringView[1] != ':';
+				return isAlphabetic(pathStringView[0]) && pathStringView[1] == ':';
 			}
 
 		public:

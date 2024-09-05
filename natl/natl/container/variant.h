@@ -41,18 +41,6 @@ namespace natl {
 		constexpr operator BaseVariantAssignMove() const noexcept { return BaseVariantAssignMove(); };
 	};
 
-	template <
-		TemplateStringLiteral Name1 = "", class DataType1 = i8,
-		TemplateStringLiteral Name2 = "", class DataType2 = i8,
-		TemplateStringLiteral Name3 = "", class DataType3 = i8>
-	class VariantT {
-		union {
-			DataType1 value1;
-
-		};
-	
-	};
-
 	template<class... DataTypes>
 	class VariantStorage {
 		//this is need for the other function to parse

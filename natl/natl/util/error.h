@@ -18,7 +18,7 @@
 
 //interface
 namespace natl {
-    constexpr void fatalError(const StringView message) noexcept {
+    constexpr void fatalError(const ConstStringView message) noexcept {
         if (isConstantEvaluated()) {
             natlTerminate();
         } else {
@@ -26,7 +26,7 @@ namespace natl {
             natlTerminate();
         }
     }
-    constexpr void fatalError(const Bool conditional, const StringView message) noexcept {
+    constexpr void fatalError(const Bool conditional, const ConstStringView message) noexcept {
         if (conditional) [[unlikely]] {
             fatalError(message);
         }

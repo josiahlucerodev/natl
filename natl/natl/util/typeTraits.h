@@ -60,22 +60,6 @@ namespace natl {
 		constexpr static type value = Value;
 	};
 	template<auto Value> constexpr inline auto ValueIdentity = ValueIdentityV<Value>::value;
-	
-
-	//underlying
-	template <typename EnumType>
-	using UnderlyingTypeT = std::underlying_type<EnumType>;
-	template <typename EnumType>
-	using UnderlyingType = UnderlyingTypeT<EnumType>::type;
-
-	template <typename EnumType>
-	constexpr UnderlyingType<EnumType> toUnderlying(const EnumType value) {
-		return static_cast<UnderlyingType<EnumType>>(value);
-	}
-	template <typename EnumType>
-	constexpr EnumType fromUnderlying(const UnderlyingType<EnumType> value) {
-		return static_cast<EnumType>(value);
-	}
 
 	//primary 
 	template<class Type> struct IsUnionV : BoolConstant<std::is_union_v<Type>> {};
@@ -124,6 +108,26 @@ namespace natl {
 	template<typename Type, Size Number> struct IsArrayT<Type[Number]> : TrueType {};
 	template<typename Type> constexpr inline Bool IsArray = IsArrayT<Type>::value;
 	template<typename Type> concept IsArrayC = IsArray<Type>;
+
+	//underlying
+	template <typename EnumType>
+	using UnderlyingTypeT = std::underlying_type<EnumType>;
+	template <typename EnumType>
+	using UnderlyingType = UnderlyingTypeT<EnumType>::type;
+
+	template <typename EnumType>
+	constexpr UnderlyingType<EnumType> toUnderlying(const EnumType value) {
+		return static_cast<UnderlyingType<EnumType>>(value);
+	}
+	template <typename EnumType>
+	constexpr EnumType fromUnderlying(const UnderlyingType<EnumType> value) {
+		return static_cast<EnumType>(value);
+	}
+	template<typename EnumType>
+		requires(IsEnum<EnumType>)
+	constexpr Size enumToSize(EnumType value) noexcept {
+		return static_cast<Size>(toUnderlying<EnumType>(value));
+	}
 
 	//relationships
 	template<typename Type, typename OtherType> struct IsSameT : FalseType {};
@@ -740,4 +744,16 @@ namespace natl {
 	};
 
 	//
+	template <typename ArrayViewLike, class DataType>
+	concept IsArrayViewLike = requires(ArrayViewLike arrayViewLike) {
+		{ arrayViewLike.data() } -> std::convertible_to<const DataType*>;
+		{ arrayViewLike.size() } -> std::convertible_to<Size>;
+		{ arrayViewLike[std::declval<Size>()] } -> std::convertible_to<DataType>;
+	};
+	template <typename StringView, class CharType>
+	concept IsStringViewLike = requires(StringView stringView) {
+		{ stringView.data() } -> std::convertible_to<const CharType*>;
+		{ stringView.size() } -> std::convertible_to<Size>;
+		{ stringView[std::declval<Size>()] } -> std::convertible_to<CharType>;
+	};
 }

@@ -9,492 +9,370 @@
 
 //interface 
 namespace natl {
-	enum class SerializationOptionalType : Bool {
-		False = false,
-		True = true,
+	enum class SerializeFlag {
+		pretty,
+		compress,
 	};
 
-	enum class SerializationBasicType : i8 {
-		dt_i8, dt_i16, dt_i32, dt_i64,
-		dt_ui8, dt_ui16, dt_ui32, dt_ui64,
-		dt_size,
-		dt_f32, dt_f64,
-		dt_ascci_str,
+	enum class SerializeID {
+		none = 0,
+		name = 1 << 0,
+		type = 1 << 1,
 	};
 
-	enum class SerializationTypeFlag : i8 {
-		dt_i8, dt_i16, dt_i32, dt_i64,
-		dt_ui8, dt_ui16, dt_ui32, dt_ui64,
-		dt_size,
-		dt_f32, dt_f64,
-		dt_ascci_str,
-		dt_array,
-		dt_dic,
-		dt_struct,
-		dt_tstruct,
-		dt_structType,
-		dt_variant,
-		dt_variantType,
-		dt_enum,
-		dt_enumType,
-	};
-
-	constexpr SerializationTypeFlag serializationBasicTypeToFlag(const SerializationBasicType basicType) noexcept {
-		switch (basicType) {
-		case SerializationBasicType::dt_i8:
-			return SerializationTypeFlag::dt_i8;
-		case SerializationBasicType::dt_i16:
-			return SerializationTypeFlag::dt_i16;
-		case SerializationBasicType::dt_i32:
-			return SerializationTypeFlag::dt_i32;
-		case SerializationBasicType::dt_i64:
-			return SerializationTypeFlag::dt_i64;
-		case SerializationBasicType::dt_ui8:
-			return SerializationTypeFlag::dt_ui8;
-		case SerializationBasicType::dt_ui16:
-			return SerializationTypeFlag::dt_ui16;
-		case SerializationBasicType::dt_ui32:
-			return SerializationTypeFlag::dt_ui32;
-		case SerializationBasicType::dt_ui64:
-			return SerializationTypeFlag::dt_ui64;
-		case SerializationBasicType::dt_size:
-			return SerializationTypeFlag::dt_size;
-		case SerializationBasicType::dt_f32:
-			return SerializationTypeFlag::dt_f32;
-		case SerializationBasicType::dt_f64:
-			return SerializationTypeFlag::dt_f64;
-		case SerializationBasicType::dt_ascci_str:
-			return SerializationTypeFlag::dt_ascci_str;
-		default:
-			unreachable();
-		}
+	constexpr SerializeID operator&(const SerializeID& lhs, const SerializeID& rhs) noexcept {
+		return natl::fromUnderlying<SerializeID>(toUnderlying<SerializeID>(lhs) & toUnderlying<SerializeID>(rhs));
+	}
+	constexpr SerializeID operator|(const SerializeID& lhs, const SerializeID& rhs) noexcept {
+		return natl::fromUnderlying<SerializeID>(toUnderlying<SerializeID>(lhs) | toUnderlying<SerializeID>(rhs));
+	}
+	constexpr SerializeID& operator&(SerializeID& lhs, const SerializeID& rhs) noexcept {
+		lhs = lhs & rhs;
+		return lhs;
+	}
+	constexpr SerializeID& operator|(SerializeID& lhs, const SerializeID& rhs) noexcept {
+		lhs = lhs | rhs;
+		return lhs;
 	}
 
-	struct SerializationStructType;
-	struct SerializationVariantType;
-	struct SerializationEnumType;
-
-	enum class SerializationTypeCategory : i8 {
-		basicType,
-		structType, 
-		enumType,
-		variantType,
+	template<typename IntegerType> 
+		requires(IsBuiltInIntegerC<IntegerType>)
+	struct SerializeNumberTag {
+		using number_type = IntegerType;
+		IntegerType number;
+		constexpr SerializeNumberTag(IntegerType numberIn) noexcept : number(numberIn) {}
+	};
+	
+	struct SerializeNameTag {
+		ConstAsciiStringView name;
 	};
 
-	struct SerializationBaseTypeElementVariant {
-		union {
-			SerializationTypeFlag basicType;
-			const SerializationVariantType* variantType;
-			const SerializationEnumType* enumType;
-			const SerializationStructType* structType;
-		};
+	template<typename Type> struct IsSerializeNumberTagV : FalseType {};
+	template<typename IntegerType> struct IsSerializeNumberTagV<SerializeNumberTag<IntegerType>> : TrueType {};
+	template<typename Type> constexpr inline Bool IsSerializeNumberTag = IsSerializeNumberTagV<Type>::value;
+	template<typename Type> concept IsSerializeNumberTagC = IsSerializeNumberTag<Type>;
 
-		constexpr SerializationBaseTypeElementVariant(const SerializationTypeFlag basicTypeIn) noexcept 
-			: basicType(basicTypeIn) {}
-		constexpr SerializationBaseTypeElementVariant(const SerializationStructType* structTypeIn) noexcept
-			: structType(structTypeIn) {}
-		constexpr SerializationBaseTypeElementVariant(const SerializationEnumType* enumTypeIn) noexcept
-			: enumType(enumTypeIn) {}
-		constexpr SerializationBaseTypeElementVariant(const SerializationVariantType* variantTypeIn) noexcept
-			: variantType(variantTypeIn) {}
+	struct SerializeCharType {};
+	struct SerializeStrType {};
+	struct SerializeFlagType {};
+	struct SerializeStructType {};
+	struct SerializeFileType {};
+	struct SerializeBlobType {};
+	template<typename SerializeType>
+	struct SerializeOptionalType {};
+	template<typename ElementType>
+	struct SerializeArrayType {};
+	template<typename KeyType, typename ValueType>
+	struct SerializeDicType {};
 
-		constexpr SerializationBaseTypeElementVariant(
-			const SerializationTypeCategory& typeCategory,
-			const SerializationBaseTypeElementVariant& other) {
-			switch (typeCategory) {
-			case SerializationTypeCategory::basicType:
-				basicType = other.basicType;
-				break;
-			case SerializationTypeCategory::structType:
-				structType = other.structType;
-				break;
-			case SerializationTypeCategory::enumType:
-				enumType = other.enumType;
-				break;
-			case SerializationTypeCategory::variantType:
-				variantType = other.variantType;
-				break;
-			default:
-				unreachable();
-			}
-		}
+
+	template<typename Type> struct IsSerializeCharTypeV : FalseType {};
+	template<> struct IsSerializeCharTypeV<SerializeCharType> : TrueType {};
+	template<typename Type> constexpr inline Bool IsSerializeCharType = IsSerializeCharType<Type>::value;
+	template<typename Type> concept IsSerializeCharTypeC = IsSerializeCharType<Type>;
+
+	template<typename Type> struct IsSerializeStrTypeV : FalseType {};
+	template<> struct IsSerializeStrTypeV<SerializeStrType> : TrueType {};
+	template<typename Type> constexpr inline Bool IsSerializeStrType = IsSerializeStrType<Type>::value;
+	template<typename Type> concept IsSerializeStrTypeC = IsSerializeStrType<Type>;
+
+	template<typename Type> struct IsSerializeFlagTypeV : FalseType {};
+	template<> struct IsSerializeFlagTypeV<SerializeFlagType> : TrueType {};
+	template<typename Type> constexpr inline Bool IsSerializeFlagType = IsSerializeFlagType<Type>::value;
+	template<typename Type> concept IsSerializeFlagTypeC = IsSerializeFlagType<Type>;
+	
+	template<typename Type> struct IsSerializeStructTypeV : FalseType {};
+	template<> struct IsSerializeStructTypeV<SerializeStructType> : TrueType {};
+	template<typename Type> constexpr inline Bool IsSerializeStructType = IsSerializeStructType<Type>::value;
+	template<typename Type> concept IsSerializeStructTypeC = IsSerializeStructType<Type>;
+
+	template<typename Type> struct IsSerializeFileTypeV : FalseType {};
+	template<> struct IsSerializeFileTypeV<SerializeFileType> : TrueType {};
+	template<typename Type> constexpr inline Bool IsSerializeFileType = IsSerializeFileType<Type>::value;
+	template<typename Type> concept IsSerializeFileTypeC = IsSerializeFileType<Type>;
+	
+	template<typename Type> struct IsSerializeBlobTypeV : FalseType {};
+	template<> struct IsSerializeBlobTypeV<SerializeBlobType> : TrueType {};
+	template<typename Type> constexpr inline Bool IsSerializeBlobType = IsSerializeBlobType<Type>::value;
+	template<typename Type> concept IsSerializeBlobTypeC = IsSerializeBlobType<Type>;
+	
+	template<typename Type> struct IsSerializeOptionalTypeV : FalseType {};
+	template<typename SerializeType> struct IsSerializeOptionalTypeV<SerializeOptionalType<SerializeType>> : TrueType {};
+	template<typename Type> constexpr inline Bool IsSerializeOptionalType = IsSerializeOptionalType<Type>::value;
+	template<typename Type> concept IsSerializeOptionalTypeC = IsSerializeOptionalType<Type>;
+
+	template<typename Type> struct IsSerializeArrayTypeV : FalseType {};
+	template<typename ElementType> struct IsSerializeArrayTypeV<SerializeArrayType<ElementType>> : FalseType {};
+	template<typename Type> constexpr inline Bool IsSerializeArrayType = IsSerializeArrayType<Type>::value;
+	template<typename Type> concept IsSerializeArrayTypeC = IsSerializeArrayType<Type>;
+
+	template<typename Type> struct IsSerializeDicTypeV : FalseType {};
+	template<typename KeyType, typename ValueType> struct IsSerializeDicTypeV<SerializeDicType<KeyType, ValueType>> : TrueType {};
+	template<typename Type> constexpr inline Bool IsSerializeDicType = IsSerializeDicType<Type>::value;
+	template<typename Type> concept IsSerializeDicTypeC = IsSerializeDicType<Type>;
+
+	template<typename Type> struct Serialize;
+
+	template<typename SerializeType> struct IsSerializableV : BoolConstant<requires() { typename Serialize<SerializeType>::serialize_as_type; }> {};
+	template<> struct IsSerializableV<SerializeCharType> : TrueType {};
+	template<> struct IsSerializableV<SerializeStrType> : TrueType {};
+	template<> struct IsSerializableV<SerializeFlagType> : TrueType {};
+	template<> struct IsSerializableV<SerializeStructType> : TrueType {};
+	template<> struct IsSerializableV<SerializeFileType> : TrueType {};
+	template<> struct IsSerializableV<SerializeBlobType> : TrueType {};
+	template<typename SerializeType> struct IsSerializableV<SerializeOptionalType<SerializeType>> : TrueType {};
+	template<typename ElementType> struct IsSerializableV<SerializeArrayType<ElementType>> : TrueType {};
+	template<typename KeyType, typename ValueType> struct IsSerializableV<SerializeDicType<KeyType, ValueType>> : TrueType {};
+
+	template<typename SerializeType> constexpr Bool IsSerializable = IsSerializableV<SerializeType>::value;
+	template<typename SerializeType> concept IsSerializableC = IsSerializable<SerializeType>;
+
+	template<typename Serializer>
+	concept IsSerializerC = true;
+
+	template<typename Functor>
+	concept IsToFlagConvertFunctor = requires(Functor functor, const natl::Size value) {
+		{ functor(value) } -> IsStringViewLike<Ascii>;
 	};
 
-	struct SerializationTypeElementsInfo {
-		SerializationOptionalType isOptionalFlag;
-		SerializationTypeCategory typeCategory;
-		SerializationBaseTypeElementVariant typeVariant;
-
-		constexpr SerializationTypeElementsInfo(
-			const SerializationBasicType basicType,
-			const SerializationOptionalType& optionalFlag = SerializationOptionalType::False) noexcept :
-			isOptionalFlag(optionalFlag), typeCategory(SerializationTypeCategory::basicType), typeVariant(serializationBasicTypeToFlag(basicType)) {}
-
-		constexpr SerializationTypeElementsInfo(
-			const SerializationStructType* structType,
-			const SerializationOptionalType& optionalFlag = SerializationOptionalType::False) noexcept :
-			isOptionalFlag(optionalFlag), typeCategory(SerializationTypeCategory::structType), typeVariant(structType) {}
-
-		constexpr SerializationTypeElementsInfo(
-			const SerializationEnumType* enumType,
-			const SerializationOptionalType& optionalFlag = SerializationOptionalType::False) noexcept :
-			isOptionalFlag(optionalFlag), typeCategory(SerializationTypeCategory::enumType), typeVariant(enumType) {}
-
-		constexpr SerializationTypeElementsInfo(
-			const SerializationVariantType* variantType,
-			const SerializationOptionalType& optionalFlag = SerializationOptionalType::False) noexcept :
-			isOptionalFlag(optionalFlag), typeCategory(SerializationTypeCategory::variantType), typeVariant(variantType) {}
-	};
-
-	struct SerializationArrayInfo {
-		SerializationOptionalType isElementOptionalFlag;
-		SerializationTypeCategory elementTypeCategory;
-		SerializationBaseTypeElementVariant elementTypeVariant;
-
-		constexpr SerializationArrayInfo(const SerializationTypeElementsInfo& elementsInfo) noexcept 
-		: isElementOptionalFlag(elementsInfo.isOptionalFlag), elementTypeCategory(elementsInfo.typeCategory),
-			elementTypeVariant(elementsInfo.typeCategory, elementsInfo.typeVariant) {}
-	};
-
-	struct SerializationDicInfo {
-		SerializationOptionalType isValueOptionalFlag;
-
-		SerializationTypeCategory keyTypeCategory;
-		SerializationTypeCategory valueTypeCategory;
-		SerializationBaseTypeElementVariant keyTypeVariant;
-		SerializationBaseTypeElementVariant valueTypeVariant;
-
-		constexpr SerializationDicInfo(
-			const SerializationTypeElementsInfo& keyElementInfo, 
-			const SerializationTypeElementsInfo& valueElementInfo) noexcept
-			: isValueOptionalFlag(valueElementInfo.isOptionalFlag), 
-			keyTypeCategory(keyElementInfo.typeCategory),
-			valueTypeCategory(valueElementInfo.typeCategory),
-			keyTypeVariant(keyElementInfo.typeCategory, keyElementInfo.typeVariant),
-			valueTypeVariant(valueElementInfo.typeCategory, valueElementInfo.typeVariant) {}
-	};
-
-	struct SerializationType {
-
-		SerializationOptionalType isOptionalFlag;
-		SerializationTypeFlag typeFlag;
-
-		union SchemaElementData {
-			const SerializationStructType* structType;
-			const SerializationEnumType* enumType;
-			const SerializationVariantType* variantType;
-
-			SerializationArrayInfo arrayInfo;
-			SerializationDicInfo dicInfo;
-
-
-			constexpr SchemaElementData() : structType(nullptr) {}
-			constexpr SchemaElementData(const SerializationStructType* structTypeIn) noexcept : structType(structTypeIn) {}
-			constexpr SchemaElementData(const SerializationEnumType* enumTypeIn) noexcept : enumType(enumTypeIn) {}
-			constexpr SchemaElementData(const SerializationVariantType* variantTypeIn) noexcept : variantType(variantTypeIn) {}
-			constexpr SchemaElementData(const SerializationArrayInfo& arrayInfoIn) noexcept : arrayInfo(arrayInfoIn) {}
-			constexpr SchemaElementData(const SerializationDicInfo& dicInfoIn) noexcept : dicInfo(dicInfoIn) {}
-		} data;
-
-		constexpr SerializationType() noexcept = default;
-		constexpr SerializationType(
-			const SerializationBasicType basicType,
-			const SerializationOptionalType& optionalFlag = SerializationOptionalType::False) noexcept :
-			isOptionalFlag(optionalFlag), typeFlag(serializationBasicTypeToFlag(basicType)), data() {}
-
-		constexpr SerializationType(
-			const SerializationStructType* type,
-			const SerializationOptionalType& optionalFlag = SerializationOptionalType::False) noexcept :
-			isOptionalFlag(optionalFlag), typeFlag(SerializationTypeFlag::dt_structType), data(type) {}
-
-		constexpr SerializationType(
-			const SerializationEnumType* enumType,
-			const SerializationOptionalType& optionalFlag = SerializationOptionalType::False) noexcept :
-			isOptionalFlag(optionalFlag), typeFlag(SerializationTypeFlag::dt_enumType), data(enumType) {}
-
-		constexpr SerializationType(
-			const SerializationVariantType* variantType,
-			const SerializationOptionalType& optionalFlag = SerializationOptionalType::False) noexcept :
-			isOptionalFlag(optionalFlag), typeFlag(SerializationTypeFlag::dt_variantType), data(variantType) {}
-	};
-
-	struct SerializationStructTypeElement {
-		String name;
-		SerializationType type;
-
-		constexpr SerializationStructTypeElement() noexcept = default;
-		constexpr SerializationStructTypeElement(
-			const StringView& nameIn, 
-			const SerializationBasicType basicType,
-			const SerializationOptionalType& optionalFlag = SerializationOptionalType::False) noexcept :
-			name(nameIn), type(basicType, optionalFlag) {}
-
-
-		constexpr SerializationStructTypeElement(
-			const StringView& nameIn, 
-			const SerializationStructType* structType,
-			const SerializationOptionalType& optionalFlag = SerializationOptionalType::False) noexcept :
-			name(nameIn), type(structType, optionalFlag) {}
-
-		constexpr SerializationStructTypeElement(
-			const StringView& nameIn, 
-			const SerializationEnumType* enumType,
-			const SerializationOptionalType& optionalFlag = SerializationOptionalType::False) noexcept :
-			name(nameIn), type(enumType, optionalFlag) {}
-
-		constexpr SerializationStructTypeElement(
-			const StringView& nameIn, 
-			const SerializationVariantType* variantType,
-			const SerializationOptionalType& optionalFlag = SerializationOptionalType::False) noexcept :
-			name(nameIn), type(variantType, optionalFlag) {}
-	};
-
-	struct SerializationStructType {
-		String name;
-		SmallDynArray<SerializationStructTypeElement, 7> elements;
-
-		constexpr SerializationStructType() noexcept = default;
-		/*
-		template<typename... SerializationStructTypeElementArgs>
-			requires(IsSame<SerializationStructTypeElement, SerializationStructTypeElementArgs> && ...)
-		constexpr SerializationStructType(const StringView& name, SerializationStructTypeElementArgs&&... elements) noexcept : name(name), elements(elements...) {};
-		*/
-		constexpr SerializationStructType(const StringView& nameIn, std::initializer_list<SerializationStructTypeElement> elementsIn) noexcept : name(nameIn), elements(elementsIn) {};
-	};
-
-	struct SerializationVariantType {
-		String name;
-		SmallDynArray<SerializationType, 7> types;
-
-		constexpr SerializationVariantType() noexcept = default;
-		constexpr SerializationVariantType(const StringView& nameIn, std::initializer_list<SerializationType> typesIn) noexcept : name(nameIn), types(typesIn) {};
-	};
-
-	struct SerializationEnumType {
-		String name;
-		SmallDynArray<String, 15> nameValues;
-	};
-
-	struct SerializationElement;
-		
-	struct LargeSerializationElement {
-		using LargeElementVariant = Variant<
-			NamedElement<"enum_type", SerializationEnumType>,
-			NamedElement<"variant_type", SerializationVariantType>,
-			NamedElement<"struct_type", SerializationStructType>
-		>;
-
-		LargeElementVariant data;
-	};
-
-	struct MediumSerializationElement {
-
-		constexpr static Size commonByteSize = 120;
-
-		struct SerializationDicElement {
-			SerializationElement* key;
-			SerializationElement* value;
-		};
-
-		using SerializationArrayData = SmallDynArray<SerializationElement*, ((commonByteSize - 24) / sizeof(SerializationElement*))>;
-		using SerializationDicData = SmallDynArray<SerializationElement*, ((commonByteSize - 24) / sizeof(SerializationElement*))>;
-		using SerializationAssicStringData = BaseStringByteSize<Ascii, commonByteSize >;
-		using SerializationStructData = SmallDynArray<SerializationElement*, ((commonByteSize - 24) / sizeof(SerializationElement*))>;
-		using SerializationTStructData = SmallDynArray<SerializationElement*, ((commonByteSize - 24) / sizeof(SerializationElement*))>;
-
-		using MediumElementVariant = Variant<
-			NamedElement<"array", SerializationArrayData>,
-			NamedElement<"ascciStr", SerializationAssicStringData>,
-			NamedElement<"dic", SerializationDicData>,
-			NamedElement<"struct", SerializationStructData>,
-			NamedElement<"tstruct", SerializationTStructData>
-		>;
-
-		MediumElementVariant data;
-	};
-
-	struct SerializationElement {
-		using ElementVariant = Variant<
-			NamedElement<"i8", i8>,
-			NamedElement<"i16", i16>,
-			NamedElement<"i32", i32>,
-			NamedElement<"i64", i64>,
-
-			NamedElement<"ui8", ui8>,
-			NamedElement<"ui16", ui16>,
-			NamedElement<"ui32", ui32>,
-			NamedElement<"ui64", ui64>,
-
-			NamedElement<"size", Size>,
-
-			NamedElement<"f32", f32>,
-			NamedElement<"f64", f64>,
-
-
-			NamedElement<"enum", Size>,
-			NamedElement<"variant", SerializationElement*>,
-			NamedElement<"medium", MediumSerializationElement*>,
-			NamedElement<"large", LargeSerializationElement*>
-		>;
-
-		StringView name;
-		ElementVariant data;
-	};
-
-	struct DeserlizationInterfaceBase {
-		BatchPool<SerializationElement> smallElementStorage;
-		BatchPool<MediumSerializationElement> mediumElementStorage;
-		BatchPool<LargeSerializationElement> largeElementStorage;
-
-		constexpr void clear() noexcept {
-			smallElementStorage.clear();
-			mediumElementStorage.clear();
-			largeElementStorage.clear();
-		}
-	};
-
-	namespace impl {
-		template<class Serializer>
-		concept DoesSerializerHaveInt8 = requires(Serializer serializer, const i8& value) {
-			{ serializer.serialize_i8(value) } -> SameAs<void>; 
-			{ serializer.serializeNull_i8() } -> SameAs<void>; 
-		};
-		template<class Serializer>
-		concept DoesSerializerHaveInt16 = requires(Serializer serializer, const i16& value) {
-				{ serializer.serialize_i16(value) } -> SameAs<void>;
-				{ serializer.serializeNull_i16() } -> SameAs<void>;
-		};
-		template<class Serializer>
-		concept DoesSerializerHaveInt32 = requires(Serializer serializer, const i32 & value) {
-			{ serializer.serialize_i32(value) } -> SameAs<void>;
-			{ serializer.serializeNull_i32() } -> SameAs<void>;
-		};
-		template<class Serializer>
-		concept DoesSerializerHaveInt64 = requires(Serializer serializer, const i64 & value) {
-			{ serializer.serialize_i64(value) } -> SameAs<void>;
-			{ serializer.serializeNull_i64() } -> SameAs<void>;
-		};
-
-		template<class Serializer>
-		concept DoesSerializerHaveUInt8 = requires(Serializer serializer, const ui8 & value) {
-			{ serializer.serialize_ui8(value) } -> SameAs<void>;
-			{ serializer.serializeNull_ui8() } -> SameAs<void>;
-		};
-		template<class Serializer>
-		concept DoesSerializerHaveUInt16 = requires(Serializer serializer, const ui16 & value) {
-			{ serializer.serialize_ui16(value) } -> SameAs<void>;
-			{ serializer.serializeNull_ui16() } -> SameAs<void>;
-		};
-		template<class Serializer>
-		concept DoesSerializerHaveUInt32 = requires(Serializer serializer, const ui32 & value) {
-			{ serializer.serialize_ui32(value) } -> SameAs<void>;
-			{ serializer.serializeNull_ui32() } -> SameAs<void>;
-		};
-		template<class Serializer>
-		concept DoesSerializerHaveUInt64 = requires(Serializer serializer, const ui64 & value) {
-			{ serializer.serialize_ui64(value) } -> SameAs<void>;
-			{ serializer.serializeNull_ui64() } -> SameAs<void>;
-		};
-
-		template<class Serializer>
-		concept DoesSerializerHaveFloat32 = requires(Serializer serializer, const f32 & value) {
-			{ serializer.serialize_f32(value) } -> SameAs<void>;
-			{ serializer.serializeNull_f32() } -> SameAs<void>;
-		};
-		template<class Serializer>
-		concept DoesSerializerHaveFloat64 = requires(Serializer serializer, const f64 & value) {
-			{ serializer.serialize_f64(value) } -> SameAs<void>;
-			{ serializer.serializeNull_f64() } -> SameAs<void>;
-		};
-
-		template<class Serializer>concept DoesSerializerHaveAssicStr = requires(Serializer serializer,
-			const ConstAsciiStringView & value) {
-				{ serializer.serializeAssicStr(value) } -> SameAs<void>;
-				{ serializer.serializeNullAssicStr() } -> SameAs<void>;
-		};
-
-		template<class Serializer>
-		concept DoesSerializeHaveTStruct = requires(Serializer serializer, const SerializationStructType& structType) {
-				{ serializer.serializeStructType(structType) } -> SameAs<void>;
-				{ serializer.serializeNamedTstructInfo(structType) } -> SameAs<void>;
-				{ serializer.serializeTypedStruct(structType) } -> SameAs<void>;
-				{ serializer.endSerializeTypedStruct() } -> SameAs<void>;
-				{ serializer.serializeNullTypedStruct(structType) } -> SameAs<void>;
-		};
-		template<class Serializer>
-		concept DoesSerializeHaveStruct = requires(Serializer serializer) {
-				{ serializer.serializeStruct() } -> SameAs<void>;
-				{ serializer.endSerializeStruct() } -> SameAs<void>;
-				{ serializer.serializeNullStruct() } -> SameAs<void>;
-		};
-		template<class Serializer>
-		concept DoesSerializeHaveDic = requires(Serializer serializer, const natl::SerializationDicInfo& dicInfo) {
-				{ serializer.serializeNamedDicInfo(dicInfo) } -> SameAs<void>;
-				{ serializer.serializeDic(dicInfo) } -> SameAs<void>;
-				{ serializer.endSerializeDic() } -> SameAs<void>;
-				{ serializer.serializeDicKey() } -> SameAs<void>;
-				{ serializer.serializeDicValue() } -> SameAs<void>;
-				{ serializer.serializeNullDic(dicInfo) } -> SameAs<void>;
-		};
-		template<class Serializer>
-		concept DoesSerializeHaveArray = requires(Serializer serializer, const natl::SerializationArrayInfo& arrayInfo) {
-				{ serializer.serializeNamedArrayInfo(arrayInfo) } ->SameAs<void>;
-				{ serializer.serializeNextArrayElement() } ->SameAs<void>;
-				{ serializer.serializeArray(arrayInfo) } -> SameAs<void>;
-				{ serializer.endSerializeArray() } -> SameAs<void>;
-				{ serializer.serializeNullArray(arrayInfo) } -> SameAs<void>;
-		};
-		template<class Serializer>
-		concept DoesSerializeHaveVariant = requires(
-			Serializer serializer,
-			const SerializationVariantType& variantType,
-			const SerializationType& variantElementType) {
-				{ serializer.serializeNamedVariantInfo(variantType, variantElementType) } -> SameAs<void>;
-				{ serializer.serializeVariantType(variantType) } -> SameAs<void>;
-				{ serializer.serializeVariant(variantType, variantElementType) } -> SameAs<void>;
-				{ serializer.endSerializeVariant() } -> SameAs<void>;
-				{ serializer.serializeNullVariant(variantType) } -> SameAs<void>;
-		};
-		
-		template<class Serializer>
-		concept DoesSerializeHaveEnum = requires(Serializer serializer,
-			const natl::SerializationEnumType& enumType,
-			const natl::Size nameIndex) {
-				{ serializer.serializeEnumType(enumType) } -> SameAs<void>;
-				{ serializer.serializeNamedEnumInfo(enumType) } -> SameAs<void>;
-				{ serializer.serializeEnum(enumType, nameIndex) } -> SameAs<void>;
-				{ serializer.serializeNullEnum(enumType) } -> SameAs<void>;
-		};	
-
-		template<class Serializer>
-		concept DoesSerializeHaveBaseSerializeUtil = requires(
-			Serializer serializer, 
-			const Size& bytes, 
-			const ConstAsciiStringView& name) {
-				{ serializer.serializeBegin(bytes) } -> SameAs<void>;
-				{ serializer.serializeEnd() } -> SameAs<void>;
-				{ serializer. template serializeNamedElement<SerializationTypeFlag::dt_i8, SerializationOptionalType::True>(name) } -> SameAs<void>;
-		};
+	template<typename Serializer, typename SerializeType, typename... SerializeArgs>
+		requires(IsSerializerC<Serializer>&& IsSerializableC<Decay<SerializeType>>)
+	constexpr void serializeWrite(Serializer& serializer, const SerializeType& serializeValue, SerializeArgs&&... serializeArgs) noexcept {
+		Serialize<Decay<SerializeType>>::template write<Serializer>(serializer, serializeValue, natl::forward<SerializeArgs>(serializeArgs)...);
 	}
 
-	template<class Serializer>
-	concept IsCompleteSerializer =
-		impl::DoesSerializeHaveBaseSerializeUtil<Serializer> &&
-		impl::DoesSerializerHaveInt8<Serializer> &&
-		impl::DoesSerializerHaveInt16<Serializer> &&
-		impl::DoesSerializerHaveInt32<Serializer> &&
-		impl::DoesSerializerHaveInt64<Serializer> &&
-		impl::DoesSerializerHaveUInt8<Serializer> &&
-		impl::DoesSerializerHaveUInt16<Serializer> &&
-		impl::DoesSerializerHaveUInt32<Serializer> &&
-		impl::DoesSerializerHaveUInt64<Serializer> &&
-		impl::DoesSerializerHaveFloat32<Serializer> &&
-		impl::DoesSerializerHaveFloat64<Serializer> &&
-		impl::DoesSerializerHaveAssicStr<Serializer> && 
-		impl::DoesSerializeHaveTStruct<Serializer> &&
-		impl::DoesSerializeHaveStruct<Serializer> &&
-		impl::DoesSerializeHaveDic<Serializer> &&
-		impl::DoesSerializeHaveArray<Serializer> &&
-		impl::DoesSerializeHaveEnum<Serializer> &&
-		impl::DoesSerializeHaveVariant<Serializer>;
+
+	//ID
+	template<typename Serializer, SerializeID ID, typename SerializeType, typename... SerializeArgs>
+		requires(IsSerializerC<Serializer>&& IsSerializableC<Decay<SerializeType>>)
+	constexpr void serializeWriteIDNamed(
+		Serializer& serializer,
+		const ConstAsciiStringView& name,
+		const SerializeType& serializeValue,
+		SerializeArgs&&... serializeArgs) noexcept {
+
+		using decayed_serialize_type = Serialize<Decay<SerializeType>>;
+		using serialize_as_type = decayed_serialize_type::serialize_as_type;
+
+		serializer.beginWrite<ID>(name);
+		serializer.template as<serialize_as_type, ID>();
+		serializer.writeValue();
+		decayed_serialize_type::template write<Serializer>(serializer, serializeValue, natl::forward<SerializeArgs>(serializeArgs)...);
+		serializer.endWrite();
+	}
+
+	template<typename Serializer, SerializeID ID, typename SerializeType, typename... SerializeArgs>
+		requires(IsSerializerC<Serializer>&& IsSerializableC<Decay<SerializeType>>)
+	constexpr void serializeWriteIDNamedWithNameTag(
+		Serializer& serializer,
+		SerializeNameTag& serializeNameTag,
+		const ConstAsciiStringView& name,
+		const SerializeType& serializeValue,
+		SerializeArgs&&... serializeArgs) noexcept {
+
+		using decayed_serialize_type = Serialize<Decay<SerializeType>>;
+		using serialize_as_type = decayed_serialize_type::serialize_as_type;
+
+		serializer.beginWrite<ID>(name, serializeNameTag);
+		serializer.template as<serialize_as_type, ID>();
+		serializer.writeValue();
+		decayed_serialize_type::template write<Serializer>(serializer, serializeValue, natl::forward<SerializeArgs>(serializeArgs)...);
+		serializer.endWrite();
+	}
+
+	template<typename Serializer, SerializeID ID, typename SerializeNumberTagType, typename SerializeType, typename... SerializeArgs>
+		requires(IsSerializerC<Serializer>&& IsSerializeNumberTagC<SerializeNumberTagType>&& IsSerializableC<Decay<SerializeType>>)
+	constexpr void serializeWriteIDNamedWithNumberTag(
+		Serializer& serializer,
+		const SerializeNumberTagType& serializeNumberTag,
+		const ConstAsciiStringView& name,
+		const SerializeType& serializeValue,
+		SerializeArgs&&... serializeArgs) noexcept {
+
+		using decayed_serialize_type = Serialize<Decay<SerializeType>>;
+		using serialize_as_type = decayed_serialize_type::serialize_as_type;
+
+		serializer.beginWrite<SerializeID::none, SerializeNumberTagType>(name, serializeNumberTag);
+		serializer.template as<serialize_as_type, SerializeID::none>();
+		serializer.writeValue();
+		decayed_serialize_type::template write<Serializer>(serializer, serializeValue, natl::forward<SerializeArgs>(serializeArgs)...);
+		serializer.endWrite();
+	}
+
+	template<typename Serializer, SerializeID ID, typename SerializeNumberTagType, typename SerializeType, typename... SerializeArgs>
+		requires(IsSerializerC<Serializer>&& IsSerializeNumberTagC<SerializeNumberTagType>&& IsSerializableC<Decay<SerializeType>>)
+	constexpr void serializeWriteIDNamedWithNumberTagAndNumberTag(
+		Serializer& serializer,
+		SerializeNameTag& serializeNameTag,
+		const SerializeNumberTagType& serializeNumberTag,
+		const ConstAsciiStringView& name,
+		const SerializeType& serializeValue,
+		SerializeArgs&&... serializeArgs) noexcept {
+
+		using decayed_serialize_type = Serialize<Decay<SerializeType>>;
+		using serialize_as_type = decayed_serialize_type::serialize_as_type;
+
+		serializer.beginWrite<ID, SerializeNumberTagType>(name, serializeNameTag, serializeNumberTag);
+		serializer.template as<serialize_as_type, ID>();
+		serializer.writeValue();
+		decayed_serialize_type::template write<Serializer>(serializer, serializeValue, natl::forward<SerializeArgs>(serializeArgs)...);
+		serializer.endWrite();
+	}
+
+	template<typename Serializer, typename SerializeType, typename... SerializeArgs>
+		requires(IsSerializerC<Serializer>&& IsSerializableC<Decay<SerializeType>>)
+	constexpr void serializeWriteNamed(
+		Serializer& serializer,
+		const ConstAsciiStringView& name,
+		const SerializeType& serializeValue,
+		SerializeArgs&&... serializeArgs) noexcept {
+
+		serializeWriteIDNamed<Serializer, SerializeID::none, SerializeType, SerializeArgs...>(
+			serializer, name, serializeValue, natl::forward<SerializeArgs>(serializeArgs)...);
+	}
+
+	template<typename Serializer, typename SerializeType, typename... SerializeArgs>
+		requires(IsSerializerC<Serializer>&& IsSerializableC<Decay<SerializeType>>)
+	constexpr void serializeWriteNamedWithNameTag(
+		Serializer& serializer,
+		SerializeNameTag& serializeNameTag,
+		const ConstAsciiStringView& name,
+		const SerializeType& serializeValue,
+		SerializeArgs&&... serializeArgs) noexcept {
+
+		serializeWriteIDNamedWithNameTag<Serializer, SerializeID::none, SerializeType, SerializeArgs...>(
+			serializer, serializeNameTag, name, serializeValue, natl::forward<SerializeArgs>(serializeArgs)...);
+	}
+
+	template<typename Serializer, typename SerializeNumberTagType, typename SerializeType, typename... SerializeArgs>
+		requires(IsSerializerC<Serializer> && IsSerializeNumberTagC<SerializeNumberTagType> && IsSerializableC<Decay<SerializeType>>)
+	constexpr void serializeWriteNamedWithNumberTag(
+		Serializer& serializer,
+		const SerializeNumberTagType& serializeNumberTag,
+		const ConstAsciiStringView& name,
+		const SerializeType& serializeValue,
+		SerializeArgs&&... serializeArgs) noexcept {
+
+		serializeWriteIDNamedWithNumberTag<Serializer, SerializeID::none, SerializeNumberTagType, SerializeType, SerializeArgs...>(
+			serializer, serializeNumberTag, name, serializeValue, natl::forward<SerializeArgs>(serializeArgs)...);
+	}
+
+	template<typename Serializer, typename SerializeNumberTagType, typename SerializeType, typename... SerializeArgs>
+		requires(IsSerializerC<Serializer>&& IsSerializeNumberTagC<SerializeNumberTagType>&& IsSerializableC<Decay<SerializeType>>)
+	constexpr void serializeWriteNamedWithNumberTagAndNumberTag(
+		Serializer& serializer,
+		SerializeNameTag& serializeNameTag,
+		const SerializeNumberTagType& serializeNumberTag,
+		const ConstAsciiStringView& name,
+		const SerializeType& serializeValue,
+		SerializeArgs&&... serializeArgs) noexcept {
+
+		serializeWriteIDNamedWithNumberTag<Serializer, SerializeID::none, SerializeNumberTagType, SerializeType, SerializeArgs...>(
+			serializer, serializeNameTag, serializeNumberTag, name, serializeValue, natl::forward<SerializeArgs>(serializeArgs)...);
+	}
+
+
+	template<> struct Serialize<natl::i8> {
+		using serialize_as_type = natl::i8;
+		template<typename Serializer>
+		constexpr static void write(Serializer& serializer, const natl::i8 value) noexcept {
+			serializer.writeI8(value);
+		}
+	};
+
+	template<> struct Serialize<natl::i16> {
+		using serialize_as_type = natl::i16;
+		template<typename Serializer>
+		constexpr static void write(Serializer& serializer, const natl::i16 value) noexcept {
+			serializer.writeI16(value);
+		}
+	};
+	template<> struct Serialize<natl::i32> {
+		using serialize_as_type = natl::i32;
+		template<typename Serializer>
+		constexpr static void write(Serializer& serializer, const natl::i32 value) noexcept {
+			serializer.writeI32(value);
+		}
+	};
+	template<> struct Serialize<natl::i64> {
+		using serialize_as_type = natl::i64;
+		template<typename Serializer>
+		constexpr static void write(Serializer& serializer, const natl::i64 value) noexcept {
+			serializer.writeI64(value);
+		}
+	};
+
+	template<> struct Serialize<natl::ui8> {
+		using serialize_as_type = natl::ui8;
+		template<typename Serializer>
+		constexpr static void write(Serializer& serializer, const natl::ui8 value) noexcept {
+			serializer.writeUI8(value);
+		}
+	};
+	template<> struct Serialize<natl::ui16> {
+		using serialize_as_type = natl::ui16;
+		template<typename Serializer>
+		constexpr static void write(Serializer& serializer, const natl::ui16 value) noexcept {
+			serializer.writeUI16(value);
+		}
+	};
+	template<> struct Serialize<natl::ui32> {
+		using serialize_as_type = natl::ui32;
+		template<typename Serializer>
+		constexpr static void write(Serializer& serializer, const natl::ui32 value) noexcept {
+			serializer.writeUI32(value);
+		}
+	};
+	template<> struct Serialize<natl::ui64> {
+		using serialize_as_type = natl::ui64;
+		template<typename Serializer>
+		constexpr static void write(Serializer& serializer, const natl::ui64 value) noexcept {
+			serializer.writeUI64(value);
+		}
+	};
+
+	template<> struct Serialize<natl::f32> {
+		using serialize_as_type = natl::f32;
+		template<typename Serializer>
+		constexpr static void write(Serializer& serializer, const natl::f32 value) noexcept {
+			serializer.writeF32(value);
+		}
+	};
+	template<> struct Serialize<natl::f64> {
+		using serialize_as_type = natl::f64;
+		template<typename Serializer>
+		constexpr static void write(Serializer& serializer, const natl::f64 value) noexcept {
+			serializer.writeF64(value);
+		}
+	};
+
+	template<> struct Serialize<natl::Ascii> {
+		using serialize_as_type = SerializeCharType;
+		template<typename Serializer>
+		constexpr static void write(Serializer& serializer, const natl::Ascii value) noexcept {
+			serializer.writeChar(value);
+		}
+	};
+
+	template<> struct Serialize<char*> {
+		using serialize_as_type = SerializeStrType;
+		template<typename Serializer>
+		constexpr static void write(Serializer& serializer, const char* str) noexcept {
+			serializer.writeStr(str);
+		}
+	};
+	template<> struct Serialize<natl::AsciiStringView> {
+		using serialize_as_type = SerializeStrType;
+		template<typename Serializer>
+		constexpr static void write(Serializer& serializer, const natl::AsciiStringView str) noexcept {
+			serializer.writeStr(str);
+		}
+	};
+	template<> struct Serialize<natl::ConstAsciiStringView> {
+		using serialize_as_type = SerializeStrType;
+		template<typename Serializer>
+		constexpr static void write(Serializer& serializer, const natl::ConstAsciiStringView str) noexcept {
+			serializer.writeStr(str);
+		}
+	};
 }

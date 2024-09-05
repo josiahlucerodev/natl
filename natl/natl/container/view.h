@@ -5,8 +5,8 @@
 
 //own
 #include "container.h"
-#include "iterators.h"
-#include "option.h"
+#include "../util/iterators.h"
+#include "../fundamental/option.h"
 
 //interface
 namespace natl {

@@ -1,9 +1,9 @@
 #pragma once 
 
 //own
-#include "typeTraits.h"
-#include "dataMovement.h"
-#include "compare.h"
+#include "../util/typeTraits.h"
+#include "../util/dataMovement.h"
+#include "../util/compare.h"
 
 //interface
 namespace natl {

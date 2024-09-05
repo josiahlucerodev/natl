@@ -17,14 +17,6 @@
 
 //interface
 namespace natl {
-
-	template <typename ArrayViewLike, class DataType>
-	concept IsArrayViewLike = requires(ArrayViewLike arrayViewLike) {
-		{ arrayViewLike.data() } -> std::convertible_to<const DataType*>;
-		{ arrayViewLike.size() } -> std::convertible_to<Size>;
-		{ arrayViewLike[std::declval<Size>()] } -> std::convertible_to<DataType>;
-	};
-
 	template <class DataType>
 	class ArrayView {
 	public:

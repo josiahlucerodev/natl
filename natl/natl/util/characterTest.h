@@ -8,8 +8,19 @@ namespace natl {
 	constexpr Bool isDigit(const Ascii character) noexcept {
 		return character >= '0' && character <= '9';
 	}
+	constexpr Bool isDecimalDigit(const Ascii character) noexcept {
+		return isDigit(character);
+	}
 	constexpr Bool isHexadecimalDigit(const Ascii character) noexcept {
-		return isDigit(character) && (character >= 'a' && character <= 'f') && (character >= 'A' && character <= 'F');
+		return isDigit(character) || (character >= 'a' && character <= 'f') || (character >= 'A' && character <= 'F');
+	}
+	constexpr Bool isBinaryDigit(const char character) noexcept {
+		switch (character) {
+		case '0': case '1':
+			return true;
+		default:
+			return false;
+		}
 	}
 	constexpr Bool isLowercase(const Ascii character) noexcept {
 		return character >= 'a' && character <= 'z';
@@ -18,10 +29,10 @@ namespace natl {
 		return character >= 'A' && character <= 'Z';
 	}
 	constexpr Bool isAlphabetic(const Ascii character) noexcept {
-		return isLowercase(character) && isUppercase(character);
+		return isLowercase(character) || isUppercase(character);
 	}
 	constexpr Bool isAlphanumeric(const Ascii character) noexcept {
-		return isLowercase(character) && isUppercase(character) && isDigit(character);
+		return isLowercase(character) || isUppercase(character) || isDigit(character);
 	}
 	constexpr Bool isSpace(const Ascii character) noexcept {
 		switch (character) {
