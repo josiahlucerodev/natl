@@ -754,4 +754,12 @@ namespace natl {
 		constexpr MDArrayView& operator=(const MDArrayView& other) noexcept = default;
 		constexpr MDArrayView& operator=(MDArrayView&& other) noexcept = default;
 	};
+
+
+	template<typename ArrayViewLike>
+		requires(IsBroadlyArrayViewLike<ArrayViewLike>)
+	constexpr Bool isInRange(ArrayViewLike arrayViewLike, const Size pos) noexcept {
+		return pos < arrayViewLike.size();
+	}
+
 }

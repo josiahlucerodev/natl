@@ -303,7 +303,7 @@ namespace natl {
 
 	template<class DataType> struct RemoveExtentT { using type = DataType; };
 	template<class DataType> struct RemoveExtentT<DataType[]> { using type = DataType; };
-	template<class DataType, std::size_t Number> struct RemoveExtentT<DataType[Number]> { using type = DataType; };
+	template<class DataType, Size Number> struct RemoveExtentT<DataType[Number]> { using type = DataType; };
 	template<class DataType> using RemoveExtent = RemoveExtentT<DataType>::type;
 
 	template<class Type> struct DecayT {
@@ -494,7 +494,7 @@ namespace natl {
 #define NATL_TYPE_TRIAT_CUSTOM_TRIVIALLY_FUN(conceptName, memberName) \
         template<typename DataType> \
         consteval Bool customCheckIf##conceptName() noexcept { \
-            if constexpr (requires() { { DataType::trivially##memberName } -> std::convertible_to<Bool>; }) { \
+            if constexpr (requires() { { DataType::trivially##memberName } -> IsConvertibleC<Bool>; }) { \
                 return DataType::trivially##memberName; \
             } else { \
                 return false; \
@@ -746,14 +746,22 @@ namespace natl {
 	//
 	template <typename ArrayViewLike, class DataType>
 	concept IsArrayViewLike = requires(ArrayViewLike arrayViewLike) {
-		{ arrayViewLike.data() } -> std::convertible_to<const DataType*>;
-		{ arrayViewLike.size() } -> std::convertible_to<Size>;
-		{ arrayViewLike[std::declval<Size>()] } -> std::convertible_to<DataType>;
+		{ arrayViewLike.data() } -> IsConvertibleC<const DataType*>;
+		{ arrayViewLike.size() } -> IsConvertibleC<Size>;
+		{ arrayViewLike[declval<Size>()] } -> IsConvertibleC<DataType>;
 	};
+	template <typename ArrayViewLike>
+	concept IsBroadlyArrayViewLike = requires(ArrayViewLike arrayViewLike) {
+		{ arrayViewLike.data() } ;
+		{ arrayViewLike.size() } -> IsConvertibleC<Size>;
+		{ arrayViewLike[declval<Size>()] };
+	};
+
+
 	template <typename StringView, class CharType>
 	concept IsStringViewLike = requires(StringView stringView) {
-		{ stringView.data() } -> std::convertible_to<const CharType*>;
-		{ stringView.size() } -> std::convertible_to<Size>;
-		{ stringView[std::declval<Size>()] } -> std::convertible_to<CharType>;
+		{ stringView.data() } -> IsConvertibleC<const CharType*>;
+		{ stringView.size() } -> IsConvertibleC<Size>;
+		{ stringView[declval<Size>()] } -> IsConvertibleC<CharType>;
 	};
 }

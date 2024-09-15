@@ -217,6 +217,12 @@ namespace natl {
 		return formatOutputIter.getOutputIter();
 	}
 
+	template<typename Container, typename... ArgTypes>
+		requires(Formattable<ArgTypes, Ascii> && ...)
+	constexpr BackInsertIterator<Container> formatToBack(Container& container, ArgTypes&&... args) noexcept {
+		return formatTo<BackInsertIterator<Container>>(backInserter(container), natl::forward<ArgTypes>(args)...);
+	}
+
 	template<typename DynStringType, typename... ArgTypes>
 		requires(Formattable<ArgTypes, Ascii> && ...)
 	constexpr DynStringType format(ArgTypes&&... args) noexcept {
@@ -1126,7 +1132,6 @@ namespace natl {
 		}
 
 	};
-	//format(formatArgText<"1: standard", "2: fish", "t", FormatElement<1, >>(tuple, formatElement()));
 
 	template<typename CharType>
 	struct Formatter<TypeInfo, CharType> {
@@ -1172,6 +1177,26 @@ namespace natl {
 		template<typename OutputIter>
 		constexpr static OutputIter format(OutputIter outputIter, value_type = value_type{}) noexcept {
 			formatTypes(outputIter, MakeIndexSequence<value_type::size>{});
+			return outputIter;
+		}
+	};
+
+	template<typename ElementType, typename CharType>
+		requires(Formattable<ElementType, CharType>)
+	struct Formatter<ArrayView<ElementType>, CharType> {
+		using value_type = ArrayView<ElementType>;
+
+		template<typename OutputIter>
+		constexpr static OutputIter format(OutputIter outputIter, const value_type arrayView) noexcept {
+			outputIter = '{';
+			for (Size i = 0; i < arrayView.size(); i++) {
+				outputIter = MakeFormatter<ElementType, CharType>::template format<OutputIter>(outputIter, arrayView[i]);
+				if (i < arrayView.size() - 1) {
+					outputIter = ',';
+					outputIter = ' ';
+				}
+			}
+			outputIter = '}';
 			return outputIter;
 		}
 	};
