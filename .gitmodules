@@ -1,3 +1,3 @@
-[submodule "externals/nacmake"]
-	path = externals/nacmake
-	url = https://github.com/NovoAffectDev/nacmake
+[submodule "externals/nactemplate"]
+	path = externals/nactemplate
+	url = https://github.com/josiahlucerodev/nactemplate
