@@ -12,11 +12,11 @@ exe_emscripten_setup(${NatlTestName} TRUE)
 set_property(TARGET ${NatlTestName} PROPERTY CXX_STANDARD 20)
 set_property(TARGET ${NatlTestName} PROPERTY CXX_STANDARD_REQUIRED On)
 
-if(NACMAKE_PROFILE)
+if(NACTEMPLATE_PROFILE)
 	ENABLE_PROFILING(${NatlTestName})
 endif()
 
-if(NACMAKE_WARNINGS)
+if(NACTEMPLATE_WARNINGS)
 	ENABLE_WARNINGS(${NatlTestName} TRUE)
 endif()
 

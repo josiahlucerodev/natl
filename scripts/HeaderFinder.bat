@@ -1,1 +1,1 @@
-python.exe ../externals/nacmake/scripts/HeaderFinder.py %cd%/../natl
+python.exe ../externals/nactemplate/scripts/HeaderFinder.py %cd%/../natl

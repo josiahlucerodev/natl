@@ -6,12 +6,12 @@ project(natl)
 
 #DEPENDENCIES
 if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR) #IS ROOT
-	#NACMAKE
-	include(externals/nacmake/externals_nacmake.cmake)
+	#NACTEMPLATE
+	include(externals/nactemplate/externals_nactemplate.cmake)
 else()
-	#NACMAKE
-	if(NOT TARGET nacmake)
-		message(FATAL_ERROR "natl: requires nacmake")
+	#NACTEMPLATE
+	if(NOT TARGET nactemplate)
+		message(FATAL_ERROR "natl: requires nactemplate")
 	endif()
 endif()
 

@@ -725,7 +725,7 @@ namespace natl {
 						constexpr ConstAsciiStringView tflagName = TemplateFlag::toStringView();
 
 						if constexpr (tflagName.starts_with("p: ")) {
-							constexpr Size newPrecision = stringDecimalToInt(tflagName.substr(3));
+							constexpr Size newPrecision = stringDecimalToInt<Size>(tflagName.substr(3));
 							precision = newPrecision;
 						} else if constexpr (tflagName == "standard") {
 							floatFormat = FloatFormat::standard;

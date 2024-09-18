@@ -1,4 +1,4 @@
 ﻿{
   "version": 4,
-  "include": [ "externals/nacmake/presentsStandard.json" ]
+  "include": [ "externals/nactemplate/presentsStandard.json" ]
 }

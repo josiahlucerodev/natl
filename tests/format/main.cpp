@@ -24,7 +24,7 @@ static_assert(natl::sformat(natl::formatArgText<"Shorthand">(false)) == "F");
 static_assert(natl::sformat("Hello") == "Hello");
 
 //string view
-static_assert(natl::sformat(natl::AsciiStringView("Hello")) == "Hello");
+static_assert(natl::sformat(natl::ConstAsciiStringView("Hello")) == "Hello");
 static_assert(natl::sformat(natl::ConstAsciiStringView("Hello")) == "Hello");
 
 //string 
