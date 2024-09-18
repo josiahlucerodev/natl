@@ -14,11 +14,11 @@ This project (natl) provides a loose alternative implementation of the cpp progr
 
 Whats Provided:
 * Most Standard containers
-* Consetxpr implmentation of standard containers  
-* Units Libary 
-* Mathmatical functions 
-* Seralization api (work in progress)
-* SIMD api (work in progress)
+* Constexpr implementation of standard containers  
+* Units Library 
+* Mathematical functions 
+* Serialization API (work in progress)
+* SIMD API (work in progress)
 
 Supported Platforms 
 * windows + msvc
