@@ -1,4 +1,7 @@
 
+//std
+#include <cmath>
+
 //natl
 #include <natl/simd.h>
 #include <natl/util/typeInfo.h>
@@ -631,7 +634,7 @@ natl::Bool powerTests() noexcept {
 				nasimd::simd_square_root<DataType, SimdArchType>, 
 				nasimd::simd_mmasked_square_root<DataType, SimdArchType>,
 				nasimd::simd_mmasked_src_square_root<DataType, SimdArchType>,
-				std::sqrtf,
+				sqrtf,
 				0.0_f32, 1000.0_f32, 0.1_f32, 0.05_f32, 0.1_f32)
 		);
 
@@ -640,7 +643,7 @@ natl::Bool powerTests() noexcept {
 				nasimd::simd_reciprocal_square_root<DataType, SimdArchType>,
 				nasimd::simd_mmasked_reciprocal_square_root<DataType, SimdArchType>,
 				nasimd::simd_mmasked_src_reciprocal_square_root<DataType, SimdArchType>,
-				[](const natl::f32 value) -> natl::f32 { return 1.0_f32 / std::sqrtf(value); },
+				[](const natl::f32 value) -> natl::f32 { return 1.0_f32 / sqrtf(value); },
 				0.00001_f32, 1000.0_f32, 0.1_f32, 0.05_f32, 0.1_f32)
 		);
 
@@ -659,7 +662,7 @@ natl::Bool powerTests() noexcept {
 				nasimd::simd_square_root<DataType, SimdArchType>, 
 				nasimd::simd_mmasked_square_root<DataType, SimdArchType>,
 				nasimd::simd_mmasked_src_square_root<DataType, SimdArchType>,
-				std::sqrt,
+				sqrt,
 				0.0_f64, 1000.0_f64, 0.1_f64, 0.05_f64, 0.1_f64)
 		);
 
@@ -668,7 +671,7 @@ natl::Bool powerTests() noexcept {
 				nasimd::simd_reciprocal_square_root<DataType, SimdArchType>,
 				nasimd::simd_mmasked_reciprocal_square_root<DataType, SimdArchType>,
 				nasimd::simd_mmasked_src_reciprocal_square_root<DataType, SimdArchType>,
-				[](const natl::f64 value) -> natl::f64 { return 1.0 / std::sqrt(value); },
+				[](const natl::f64 value) -> natl::f64 { return 1.0 / sqrt(value); },
 				0.00001_f64, 1000.0_f64, 0.1_f64, 0.05_f64, 0.1_f64)
 		);
 

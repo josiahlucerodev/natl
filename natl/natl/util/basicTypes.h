@@ -23,10 +23,26 @@ namespace natl {
 	using f32 = float;
 	using f64 = double;
 
-	using UIntPtrSized = std::conditional_t<sizeof(void*) == 4, ui32, ui64>;
-
 	using Size = ui64;
-	using PtrDiff = std::ptrdiff_t;
+	using StdSize = std::size_t;
+
+	template<Size>
+	struct IntPtrSizedT;
+	template<> struct IntPtrSizedT<4> { using type = ui32; };
+	template<> struct IntPtrSizedT<8> { using type = ui64; };
+	using IntPtrSized = IntPtrSizedT<sizeof(void*)>::type;
+
+	template<Size>
+	struct UIntPtrSizedT;
+	template<> struct UIntPtrSizedT<4> { using type = ui32; };
+	template<> struct UIntPtrSizedT<8> { using type = ui64; };
+	using UIntPtrSized = UIntPtrSizedT<sizeof(void*)>::type;
+
+	namespace impl {
+		template<typename DataType> DataType ptrDiffDeclval() noexcept { return DataType(); }
+	}
+
+	using PtrDiff = decltype(impl::ptrDiffDeclval<char*>() - impl::ptrDiffDeclval<char*>());
 
 	using SChar = signed char;
 	using Char = char;

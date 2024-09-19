@@ -41,11 +41,11 @@ namespace natl {
 			constexpr callable_base* copyCallable(callable_base* location) const noexcept override {
 				if constexpr (IsCopyConstructible<Functor>) {
 					if (location) {
-						std::construct_at<Callable>(static_cast<Callable*>(location), functor);
+						natl::construct<Callable>(static_cast<Callable*>(location), functor);
 						return nullptr;
 					} else {
 						Callable* newCallable = Alloc::template rebind_alloc<Callable>::allocate(1);
-						std::construct_at<Callable>(newCallable, functor);
+						natl::construct<Callable>(newCallable, functor);
 						return static_cast<callable_base*>(newCallable);
 					}
 				} else {
@@ -54,18 +54,18 @@ namespace natl {
 			}
 			constexpr callable_base* moveCallable(callable_base* location) noexcept override {
 				if (location) {
-					std::construct_at<Callable>(static_cast<Callable*>(location), natl::move(functor));
+					natl::construct<Callable>(static_cast<Callable*>(location), natl::move(functor));
 					return nullptr;
 				} else {
 					Callable* newCallable = Alloc::template rebind_alloc<Callable>::allocate(1);
-					std::construct_at<Callable>(newCallable, natl::move(functor));
+					natl::construct<Callable>(newCallable, natl::move(functor));
 					return static_cast<callable_base*>(newCallable);
 				}
 			}
 			constexpr destory_function getDestoryFunction() const noexcept override {
 				return [](callable_base* location) noexcept -> void {
 					Callable* destoryCallable = static_cast<Callable*>(location);
-					std::destroy_at<Callable>(destoryCallable);
+					natl::deconstruct<Callable>(destoryCallable);
 					Alloc::template rebind_alloc<Callable>::deallocate(destoryCallable, 1);
 				};
 			}
@@ -110,7 +110,7 @@ namespace natl {
 					if constexpr (IsCopyConstructible<Functor>) {
 						using constexpr_callable_alloc = DefaultAllocator<ConstexprCallable>;
 						ConstexprCallable* newCallable = constexpr_callable_alloc::allocate(1);
-						std::construct_at<ConstexprCallable>(newCallable, static_cast<const ConstexprCallable*>(callableBase)->functor);
+						natl::construct<ConstexprCallable>(newCallable, static_cast<const ConstexprCallable*>(callableBase)->functor);
 
 						return static_cast<constexpr_callable_base*>(newCallable);
 					} else {
@@ -203,7 +203,7 @@ namespace natl {
 			constexpr void internalDeconstruct() noexcept {
 				switch (functionStorageType) {
 				case impl::FunctionStorageType::smallCallable:
-					std::destroy_at<callable_base>(reinterpret_cast<callable_base*>(smallCallableStorage));
+					natl::deconstruct<callable_base>(reinterpret_cast<callable_base*>(smallCallableStorage));
 					break;
 				case impl::FunctionStorageType::heapCallable: {
 					callable_destory_function destoryFunction = heapCallable->getDestoryFunction();
@@ -279,7 +279,7 @@ namespace natl {
 						break;
 					case impl::FunctionStorageType::constexprCallable:
 						if (isConstantEvaluated()) {
-							std::construct_at<constexpr_callable_base>(
+							natl::construct<constexpr_callable_base>(
 								&constexprCallable,
 								other.constexprCallable->getCopyFunctorStorageFunction()(other.constexprCallable));
 						} else {
@@ -322,7 +322,7 @@ namespace natl {
 						break;
 					case impl::FunctionStorageType::constexprCallable:
 						if (isConstantEvaluated()) {
-							std::construct_at<constexpr_callable_base*>(
+							natl::construct<constexpr_callable_base*>(
 								&constexprCallable,
 								other.constexprCallable);
 						} else {
@@ -349,22 +349,22 @@ namespace natl {
 						using constexpr_callable_type = impl::ConstexprCallable<Functor, ReturnType, ArgTypes...>;
 						using constexpr_callable_type_alloc = DefaultAllocator<constexpr_callable_type>;
 						constexpr_callable_type* newConstexprCallable = constexpr_callable_type_alloc::allocate(1);
-						std::construct_at<constexpr_callable_type>(newConstexprCallable, natl::move(functor));
+						natl::construct<constexpr_callable_type>(newConstexprCallable, natl::move(functor));
 
 						functionStorageType = impl::FunctionStorageType::constexprCallable;
-						std::construct_at<constexpr_callable_base*>(
+						natl::construct<constexpr_callable_base*>(
 							&constexprCallable,
 							static_cast<constexpr_callable_base*>(newConstexprCallable));
 					} else {
 						if constexpr (sizeof(FunctorCallableType) <= smallBufferSize) {
 							numberOfBytesUsed = TypeByteSize<FunctorCallableType>;
 							functionStorageType = impl::FunctionStorageType::smallCallable;
-							std::construct_at<FunctorCallableType, Functor>(reinterpret_cast<FunctorCallableType*>(smallCallableStorage), forward<Functor>(functor));
+							natl::construct<FunctorCallableType, Functor>(reinterpret_cast<FunctorCallableType*>(smallCallableStorage), forward<Functor>(functor));
 						} else {
 							numberOfBytesUsed = TypeByteSize<FunctorCallableType>;
 							functionStorageType = impl::FunctionStorageType::heapCallable;
 							FunctorCallableType* functorCallable = Alloc::template rebind_alloc<FunctorCallableType>::allocate(1);
-							std::construct_at<FunctorCallableType>(functorCallable, natl::move(functor));
+							natl::construct<FunctorCallableType>(functorCallable, natl::move(functor));
 							heapCallable = static_cast<callable_base*>(functorCallable);
 						}
 					}
@@ -1140,7 +1140,7 @@ namespace natl {
 			template<class Functor>
 				requires(HasFunctionSignature<Functor, ReturnType, ArgTypes...>)
 			constexpr FunctionRefBase& assign(Functor& functor) noexcept {
-				if constexpr(std::is_convertible_v<Functor, ReturnType(*)(ArgTypes...)>) {
+				if constexpr(IsConvertibleC<Functor, ReturnType(*)(ArgTypes...)>) {
 					functionPtr = functor;
 					functionRefStorageType = FunctionRefStorageType::functionPtr;
 					return self();
@@ -1150,14 +1150,14 @@ namespace natl {
 					using constexpr_callable_ref_type = ConstexprCallableRef<Functor, ReturnType, ArgTypes...>;
 					using constexpr_callable_ref_type_alloc = DefaultAllocator<constexpr_callable_ref_type>;
 					constexpr_callable_ref_type* constexprCallableRefType = constexpr_callable_ref_type_alloc::allocate(1);
-					std::construct_at<constexpr_callable_ref_type>(constexprCallableRefType, functor);
+					natl::construct<constexpr_callable_ref_type>(constexprCallableRefType, functor);
 
 					functionRefStorageType = FunctionRefStorageType::constexprCallableRef;
-					std::construct_at<constexpr_callable_ref_base>(&constexprCallableRef, static_cast<constexpr_callable_ref_base*>(constexprCallableRefType));
+					natl::construct<constexpr_callable_ref_base>(&constexprCallableRef, static_cast<constexpr_callable_ref_base*>(constexprCallableRefType));
 				} else {
 					using FunctorCallableRefType = CallableRef<Functor, ReturnType, ArgTypes...>;
 					functionRefStorageType = FunctionRefStorageType::callableRef;
-					std::construct_at<FunctorCallableRefType, Functor&>(reinterpret_cast<FunctorCallableRefType*>(callableRefStorage), functor);
+					natl::construct<FunctorCallableRefType, Functor&>(reinterpret_cast<FunctorCallableRefType*>(callableRefStorage), functor);
 				}
 				return self();
 			}

@@ -1,8 +1,5 @@
 #pragma once 
 
-//std
-#include <cstdint>
-
 //own
 #include "../util/hash.h"
 #include "../util/iterators.h"
@@ -51,6 +48,7 @@ namespace natl {
 	public:
 		using iterator_traits = DefaultIteratorTraits<typename entry_type::value_type>;
 		using entry_iterator_traits = DefaultIteratorTraits<entry_type>;
+		using iterator_category = BidirectionalIteratorTag;
 
 		using value_type = iterator_traits::value_type;
 		using reference = iterator_traits::reference;

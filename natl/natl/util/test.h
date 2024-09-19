@@ -21,23 +21,23 @@ namespace natl {
 	class TestTypeStdOut {
 	public:
 		//constructor
-		TestTypeStdOut() noexcept { std::cout << "default constructed\n"; }
-		TestTypeStdOut(TestTypeStdOut&) noexcept { std::cout << "ref constructed\n"; }
-		TestTypeStdOut(const TestTypeStdOut&) noexcept { std::cout << "const ref constructed\n"; }
-		TestTypeStdOut(TestTypeStdOut&&) noexcept { std::cout << "moved constructed\n"; }
-		TestTypeStdOut(const TestTypeStdOut&&) noexcept { std::cout << "const moved constructed\n"; }
+		TestTypeStdOut() noexcept { natl::print("default constructed"); }
+		TestTypeStdOut(TestTypeStdOut&) noexcept { natl::println("ref constructed"); }
+		TestTypeStdOut(const TestTypeStdOut&) noexcept { natl::println("const ref constructed"); }
+		TestTypeStdOut(TestTypeStdOut&&) noexcept { natl::println("moved constructed"); }
+		TestTypeStdOut(const TestTypeStdOut&&) noexcept { natl::println("const moved constructed"); }
 
 		//destructor 
-		~TestTypeStdOut() noexcept { std::cout << "destructed\n"; }
+		~TestTypeStdOut() noexcept { natl::println("destructed\n"); }
 
 		//util
 		constexpr TestTypeStdOut& self() { return *this; }
 
 		//assignment 
-		TestTypeStdOut& operator=(TestTypeStdOut&) { std::cout << "ref assigned\n"; return self(); }
-		TestTypeStdOut& operator=(const TestTypeStdOut&) { std::cout << "const ref assigned\n"; return self(); }
-		TestTypeStdOut& operator=(TestTypeStdOut&&) noexcept { std::cout << "moved assigned\n"; return self(); }
-		TestTypeStdOut& operator=(const TestTypeStdOut&&) noexcept { std::cout << "const moved assigned\n"; return self(); }
+		TestTypeStdOut& operator=(TestTypeStdOut&) { natl::println("ref assigned"); return self(); }
+		TestTypeStdOut& operator=(const TestTypeStdOut&) { natl::println("const ref assigned"); return self(); }
+		TestTypeStdOut& operator=(TestTypeStdOut&&) noexcept { natl::println("moved assigned"); return self(); }
+		TestTypeStdOut& operator=(const TestTypeStdOut&&) noexcept { natl::println("const moved assigned"); return self(); }
 	};
 	//custom 
 	class TestTypeCustomTrivialStdOut {
@@ -54,23 +54,23 @@ namespace natl {
 		constexpr static Bool triviallyConstRefAssignable = true;
 
 		//constructor
-		TestTypeCustomTrivialStdOut() noexcept : addressableData(0) { std::cout << "default constructed\n"; }
-		TestTypeCustomTrivialStdOut(TestTypeCustomTrivialStdOut&) noexcept : addressableData(0) { std::cout << "ref constructed\n"; }
-		TestTypeCustomTrivialStdOut(const TestTypeCustomTrivialStdOut&) noexcept : addressableData(0) { std::cout << "const ref constructed\n"; }
-		TestTypeCustomTrivialStdOut(TestTypeCustomTrivialStdOut&&) noexcept : addressableData(0) { std::cout << "moved constructed\n"; }
-		TestTypeCustomTrivialStdOut(const TestTypeCustomTrivialStdOut&&) noexcept : addressableData(0) { std::cout << "const moved constructed\n"; }
+		TestTypeCustomTrivialStdOut() noexcept : addressableData(0) { natl::println("default constructed"); }
+		TestTypeCustomTrivialStdOut(TestTypeCustomTrivialStdOut&) noexcept : addressableData(0) { natl::println("ref constructed"); }
+		TestTypeCustomTrivialStdOut(const TestTypeCustomTrivialStdOut&) noexcept : addressableData(0) { natl::println("const ref constructed"); }
+		TestTypeCustomTrivialStdOut(TestTypeCustomTrivialStdOut&&) noexcept : addressableData(0) { natl::println("moved constructed"); }
+		TestTypeCustomTrivialStdOut(const TestTypeCustomTrivialStdOut&&) noexcept : addressableData(0) { natl::println("const moved constructed"); }
 
 		//destructor 
-		~TestTypeCustomTrivialStdOut() noexcept { std::cout << "destructed\n"; }
+		~TestTypeCustomTrivialStdOut() noexcept { natl::println("destructed"); }
 
 		//util
 		constexpr TestTypeCustomTrivialStdOut& self() { return *this; }
 
 		//assignment 
-		TestTypeCustomTrivialStdOut& operator=(TestTypeCustomTrivialStdOut&) { std::cout << "ref assigned\n"; return self(); }
-		TestTypeCustomTrivialStdOut& operator=(const TestTypeCustomTrivialStdOut&) { std::cout << "const ref assigned\n"; return self(); }
-		TestTypeCustomTrivialStdOut& operator=(TestTypeCustomTrivialStdOut&&) noexcept { std::cout << "moved assigned\n"; return self(); }
-		TestTypeCustomTrivialStdOut& operator=(const TestTypeCustomTrivialStdOut&&) noexcept { std::cout << "const moved assigned\n"; return self(); }
+		TestTypeCustomTrivialStdOut& operator=(TestTypeCustomTrivialStdOut&) { natl::println("ref assigned"); return self(); }
+		TestTypeCustomTrivialStdOut& operator=(const TestTypeCustomTrivialStdOut&) { natl::println("const ref assigned"); return self(); }
+		TestTypeCustomTrivialStdOut& operator=(TestTypeCustomTrivialStdOut&&) noexcept { natl::println("moved assigned"); return self(); }
+		TestTypeCustomTrivialStdOut& operator=(const TestTypeCustomTrivialStdOut&&) noexcept { natl::println("const moved assigned"); return self(); }
 
 		//element access 
 		const ui8* getAddress() const noexcept { return &addressableData; }

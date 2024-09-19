@@ -66,8 +66,8 @@ namespace natl {
     template <typename FromTag, typename ToTag, typename FromDataType, typename ToDataType>
         requires(IsUnitTag<FromTag> 
             && IsUnitTag<ToTag> 
-            && std::is_same_v<typename FromTag::tag_group, typename ToTag::tag_group>
-            && std::is_same_v<typename FromTag::tag_group::group_type, StrongUnitGroupTypeMagnitude>)
+            && IsSameC<typename FromTag::tag_group, typename ToTag::tag_group>
+            && IsSameC<typename FromTag::tag_group::group_type, StrongUnitGroupTypeMagnitude>)
         struct StrongUnitConversionFactor<FromTag, ToTag, FromDataType, ToDataType> {
 
         static_assert(DoesNotUnitConvertRequireFloat<FromTag, ToTag, ToDataType>, "converting down requires a base float type");
@@ -292,13 +292,13 @@ namespace natl {
         struct CalculateMagnitudeTypePack {};
         template <typename TargetUnit, typename... UnitTypes>
         struct CalculateMagnitudeTypePack<TargetUnit, TypePack<UnitTypes...>> {
-            constexpr static SSize magnitude = TargetUnit::magnitude + ((static_cast<SSize>(std::is_same_v<typename TargetUnit::unit_tag, typename UnitTypes::unit_tag>) * UnitTypes::magnitude) + ...);
+            constexpr static SSize magnitude = TargetUnit::magnitude + ((static_cast<SSize>(IsSameC<typename TargetUnit::unit_tag, typename UnitTypes::unit_tag>) * UnitTypes::magnitude) + ...);
         };
 
         template<typename LhsUnit, typename RhsUnit>
         struct StructSameUnitGroupError {
-            constexpr static Bool value = !(!std::is_same_v<typename LhsUnit::unit_tag, typename RhsUnit::unit_tag> &&
-                std::is_same_v<typename LhsUnit::unit_tag::tag_group, typename RhsUnit::unit_tag::tag_group>);
+            constexpr static Bool value = !(!IsSameC<typename LhsUnit::unit_tag, typename RhsUnit::unit_tag> &&
+                IsSameC<typename LhsUnit::unit_tag::tag_group, typename RhsUnit::unit_tag::tag_group>);
         };
 
 
@@ -308,7 +308,7 @@ namespace natl {
         struct CalculateMagnitudeSubTypePack<TargetUnit, TypePack<UnitTypes...>> {
             static_assert((StructSameUnitGroupError<TargetUnit, UnitTypes>::value || ...),
                 "natl: Unit div - doing an operation with a unit form the same group but of differnt type. Requires conversion");
-            constexpr static SSize magnitude = TargetUnit::magnitude - ((static_cast<SSize>(std::is_same_v<typename TargetUnit::unit_tag, typename UnitTypes::unit_tag>) * UnitTypes::magnitude) + ...);
+            constexpr static SSize magnitude = TargetUnit::magnitude - ((static_cast<SSize>(IsSameC<typename TargetUnit::unit_tag, typename UnitTypes::unit_tag>) * UnitTypes::magnitude) + ...);
         };
 
         template <typename... UnitTypes>
@@ -317,7 +317,7 @@ namespace natl {
         struct CalculateConversionFactor<TargetUnit, TypePack<UnitTypes...>> {
             static_assert((StructSameUnitGroupError<TargetUnit, UnitTypes>::value || ...),
                 "natl: Unit div - doing an operation with a unit form the same group but of differnt type. Requires conversion");
-            constexpr static SSize magnitude = TargetUnit::magnitude - ((static_cast<SSize>(std::is_same_v<typename TargetUnit::unit_tag, typename UnitTypes::unit_tag>) * UnitTypes::magnitude) + ...);
+            constexpr static SSize magnitude = TargetUnit::magnitude - ((static_cast<SSize>(IsSameC<typename TargetUnit::unit_tag, typename UnitTypes::unit_tag>) * UnitTypes::magnitude) + ...);
         };
         
         template<typename TransfromUnit, typename UnitTypePack>
@@ -334,7 +334,7 @@ namespace natl {
         struct UnitCompare {
             static_assert(StructSameUnitGroupError<LhsUnit, RhsUnit>::value,
                 "natl: Unit mul - doing an operation with a unit form the same group but of differnt type. Requires conversion");
-            constexpr static Bool value = std::is_same_v<typename LhsUnit::unit_tag, typename RhsUnit::unit_tag>;
+            constexpr static Bool value = IsSameC<typename LhsUnit::unit_tag, typename RhsUnit::unit_tag>;
         };
 
         template<typename TestUnit>
@@ -366,7 +366,7 @@ namespace natl {
         struct UnitValueGroupCompare {
             using LhsUnitTag = LhsUnit::unit_tag;
             using RhsUnitTag = RhsUnit::unit_tag;
-            constexpr static Bool value = std::is_same_v<typename LhsUnitTag::tag_group, typename RhsUnitTag::tag_group>;
+            constexpr static Bool value = IsSameC<typename LhsUnitTag::tag_group, typename RhsUnitTag::tag_group>;
         };
     public:
         template<typename TransfromUnit, typename UnitTypePack>

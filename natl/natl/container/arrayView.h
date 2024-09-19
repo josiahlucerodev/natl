@@ -27,7 +27,7 @@ namespace natl {
 		using const_pointer = const DataType*;
 		using optional_pointer = Option<DataType*>;
 		using optional_const_pointer = Option<const DataType*>;
-		using difference_type = std::ptrdiff_t;
+		using difference_type = PtrDiff;
 		using size_type = Size;
 
 		using iterator = RandomAccessIterator<DataType>;
@@ -51,7 +51,7 @@ namespace natl {
 		constexpr ArrayView(const ArrayView& other) noexcept requires(IsConst<DataType>) : dataPtr(other.data()), arraySize(other.size()) {}
 		constexpr ArrayView(std::initializer_list<DataType> initList) noexcept requires(IsConst<DataType>) : dataPtr(initList.begin()), arraySize(initList.size()) {}
 		template<class ArrayViewLike>
-			requires(!std::is_same_v<ArrayViewLike, std::initializer_list<DataType>>&& IsArrayViewLike<ArrayViewLike, DataType>)
+			requires(!IsSameC<ArrayViewLike, std::initializer_list<DataType>>&& IsArrayViewLike<ArrayViewLike, DataType>)
 		constexpr ArrayView(const ArrayViewLike& arrayViewLike) noexcept requires(IsConst<DataType>) : dataPtr(arrayViewLike.data()), arraySize(arrayViewLike.size()) {}
 
 		//destructor
@@ -210,7 +210,7 @@ namespace natl {
 			return lhs == ArrayView<const DataType>(rhs.data(), rhs.size());
 		}
 		template<class ArrayViewLike>
-			requires(std::is_convertible_v<ArrayViewLike, ArrayView<const DataType>> && !IsArrayViewLike<ArrayViewLike, const DataType>)
+			requires(IsConvertible<ArrayViewLike, ArrayView<const DataType>> && !IsArrayViewLike<ArrayViewLike, const DataType>)
 		friend constexpr Bool operator==(const ArrayView& lhs, const ArrayViewLike& rhs) noexcept {
 			return lhs == static_cast<const ArrayView<DataType>>(rhs);
 		}
@@ -233,7 +233,7 @@ namespace natl {
 			return lhs != ArrayView<const DataType>(rhs.data(), rhs.size());
 		}
 		template<class ArrayViewLike>
-			requires(std::is_convertible_v<ArrayViewLike, ArrayView<const DataType>> && !IsArrayViewLike<ArrayViewLike, const DataType>)
+			requires(IsConvertibleC<ArrayViewLike, ArrayView<const DataType>> && !IsArrayViewLike<ArrayViewLike, const DataType>)
 		friend constexpr Bool operator!=(const ArrayView& lhs, const ArrayViewLike& rhs) noexcept {
 			return lhs != static_cast<const ArrayView<DataType>>(rhs);
 		}
@@ -256,7 +256,7 @@ namespace natl {
 			return lhs < ArrayView<const DataType>(rhs.data(), rhs.size());
 		}
 		template<class ArrayViewLike>
-			requires(std::is_convertible_v<ArrayViewLike, ArrayView<const DataType>> && !IsArrayViewLike<ArrayViewLike, const DataType>)
+			requires(IsConvertibleC<ArrayViewLike, ArrayView<const DataType>> && !IsArrayViewLike<ArrayViewLike, const DataType>)
 		friend constexpr Bool operator<(const ArrayView& lhs, const ArrayViewLike& rhs) noexcept {
 			return lhs < static_cast<const ArrayView<DataType>>(rhs);
 		}
@@ -279,7 +279,7 @@ namespace natl {
 			return lhs <= ArrayView<const DataType>(rhs.data(), rhs.size());
 		}
 		template<class ArrayViewLike>
-			requires(std::is_convertible_v<ArrayViewLike, ArrayView<const DataType>> && !IsArrayViewLike<ArrayViewLike, const DataType>)
+			requires(IsConvertibleC<ArrayViewLike, ArrayView<const DataType>> && !IsArrayViewLike<ArrayViewLike, const DataType>)
 		friend constexpr Bool operator<=(const ArrayView& lhs, const ArrayViewLike& rhs) noexcept {
 			return lhs <= static_cast<const ArrayView<DataType>>(rhs);
 		}
@@ -302,7 +302,7 @@ namespace natl {
 			return lhs > ArrayView<const DataType>(rhs.data(), rhs.size());
 		}
 		template<class ArrayViewLike>
-			requires(std::is_convertible_v<ArrayViewLike, ArrayView<const DataType>> && !IsArrayViewLike<ArrayViewLike, const DataType>)
+			requires(IsConvertibleC<ArrayViewLike, ArrayView<const DataType>> && !IsArrayViewLike<ArrayViewLike, const DataType>)
 		friend constexpr Bool operator>(const ArrayView& lhs, const ArrayViewLike& rhs) noexcept {
 			return lhs > static_cast<const ArrayView<DataType>>(rhs);
 		}
@@ -325,7 +325,7 @@ namespace natl {
 			return lhs >= ArrayView<const DataType>(rhs.data(), rhs.size());
 		}
 		template<class ArrayViewLike>
-			requires(std::is_convertible_v<ArrayViewLike, ArrayView<const DataType>> && !IsArrayViewLike<ArrayViewLike, const DataType>)
+			requires(IsConvertibleC<ArrayViewLike, ArrayView<const DataType>> && !IsArrayViewLike<ArrayViewLike, const DataType>)
 		friend constexpr Bool operator>=(const ArrayView& lhs, const ArrayViewLike& rhs) noexcept {
 			return lhs >= static_cast<const ArrayView<DataType>>(rhs);
 		}
@@ -348,7 +348,7 @@ namespace natl {
 			return lhs <=> ArrayView<const DataType>(rhs.data(), rhs.size());
 		}
 		template<class ArrayViewLike>
-			requires(std::is_convertible_v<ArrayViewLike, ArrayView<const DataType>> && !IsArrayViewLike<ArrayViewLike, const DataType>)
+			requires(IsConvertibleC<ArrayViewLike, ArrayView<const DataType>> && !IsArrayViewLike<ArrayViewLike, const DataType>)
 		friend constexpr StrongOrdering operator<=>(const ArrayView& lhs, const ArrayViewLike& rhs) noexcept {
 			return lhs <=> static_cast<const ArrayView<DataType>>(rhs);
 		}
@@ -362,7 +362,7 @@ namespace natl {
 		HasIteratorType<Container> &&
 		HasBeginIteratorToPtr<Container> &&
 		HasSizeMethod<Container> &&
-		std::random_access_iterator<typename Container::iterator>;
+		IsRandomAccessIterator<typename Container::iterator>;
 
 	template<class Container>
 		requires(IsArrayViewLike<Container, typename Container::value_type>)
@@ -460,7 +460,7 @@ namespace natl {
 					for (Size j = 0; j < i; ++j) {
 						mul *= spatialRegions[j].size;
 					}
-					index += (std::min<Size>(indexes[i], spatialRegions[i].extent) + spatialRegions[i].offset) * mul;
+					index += (natl::min<Size>(indexes[i], spatialRegions[i].extent) + spatialRegions[i].offset) * mul;
 				}
 				return index;
 			}
@@ -489,7 +489,7 @@ namespace natl {
 				return spatialRegions[dimensionIndex].extent;
 			}
 			constexpr Size dimensionSize(const Size index) const noexcept {
-				return spatialRegions[std::min<Size>(index, numberOfDimension())].extent;
+				return spatialRegions[natl::min<Size>(index, numberOfDimension())].extent;
 			}
 			constexpr Size size() noexcept {
 				Size calculatedSize = 1;
@@ -535,7 +535,7 @@ namespace natl {
 
 		template <typename DataType, typename Seq> struct OffsetsMDArrayViewImpl;
 		template <typename DataType, Size... Is>
-		struct OffsetsMDArrayViewImpl<DataType, std::index_sequence<Is...>> {
+		struct OffsetsMDArrayViewImpl<DataType, IndexSequence<Is...>> {
 			using OffsetsMDArrayViewType = 
 				OffsetMDArrayViewDimensions<
 				DataType, 
@@ -642,7 +642,7 @@ namespace natl {
 				return dimensionsSizes[dimensionIndex];
 			}
 			constexpr Size dimensionSize(const Size index) const noexcept {
-				return dimensionsSizes[std::min<Size>(index, numberOfDimension())];
+				return dimensionsSizes[natl::min<Size>(index, numberOfDimension())];
 			}
 			constexpr Size size() noexcept {
 				Size calculatedSize = 1;
@@ -668,7 +668,7 @@ namespace natl {
 
 		template <typename DataType, typename Seq> struct MDArrayViewImpl;
 		template <typename DataType, Size... Is>
-		struct MDArrayViewImpl<DataType, std::index_sequence<Is...>> {
+		struct MDArrayViewImpl<DataType, IndexSequence<Is...>> {
 			using OffsetsMDArrayViewType =
 				MDArrayViewDimensions<
 				DataType,
@@ -678,7 +678,7 @@ namespace natl {
 	}
 
 	template <typename DataType, Size DimensionNumber>
-	class OffsetsMDArrayView : public impl::OffsetsMDArrayViewImpl<DataType, std::make_index_sequence<DimensionNumber>>::OffsetsMDArrayViewType {
+	class OffsetsMDArrayView : public impl::OffsetsMDArrayViewImpl<DataType, MakeIndexSequence<DimensionNumber>>::OffsetsMDArrayViewType {
 	public:
 		using value_type = DataType;
 		using reference = DataType&;
@@ -690,7 +690,7 @@ namespace natl {
 		using difference_type = PtrDiff;
 		using size_type = Size;
 
-		using OffsetsMDArrayViewImplType = impl::OffsetsMDArrayViewImpl<DataType, std::make_index_sequence<DimensionNumber>>::OffsetsMDArrayViewType;
+		using OffsetsMDArrayViewImplType = impl::OffsetsMDArrayViewImpl<DataType, MakeIndexSequence<DimensionNumber>>::OffsetsMDArrayViewType;
 		using BaseArrayView = OffsetsMDArrayViewImplType::BaseArrayView;
 	public:
 		//movement info  
@@ -717,7 +717,7 @@ namespace natl {
 	};
 
 	template <typename DataType, Size DimensionNumber>
-	class MDArrayView : public impl::MDArrayViewImpl<DataType, std::make_index_sequence<DimensionNumber>>::MDArrayViewType {
+	class MDArrayView : public impl::MDArrayViewImpl<DataType, MakeIndexSequence<DimensionNumber>>::MDArrayViewType {
 	public:
 		using value_type = DataType;
 		using reference = DataType&;
@@ -729,7 +729,7 @@ namespace natl {
 		using difference_type = PtrDiff;
 		using size_type = Size;
 
-		using MDArrayViewImplType = impl::MDArrayViewImpl<DataType, std::make_index_sequence<DimensionNumber>>::MDArrayViewType;
+		using MDArrayViewImplType = impl::MDArrayViewImpl<DataType, MakeIndexSequence<DimensionNumber>>::MDArrayViewType;
 		using BaseArrayView = MDArrayViewImplType::BaseArrayView;
 	public:
 		//movement info  

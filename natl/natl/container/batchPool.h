@@ -41,7 +41,7 @@ namespace natl {
 			}
 		};
 
-		template<class DataType, typename BatchDynArray, std::size_t BatchSize = 100>
+		template<class DataType, typename BatchDynArray, Size BatchSize = 100>
 		class BatchHeapBase {
 		private:
 			BatchPoolBase<DataType, BatchDynArray, BatchSize> pool;
@@ -59,7 +59,7 @@ namespace natl {
 				}
 				freeSlots.reserve(pool.size() + BatchSize);
 
-				for (std::size_t i = 0; i < BatchSize; i++) {
+				for (Size i = 0; i < BatchSize; i++) {
 					freeSlots.push_back(pool.newElement());
 				}
 			}
@@ -70,8 +70,8 @@ namespace natl {
 				freeSlots.pop_back();
 				return element;
 			};
-			constexpr inline std::size_t capacity() noexcept { return pool.capacity(); }
-			constexpr inline std::size_t size() noexcept { return pool.size(); }
+			constexpr inline Size capacity() noexcept { return pool.capacity(); }
+			constexpr inline Size size() noexcept { return pool.size(); }
 		};
 	}
 

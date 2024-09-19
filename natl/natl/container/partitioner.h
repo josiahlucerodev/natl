@@ -84,15 +84,15 @@ namespace natl {
 	};
 
 
-	inline std::size_t alignmentOffset(std::uint8_t* ptr, std::size_t alignment) noexcept {
-		std::size_t offset = static_cast<std::size_t>(reinterpret_cast<std::uintptr_t>(ptr) & (alignment - 1));
+	inline Size alignmentOffset(ui8* ptr, Size alignment) noexcept {
+		Size offset = static_cast<Size>(reinterpret_cast<UIntPtrSized>(ptr) & (alignment - 1));
 		if (offset != 0) { offset = alignment - offset; }// number of bytes to skip 
 		return offset;
 	}
 
 	template<class Alloc>
 		requires(IsAllocator<Alloc>)
-	class DynamicBytePartitioner : public DynamicPartitioner<std::uint8_t, Alloc> {
+	class DynamicBytePartitioner : public DynamicPartitioner<ui8, Alloc> {
 		using allocator_type = Alloc;
 
 		using value_type = typename Alloc::value_type;
@@ -121,7 +121,7 @@ namespace natl {
 		constexpr static Bool triviallyConstRefConstructedable = false;
 		constexpr static Bool triviallyMoveConstructedable = false;
 	public:
-		DynamicBytePartitioner() : DynamicPartitioner<std::uint8_t, Alloc>() {}
+		DynamicBytePartitioner() : DynamicPartitioner<ui8, Alloc>() {}
 	public:
 		template<class value_type>
 		ArrayView<value_type> newPartition(const size_type partiationSize) noexcept {
@@ -131,8 +131,8 @@ namespace natl {
 				return ArrayView<value_type>(nullptr, 0);
 			}
 
-			DynamicPartitioner<std::uint8_t, Alloc>& castSelf = *static_cast<DynamicPartitioner<std::uint8_t, Alloc>*>(this);
-			ArrayView<std::uint8_t> bytePartition = castSelf.newPartition(partiationByteSize);
+			DynamicPartitioner<ui8, Alloc>& castSelf = *static_cast<DynamicPartitioner<ui8, Alloc>*>(this);
+			ArrayView<ui8> bytePartition = castSelf.newPartition(partiationByteSize);
 			ArrayView<value_type> partition(static_cast<pointer>(static_cast<void*>(bytePartition.at(offset))), partiationSize);
 			return partition;
 		}
@@ -140,7 +140,7 @@ namespace natl {
 
 	template<class value_type>
 	class SubPartitioner {
-		using size_type = std::size_t;
+		using size_type = Size;
 	private:
 		ArrayView<value_type> partition;
 		size_type partitionIndex;

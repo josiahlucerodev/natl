@@ -1,4 +1,7 @@
 
+//std
+#include <cmath>
+
 //natl
 #include <natl/math.h>
 #include <natl/system/timer.h>
@@ -373,9 +376,9 @@ natl::Bool testMathFunctionF64(
 natl::Bool basicSqrtImplSTest() noexcept {
 	using namespace natl::literals;
 	natl::Bool successful = true;
-	successful &= testMathFunctionF32("basicSqrtF32ImplS", natlm::impl::basicSqrtF32ImplS, std::sqrtf,
+	successful &= testMathFunctionF32("basicSqrtF32ImplS", natlm::impl::basicSqrtF32ImplS, sqrtf,
 		0.0_f32, natl::f32(10000), 0.1_f32, 0.05_f32, 0.1_f32);
-	successful &= testMathFunctionF64("basicSqrtF64ImplS", natlm::impl::basicSqrtF64ImplS, std::sqrt,
+	successful &= testMathFunctionF64("basicSqrtF64ImplS", natlm::impl::basicSqrtF64ImplS, sqrt,
 		0.0_f64, natl::f64(10000), 0.1_f64, 0.05_f64, 0.1_f64);
 	return successful;
 }
@@ -383,9 +386,9 @@ natl::Bool basicSqrtImplSTest() noexcept {
 natl::Bool sqrtImplSTest() noexcept {
 	using namespace natl::literals;
 	natl::Bool successful = true;
-	successful &= testMathFunctionF32("sqrtF32ImplS", natlm::impl::sqrtF32ImplS, std::sqrtf,
+	successful &= testMathFunctionF32("sqrtF32ImplS", natlm::impl::sqrtF32ImplS, sqrtf,
 		0.0_f32, 1000.0_f32, 0.1_f32, 0.05_f32, 0.1_f32);
-	successful &= testMathFunctionF64("sqrtF64ImplS", natlm::impl::sqrtF64ImplS, std::sqrt,
+	successful &= testMathFunctionF64("sqrtF64ImplS", natlm::impl::sqrtF64ImplS, sqrt,
 		0.0_f64, 1000.0_f64, 0.1_f64, 0.05_f64, 0.1_f64);
 	return successful;
 }
@@ -393,9 +396,9 @@ natl::Bool sqrtImplSTest() noexcept {
 natl::Bool basicSqrtTest() noexcept {
 	using namespace natl::literals;
 	natl::Bool successful = true;
-	successful &= testMathFunctionF32("basicSqrtF32", natlm::basicSqrtF32, std::sqrtf,
+	successful &= testMathFunctionF32("basicSqrtF32", natlm::basicSqrtF32, sqrtf,
 		0.0_f32, 1000.0_f32, 0.1_f32, 0.05_f32, 0.1_f32);
-	successful &= testMathFunctionF64("basicSqrtF64", natlm::basicSqrtF64, std::sqrt,
+	successful &= testMathFunctionF64("basicSqrtF64", natlm::basicSqrtF64, sqrt,
 		0.0_f64, 1000.0_f64, 0.1_f64, 0.05_f64, 0.1_f64);
 	return successful;
 }
@@ -403,9 +406,9 @@ natl::Bool basicSqrtTest() noexcept {
 natl::Bool sqrtTest() noexcept {
 	using namespace natl::literals;
 	natl::Bool successful = true;
-	successful &= testMathFunctionF32("sqrtF32", natlm::sqrtF32, std::sqrtf,
+	successful &= testMathFunctionF32("sqrtF32", natlm::sqrtF32, sqrtf,
 		0.0_f32, 1000.0_f32, 0.1_f32, 0.05_f32, 0.1_f32);
-	successful &= testMathFunctionF64("sqrtF64", natlm::sqrtF64, std::sqrt,
+	successful &= testMathFunctionF64("sqrtF64", natlm::sqrtF64, sqrt,
 		0.0_f64, 1000.0_f64, 0.1_f64, 0.05_f64, 0.1_f64);
 	return successful;
 }
@@ -414,10 +417,10 @@ natl::Bool basicRsqrtImplSTest() noexcept {
 	using namespace natl::literals;
 	natl::Bool successful = true;
 	successful &= testMathFunctionF32("basicRsqrtF32ImplS", natlm::impl::basicRsqrtF32ImplS, 
-		[](const natl::f32 value) -> natl::f32 { return 1.0_f32 / std::sqrtf(value); },
+		[](const natl::f32 value) -> natl::f32 { return 1.0_f32 / sqrtf(value); },
 		0.00001_f32, 1000.0_f32, 0.1_f32, 0.05_f32, 0.1_f32);
 	successful &= testMathFunctionF64("basicRsqrtF64ImplS", natlm::impl::basicRsqrtF64ImplS, 
-		[](const natl::f64 value) -> natl::f64 { return 1.0 / std::sqrt(value); },
+		[](const natl::f64 value) -> natl::f64 { return 1.0 / sqrt(value); },
 		0.00001_f64, 1000.0_f64, 0.1_f64, 0.05_f64, 0.1_f64);
 	return successful;
 }
@@ -426,10 +429,10 @@ natl::Bool rsqrtImplSTest() noexcept {
 	using namespace natl::literals;
 	natl::Bool successful = true;
 	successful &= testMathFunctionF32("rsqrtF32ImplS", natlm::impl::rsqrtF32ImplS,
-		[](const natl::f32 value) -> natl::f32 { return 1.0_f32 / std::sqrtf(value); },
+		[](const natl::f32 value) -> natl::f32 { return 1.0_f32 / sqrtf(value); },
 		0.00001_f32, 1000.0_f32, 0.1_f32, 0.05_f32, 0.1_f32);
 	successful &= testMathFunctionF64("rsqrtF64ImplS", natlm::impl::rsqrtF64ImplS,
-		[](const natl::f64 value) -> natl::f64 { return 1.0 / std::sqrt(value); },
+		[](const natl::f64 value) -> natl::f64 { return 1.0 / sqrt(value); },
 		0.00001_f64, 1000.0_f64, 0.1_f64, 0.05_f64, 0.1_f64);
 	return successful;
 }
@@ -438,10 +441,10 @@ natl::Bool basicRsqrtTest() noexcept {
 	using namespace natl::literals;
 	natl::Bool successful = true;
 	successful &= testMathFunctionF32("basicRsqrtF32", natlm::basicRsqrtF32,
-		[](const natl::f32 value) -> natl::f32 { return 1.0_f32 / std::sqrtf(value); },
+		[](const natl::f32 value) -> natl::f32 { return 1.0_f32 / sqrtf(value); },
 		0.00001_f32, 1000.0_f32, 0.1_f32, 0.05_f32, 0.1_f32);
 	successful &= testMathFunctionF64("basicRsqrtF64", natlm::basicRsqrtF64,
-		[](const natl::f64 value) -> natl::f64 { return 1.0 / std::sqrt(value); },
+		[](const natl::f64 value) -> natl::f64 { return 1.0 / sqrt(value); },
 		0.00001_f64, 1000.0_f64, 0.1_f64, 0.05_f64, 0.1_f64);
 	return successful;
 }
@@ -450,10 +453,10 @@ natl::Bool rsqrtTest() noexcept {
 	using namespace natl::literals;
 	natl::Bool successful = true;
 	successful &= testMathFunctionF32("rsqrtF32", natlm::rsqrtF32,
-		[](const natl::f32 value) -> natl::f32 { return 1.0_f32 / std::sqrtf(value); },
+		[](const natl::f32 value) -> natl::f32 { return 1.0_f32 / sqrtf(value); },
 		0.00001_f32, 1000.0_f32, 0.1_f32, 0.05_f32, 0.1_f32);
 	successful &= testMathFunctionF64("rsqrtF64", natlm::rsqrtF64,
-		[](const natl::f64 value) -> natl::f64 { return 1.0 / std::sqrt(value); },
+		[](const natl::f64 value) -> natl::f64 { return 1.0 / sqrt(value); },
 		0.00001_f64, 1000.0_f64, 0.1_f64, 0.05_f64, 0.1_f64);
 	return successful;
 }
@@ -474,9 +477,9 @@ natl::Bool powerTests() noexcept {
 natl::Bool basicExpDivTest() noexcept {
 	using namespace natl::literals;
 	natl::Bool successful = true;
-	successful &= testMathFunctionF32("basicExpDivF32", natlm::basicExpDivF32, std::expf,
+	successful &= testMathFunctionF32("basicExpDivF32", natlm::basicExpDivF32, expf,
 		-80.0_f32, 80.0_f32, 0.1_f32, 0.05_f32, 0.1_f32);
-	successful &= testMathFunctionF64("basicExpDivF64", natlm::basicExpDivF64, std::exp,
+	successful &= testMathFunctionF64("basicExpDivF64", natlm::basicExpDivF64, exp,
 		-80.0_f64, 80.0_f64, 0.1_f64, 0.05_f64, 0.1_f64);
 	return successful;
 }
@@ -484,9 +487,9 @@ natl::Bool basicExpDivTest() noexcept {
 natl::Bool basicExpTest() noexcept {
 	using namespace natl::literals;
 	natl::Bool successful = true;
-	successful &= testMathFunctionF32("basicExpF32", natlm::basicExpF32, std::expf,
+	successful &= testMathFunctionF32("basicExpF32", natlm::basicExpF32, expf,
 		-80.0_f32, 80.0_f32, 0.1_f32, 0.05_f32, 0.1_f32);
-	successful &= testMathFunctionF64("basicExpF64", natlm::basicExpF64, std::exp,
+	successful &= testMathFunctionF64("basicExpF64", natlm::basicExpF64, exp,
 		-80.0_f64, 80.0_f64, 0.1_f64, 0.05_f64, 0.1_f64);
 	return successful;
 }
@@ -494,9 +497,9 @@ natl::Bool basicExpTest() noexcept {
 natl::Bool basicExp2Test() noexcept {
 	using namespace natl::literals;
 	natl::Bool successful = true;
-	successful &= testMathFunctionF32("basicExp2F32", natlm::basicExp2F32, std::exp2f,
+	successful &= testMathFunctionF32("basicExp2F32", natlm::basicExp2F32, exp2f,
 		-80.0_f32, 80.0_f32, 0.1_f32, 0.05_f32, 0.1_f32);
-	successful &= testMathFunctionF64("basicExp2F64", natlm::basicExp2F64, std::exp2,
+	successful &= testMathFunctionF64("basicExp2F64", natlm::basicExp2F64, exp2,
 		-80.0_f64, 80.0_f64, 0.1_f64, 0.05_f64, 0.1_f64);
 	return successful;
 }
@@ -504,9 +507,9 @@ natl::Bool basicExp2Test() noexcept {
 natl::Bool basicLog2Test() noexcept {
 	using namespace natl::literals;
 	natl::Bool successful = true;
-	successful &= testMathFunctionF32("basicLog2F32", natlm::basicLog2F32, std::log2f,
+	successful &= testMathFunctionF32("basicLog2F32", natlm::basicLog2F32, log2f,
 		0.0001_f32, 80.0_f32, 0.1_f32, 0.05_f32, 0.1_f32);
-	successful &= testMathFunctionF64("basicLog2F64", natlm::basicLog2F64, std::log2,
+	successful &= testMathFunctionF64("basicLog2F64", natlm::basicLog2F64, log2,
 		0.0001_f64, 80.0_f64, 0.1_f64, 0.05_f64, 0.1_f64);
 	return successful;
 }
@@ -514,9 +517,9 @@ natl::Bool basicLog2Test() noexcept {
 natl::Bool log2Test() noexcept {
 	using namespace natl::literals;
 	natl::Bool successful = true;
-	successful &= testMathFunctionF32("log2F32", natlm::log2F32, std::log2f,
+	successful &= testMathFunctionF32("log2F32", natlm::log2F32, log2f,
 		0.0001_f32, 80.0_f32, 0.1_f32, 0.05_f32, 0.1_f32);
-	successful &= testMathFunctionF64("log2F64", natlm::log2F64, std::log2,
+	successful &= testMathFunctionF64("log2F64", natlm::log2F64, log2,
 		0.0001_f64, 80.0_f64, 0.1_f64, 0.05_f64, 0.1_f64);
 	return successful;
 }
@@ -524,9 +527,9 @@ natl::Bool log2Test() noexcept {
 natl::Bool basicLnTest() noexcept {
 	using namespace natl::literals;
 	natl::Bool successful = true;
-	successful &= testMathFunctionF32("basicLnF32", natlm::basicLnF32, std::logf,
+	successful &= testMathFunctionF32("basicLnF32", natlm::basicLnF32, logf,
 		0.0001_f32, 80.0_f32, 0.1_f32, 0.05_f32, 0.1_f32);
-	successful &= testMathFunctionF64("basicLnF64", natlm::basicLnF64, std::log,
+	successful &= testMathFunctionF64("basicLnF64", natlm::basicLnF64, log,
 		0.0001_f64, 80.0_f64, 0.1_f64, 0.05_f64, 0.1_f64);
 	return successful;
 }
@@ -534,9 +537,9 @@ natl::Bool basicLnTest() noexcept {
 natl::Bool lnTest() noexcept {
 	using namespace natl::literals;
 	natl::Bool successful = true;
-	successful &= testMathFunctionF32("lnF32", natlm::lnF32, std::logf,
+	successful &= testMathFunctionF32("lnF32", natlm::lnF32, logf,
 		0.0001_f32, 80.0_f32, 0.1_f32, 0.05_f32, 0.1_f32);
-	successful &= testMathFunctionF64("lnF64", natlm::lnF64, std::log,
+	successful &= testMathFunctionF64("lnF64", natlm::lnF64, log,
 		0.0001_f64, 80.0_f64, 0.1_f64, 0.05_f64, 0.1_f64);
 	return successful;
 }
@@ -544,9 +547,9 @@ natl::Bool lnTest() noexcept {
 natl::Bool basicLogTest() noexcept {
 	using namespace natl::literals;
 	natl::Bool successful = true;
-	successful &= testMathFunctionF32("basicLogF32", natlm::basicLogF32, std::log10f,
+	successful &= testMathFunctionF32("basicLogF32", natlm::basicLogF32, log10f,
 		0.0001_f32, 80.0_f32, 0.1_f32, 0.05_f32, 0.1_f32);
-	successful &= testMathFunctionF64("basicLogF64", natlm::basicLogF64, std::log10,
+	successful &= testMathFunctionF64("basicLogF64", natlm::basicLogF64, log10,
 		0.0001_f64, 80.0_f64, 0.1_f64, 0.05_f64, 0.1_f64);
 	return successful;
 }
@@ -554,9 +557,9 @@ natl::Bool basicLogTest() noexcept {
 natl::Bool logTest() noexcept {
 	using namespace natl::literals;
 	natl::Bool successful = true;
-	successful &= testMathFunctionF32("logF32", natlm::logF32, std::log10f,
+	successful &= testMathFunctionF32("logF32", natlm::logF32, log10f,
 		0.0001_f32, 80.0_f32, 0.1_f32, 0.05_f32, 0.1_f32);
-	successful &= testMathFunctionF64("logF64", natlm::logF64, std::log10,
+	successful &= testMathFunctionF64("logF64", natlm::logF64, log10,
 		0.0001_f64, 80.0_f64, 0.1_f64, 0.05_f64, 0.1_f64);
 	return successful;
 }
@@ -578,9 +581,9 @@ natl::Bool exponentialTests() noexcept {
 natl::Bool sinQuadTest() noexcept {
 	using namespace natl::literals;
 	natl::Bool successful = true;
-	successful &= testMathFunctionF32("sinQuadF32", natlm::sinQuadF32, std::sinf, 
+	successful &= testMathFunctionF32("sinQuadF32", natlm::sinQuadF32, sinf, 
 		natl::f32(-natlm::twoPi), natl::f32(natlm::twoPi), 0.001_f32, 0.1_f32, 0.1_f32);
-	successful &= testMathFunctionF64("sinQuadF64", natlm::sinQuadF64, std::sin, 
+	successful &= testMathFunctionF64("sinQuadF64", natlm::sinQuadF64, sin, 
 		natl::f64(-natlm::twoPi), natl::f64(natlm::twoPi), 0.001_f64, 0.1_f64, 0.1_f64);
 	return successful;
 }
@@ -588,9 +591,9 @@ natl::Bool sinQuadTest() noexcept {
 natl::Bool cosQuadTest() noexcept {
 	using namespace natl::literals;
 	natl::Bool successful = true;
-	successful &= testMathFunctionF32("cosQuadTestF32", natlm::cosQuadF32, std::cosf, 
+	successful &= testMathFunctionF32("cosQuadTestF32", natlm::cosQuadF32, cosf, 
 		natl::f32(-natlm::twoPi), natl::f32(natlm::twoPi), 0.001_f32, 0.1_f32, 0.1_f32);
-	successful &= testMathFunctionF64("cosQuadTestF64", natlm::cosQuadF64, std::cos, 
+	successful &= testMathFunctionF64("cosQuadTestF64", natlm::cosQuadF64, cos, 
 		natl::f64(-natlm::twoPi), natl::f64(natlm::twoPi), 0.001_f64, 0.1_f64, 0.1_f64);
 	return successful;
 }
@@ -598,19 +601,19 @@ natl::Bool cosQuadTest() noexcept {
 natl::Bool sinQuadMulFmodTest() noexcept {
 	using namespace natl::literals;
 	natl::Bool successful = true;
-	successful &= testMathFunctionF32("sinQuadMulFmodF32", natlm::sinQuadMulFmodF32, std::sinf, 
+	successful &= testMathFunctionF32("sinQuadMulFmodF32", natlm::sinQuadMulFmodF32, sinf, 
 		natl::f32(-natlm::twoPi), natl::f32(natlm::twoPi), 0.001_f32, 0.1_f32, 0.1_f32);
 	successful &= testMathFunctionF64("sinQuadMulFmodF64", natlm::sinQuadMulFmodF64, 
-		std::sin, natl::f64(-natlm::twoPi), natl::f64(natlm::twoPi), 0.001_f64, 0.1_f64, 0.1_f64);
+		sin, natl::f64(-natlm::twoPi), natl::f64(natlm::twoPi), 0.001_f64, 0.1_f64, 0.1_f64);
 	return successful;
 }
 
 natl::Bool cosQuadMulFmodTest() noexcept {
 	using namespace natl::literals;
 	natl::Bool successful = true;
-	successful &= testMathFunctionF32("cosQuadMulFmodF32", natlm::cosQuadMulFmodF32, std::cosf, 
+	successful &= testMathFunctionF32("cosQuadMulFmodF32", natlm::cosQuadMulFmodF32, cosf, 
 		natl::f32(-natlm::twoPi), natl::f32(natlm::twoPi), 0.001_f32, 0.1_f32, 0.1_f32);
-	successful &= testMathFunctionF64("cosQuadMulFmodF64", natlm::cosQuadMulFmodF64, std::cos, 
+	successful &= testMathFunctionF64("cosQuadMulFmodF64", natlm::cosQuadMulFmodF64, cos, 
 		natl::f64(-natlm::twoPi), natl::f64(natlm::twoPi), 0.001_f64, 0.1_f64, 0.1_f64);
 	return successful;
 }
@@ -618,9 +621,9 @@ natl::Bool cosQuadMulFmodTest() noexcept {
 natl::Bool cosTaySerd4pTest() noexcept {
 	using namespace natl::literals;
 	natl::Bool successful = true;
-	successful &= testMathFunctionF32("cosTaySerd4pF32", natlm::cosTaySerd4pF32, std::cosf, 
+	successful &= testMathFunctionF32("cosTaySerd4pF32", natlm::cosTaySerd4pF32, cosf, 
 		natl::f32(-natlm::twoPi), natl::f32(natlm::twoPi), 0.001_f32, 0.3_f32, 0.3_f32);
-	successful &= testMathFunctionF64("cosTaySerd4pF64", natlm::cosTaySerd4pF64, std::cos,
+	successful &= testMathFunctionF64("cosTaySerd4pF64", natlm::cosTaySerd4pF64, cos,
 		natl::f64(-natlm::twoPi), natl::f64(natlm::twoPi), 0.001_f64, 0.3_f64, 0.3_f64);
 	return successful;
 }
@@ -628,19 +631,19 @@ natl::Bool cosTaySerd4pTest() noexcept {
 natl::Bool sinTaySerd4pTest() noexcept {
 	using namespace natl::literals;
 	natl::Bool successful = true;
-	successful &= testMathFunctionF32("sinTaySerd4pF32", natlm::sinTaySerd4pF32, std::sinf, 
+	successful &= testMathFunctionF32("sinTaySerd4pF32", natlm::sinTaySerd4pF32, sinf, 
 		natl::f32(-natlm::twoPi), natl::f32(natlm::twoPi), 0.001_f32, 0.3_f32, 0.3_f32);
 	successful &= testMathFunctionF64("sinTaySerd4pF64", natlm::sinTaySerd4pF64, 
-		std::sin, natl::f64(-natlm::twoPi), natl::f64(natlm::twoPi), 0.001_f64, 0.3_f64, 0.3_f64);
+		sin, natl::f64(-natlm::twoPi), natl::f64(natlm::twoPi), 0.001_f64, 0.3_f64, 0.3_f64);
 	return successful;
 }
 
 natl::Bool tan4dpTest() noexcept {
 	using namespace natl::literals;
 	natl::Bool successful = true;
-	successful &= testMathFunctionF32("tan4dpTestF32", natlm::tan4dpF32, std::tanf, 
+	successful &= testMathFunctionF32("tan4dpTestF32", natlm::tan4dpF32, tanf, 
 		natl::f32(-natlm::piOver2 + 0.1), natl::f32(natlm::piOver2 - 0.1), 0.001_f32, 0.02_f32, 0.02_f32);
-	successful &= testMathFunctionF64("tan4dpTestF64", natlm::tan4dpF64, std::tan, 
+	successful &= testMathFunctionF64("tan4dpTestF64", natlm::tan4dpF64, tan, 
 		natl::f64(-natlm::piOver2 + 0.1), natl::f64(natlm::piOver2 - 0.1), 0.001_f64, 0.02_f64, 0.02_f64);
 	return successful;
 }
@@ -648,9 +651,9 @@ natl::Bool tan4dpTest() noexcept {
 natl::Bool asinQuadTest() noexcept {
 	using namespace natl::literals;
 	natl::Bool successful = true;
-	successful &= testMathFunctionF32("asinQuadF32", natlm::asinQuadF32, std::asinf, 
+	successful &= testMathFunctionF32("asinQuadF32", natlm::asinQuadF32, asinf, 
 		-1.0_f32, 1.0_f32, 0.001_f32, 0.05_f32, 0.05_f32);
-	successful &= testMathFunctionF64("asinQuadF64", natlm::asinQuadF64, std::asin, 
+	successful &= testMathFunctionF64("asinQuadF64", natlm::asinQuadF64, asin, 
 		-1.0_f64, 1.0_f64, 0.001_f64, 0.05_f64, 0.05_f64);
 	return successful;
 }
@@ -658,9 +661,9 @@ natl::Bool asinQuadTest() noexcept {
 natl::Bool acosQuadTest() noexcept {
 	using namespace natl::literals;
 	natl::Bool successful = true;
-	successful &= testMathFunctionF32("acosQuadF32", natlm::acosQuadF32, std::acosf, 
+	successful &= testMathFunctionF32("acosQuadF32", natlm::acosQuadF32, acosf, 
 		-1.0_f32, 1.0_f32, 0.001_f32, 0.08_f32, 0.08_f32);
-	successful &= testMathFunctionF64("acosQuadF64", natlm::acosQuadF64, std::acos, 
+	successful &= testMathFunctionF64("acosQuadF64", natlm::acosQuadF64, acos, 
 		-1.0_f64, 1.0_f64, 0.001_f64, 0.08_f64, 0.08_f64);
 	return successful;
 }
@@ -668,9 +671,9 @@ natl::Bool acosQuadTest() noexcept {
 natl::Bool atan4dpTest() noexcept {
 	using namespace natl::literals;
 	natl::Bool successful = true;
-	successful &= testMathFunctionF32("atan4dpF32", natlm::atan4dpF32, std::atanf, 
+	successful &= testMathFunctionF32("atan4dpF32", natlm::atan4dpF32, atanf, 
 		-1.0_f32, 1.0_f32, 0.001_f32, 0.008_f32, 0.001_f32);
-	successful &= testMathFunctionF64("atan4dpF64", natlm::atan4dpF64, std::atan, 
+	successful &= testMathFunctionF64("atan4dpF64", natlm::atan4dpF64, atan, 
 		-1.0_f64, 1.0_f64, 0.001_f64, 0.008_f64, 0.001_f64);
 	return successful;
 }
@@ -693,9 +696,9 @@ natl::Bool trigonometricTests() noexcept {
 natl::Bool basicSinhTest() noexcept {
 	using namespace natl::literals;
 	natl::Bool successful = true;
-	successful &= testMathFunctionF32("basicSinhF32", natlm::basicSinhF32, std::sinhf,
+	successful &= testMathFunctionF32("basicSinhF32", natlm::basicSinhF32, sinhf,
 		natl::f32(-natlm::twoPi), natl::f32(natlm::twoPi), 0.001_f32, 0.1_f32, 0.1_f32);
-	successful &= testMathFunctionF64("basicSinhF64", natlm::basicSinhF64, std::sinh,
+	successful &= testMathFunctionF64("basicSinhF64", natlm::basicSinhF64, sinh,
 		natl::f64(-natlm::twoPi), natl::f64(natlm::twoPi), 0.001_f64, 0.1_f64, 0.1_f64);
 	return successful;
 }
@@ -703,9 +706,9 @@ natl::Bool basicSinhTest() noexcept {
 natl::Bool sinhTest() noexcept {
 	using namespace natl::literals;
 	natl::Bool successful = true;
-	successful &= testMathFunctionF32("sinhF32", natlm::sinhF32, std::sinhf,
+	successful &= testMathFunctionF32("sinhF32", natlm::sinhF32, sinhf,
 		natl::f32(-natlm::twoPi), natl::f32(natlm::twoPi), 0.001_f32, 0.1_f32, 0.1_f32);
-	successful &= testMathFunctionF64("sinhF64", natlm::sinhF64, std::sinh,
+	successful &= testMathFunctionF64("sinhF64", natlm::sinhF64, sinh,
 		natl::f64(-natlm::twoPi), natl::f64(natlm::twoPi), 0.001_f64, 0.1_f64, 0.1_f64);
 	return successful;
 }
@@ -713,9 +716,9 @@ natl::Bool sinhTest() noexcept {
 natl::Bool basicCoshTest() noexcept {
 	using namespace natl::literals;
 	natl::Bool successful = true;
-	successful &= testMathFunctionF32("basicCoshF32", natlm::basicCoshF32, std::coshf,
+	successful &= testMathFunctionF32("basicCoshF32", natlm::basicCoshF32, coshf,
 		natl::f32(-natlm::twoPi), natl::f32(natlm::twoPi), 0.001_f32, 0.1_f32, 0.1_f32);
-	successful &= testMathFunctionF64("basicCoshF64", natlm::basicCoshF64, std::cosh,
+	successful &= testMathFunctionF64("basicCoshF64", natlm::basicCoshF64, cosh,
 		natl::f64(-natlm::twoPi), natl::f64(natlm::twoPi), 0.001_f64, 0.1_f64, 0.1_f64);
 	return successful;
 }
@@ -723,9 +726,9 @@ natl::Bool basicCoshTest() noexcept {
 natl::Bool coshTest() noexcept {
 	using namespace natl::literals;
 	natl::Bool successful = true;
-	successful &= testMathFunctionF32("coshF32", natlm::coshF32, std::coshf,
+	successful &= testMathFunctionF32("coshF32", natlm::coshF32, coshf,
 		natl::f32(-natlm::twoPi), natl::f32(natlm::twoPi), 0.001_f32, 0.1_f32, 0.1_f32);
-	successful &= testMathFunctionF64("coshF64", natlm::coshF64, std::cosh,
+	successful &= testMathFunctionF64("coshF64", natlm::coshF64, cosh,
 		natl::f64(-natlm::twoPi), natl::f64(natlm::twoPi), 0.001_f64, 0.1_f64, 0.1_f64);
 	return successful;
 }
@@ -733,9 +736,9 @@ natl::Bool coshTest() noexcept {
 natl::Bool basicTanhTest() noexcept {
 	using namespace natl::literals;
 	natl::Bool successful = true;
-	successful &= testMathFunctionF32("basicTanhF32", natlm::basicTanhF32, std::tanhf,
+	successful &= testMathFunctionF32("basicTanhF32", natlm::basicTanhF32, tanhf,
 		natl::f32(-natlm::twoPi), natl::f32(natlm::twoPi), 0.001_f32, 0.1_f32, 0.1_f32);
-	successful &= testMathFunctionF64("basicTanhF64", natlm::basicTanhF64, std::tanh,
+	successful &= testMathFunctionF64("basicTanhF64", natlm::basicTanhF64, tanh,
 		natl::f64(-natlm::twoPi), natl::f64(natlm::twoPi), 0.001_f64, 0.1_f64, 0.1_f64);
 	return successful;
 }
@@ -743,9 +746,9 @@ natl::Bool basicTanhTest() noexcept {
 natl::Bool tanhTest() noexcept {
 	using namespace natl::literals;
 	natl::Bool successful = true;
-	successful &= testMathFunctionF32("tanhF32", natlm::tanhF32, std::tanhf,
+	successful &= testMathFunctionF32("tanhF32", natlm::tanhF32, tanhf,
 		natl::f32(-natlm::twoPi), natl::f32(natlm::twoPi), 0.001_f32, 0.1_f32, 0.1_f32);
-	successful &= testMathFunctionF64("tanhF64", natlm::tanhF64, std::tanh,
+	successful &= testMathFunctionF64("tanhF64", natlm::tanhF64, tanh,
 		natl::f64(-natlm::twoPi), natl::f64(natlm::twoPi), 0.001_f64, 0.1_f64, 0.1_f64);
 	return successful;
 }
@@ -753,9 +756,9 @@ natl::Bool tanhTest() noexcept {
 natl::Bool basicAsinhTest() noexcept {
 	using namespace natl::literals;
 	natl::Bool successful = true;
-	successful &= testMathFunctionF32("basicAsinhF32", natlm::basicAsinhF32, std::asinhf,
+	successful &= testMathFunctionF32("basicAsinhF32", natlm::basicAsinhF32, asinhf,
 		natl::f32(-natlm::twoPi), natl::f32(natlm::twoPi), 0.001_f32, 0.1_f32, 0.1_f32);
-	successful &= testMathFunctionF64("basicAsinhF64", natlm::basicAsinhF64, std::asinh,
+	successful &= testMathFunctionF64("basicAsinhF64", natlm::basicAsinhF64, asinh,
 		natl::f64(-natlm::twoPi), natl::f64(natlm::twoPi), 0.001_f64, 0.1_f64, 0.1_f64);
 	return successful;
 }
@@ -763,9 +766,9 @@ natl::Bool basicAsinhTest() noexcept {
 natl::Bool asinhTest() noexcept {
 	using namespace natl::literals;
 	natl::Bool successful = true;
-	successful &= testMathFunctionF32("asinhF32", natlm::asinhF32, std::asinhf,
+	successful &= testMathFunctionF32("asinhF32", natlm::asinhF32, asinhf,
 		natl::f32(-natlm::twoPi), natl::f32(natlm::twoPi), 0.001_f32, 0.1_f32, 0.1_f32);
-	successful &= testMathFunctionF64("asinhF64", natlm::asinhF64, std::asinh,
+	successful &= testMathFunctionF64("asinhF64", natlm::asinhF64, asinh,
 		natl::f64(-natlm::twoPi), natl::f64(natlm::twoPi), 0.001_f64, 0.1_f64, 0.1_f64);
 	return successful;
 }
@@ -773,9 +776,9 @@ natl::Bool asinhTest() noexcept {
 natl::Bool basicAcoshTest() noexcept {
 	using namespace natl::literals;
 	natl::Bool successful = true;
-	successful &= testMathFunctionF32("basicAcoshF32", natlm::basicAcoshF32, std::acoshf,
+	successful &= testMathFunctionF32("basicAcoshF32", natlm::basicAcoshF32, acoshf,
 		1.0_f32, natl::f32(natlm::twoPi), 0.001_f32, 0.1_f32, 0.1_f32);
-	successful &= testMathFunctionF64("basicAcoshF64", natlm::basicAcoshF64, std::acosh,
+	successful &= testMathFunctionF64("basicAcoshF64", natlm::basicAcoshF64, acosh,
 		1.0_f64, natl::f64(natlm::twoPi), 0.001_f64, 0.1_f64, 0.1_f64);
 	return successful;
 }
@@ -783,9 +786,9 @@ natl::Bool basicAcoshTest() noexcept {
 natl::Bool acoshTest() noexcept {
 	using namespace natl::literals;
 	natl::Bool successful = true;
-	successful &= testMathFunctionF32("acoshF32", natlm::acoshF32, std::acoshf,
+	successful &= testMathFunctionF32("acoshF32", natlm::acoshF32, acoshf,
 		1.0_f32, natl::f32(natlm::twoPi), 0.001_f32, 0.1_f32, 0.1_f32);
-	successful &= testMathFunctionF64("acoshF64", natlm::acoshF64, std::acosh,
+	successful &= testMathFunctionF64("acoshF64", natlm::acoshF64, acosh,
 		1.0_f64, natl::f64(natlm::twoPi), 0.001_f64, 0.1_f64, 0.1_f64);
 	return successful;
 }
@@ -793,9 +796,9 @@ natl::Bool acoshTest() noexcept {
 natl::Bool basicAtanhTest() noexcept {
 	using namespace natl::literals;
 	natl::Bool successful = true;
-	successful &= testMathFunctionF32("basicAtanhF32", natlm::basicAtanhF32, std::atanhf,
+	successful &= testMathFunctionF32("basicAtanhF32", natlm::basicAtanhF32, atanhf,
 		natl::f32(-0.99999), 1.0_f32, 0.001_f32, 0.1_f32, 0.1_f32);
-	successful &= testMathFunctionF64("basicAtanhF64", natlm::basicAtanhF64, std::atanh,
+	successful &= testMathFunctionF64("basicAtanhF64", natlm::basicAtanhF64, atanh,
 		natl::f64(-0.99999), 1.0_f64, 0.001_f64, 0.1_f64, 0.1_f64);
 	return successful;
 }
@@ -803,9 +806,9 @@ natl::Bool basicAtanhTest() noexcept {
 natl::Bool atanhTest() noexcept {
 	using namespace natl::literals;
 	natl::Bool successful = true;
-	successful &= testMathFunctionF32("atanhF32", natlm::atanhF32, std::atanhf,
+	successful &= testMathFunctionF32("atanhF32", natlm::atanhF32, atanhf,
 		-1.0_f32, 1.0_f32, 0.001_f32, 0.1_f32, 0.1_f32);
-	successful &= testMathFunctionF64("atanhF64", natlm::atanhF64, std::atanh,
+	successful &= testMathFunctionF64("atanhF64", natlm::atanhF64, atanh,
 		-1.0_f64, 1.0_f64, 0.001_f64, 0.1_f64, 0.1_f64);
 	return successful;
 }

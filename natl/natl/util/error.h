@@ -15,6 +15,7 @@
 //own
 #include "../container/stringView.h"
 #include "compilerDependent.h"
+#include "../system/print.h"
 
 //interface
 namespace natl {
@@ -22,7 +23,7 @@ namespace natl {
         if (isConstantEvaluated()) {
             natlTerminate();
         } else {
-            std::cout << message.c_str();
+            natl::println(message.c_str());
             natlTerminate();
         }
     }

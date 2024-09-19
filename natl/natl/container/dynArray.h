@@ -91,7 +91,7 @@ namespace natl {
 			construct(count, value);
 		}
 		template<class Iter>
-			requires(IsIterPtr<Iter> && std::is_same_v<typename IterPtrTraits<Iter>::value_type, value_type>)
+			requires(IsIterPtr<Iter> && IsSameC<typename IteratorTraits<Iter>::value_type, value_type>)
 		constexpr DynArray(Iter first, Iter last) noexcept {
 			baseConstructorInit();
 			construct<Iter>(first, last);
@@ -168,7 +168,7 @@ namespace natl {
 		}
 
 		template<class Iter>
-			requires(IsIterPtr<Iter>&& std::is_same_v<typename IterPtrTraits<Iter>::value_type, value_type>)
+			requires(IsIterPtr<Iter>&& IsSameC<typename IteratorTraits<Iter>::value_type, value_type>)
 		constexpr DynArray& construct(Iter first, Iter last) noexcept {
 			if constexpr (std::contiguous_iterator<Iter>) {
 				const size_type count = iterDistance<Iter>(first, last);
@@ -278,7 +278,7 @@ namespace natl {
 			return self();
 		}
 		template<class Iter> 
-			requires(IsIterPtr<Iter> && std::is_same_v<typename IterPtrTraits<Iter>::value_type, value_type>)
+			requires(IsIterPtr<Iter> && IsSameC<typename IteratorTraits<Iter>::value_type, value_type>)
 		constexpr DynArray& assign(Iter first, Iter last) noexcept {
 			if constexpr (IsRandomAccessIterator<Iter>) {
 				const size_type count = iterDistance<Iter>(first, last);
@@ -670,7 +670,7 @@ namespace natl {
 			return iterator(data() + index);
 		}
 		template<class Iter>
-			requires(IsIterPtr<Iter>&& std::is_same_v<typename IterPtrTraits<Iter>::value_type, value_type>)
+			requires(IsIterPtr<Iter>&& IsSameC<typename IteratorTraits<Iter>::value_type, value_type>)
 		constexpr iterator insert(const_iterator pos, Iter first, Iter last) {
 			if constexpr (IsRandomAccessIterator<Iter>) {
 				const size_type count = iterDistance<Iter>(first, last);
@@ -703,7 +703,7 @@ namespace natl {
 				*dstPtr = *srcIter;
 			}
 			for (size_type i = 0; i < uninilizedCopyCount; i++, dstPtr++, srcIter++) {
-				std::construct_at<value_type, value_type>(dstPtr, *srcIter);
+				natl::construct<value_type, value_type>(dstPtr, *srcIter);
 			}
 
 			setSize(newSize);
@@ -726,7 +726,7 @@ namespace natl {
 
 			shiftRelocateLeft(index, 1);
 
-			std::construct_at<value_type, Args...>(&*pos, std::forward<Args>(args)...);
+			natl::construct<value_type, Args...>(&*pos, natl::forward<Args>(args)...);
 
 			setSize(newSize);
 			return iterator(data() + index);
@@ -767,7 +767,7 @@ namespace natl {
 			return iterator(data() + index);
 		}
 
-		constexpr iterator eraseAtIndex(const std::size_t index) noexcept { 
+		constexpr iterator eraseAtIndex(const Size index) noexcept { 
 			return erase(begin() + index); 
 		}
 
@@ -793,7 +793,7 @@ namespace natl {
 			factorReserve(newSize);
 			setSize(newSize);
 			reference value = at(index);
-			std::construct_at<value_type, Args...>(value, std::forward<Args>(args)...);
+			natl::construct<value_type, Args...>(value, natl::forward<Args>(args)...);
 			return value;
 		}
 
@@ -816,7 +816,7 @@ namespace natl {
 			return append(arrayViewLike.data(), arrayViewLike.size());
 		}
 		template<class ArrayViewLikeConvertible>
-			requires(std::is_convertible_v<ArrayViewLikeConvertible, ArrayView<const value_type>> && !IsArrayViewLike<ArrayViewLikeConvertible, value_type>)
+			requires(IsConvertibleC<ArrayViewLikeConvertible, ArrayView<const value_type>> && !IsArrayViewLike<ArrayViewLikeConvertible, value_type>)
 		constexpr DynArray& append(const ArrayViewLikeConvertible& arrayViewLikeConvertible) noexcept {
 			return append<ArrayView<const value_type>>( static_cast<ArrayView<const value_type>>(arrayViewLikeConvertible) );
 		}
@@ -839,7 +839,7 @@ namespace natl {
 				valueDst = value;
 			} else {
 				value_type tempValue = value;
-				std::construct_at<value_type, value_type>(&valueDst, forward<value_type>(tempValue));
+				natl::construct<value_type, value_type>(&valueDst, forward<value_type>(tempValue));
 			}
 			return valueDst;
 		}
@@ -848,7 +848,7 @@ namespace natl {
 			if (IsTriviallyDestructible<value_type>) {
 				valueDst = value;
 			} else {
-				std::construct_at<value_type, value_type>(&valueDst, forward<value_type>(value));
+				natl::construct<value_type, value_type>(&valueDst, forward<value_type>(value));
 			}
 			return valueDst;
 		}
@@ -917,7 +917,7 @@ namespace natl {
 			return lhs.toArrayView() == rhs;
 		}
 		template<class ArrayViewLike>
-			requires(std::is_convertible_v<ArrayViewLike, ArrayView<const value_type>> && !IsArrayViewLike<ArrayViewLike, const value_type>)
+			requires(IsConvertibleC<ArrayViewLike, ArrayView<const value_type>> && !IsArrayViewLike<ArrayViewLike, const value_type>)
 		friend constexpr Bool operator==(const DynArray& lhs, const ArrayViewLike& rhs) noexcept {
 			return lhs.toArrayView() == rhs;
 		}
@@ -937,7 +937,7 @@ namespace natl {
 			return lhs.toArrayView() != rhs;
 		}
 		template<class ArrayViewLike>
-			requires(std::is_convertible_v<ArrayViewLike, ArrayView<const value_type>> && !IsArrayViewLike<ArrayViewLike, const value_type>)
+			requires(IsConvertibleC<ArrayViewLike, ArrayView<const value_type>> && !IsArrayViewLike<ArrayViewLike, const value_type>)
 		friend constexpr Bool operator!=(const DynArray& lhs, const ArrayViewLike& rhs) noexcept {
 			return lhs.toArrayView() != rhs;
 		}
@@ -957,7 +957,7 @@ namespace natl {
 			return lhs.toArrayView() < rhs;
 		}
 		template<class ArrayViewLike>
-			requires(std::is_convertible_v<ArrayViewLike, ArrayView<const value_type>> && !IsArrayViewLike<ArrayViewLike, const value_type>)
+			requires(IsConvertibleC<ArrayViewLike, ArrayView<const value_type>> && !IsArrayViewLike<ArrayViewLike, const value_type>)
 		friend constexpr Bool operator<(const DynArray& lhs, const ArrayViewLike& rhs) noexcept {
 			return lhs.toArrayView() < rhs;
 		}
@@ -977,7 +977,7 @@ namespace natl {
 			return lhs.toArrayView() <= rhs;
 		}
 		template<class ArrayViewLike>
-			requires(std::is_convertible_v<ArrayViewLike, ArrayView<const value_type>> && !IsArrayViewLike<ArrayViewLike, const value_type>)
+			requires(IsConvertibleC<ArrayViewLike, ArrayView<const value_type>> && !IsArrayViewLike<ArrayViewLike, const value_type>)
 		friend constexpr Bool operator<=(const DynArray& lhs, const ArrayViewLike& rhs) noexcept {
 			return lhs.toArrayView() <= rhs;
 		}
@@ -997,7 +997,7 @@ namespace natl {
 			return lhs.toArrayView() > rhs;
 		}
 		template<class ArrayViewLike>
-			requires(std::is_convertible_v<ArrayViewLike, ArrayView<const value_type>> && !IsArrayViewLike<ArrayViewLike, const value_type>)
+			requires(IsConvertibleC<ArrayViewLike, ArrayView<const value_type>> && !IsArrayViewLike<ArrayViewLike, const value_type>)
 		friend constexpr Bool operator>(const DynArray& lhs, const ArrayViewLike& rhs) noexcept {
 			return lhs.toArrayView() > rhs;
 		}
@@ -1017,7 +1017,7 @@ namespace natl {
 			return lhs.toArrayView() >= rhs;
 		}
 		template<class ArrayViewLike>
-			requires(std::is_convertible_v<ArrayViewLike, ArrayView<const value_type>> && !IsArrayViewLike<ArrayViewLike, const value_type>)
+			requires(IsConvertibleC<ArrayViewLike, ArrayView<const value_type>> && !IsArrayViewLike<ArrayViewLike, const value_type>)
 		friend constexpr Bool operator>=(const DynArray& lhs, const ArrayViewLike& rhs) noexcept {
 			return lhs.toArrayView() >= rhs;
 		}
@@ -1037,7 +1037,7 @@ namespace natl {
 			return lhs.toArrayView() <=> rhs;
 		}
 		template<class ArrayViewLike>
-			requires(std::is_convertible_v<ArrayViewLike, ArrayView<const value_type>> && !IsArrayViewLike<ArrayViewLike, const value_type>)
+			requires(IsConvertibleC<ArrayViewLike, ArrayView<const value_type>> && !IsArrayViewLike<ArrayViewLike, const value_type>)
 		friend constexpr StrongOrdering operator<=>(const DynArray& lhs, const ArrayViewLike& rhs) noexcept {
 			return lhs.toArrayView() <=> rhs;
 		}

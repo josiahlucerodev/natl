@@ -32,16 +32,27 @@ namespace natl {
         )
     > {};
 
-    template<class... DataTypes>
+    template<typename... DataTypes>
     using CommonComparisonCategory = CommonComparisonCategoryType<DataTypes...>::type;
+
+    template <typename Type>
+    concept ThreeWayComparable = requires(const RemoveReference<Type>& __a, const RemoveReference<Type>& __b) {
+            { __a <=> __b };
+    };
+
+    template <typename LhsType, typename RhsType>
+    concept ThreeWayComparableWith = ThreeWayComparable<LhsType> && ThreeWayComparable<RhsType> && 
+        requires(const RemoveReference<LhsType>& lhs, const RemoveReference<RhsType>& rhs) {
+            { lhs <=> rhs };
+    };
 
     struct CompareThreeWay {
         template <typename LhsDataType, typename RhsDataType>
         constexpr auto operator()(const LhsDataType& lhs, const RhsDataType& rhs) const
             requires(requires {
-                { lhs < rhs } -> std::convertible_to<Bool>;
-                { rhs < lhs } -> std::convertible_to<Bool>; }) {
-            if constexpr (std::three_way_comparable_with<LhsDataType, RhsDataType>) {
+                { lhs < rhs } -> ConvertibleTo<Bool>;
+                { rhs < lhs } -> ConvertibleTo<Bool>; }) {
+            if constexpr (ThreeWayComparableWith<LhsDataType, RhsDataType>) {
                 return lhs <=> rhs;
             } else {
                 if (lhs < rhs) {

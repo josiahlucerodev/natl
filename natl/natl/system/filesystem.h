@@ -86,7 +86,7 @@ namespace natl {
 			constexpr array_view_type toArrayView() noexcept requires(IsNotConst<CharType>) { return array_view_type(pathStringView.data(), size()); }
 			constexpr const_array_view_type toArrayView() const noexcept { return const_array_view_type(pathStringView.data(), size()); }
 			template<class StringLike>
-				requires(std::is_constructible_v<StringLike, const CharType*, Size>)
+				requires(IsConstructibleC<StringLike, const CharType*, Size>)
 			constexpr StringLike convertTo() { 
 				return StringLike(pathStringView.data(), pathStringView.size()); 
 			}
@@ -944,17 +944,17 @@ namespace natl {
 	using Path512 = PathByteSize<512>;
 
 	namespace literals {
-		constexpr Path128 operator ""_natl_path(const char* str, std::size_t len) noexcept {
+		constexpr Path128 operator ""_natl_path(const char* str, StdSize len) noexcept {
 			return Path128(ConstStringView{ str, static_cast<Size>(len) });
 		}
 
-		constexpr Path128 operator ""_natl_path_128(const char* str, std::size_t len) noexcept {
+		constexpr Path128 operator ""_natl_path_128(const char* str, StdSize len) noexcept {
 			return Path128(ConstStringView{ str, static_cast<Size>(len) });
 		}
-		constexpr Path256 operator ""_natl_path_256(const char* str, std::size_t len) noexcept {
+		constexpr Path256 operator ""_natl_path_256(const char* str, StdSize len) noexcept {
 			return Path256(ConstStringView{ str, static_cast<Size>(len) });
 		}
-		constexpr Path512 operator ""_natl_path_512(const char* str, std::size_t len) noexcept {
+		constexpr Path512 operator ""_natl_path_512(const char* str, StdSize len) noexcept {
 			return Path512(ConstStringView{ str, static_cast<Size>(len) });
 		}
 	}

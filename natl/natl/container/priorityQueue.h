@@ -29,7 +29,7 @@ namespace natl {
 			const Size leftIndex = heapLeftChildIndex(index);
 			const Size rightIndex = heapRightChildIndex(index);
 			Size smallest = index;
-			using difference_type = typename IterPtrTraits<RandomIter>::difference_type;
+			using difference_type = typename IteratorTraits<RandomIter>::difference_type;
 			if (leftIndex < size && compare(iterValue<RandomIter>(first + static_cast<difference_type>(leftIndex)), iterValue<RandomIter>(first + static_cast<difference_type>(index)))) {
 				smallest = leftIndex;
 			}
@@ -55,7 +55,7 @@ namespace natl {
 
 	template<typename RandomIter, typename Compare>
 	constexpr void pushHeap(RandomIter first, RandomIter last, Compare compare) noexcept {
-		using difference_type = typename IterPtrTraits<RandomIter>::difference_type;
+		using difference_type = typename IteratorTraits<RandomIter>::difference_type;
 		const Size size = iterDistance<RandomIter>(first, last);
 		if (size <= 1) { return; }
 		Size current = size - 1;
@@ -81,7 +81,7 @@ namespace natl {
 
 	template<class RandomIter, class Compare>
 	constexpr Bool isHeap(RandomIter first, RandomIter last, Compare compare) noexcept {
-		using difference_type = typename IterPtrTraits<RandomIter>::difference_type;
+		using difference_type = typename IteratorTraits<RandomIter>::difference_type;
 		Size size = iterDistance<RandomIter>(first, last);
 		for (Size index = 1; index < size; index++) {
 			if (compare(

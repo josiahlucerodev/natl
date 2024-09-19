@@ -45,17 +45,17 @@ namespace natl {
 		constexpr Tuple() noexcept = default;
 
 		template<typename FirstU, typename... RestU>
-			requires(std::is_constructible_v<FirstDataType, const FirstU&>&& std::is_constructible_v<rest_tuple_type, const RestU&...>)
+			requires(IsConstructibleC<FirstDataType, const FirstU&>&& IsConstructibleC<rest_tuple_type, const RestU&...>)
 		constexpr Tuple(const FirstU& firstIn, const RestU&... restIn) noexcept : first(firstIn), rest(restIn...) {}
 		template<typename FirstU, typename... RestU>
-			requires(std::is_constructible_v<FirstDataType, FirstU&&>&& std::is_constructible_v<rest_tuple_type, RestU&&...>)
+			requires(IsConstructibleC<FirstDataType, FirstU&&>&& IsConstructibleC<rest_tuple_type, RestU&&...>)
 		constexpr Tuple(FirstU&& firstIn, RestU&&... restIn) noexcept : first(natl::forward<FirstU>(firstIn)), rest(natl::forward<RestU>(restIn)...) {}
 
 		template<typename FirstU, typename... RestU>
-			requires(std::is_constructible_v<FirstDataType, const FirstU&>&& std::is_constructible_v<rest_tuple_type, const RestU&...>)
+			requires(IsConstructibleC<FirstDataType, const FirstU&>&& IsConstructibleC<rest_tuple_type, const RestU&...>)
 		constexpr Tuple(const Tuple<FirstU, RestU...>& other) noexcept : first(other.first), rest(other.rest) {}
 		template<typename FirstU, typename... RestU>
-			requires(std::is_constructible_v<FirstDataType, FirstU&&> && std::is_constructible_v<rest_tuple_type, RestU&&...>)
+			requires(IsConstructibleC<FirstDataType, FirstU&&> && IsConstructibleC<rest_tuple_type, RestU&&...>)
 		constexpr Tuple(Tuple<FirstU, RestU...>&& other) noexcept : 
 			first(natl::forward<FirstDataType>(other.first)),
 			rest(natl::forward<decltype(other.rest)>(other.rest)) {}
@@ -291,10 +291,10 @@ namespace std {
 	template<typename... DataTypes>
 	struct tuple_size<natl::Tuple<DataTypes...>> : natl::IntegralConstant<natl::Size, sizeof...(DataTypes)> {};
 	template<> struct tuple_size<natl::Tuple<>> : natl::IntegralConstant<natl::Size, 0> {};
-	template<std::size_t Index, class... DataTypes >
+	template<natl::StdSize Index, class... DataTypes >
 	struct tuple_element<Index, natl::Tuple<DataTypes...>> { 
 		using type = natl::TupleElement<Index, natl::Tuple<DataTypes...>>;  
 	};
-	template<std::size_t Index>
+	template<natl::StdSize Index>
 	struct tuple_element<Index, natl::Tuple<>> { using type = void; };
 }

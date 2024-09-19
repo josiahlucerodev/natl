@@ -76,13 +76,13 @@ namespace natl {
 		constexpr void destruct() noexcept {
 			switch (state) {
 			case ExpectState::dummy:
-				std::destroy_at<Dummy>(&dummy);
+				natl::deconstruct<Dummy>(&dummy);
 				break;
 			case ExpectState::value:
-				std::destroy_at<DataType>(&data);
+				natl::deconstruct<DataType>(&data);
 				break;
 			case ExpectState::error:
-				std::destroy_at<ErrorType>(&errorData);
+				natl::deconstruct<ErrorType>(&errorData);
 				break;
 			}
 		}
@@ -103,10 +103,10 @@ namespace natl {
 
 			switch (other.state) {
 			case ExpectState::value:
-				std::construct_at<DataType>(&data, other.data);
+				natl::construct<DataType>(&data, other.data);
 				break;
 			case ExpectState::error:
-				std::construct_at<ErrorType>(&errorData, other.errorData);
+				natl::construct<ErrorType>(&errorData, other.errorData);
 				break;
 			default:
 				break;
@@ -120,17 +120,17 @@ namespace natl {
 
 			switch (other.state) {
 			case ExpectState::value:
-				std::construct_at<DataType>(&data, move<DataType>(other.data));
+				natl::construct<DataType>(&data, move<DataType>(other.data));
 				break;
 			case ExpectState::error:
-				std::construct_at<ErrorType>(&errorData, move<ErrorType>(other.errorData));
+				natl::construct<ErrorType>(&errorData, move<ErrorType>(other.errorData));
 				break;
 			default:
 				break;
 			}
 
 			other.destruct();
-			std::construct_at<Dummy>(&other.dummy);
+			natl::construct<Dummy>(&other.dummy);
 			other.state = ExpectState::dummy;
 
 			return self();
@@ -138,19 +138,19 @@ namespace natl {
 		constexpr Expect& operator=(const Unexpected<ErrorType>& other) noexcept {
 			destruct();
 			state = ExpectState::error;
-			std::construct_at<ErrorType>(&errorData, other.errorData);
+			natl::construct<ErrorType>(&errorData, other.errorData);
 			return self();
 		}
 		constexpr Expect& operator=(Unexpected<ErrorType>&& other) noexcept {
 			destruct();
 			state = ExpectState::error;
-			std::construct_at<ErrorType>(&errorData, move<ErrorType>(other.errorData));
+			natl::construct<ErrorType>(&errorData, move<ErrorType>(other.errorData));
 			return self();
 		}
 		constexpr Expect& operator=(DataType&& value) noexcept {
 			destruct();
 			state = ExpectState::value;
-			std::construct_at<ErrorType>(&data, move<DataType>(value));
+			natl::construct<ErrorType>(&data, move<DataType>(value));
 			return self();
 		}
 
@@ -228,11 +228,11 @@ namespace natl {
 
 		//modifiers
 		template<class... Args>
-			requires(std::is_constructible_v<DataType, Args...>)
+			requires(IsConstructibleC<DataType, Args...>)
 		constexpr DataType& emplace(Args&&... args) noexcept {
 			destruct();
 			state = ExpectState::value;
-			std::construct_at<DataType>(data, forward(args)...);
+			natl::construct<DataType>(data, forward(args)...);
 			return data;
 		}
 		constexpr void swap(Expect& other) noexcept {

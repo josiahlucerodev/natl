@@ -7,6 +7,7 @@
 //own
 #include "../util/basicTypes.h"
 #include "../util/utility.h"
+#include "../util/dataMovement.h"
 
 //interface 
 namespace natl {
@@ -69,24 +70,24 @@ namespace natl {
 			constexpr AtomicBase(const AtomicBase&) noexcept = delete;
 			constexpr AtomicBase() noexcept {
 				if (isConstantEvaluated()) {
-					std::construct_at<value_type>(&value);
+					natl::construct<value_type>(&value);
 				} else {
-					std::construct_at<atomic_value_type>(&atomicValue);
+					natl::construct<atomic_value_type>(&atomicValue);
 				}
 			}
 			constexpr AtomicBase(value_type desired) noexcept {
 				if (isConstantEvaluated()) {
-					std::construct_at<value_type>(&value, desired);
+					natl::construct<value_type>(&value, desired);
 				} else {
-					std::construct_at<atomic_value_type>(&atomicValue, desired);
+					natl::construct<atomic_value_type>(&atomicValue, desired);
 				}
 			}
 			//destructor 
 			constexpr ~AtomicBase() noexcept {
 				if (isConstantEvaluated()) {
-					std::destroy_at<value_type>(&value);
+					natl::deconstruct<value_type>(&value);
 				} else {
-					std::destroy_at<atomic_value_type>(&atomicValue);
+					natl::deconstruct<atomic_value_type>(&atomicValue);
 				}
 			}
 

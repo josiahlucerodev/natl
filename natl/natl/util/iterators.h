@@ -32,8 +32,33 @@ namespace natl {
 #pragma warning(pop)
 #endif // NATL_COMPILER_MSVC
 
-	struct RandomAccessIteratorTag {};
-	struct BidirectionalIteratorTag {};
+	using RandomAccessIteratorTag = std::random_access_iterator_tag;
+	using BidirectionalIteratorTag = std::bidirectional_iterator_tag;
+
+	template<typename Iter>
+	struct IteratorTraits {
+		using value_type = Iter::value_type;
+		using reference = Iter::reference;
+		using difference_type = Iter::difference_type;
+		using pointer = Iter::pointer;
+		using iterator_category = Iter::iterator_category;
+	};
+
+	template<class Type> struct IteratorTraits<Type*> {
+		using value_type = Type;
+		using reference = Type&;
+		using difference_type = PtrDiff;
+		using pointer = Type*;
+		using iterator_category = RandomAccessIteratorTag;
+	};
+
+	template<class Type> struct IteratorTraits<const Type*> {
+		using value_type = const Type;
+		using reference = const Type&;
+		using difference_type = PtrDiff;
+		using pointer = const Type*;
+		using iterator_category = RandomAccessIteratorTag;
+	};
 
 	template<typename Type>
 	concept HasIteratorType = requires {
@@ -41,13 +66,13 @@ namespace natl {
 	};
 
 	template <typename Iter>
-	using IteratorCategory = typename std::iterator_traits<Iter>::iterator_category;
+	using IteratorCategory = typename IteratorTraits<Iter>::iterator_category;
 
 	template <typename Iter, typename = void>
 	inline constexpr Bool IsIteratorV = false;
 
 	template <typename Iter>
-	inline constexpr Bool IsIteratorV<Iter, std::void_t<IteratorCategory<Iter>>> = true;
+	inline constexpr Bool IsIteratorV<Iter, Void<IteratorCategory<Iter>>> = true;
 
 	template<typename Iter>
 	concept IsIterator = IsIteratorV<Iter>;
@@ -55,24 +80,16 @@ namespace natl {
 	template <typename Iter>
 	concept IsIterPtr = IsPointer<Iter> || IsIterator<Iter>;
 
-	template <typename Iter>
-		requires (IsIterPtr<Iter>)
-	struct IterPtrTraits {
-		using value_type = std::conditional_t<std::is_pointer_v<std::decay_t<Iter>>, std::remove_pointer_t<std::decay_t<Iter>>, typename std::iterator_traits<Iter>::value_type>;
-		using reference = std::conditional_t<std::is_pointer_v<std::decay_t<Iter>>, std::remove_pointer_t<std::decay_t<Iter>>&, typename std::iterator_traits<Iter>::reference>;
-		using difference_type = std::conditional_t<std::is_pointer_v<std::decay_t<Iter>>, PtrDiff, typename std::iterator_traits<Iter>::difference_type>;
-	};
-
 	template <typename SrcIter, typename DstIter>
 	concept MemcopyConstructibleIter =
 		IsIterPtr<SrcIter> &&
 		IsIterPtr<DstIter> &&
-		IsSame<typename SrcIter::iterator_catagory, std::random_access_iterator_tag> &&
-		IsSame<typename DstIter::iterator_catagory, std::random_access_iterator_tag> &&
+		IsSame<typename SrcIter::iterator_catagory, RandomAccessIteratorTag> &&
+		IsSame<typename DstIter::iterator_catagory, RandomAccessIteratorTag> &&
 		MemcopyConstructibleSrcDst<
-		typename IterPtrTraits<SrcIter>::value_type,
-		typename IterPtrTraits<DstIter>::value_type,
-		typename IterPtrTraits<SrcIter>::reference>;
+		typename IteratorTraits<SrcIter>::value_type,
+		typename IteratorTraits<DstIter>::value_type,
+		typename IteratorTraits<SrcIter>::reference>;
 
 
 	template <typename SrcIter, typename DstIter>
@@ -80,14 +97,14 @@ namespace natl {
 		IsIterPtr<SrcIter> &&
 		IsIterPtr<DstIter> &&
 		MemcopyAssignableSrcDst<
-		typename IterPtrTraits<SrcIter>::value_type,
-		typename IterPtrTraits<DstIter>::value_type,
-		typename IterPtrTraits<SrcIter>::reference,
-		typename IterPtrTraits<DstIter>::reference>;
+		typename IteratorTraits<SrcIter>::value_type,
+		typename IteratorTraits<DstIter>::value_type,
+		typename IteratorTraits<SrcIter>::reference,
+		typename IteratorTraits<DstIter>::reference>;
 
-	template <typename Iter, typename value_type = typename IterPtrTraits<Iter>::value_type>
+	template <typename Iter, typename value_type = typename IteratorTraits<Iter>::value_type>
 	constexpr value_type* iteratorToAddress(Iter iter) noexcept {
-		if constexpr (std::is_pointer_v<std::decay_t<Iter>>) {
+		if constexpr (IsPointerC<Decay<Iter>>) {
 			return iter;
 		} else {
 			return &*iter;
@@ -97,18 +114,18 @@ namespace natl {
 	template <typename SrcIter, typename DstIter>
 		requires(IsIterPtr<SrcIter>&& IsIterPtr<DstIter>)
 	DstIter iterMemcopy(SrcIter first, SrcIter last, DstIter dst) noexcept {
-		typename IterPtrTraits<SrcIter>::value_type* firstPtr = iteratorToAddress<SrcIter>(first);
-		typename IterPtrTraits<SrcIter>::value_type* lastPtr = iteratorToAddress<SrcIter>(last);
-		typename IterPtrTraits<DstIter>::value_type* dstPtr = iteratorToAddress<DstIter>(dst);
+		typename IteratorTraits<SrcIter>::value_type* firstPtr = iteratorToAddress<SrcIter>(first);
+		typename IteratorTraits<SrcIter>::value_type* lastPtr = iteratorToAddress<SrcIter>(last);
+		typename IteratorTraits<DstIter>::value_type* dstPtr = iteratorToAddress<DstIter>(dst);
 
 		const char* const firstVoidPtr = const_cast<const char*>(reinterpret_cast<const volatile char*>(firstPtr));
 		const char* const lastVoidPtr = const_cast<const char*>(reinterpret_cast<const volatile char*>(lastPtr));
 		char* const dstVoidPtr = const_cast<char*>(reinterpret_cast<const volatile char*>(dstPtr));
 
 		const Size count = static_cast<Size>(lastVoidPtr - firstVoidPtr);
-		std::memcpy(dstVoidPtr, firstVoidPtr, static_cast<std::size_t>(count));
+		std::memcpy(dstVoidPtr, firstVoidPtr, static_cast<StdSize>(count));
 
-		if constexpr (std::is_pointer_v<DstIter>) {
+		if constexpr (IsPointer<DstIter>) {
 			return reinterpret_cast<DstIter>(dstPtr + count);
 		} else {
 			return dst + static_cast<Size>(lastPtr - firstPtr);
@@ -119,7 +136,7 @@ namespace natl {
 		requires(IsIterPtr<SrcIter>&& IsIterPtr<DstIter>&& std::equality_comparable_with<const SizeType, int>)
 	DstIter iterMemcopyCount(SrcIter first, DstIter dst, SizeType count) noexcept {
 		auto memcopyRst = iterMemcopy(first, first + count, dst);
-		if constexpr (std::is_pointer_v<DstIter>) {
+		if constexpr (IsPointer<DstIter>) {
 			return memcopyRst;
 		} else {
 			return dst + count;
@@ -129,15 +146,15 @@ namespace natl {
 	template <typename Iter, typename ValueType>
 	concept IsIterPtrZeroMemsetAble =
 		IsIterPtr<Iter> &&
-		(std::is_trivially_constructible_v<typename IterPtrTraits<Iter>::value_type, const ValueType&> ||
-			(std::is_same_v<typename IterPtrTraits<Iter>::value_type, ValueType> && IsTriviallyConstRefConstructible<typename IterPtrTraits<Iter>::value_type>));
+		(std::is_trivially_constructible_v<typename IteratorTraits<Iter>::value_type, const ValueType&> ||
+			(IsSameC<typename IteratorTraits<Iter>::value_type, ValueType> && IsTriviallyConstRefConstructible<typename IteratorTraits<Iter>::value_type>));
 
 	template <typename Iter, typename SizeType>
 	concept CanGetSizeFormIterPtrSub =
 		IsIterPtr<Iter>
 		&& std::is_integral_v<SizeType>
 		&& requires(Iter first, Iter last) {
-			{ last - first } -> std::convertible_to<SizeType>;
+			{ last - first } -> ConvertibleTo<SizeType>;
 	};
 
 	template <typename Iter, typename SizeType>
@@ -149,41 +166,41 @@ namespace natl {
 	template <typename DstIter>
 		requires(IsIterPtr<DstIter>)
 	void iterPtrMemset(DstIter dst, const int value, const Size count) {
-		typename IterPtrTraits<DstIter>::value_type* const dstPtr = iteratorToAddress<DstIter>(dst);
+		typename IteratorTraits<DstIter>::value_type* const dstPtr = iteratorToAddress<DstIter>(dst);
 		void* const dstVoidPtr = reinterpret_cast<void* const>(dstPtr);
-		std::memset(dstVoidPtr, value, static_cast<std::size_t>(count) * sizeof(typename IterPtrTraits<DstIter>::value_type));
+		std::memset(dstVoidPtr, value, static_cast<StdSize>(static_cast<Size>(count) * sizeof(typename IteratorTraits<DstIter>::value_type)));
 	}
 
 	template <typename SrcIter, typename DstIter>
 	concept MemcpyCompareIter = IsIterPtr<SrcIter> && IsIterPtr<DstIter> &&
-		MemcpyCompareableSrcDst<typename IterPtrTraits<SrcIter>::value_type, typename IterPtrTraits<DstIter>::value_type>;
+		MemcpyCompareableSrcDst<typename IteratorTraits<SrcIter>::value_type, typename IteratorTraits<DstIter>::value_type>;
 
 
 	template <typename AIter, typename BIter>
 		requires(MemcpyCompareIter<AIter, BIter>)
 	Bool iterPtrMemcpy(AIter a, BIter b, const Size count) {
-		const typename IterPtrTraits<AIter>::value_type* const aPtr = iteratorToAddress<AIter>(a);
-		const typename IterPtrTraits<BIter>::value_type* const bPtr = iteratorToAddress<BIter>(b);
+		const typename IteratorTraits<AIter>::value_type* const aPtr = iteratorToAddress<AIter>(a);
+		const typename IteratorTraits<BIter>::value_type* const bPtr = iteratorToAddress<BIter>(b);
 		const void* const aVoidPtr = reinterpret_cast<const void* const>(aPtr);
 		const void* const bVoidPtr = reinterpret_cast<const void* const>(bPtr);
-		return std::memcmp(aVoidPtr, bVoidPtr, static_cast<Size>(count) * sizeof(IterPtrTraits<AIter>::value_type));
+		return std::memcmp(aVoidPtr, bVoidPtr, static_cast<Size>(count) * sizeof(IteratorTraits<AIter>::value_type));
 	}
 
 
 	template <typename Iter>
 		requires(IsIterPtr<Iter>)
 	constexpr decltype(auto) unwrappedIterator(Iter&& iter) noexcept {
-		if constexpr (std::is_pointer_v<std::decay_t<Iter>>) {
+		if constexpr (IsPointer<Decay<Iter>>) {
 			return iter + 0;
 		} else {
 			return iter;
 		}
 	}
 
-	template<typename Iter, typename value_type = typename IterPtrTraits<Iter>::value_type>
+	template<typename Iter, typename value_type = typename IteratorTraits<Iter>::value_type>
 		requires(IsIterPtr<Iter>)
 	constexpr value_type* getIterValuePtr(Iter iter) noexcept {
-		if constexpr (std::is_pointer_v<std::decay_t<Iter>>) {
+		if constexpr (IsPointer<Decay<Iter>>) {
 			return iter;
 		} else {
 			return &*iter;
@@ -191,12 +208,12 @@ namespace natl {
 	}
 
 	template <typename Iter>
-	concept IsRandomAccessIterator = IsIterPtr<Iter> || std::is_same_v<IteratorCategory<Iter>, std::random_access_iterator_tag>;
+	concept IsRandomAccessIterator = IsIterPtr<Iter> || IsSame<IteratorCategory<Iter>, RandomAccessIteratorTag>;
 
 	template <typename Iter>
 	constexpr typename IteratorCategory<Iter>::difference_type
 		iterDistance(Iter first, Iter last) noexcept {
-		typename std::iterator_traits<Iter>::difference_type distance = 0;
+		typename IteratorTraits<Iter>::difference_type distance = 0;
 		while (first != last) {
 			++distance;
 			++first;
@@ -216,7 +233,7 @@ namespace natl {
 
 	template<typename Iter>
 		requires(IsIterator<Iter>)
-	constexpr IterPtrTraits<Iter>::reference iterValue(Iter iter) noexcept {
+	constexpr IteratorTraits<Iter>::reference iterValue(Iter iter) noexcept {
 		return *iter;
 	}
 
@@ -349,7 +366,7 @@ namespace natl {
 	class RandomAccessIterator {
 	public:
 		using iterator = RandomAccessIterator<DataType>;
-		using difference_type = std::ptrdiff_t;
+		using difference_type = PtrDiff;
 		using value_type = DataType;
 		using reference = DataType&;
 		using const_reference = const DataType&;
@@ -417,7 +434,7 @@ namespace natl {
 		using difference_type = typename Alloc::difference_type;
 		using size_type = typename Alloc::size_type;
 
-		using iterator_category = std::random_access_iterator_tag;
+		using iterator_category = RandomAccessIteratorTag;
 	private:
 		pointer dataPtr;
 	public:

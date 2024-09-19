@@ -8,7 +8,7 @@
 
 
 constexpr char compileTimeTest() {
-	natl::DynArray<char> charArray(100, 5);
+	natl::DynArray<char> charArray(100, 't');
 	natl::SmallDynArray<char, 10> smallCharArray;
 	natl::String charString = charArray.getAlloctionMoveAdapater();
 	natl::HeapArray<char> heapArray;

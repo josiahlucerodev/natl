@@ -9,6 +9,8 @@
 //own
 #include "basicTypes.h"
 #include "compilerDependent.h"
+#include "typeTraits.h"
+#include "bits.h"
 
 //interface
 namespace natl {
@@ -81,13 +83,13 @@ namespace natl {
 			if (isConstantEvaluated()) {
 				return;
 			}
-			trackerAllocatorData.registerAllocate(std::bit_cast<void*, const pointer>(ptr));
+			trackerAllocatorData.registerAllocate(natl::bitCast<void*, const pointer>(ptr));
 		}
 		constexpr static void registerDeallocate(const pointer ptr) noexcept {
 			if (isConstantEvaluated()) {
 				return;
 			}
-			trackerAllocatorData.registerDeallocate(std::bit_cast<void*, const pointer>(ptr));
+			trackerAllocatorData.registerDeallocate(natl::bitCast<void*, const pointer>(ptr));
 		}
 	};
 
@@ -103,8 +105,8 @@ namespace natl {
 			typename Alloc::difference_type;
 
 			// Allocate and deallocate memory
-			{ Alloc::allocate(std::declval<typename Alloc::size_type>()) } -> std::same_as<typename Alloc::pointer>;
-			{ Alloc::deallocate(std::declval<typename Alloc::pointer>(), std::declval<typename Alloc::size_type>()) };
+			{ Alloc::allocate(natl::declval<typename Alloc::size_type>()) } -> natl::SameAs<typename Alloc::pointer>;
+			{ Alloc::deallocate(natl::declval<typename Alloc::pointer>(), natl::declval<typename Alloc::size_type>()) };
 	};
 
 	template<class Alloc>
@@ -154,7 +156,7 @@ namespace natl {
 		Allocator operator=(Allocator&&) {}
 
 		[[nodiscard]] constexpr static pointer allocate(const Size number) noexcept { 
-			pointer ptr = std::allocator<DataType>().allocate(static_cast<std::size_t>(number));
+			pointer ptr = std::allocator<DataType>().allocate(static_cast<StdSize>(number));
 			if constexpr (natl_enable_allocator_tracking) {
 				TrackerAllocator<DataType>::registerAllocate(ptr);
 			}
@@ -165,7 +167,7 @@ namespace natl {
 			if constexpr (natl_enable_allocator_tracking) {
 				TrackerAllocator<DataType>::registerDeallocate(ptr);
 			}
-			std::allocator<DataType>().deallocate(ptr, static_cast<std::size_t>(number));
+			std::allocator<DataType>().deallocate(ptr, static_cast<StdSize>(number));
 		}
 	};
 

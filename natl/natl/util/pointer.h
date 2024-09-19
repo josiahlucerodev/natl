@@ -5,6 +5,7 @@
 #include "allocator.h"
 #include "dataMovement.h"
 #include "algorithm.h"
+#include "../util/bits.h"
 #include "../sync/atomic.h"
 #include "../container/functional.h"
 
@@ -61,7 +62,7 @@ namespace natl {
 
 		//delete operations
 		constexpr void operator()(typename Alloc::pointer ptr) const {
-			std::destroy_at<DataType>(ptr);
+			natl::deconstruct<DataType>(ptr);
 			Alloc::deallocate(ptr, 1); 
 		}
 	};
@@ -114,35 +115,35 @@ namespace natl {
 			other.dataPtr = nullptr;
 		}
 
-		constexpr UniquePtr(std::nullptr_t) noexcept : dataPtr(nullptr), deleter() {}
+		constexpr UniquePtr(NullptrType) noexcept : dataPtr(nullptr), deleter() {}
 
 		constexpr UniquePtr(pointer ptr) noexcept requires(IsEmpty<Deleter>) { dataPtr = ptr; }
 		constexpr UniquePtr(const value_type& value) noexcept requires(IsEmpty<Deleter>) {
 			dataPtr = Alloc::allocate(1);
-			std::construct_at<DataType, DataType>(dataPtr, value);
+			natl::construct<DataType, DataType>(dataPtr, value);
 		}
 		constexpr UniquePtr(value_type&& value) noexcept requires(IsEmpty<Deleter>) {
 			dataPtr = Alloc::allocate(1);
-			std::construct_at<DataType, DataType>(dataPtr, natl::forward<DataType>(value));
+			natl::construct<DataType, DataType>(dataPtr, natl::forward<DataType>(value));
 		}
 
 		constexpr UniquePtr(pointer ptr, const deleter_type& deleterIn) noexcept requires(IsNotEmpty<Deleter>) : dataPtr(ptr), deleter(deleterIn) {}
 		constexpr UniquePtr(pointer ptr, deleter_type&& deleterIn) noexcept requires(IsNotEmpty<Deleter>) : dataPtr(ptr), deleter(natl::move(deleterIn)) {}
 		constexpr UniquePtr(const value_type& value, const deleter_type& deleterIn) noexcept requires(IsNotEmpty<Deleter>) : dataPtr(nullptr), deleter(deleterIn) {
 			dataPtr = Alloc::allocate(1);
-			std::construct_at<DataType, DataType>(dataPtr, value);
+			natl::construct<DataType, DataType>(dataPtr, value);
 		}
 		constexpr UniquePtr(const value_type& value, deleter_type&& deleterIn) noexcept requires(IsNotEmpty<Deleter>) : dataPtr(nullptr), deleter(natl::move(deleterIn)) {
 			dataPtr = Alloc::allocate(1);
-			std::construct_at<DataType, DataType>(dataPtr, value);
+			natl::construct<DataType, DataType>(dataPtr, value);
 		}
 		constexpr UniquePtr(value_type&& value, const deleter_type& deleterIn) noexcept requires(IsNotEmpty<Deleter>) : dataPtr(nullptr), deleter(deleterIn) {
 			dataPtr = Alloc::allocate(1);
-			std::construct_at<DataType, DataType>(dataPtr, forward<DataType>(value));
+			natl::construct<DataType, DataType>(dataPtr, forward<DataType>(value));
 		}
 		constexpr UniquePtr(value_type&& value, deleter_type&& deleterIn) noexcept requires(IsNotEmpty<Deleter>) : dataPtr(nullptr), deleter(natl::move(deleterIn)) {
 			dataPtr = Alloc::allocate(1);
-			std::construct_at<DataType, DataType>(dataPtr, forward<DataType>(value));
+			natl::construct<DataType, DataType>(dataPtr, forward<DataType>(value));
 		}
 
 		//destructor
@@ -173,7 +174,7 @@ namespace natl {
 				deleter = move(deleter);
 			}
 		}
-		constexpr UniquePtr& operator=(std::nullptr_t) noexcept {
+		constexpr UniquePtr& operator=(NullptrType) noexcept {
 			reset();
 		}
 
@@ -224,12 +225,12 @@ namespace natl {
 		constexpr Bool operator>=(const UniquePtr& other) const noexcept { return get() >= other.get(); }
 		constexpr std::compare_three_way_result_t<pointer> operator<=>(const UniquePtr& other) { return get() <=> other.get(); };
 
-		constexpr Bool operator==(std::nullptr_t) const noexcept { return !self(); }
-		constexpr Bool operator!=(std::nullptr_t) const noexcept { return static_cast<Bool>(self()); }
+		constexpr Bool operator==(NullptrType) const noexcept { return !self(); }
+		constexpr Bool operator!=(NullptrType) const noexcept { return static_cast<Bool>(self()); }
 
 		//special
 		constexpr Size hash() const noexcept {
-			return std::bit_cast<Size, pointer>(dataPtr);
+			return natl::bitCast<Size, pointer>(dataPtr);
 		}
 	};
 
@@ -253,10 +254,10 @@ namespace natl {
 		constexpr static Bool triviallyMoveConstructedable = true;
 	private:
 		constexpr static Size convertPtrToInt(const PtrDataType* ptr) noexcept {
-			return std::bit_cast<Size, const PtrDataType*>(ptr); 
+			return natl::bitCast<Size, const PtrDataType*>(ptr);
 		}
 		constexpr static PtrDataType* convertIntToPtr(const Size ptr) noexcept {
-			return std::bit_cast<PtrDataType*, Size>(ptr);
+			return natl::bitCast<PtrDataType*, Size>(ptr);
 		}
 #ifdef NATL_64BIT
 
@@ -312,6 +313,7 @@ namespace natl {
 		};
 		constexpr static Bool combindPacking = false;
 #endif // NATL_64BIT
+
 		struct ConstexprPackingType {
 			SmallDataType smallDataStorage;
 			PtrDataType* ptr;
@@ -329,32 +331,32 @@ namespace natl {
 		//constructor 
 		constexpr PackedPtrAndSmallData() noexcept {
 			if (isConstantEvaluated()) {
-				std::construct_at(&constexprPackingPtr, new ConstexprPackingType{});
+				natl::construct(&constexprPackingPtr, new ConstexprPackingType{});
 			} else {
-				std::construct_at<PackingType, PackingType>(&packing, PackingType{});
+				natl::construct<PackingType, PackingType>(&packing, PackingType{});
 			}
 		}
 		constexpr PackedPtrAndSmallData(const PackedPtrAndSmallData& other) noexcept {
 			if (isConstantEvaluated()) {
-				std::construct_at(&constexprPackingPtr, new ConstexprPackingType(other.smallData, other.ptr));
+				natl::construct(&constexprPackingPtr, new ConstexprPackingType(other.constexprPackingPtr->smallDataStorage, other.constexprPackingPtr->ptr));
 			} else {
-				std::construct_at(&packing, other.packing);
+				natl::construct(&packing, other.packing);
 			}
 		}
 		constexpr PackedPtrAndSmallData(PackedPtrAndSmallData&& other) noexcept {
 			if (isConstantEvaluated()) {
-				std::construct_at(&constexprPackingPtr, natl::move(other.constexprPackingPtr));
+				natl::construct(&constexprPackingPtr, natl::move(other.constexprPackingPtr));
 				other.constexprPackingPtr = nullptr;
 			} else {
-				std::construct_at(&packing, other.packing);
+				natl::construct(&packing, other.packing);
 				other.packing = PackingType{};
 			}
 		}
 		constexpr PackedPtrAndSmallData(PtrDataType* ptr, SmallDataType smallData) noexcept {
 			if (isConstantEvaluated()) {
-				std::construct_at(&constexprPackingPtr, new ConstexprPackingType(smallData, ptr));
+				natl::construct(&constexprPackingPtr, new ConstexprPackingType(smallData, ptr));
 			} else {
-				std::construct_at(&packing, PackingType(smallData, ptr));
+				natl::construct(&packing, PackingType(smallData, ptr));
 			}
 		}
 
@@ -389,7 +391,7 @@ namespace natl {
 				constexprPackingPtr = natl::move(other.constexprPackingPtr);
 				other.constexprPackingPtr = nullptr;
 			} else {
-				std::construct_at<PackingType, PackingType>(packing, other.packing);
+				natl::construct<PackingType, PackingType>(packing, other.packing);
 				other.packing = PackingType{};
 			}
 			return self();
@@ -609,7 +611,7 @@ namespace natl {
 				requires(HasFunctionSignature<PreDeleteFunctor, void, DataType*> &&
 						HasFunctionSignature<PostDeleteFunctor, void> && 
 						IsDeleter<ControlBlockDeleter, SharedPtrControlBlockFused> &&
-						std::is_constructible_v<DataType, ConstructArgTypes...>)
+						IsConstructibleC<DataType, ConstructArgTypes...>)
 			SharedPtrControlBlockFused(PreDeleteFunctor&& preDeleteFunctorIn, 
 				PostDeleteFunctor&& postDeleteFunctorIn, 
 				ControlBlockDeleter&& controlBlockDeleterIn, 
@@ -628,7 +630,7 @@ namespace natl {
 						controlBlockFused->preDeleteFunction.invoke(&controlBlockFused->data);
 					}
 
-					std::destroy_at<DataType>(&controlBlockFused->data);
+					natl::deconstruct<DataType>(&controlBlockFused->data);
 
 					if (controlBlockFused->postDeleteFunction.isNotEmpty()) {
 						controlBlockFused->postDeleteFunction.invoke();
@@ -885,7 +887,7 @@ namespace natl {
 		public:
 			//constructor 
 			constexpr WeakPtr() noexcept : dataPtrAndControlBlockState(nullptr, impl::SharedPtrControlBlockState::seperate), controlBlockSeperate() {}
-			constexpr WeakPtr(std::nullptr_t) noexcept : dataPtrAndControlBlockState(nullptr, impl::SharedPtrControlBlockState::seperate), controlBlockSeperate() {}
+			constexpr WeakPtr(NullptrType) noexcept : dataPtrAndControlBlockState(nullptr, impl::SharedPtrControlBlockState::seperate), controlBlockSeperate() {}
 
 		private:
 			template<class OtherType>
@@ -1431,7 +1433,7 @@ namespace natl {
 	public:
 		//constructor
 		constexpr SharedPtr() noexcept : dataPtrAndControlBlockState(nullptr, impl::SharedPtrControlBlockState::seperate), controlBlockSeperate() {}
-		constexpr SharedPtr(std::nullptr_t) noexcept : dataPtrAndControlBlockState(nullptr, impl::SharedPtrControlBlockState::seperate), controlBlockSeperate() {}
+		constexpr SharedPtr(NullptrType) noexcept : dataPtrAndControlBlockState(nullptr, impl::SharedPtrControlBlockState::seperate), controlBlockSeperate() {}
 
 		constexpr SharedPtr(const SharedPtr& other) noexcept {
 			constructCopy<SharedPtr>(other);
@@ -1514,7 +1516,7 @@ namespace natl {
 			};
 
 			SharedPtrControlBlockSeperateConstexprType* controlBlock = control_block_seperate_data_constexpr_alloc::allocate(1);
-			std::construct_at(controlBlock, 
+			natl::construct(controlBlock, 
 				ptr,
 				natl::move(preDeleteFunction), 
 				natl::move(postDeleteFunction), 
@@ -1560,7 +1562,7 @@ namespace natl {
 			dataPtrAndControlBlockState.setValues(ptr, impl::SharedPtrControlBlockState::seperate);
 			using control_block_seperate_alloc = Alloc::template rebind_alloc<control_block_seperate>;
 			controlBlockSeperate = control_block_seperate_alloc::allocate(1);
-			std::construct_at<control_block_seperate>(controlBlockSeperate, ptr, DefaultDeleter<DataType, Alloc>(), DefaultDeleter<control_block_seperate, control_block_seperate_alloc>());
+			natl::construct<control_block_seperate>(controlBlockSeperate, ptr, DefaultDeleter<DataType, Alloc>(), DefaultDeleter<control_block_seperate, control_block_seperate_alloc>());
 		}
 
 		template<class Alloc, class Deleter>
@@ -1577,7 +1579,7 @@ namespace natl {
 			dataPtrAndControlBlockState.setValues(ptr, impl::SharedPtrControlBlockState::seperate);
 			using control_block_seperate_alloc = Alloc::template rebind_alloc<control_block_seperate>;
 			controlBlockSeperate = control_block_seperate_alloc::allocate(1);
-			std::construct_at<control_block_seperate>(controlBlockSeperate, ptr, deleter, DefaultDeleter<control_block_seperate, control_block_seperate_alloc>());
+			natl::construct<control_block_seperate>(controlBlockSeperate, ptr, deleter, DefaultDeleter<control_block_seperate, control_block_seperate_alloc>());
 		}
 		template<class OtherDataType, class Alloc>
 			requires(IsAllocator<Alloc> && IsPolymorphicCastable<OtherDataType, DataType>)
@@ -1596,7 +1598,7 @@ namespace natl {
 			using other_control_block_type = impl::SharedPtrControlBlockSeperate<OtherDataType>;
 			using other_control_block_type_alloc = Alloc::template rebind_alloc<other_control_block_type>;
 			other_control_block_type* otherControlBlockSeperate = other_control_block_type_alloc::allocate(1);
-			std::construct_at<other_control_block_type>(otherControlBlockSeperate, dataPtr, DefaultDeleter<DataType, Alloc>(), DefaultDeleter<other_control_block_type, other_control_block_type_alloc>());
+			natl::construct<other_control_block_type>(otherControlBlockSeperate, dataPtr, DefaultDeleter<DataType, Alloc>(), DefaultDeleter<other_control_block_type, other_control_block_type_alloc>());
 			controlBlockSeperatePolymorphic = static_cast<control_block_seperate_polymorphic*>(otherControlBlockSeperate);
 		}
 
@@ -1616,7 +1618,7 @@ namespace natl {
 			using other_control_block_type = impl::SharedPtrControlBlockSeperate<OtherDataType>;
 			using other_control_block_type_alloc = Alloc::template rebind_alloc<other_control_block_type>;
 			other_control_block_type* otherControlBlockSeperate = other_control_block_type_alloc::allocate(1);
-			std::construct_at<other_control_block_type>(otherControlBlockSeperate, dataPtr, deleter, DefaultDeleter<other_control_block_type, other_control_block_type_alloc>());
+			natl::construct<other_control_block_type>(otherControlBlockSeperate, dataPtr, deleter, DefaultDeleter<other_control_block_type, other_control_block_type_alloc>());
 			controlBlockSeperatePolymorphic = static_cast<control_block_seperate_polymorphic*>(otherControlBlockSeperate);
 		}
 
@@ -1664,7 +1666,7 @@ namespace natl {
 		}
 
 		template<class Alloc, class... ConstructArgTypes>
-			requires(IsAllocator<Alloc> && std::is_constructible_v<DataType, ConstructArgTypes...>)
+			requires(IsAllocator<Alloc> && IsConstructibleC<DataType, ConstructArgTypes...>)
 		constexpr SharedPtr(SharedPtrFusedConstruct, Alloc, ConstructArgTypes... constructArg) noexcept {
 			if (isConstantEvaluated()) {
 				constructContexpr<DataType, Alloc>(
@@ -1679,7 +1681,7 @@ namespace natl {
 			using control_block_fused_alloc = Alloc::template rebind_alloc<control_block_fused>;
 			controlBlockFused = control_block_fused_alloc::allocate(1);
 
-			std::construct_at<control_block_fused>(controlBlockFused,
+			natl::construct<control_block_fused>(controlBlockFused,
 				typename control_block_fused::pre_delete_function_type(),
 				typename control_block_fused::post_delete_function_type(),
 				DefaultDeleter<control_block_fused, control_block_fused_alloc>(),
@@ -1934,7 +1936,7 @@ namespace natl {
 			dataPtr = p;
 		}
 		constexpr void swap(ObserverPtr& other) noexcept {
-			element_type* tempDataPtr = other.tempDataPtr;
+			element_type* tempDataPtr = other.dataPtr;
 			other.dataPtr = dataPtr;
 			dataPtr = tempDataPtr;
 		}

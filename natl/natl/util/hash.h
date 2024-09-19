@@ -8,25 +8,26 @@
 #include "basicTypes.h"
 #include "typeTraits.h"
 #include "compilerDependent.h"
+#include "bits.h"
 
 //interface 
 namespace natl {
 	template<class DataType>
 	concept HasStaticHashFunction = requires(const DataType& value) {
-		{ DataType::staticHash(value) } -> std::same_as<Size>;
+		{ DataType::staticHash(value) } -> SameAs<Size>;
 	};
 	template<class DataType>
 	concept HasHashFunction = requires(const DataType& value) {
-		{ value.hash() } -> std::same_as<Size>;
+		{ value.hash() } -> SameAs<Size>;
 	};
 	template <typename DataType>
 	concept StdHashable = requires(const DataType& a) {
-		{ std::hash<DataType>{}(a) } -> std::convertible_to<std::size_t>;
+		{ std::hash<DataType>{}(a) } -> ConvertibleTo<Size>;
 	};
 
 
 	template<typename DataType>
-	concept Hashable = HasStaticHashFunction<DataType> || HasHashFunction<DataType> || std::is_pointer_v<DataType> || StdHashable<DataType>;
+	concept Hashable = HasStaticHashFunction<DataType> || HasHashFunction<DataType> || IsPointerC<DataType> || StdHashable<DataType>;
 
 	template<class DataType>
 	struct Hash {
@@ -36,8 +37,8 @@ namespace natl {
 				return DataType::staticHash(value);
 			} else if constexpr (HasHashFunction<DataType>) {
 				return value.hash();
-			} else if constexpr (std::is_pointer_v<DataType>) {
-				return static_cast<Size>(std::bit_cast<UIntPtrSized, DataType>(value));
+			} else if constexpr (IsPointerC<DataType>) {
+				return static_cast<Size>(natl::bitCast<UIntPtrSized, DataType>(value));
 			} else if constexpr (StdHashable<DataType>) {
 				return static_cast<Size>(std::hash<DataType>{}(value));
 			} else {
@@ -48,16 +49,16 @@ namespace natl {
 
 
 	template<> struct Hash<i8> {
-		constexpr static Size hash(const i8 value) { return static_cast<Size>(std::bit_cast<ui8, i8>(value)); }
+		constexpr static Size hash(const i8 value) { return static_cast<Size>(natl::bitCast<ui8, i8>(value)); }
 	};
 	template<> struct Hash<i16> {
-		constexpr static Size hash(const i16 value) { return static_cast<Size>(std::bit_cast<ui16, i16>(value)); }
+		constexpr static Size hash(const i16 value) { return static_cast<Size>(natl::bitCast<ui16, i16>(value)); }
 	};
 	template<> struct Hash<i32> {
-		constexpr static Size hash(const i32 value) { return static_cast<Size>(std::bit_cast<ui32, i32>(value)); }
+		constexpr static Size hash(const i32 value) { return static_cast<Size>(natl::bitCast<ui32, i32>(value)); }
 	};
 	template<> struct Hash<i64> {
-		constexpr static Size hash(const i64 value) { return static_cast<Size>(std::bit_cast<ui64, i64>(value)); }
+		constexpr static Size hash(const i64 value) { return static_cast<Size>(natl::bitCast<ui64, i64>(value)); }
 	};
 
 	template<> struct Hash<ui8> {
@@ -74,10 +75,10 @@ namespace natl {
 	};
 
 	template<> struct Hash<float> {
-		constexpr static Size hash(const float value) { return static_cast<Size>(std::bit_cast<ui32, float>(value)); }
+		constexpr static Size hash(const float value) { return static_cast<Size>(natl::bitCast<ui32, float>(value)); }
 	};
 	template<> struct Hash<double> {
-		constexpr static Size hash(const double value) { return static_cast<Size>(std::bit_cast<ui64, double>(value)); }
+		constexpr static Size hash(const double value) { return static_cast<Size>(natl::bitCast<ui64, double>(value)); }
 	};
 
 	template<typename DataType>

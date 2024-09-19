@@ -69,7 +69,7 @@ namespace natl {
 			return natl::unexpected(AlignPtrError::invalidAlignment); 
 		}
 
-		natl::Size misalignment = static_cast<natl::Size>(std::bit_cast<UIntPtrSized>(ptr)) % alignment;
+		natl::Size misalignment = static_cast<natl::Size>(natl::bitCast<UIntPtrSized>(ptr)) % alignment;
 		natl::Size adjustment = (misalignment == natl::Size(0)) ? natl::Size(0) : (alignment - misalignment);
 
 		if (space < size + adjustment) {

@@ -78,7 +78,7 @@ namespace natl {
 		return !(lhs < rhs);
 	}
 	template< class T1, class T2, class U1, class U2 >
-	constexpr std::common_comparison_category_t<CompareThreeWayResultType<T1, U1>, CompareThreeWayResultType<T2, U2>>
+	constexpr CommonComparisonCategory<CompareThreeWayResultType<T1, U1>, CompareThreeWayResultType<T2, U2>>
 		operator<=>(const Pair<T1, T2>& lhs, const Pair<U1, U2>& rhs) noexcept {
 		if (auto result = CompareThreeWay{}(lhs.first, rhs.first); result != 0) {
 			return result;
@@ -88,8 +88,8 @@ namespace natl {
 	}
 
 	template<class DataTypeFirst, class DataTypeSecond>
-	constexpr Pair<typename std::decay<DataTypeFirst>::type, typename std::decay<DataTypeSecond>::type> makePair(DataTypeFirst&& first, DataTypeSecond&& second) {
-		return Pair<typename std::decay<DataTypeFirst>::type, typename std::decay<DataTypeSecond>::type>(first, second);
+	constexpr Pair<typename Decay<DataTypeFirst>::type, typename Decay<DataTypeSecond>::type> makePair(DataTypeFirst&& first, DataTypeSecond&& second) {
+		return Pair<typename Decay<DataTypeFirst>::type, typename Decay<DataTypeSecond>::type>(first, second);
 	}
 
 	template<class DataTypeFirst, class DataTypeSecond>
@@ -173,8 +173,8 @@ namespace natl {
 	}
 
 	template<class DataTypeFirst, class DataTypeSecond>
-	constexpr CompressedPair<typename std::decay<DataTypeFirst>::type, typename std::decay<DataTypeSecond>::type> makePair(DataTypeFirst&& first, DataTypeSecond&& second) {
-		return CompressedPair<typename std::decay<DataTypeFirst>::type, typename std::decay<DataTypeSecond>::type>(first, second);
+	constexpr CompressedPair<typename Decay<DataTypeFirst>::type, typename Decay<DataTypeSecond>::type> makePair(DataTypeFirst&& first, DataTypeSecond&& second) {
+		return CompressedPair<typename Decay<DataTypeFirst>::type, typename Decay<DataTypeSecond>::type>(first, second);
 	}
 
 }

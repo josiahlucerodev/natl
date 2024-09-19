@@ -191,7 +191,7 @@ public:
 		testName += " testCStringConversion";
 		natl::Test test(natlTestFrom, testName, natl::TestType::leaf);
 
-		if constexpr (std::is_same_v<typename StringType::value_type, char>) {
+		if constexpr (natl::IsSameC<typename StringType::value_type, char>) {
 			StringType str = "Hello, World!";
 
 			// Test conversion to C-style string

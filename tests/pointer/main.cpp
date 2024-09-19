@@ -1,6 +1,7 @@
 
 //natl
 #include <natl/util/pointer.h>
+#include <natl/system/printFormatted.h>
 
 constexpr natl::Size constexprTest() {
 	natl::WeakPtr<int> weakPtr{};
@@ -33,6 +34,5 @@ int main() {
 	[[maybe_unused]] natl::Size value2 = constexprTest();
 	[[maybe_unused]] constexpr natl::Size value3 = constexprTest2();
 	[[maybe_unused]] natl::Size value4 = constexprTest2();
-	std::cout << value << value3;
-	std::cout << value2 << value2;
+	natl::printf(value, ", ", value2, ", ", value3, ", ", value4);
 }

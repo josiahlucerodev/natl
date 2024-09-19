@@ -62,13 +62,13 @@ namespace natl {
 	template<auto Value> constexpr inline auto ValueIdentity = ValueIdentityV<Value>::value;
 
 	//primary 
-	template<class Type> struct IsUnionV : BoolConstant<std::is_union_v<Type>> {};
-	template<class Type> inline constexpr Bool IsUnion = IsUnionV<Type>::value;
-	template<class Type> concept IsUnionC = IsUnion<Type>;
+	template<typename Type> struct IsUnionV : BoolConstant<std::is_union_v<Type>> {};
+	template<typename Type> inline constexpr Bool IsUnion = IsUnionV<Type>::value;
+	template<typename Type> concept IsUnionC = IsUnion<Type>;
 
-	template<class Type> struct IsNotUnionV : NegationV<IsUnionV<Type>> {};
-	template<class Type> inline constexpr Bool IsNotUnion = IsNotUnionV<Type>::value;
-	template<class Type> concept IsNotUnionC = IsNotUnion<Type>;
+	template<typename Type> struct IsNotUnionV : NegationV<IsUnionV<Type>> {};
+	template<typename Type> inline constexpr Bool IsNotUnion = IsNotUnionV<Type>::value;
+	template<typename Type> concept IsNotUnionC = IsNotUnion<Type>;
 
 	namespace impl {
 		template<typename Type> IntegralConstant<Bool, IsNotUnion<Type>> isClassTest(int Type::*);
@@ -90,12 +90,7 @@ namespace natl {
 	template<typename Type> constexpr inline Bool IsNotEnum = IsNotEnumV<Type>::value;
 	template<typename Type> concept IsNotEnumC = IsNotEnum<Type>;
 
-	template<typename FunctionSignature> struct IsFunctionV : FalseType {};
-	template<typename ReturnType, typename... ArgTypes> struct IsFunctionV<ReturnType(ArgTypes...)> : TrueType {};
-	template<typename FunctionSignature> constexpr inline Bool IsFunction = IsFunctionV<FunctionSignature>::value;
-	template<typename FunctionSignature> concept IsFunctionC = IsFunction<FunctionSignature>;
-
-	template<typename Type> struct IsPointerV: FalseType {};
+	template<typename Type> struct IsPointerV : FalseType {};
 	template<typename Type> struct IsPointerV<Type*> : TrueType {};
 	template<typename Type> struct IsPointerV<Type* const> : TrueType {};
 	template<typename Type> struct IsPointerV<Type* volatile> : TrueType {};
@@ -108,6 +103,68 @@ namespace natl {
 	template<typename Type, Size Number> struct IsArrayT<Type[Number]> : TrueType {};
 	template<typename Type> constexpr inline Bool IsArray = IsArrayT<Type>::value;
 	template<typename Type> concept IsArrayC = IsArray<Type>;
+
+#ifdef NATL_COMPILER_EMSCRIPTEN
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wambiguous-ellipsis" 
+#endif // NATL_COMPILER_EMSCRIPTEN
+
+
+	template<typename > struct IsFunctionV : FalseType {};
+	template<typename ReturnType, typename... ArgTypes> struct IsFunctionV<ReturnType(ArgTypes...)> : TrueType {};
+	template<typename ReturnType, typename... ArgTypes> struct IsFunctionV<ReturnType(ArgTypes......)> : TrueType {};
+	template<typename ReturnType, typename... ArgTypes> struct IsFunctionV<ReturnType(ArgTypes...) const> : TrueType {};
+	template<typename ReturnType, typename... ArgTypes> struct IsFunctionV<ReturnType(ArgTypes...) volatile> : TrueType {};
+	template<typename ReturnType, typename... ArgTypes> struct IsFunctionV<ReturnType(ArgTypes...) const volatile> : TrueType {};
+	template<typename ReturnType, typename... ArgTypes> struct IsFunctionV<ReturnType(ArgTypes......) const> : TrueType {};
+	template<typename ReturnType, typename... ArgTypes> struct IsFunctionV<ReturnType(ArgTypes......) volatile> : TrueType {};
+	template<typename ReturnType, typename... ArgTypes> struct IsFunctionV<ReturnType(ArgTypes......) const volatile> : TrueType {};
+	template<typename ReturnType, typename... ArgTypes> struct IsFunctionV<ReturnType(ArgTypes...)&> : TrueType {};
+	template<typename ReturnType, typename... ArgTypes> struct IsFunctionV<ReturnType(ArgTypes...) const&> : TrueType {};
+	template<typename ReturnType, typename... ArgTypes> struct IsFunctionV<ReturnType(ArgTypes...) volatile&> : TrueType {};
+	template<typename ReturnType, typename... ArgTypes> struct IsFunctionV<ReturnType(ArgTypes...) const volatile&> : TrueType {};
+	template<typename ReturnType, typename... ArgTypes> struct IsFunctionV<ReturnType(ArgTypes......)&> : TrueType {};
+	template<typename ReturnType, typename... ArgTypes> struct IsFunctionV<ReturnType(ArgTypes......) const&> : TrueType {};
+	template<typename ReturnType, typename... ArgTypes> struct IsFunctionV<ReturnType(ArgTypes......) volatile&> : TrueType {};
+	template<typename ReturnType, typename... ArgTypes> struct IsFunctionV<ReturnType(ArgTypes......) const volatile&> : TrueType {};
+	template<typename ReturnType, typename... ArgTypes> struct IsFunctionV<ReturnType(ArgTypes...)&&> : TrueType {};
+	template<typename ReturnType, typename... ArgTypes> struct IsFunctionV<ReturnType(ArgTypes...) const&&> : TrueType {};
+	template<typename ReturnType, typename... ArgTypes> struct IsFunctionV<ReturnType(ArgTypes...) volatile&&> : TrueType {};
+	template<typename ReturnType, typename... ArgTypes> struct IsFunctionV<ReturnType(ArgTypes...) const volatile&&> : TrueType {};
+	template<typename ReturnType, typename... ArgTypes> struct IsFunctionV<ReturnType(ArgTypes......)&&> : TrueType {};
+	template<typename ReturnType, typename... ArgTypes> struct IsFunctionV<ReturnType(ArgTypes......) const&&> : TrueType {};
+	template<typename ReturnType, typename... ArgTypes> struct IsFunctionV<ReturnType(ArgTypes......) volatile&&> : TrueType {};
+	template<typename ReturnType, typename... ArgTypes> struct IsFunctionV<ReturnType(ArgTypes......) const volatile&&> : TrueType {};
+	template<typename ReturnType, typename... ArgTypes> struct IsFunctionV<ReturnType(ArgTypes...) noexcept> : TrueType {};
+	template<typename ReturnType, typename... ArgTypes> struct IsFunctionV<ReturnType(ArgTypes......) noexcept> : TrueType {};
+	template<typename ReturnType, typename... ArgTypes> struct IsFunctionV<ReturnType(ArgTypes...) const noexcept> : TrueType {};
+	template<typename ReturnType, typename... ArgTypes> struct IsFunctionV<ReturnType(ArgTypes...) volatile noexcept> : TrueType {};
+	template<typename ReturnType, typename... ArgTypes> struct IsFunctionV<ReturnType(ArgTypes...) const volatile noexcept> : TrueType {};
+	template<typename ReturnType, typename... ArgTypes> struct IsFunctionV<ReturnType(ArgTypes......) const noexcept> : TrueType {};
+	template<typename ReturnType, typename... ArgTypes> struct IsFunctionV<ReturnType(ArgTypes......) volatile noexcept> : TrueType {};
+	template<typename ReturnType, typename... ArgTypes> struct IsFunctionV<ReturnType(ArgTypes......) const volatile noexcept> : TrueType {};
+	template<typename ReturnType, typename... ArgTypes> struct IsFunctionV<ReturnType(ArgTypes...) & noexcept> : TrueType {};
+	template<typename ReturnType, typename... ArgTypes> struct IsFunctionV<ReturnType(ArgTypes...) const& noexcept> : TrueType {};
+	template<typename ReturnType, typename... ArgTypes> struct IsFunctionV<ReturnType(ArgTypes...) volatile& noexcept> : TrueType {};
+	template<typename ReturnType, typename... ArgTypes> struct IsFunctionV<ReturnType(ArgTypes...) const volatile& noexcept> : TrueType {};
+	template<typename ReturnType, typename... ArgTypes> struct IsFunctionV<ReturnType(ArgTypes......) & noexcept> : TrueType {};
+	template<typename ReturnType, typename... ArgTypes> struct IsFunctionV<ReturnType(ArgTypes......) const& noexcept> : TrueType {};
+	template<typename ReturnType, typename... ArgTypes> struct IsFunctionV<ReturnType(ArgTypes......) volatile& noexcept> : TrueType {};
+	template<typename ReturnType, typename... ArgTypes> struct IsFunctionV<ReturnType(ArgTypes......) const volatile& noexcept> : TrueType {};
+	template<typename ReturnType, typename... ArgTypes> struct IsFunctionV<ReturnType(ArgTypes...) && noexcept> : TrueType {};
+	template<typename ReturnType, typename... ArgTypes> struct IsFunctionV<ReturnType(ArgTypes...) const&& noexcept> : TrueType {};
+	template<typename ReturnType, typename... ArgTypes> struct IsFunctionV<ReturnType(ArgTypes...) volatile&& noexcept> : TrueType {};
+	template<typename ReturnType, typename... ArgTypes> struct IsFunctionV<ReturnType(ArgTypes...) const volatile&& noexcept> : TrueType {};
+	template<typename ReturnType, typename... ArgTypes> struct IsFunctionV<ReturnType(ArgTypes......) && noexcept> : TrueType {};
+	template<typename ReturnType, typename... ArgTypes> struct IsFunctionV<ReturnType(ArgTypes......) const&& noexcept> : TrueType {};
+	template<typename ReturnType, typename... ArgTypes> struct IsFunctionV<ReturnType(ArgTypes......) volatile&& noexcept> : TrueType {};
+	template<typename ReturnType, typename... ArgTypes> struct IsFunctionV<ReturnType(ArgTypes......) const volatile&& noexcept> : TrueType {};
+	template<typename FunctionSignature> constexpr inline Bool IsFunction = IsFunctionV<FunctionSignature>::value;
+	template<typename FunctionSignature> concept IsFunctionC = IsFunction<FunctionSignature>;
+
+#ifdef NATL_COMPILER_EMSCRIPTEN
+#pragma GCC diagnostic pop
+#endif // NATL_COMPILER_EMSCRIPTEN
 
 	//underlying
 	template <typename EnumType>
@@ -130,14 +187,14 @@ namespace natl {
 	}
 
 	//relationships
-	template<typename Type, typename OtherType> struct IsSameT : FalseType {};
-	template<typename Type> struct IsSameT<Type, Type> : TrueType {};
-	template<typename Type, typename OtherType> constexpr inline Bool IsSame = IsSameT<Type, OtherType>::value;
+	template<typename Type, typename OtherType> struct IsSameV : FalseType {};
+	template<typename Type> struct IsSameV<Type, Type> : TrueType {};
+	template<typename Type, typename OtherType> constexpr inline Bool IsSame = IsSameV<Type, OtherType>::value;
 	template<typename Type, typename OtherType> concept IsSameC = IsSame<Type, OtherType>;
 
-	template<typename Type, typename OtherType> struct IsNotSameT : TrueType {};
-	template<typename Type> struct IsNotSameT<Type, Type> : FalseType {};
-	template<typename Type, typename OtherType> constexpr inline Bool IsNotSame = IsNotSameT<Type, OtherType>::value;
+	template<typename Type, typename OtherType> struct IsNotSameV : TrueType {};
+	template<typename Type> struct IsNotSameV<Type, Type> : FalseType {};
+	template<typename Type, typename OtherType> constexpr inline Bool IsNotSame = IsNotSameV<Type, OtherType>::value;
 	template<typename Type, typename OtherType> concept IsNotSameC = IsNotSame<Type, OtherType>;
 
 	namespace impl {
@@ -197,12 +254,13 @@ namespace natl {
 	template<typename Type> constexpr inline Bool IsNotEmpty = IsNotEmptyV<Type>::value;
 	template<typename Type> concept IsNotEmptyC = IsNotEmpty<Type>;
 
-	template<typename DataType> struct IsVoidV : IsSameT<void, RemoveConctVolatile<DataType>> {};
+	template<typename DataType> struct IsVoidV : IsSameV<void, RemoveConctVolatile<DataType>> {};
 	template<typename DataType> constexpr inline Bool IsVoid = IsVoidV<DataType>::value;
 	template<typename DataType> concept IsVoidC = IsVoid<DataType>;
 
 	template<typename... AnyTypes> struct MakeVoidT { using type = void; };
 	template<typename... AnyTypes> using MakeVoid = MakeVoidT<AnyTypes...>::type;
+	template <typename... Types> using Void = void;
 
 
 	template<typename DataType, template<typename...> typename Primary>
@@ -320,6 +378,7 @@ namespace natl {
 			>
 		>;
 	};
+
 	template<class Type> using Decay = DecayT<Type>::type;
 
 	//convert
@@ -482,13 +541,13 @@ namespace natl {
 	struct IsAssignableV : BoolConstant<IsAssignable<Type, OtherType>> {};
 
 	template <typename DataType>
-	concept IsCopyConstructible = std::is_copy_constructible_v<std::decay_t<DataType>>;
+	concept IsCopyConstructible = std::is_copy_constructible_v<Decay<DataType>>;
 
 	template <typename DataType>
-	concept IsCopyAssignable = std::is_copy_assignable_v<std::decay_t<DataType>>;
+	concept IsCopyAssignable = std::is_copy_assignable_v<Decay<DataType>>;
 
 	template <typename DataType>
-	concept IsMoveConstructible = std::is_move_constructible_v<std::decay_t<DataType>>;
+	concept IsMoveConstructible = std::is_move_constructible_v<Decay<DataType>>;
 
 	namespace impl {
 #define NATL_TYPE_TRIAT_CUSTOM_TRIVIALLY_FUN(conceptName, memberName) \
@@ -551,28 +610,28 @@ namespace natl {
 
 	template <typename Src, typename Dst, typename SrcRef>
 	concept MemcopyConstructibleSrcDst =
-		!std::is_same_v<Src, void> &&
-		!std::is_same_v<Dst, void> &&
-		!std::is_same_v<SrcRef, void> &&
+		!IsSameC<Src, void> &&
+		!IsSameC<Dst, void> &&
+		!IsSameC<SrcRef, void> &&
 		(
-			(std::is_same_v<std::decay_t<Src>, std::decay_t<Dst>>&& MemcopyConstructible<Src>) ||
+			(IsSameC<Decay<Src>, Decay<Dst>>&& MemcopyConstructible<Src>) ||
 			(sizeof(Src) == sizeof(Dst) && std::is_trivially_constructible_v<Dst, SrcRef>)
 			);
 
 	template<typename Src, typename Dst, typename SrcRef, typename DstRef>
 	concept MemcopyAssignableSrcDst =
-		(std::is_same_v<Src, Dst> && MemcopyConstructible<Src>) ||
+		(IsSameC<Src, Dst> && MemcopyConstructible<Src>) ||
 		(sizeof(Src) == sizeof(Dst) && std::is_trivially_assignable_v<DstRef, SrcRef>);
 
 	template <typename Type>
 	concept MemcpyCompareable = IsTriviallyCompareable<Type>;
 
 	template<typename Src, typename Dst>
-	concept MemcpyCompareableSrcDst = (std::is_same_v<Src, Dst> && MemcpyCompareable<Src>);
+	concept MemcpyCompareableSrcDst = (IsSameC<Src, Dst> && MemcpyCompareable<Src>);
 	
 	//cast
 	template <typename From, typename To>
-	concept IsPolymorphicCastable = std::is_base_of_v<From, To> || std::is_convertible_v<From*, To*>;
+	concept IsPolymorphicCastable = std::is_base_of_v<From, To> || IsConvertibleC<From*, To*>;
 
 
 	//compare

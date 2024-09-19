@@ -68,7 +68,7 @@ namespace natl {
 
     template <Size Index, class FindType, class TestType, class... Types>
     struct TemplatePackFindIndexOfTypeImpl<Index, FindType, TestType, Types...> {
-        constexpr static Size value = std::is_same_v<FindType, TestType> ? Index : TemplatePackFindIndexOfTypeImpl<Index + 1, FindType, Types...>::value;
+        constexpr static Size value = IsSameC<FindType, TestType> ? Index : TemplatePackFindIndexOfTypeImpl<Index + 1, FindType, Types...>::value;
     };
 
     template <class FindType, class... Types>
@@ -262,7 +262,7 @@ namespace natl {
 
         template<template<typename> typename PredicateType, typename TestElement, typename... RemainingElements>
         struct TypePackRemoveElementsIfImpl<PredicateType, TestElement, RemainingElements...> {
-            using type = std::conditional_t<
+            using type = Conditional<
                 !PredicateType<TestElement>::value,
                 typename TypePackRemoveElementsIfImpl<PredicateType, RemainingElements...>::type::template add_new_elements_front<TestElement>,
                 TypePack<RemainingElements...>
@@ -363,7 +363,7 @@ namespace natl {
         template <template<typename, typename> typename TypeCompare, typename ExistingTypePack, typename TestElement, typename... RemainingElement>
         struct TypePackAddUniqueImpl<TypeCompare, ExistingTypePack, TestElement, RemainingElement...> {
             using remaining_test_type = typename TypePackAddUniqueImpl<TypeCompare, ExistingTypePack, RemainingElement...>::type;
-            using type = std::conditional_t<
+            using type = Conditional<
                 TypePackHasElementImpl<TypeCompare, TestElement, ExistingTypePack>::value,
                 remaining_test_type,
                 typename remaining_test_type::template add_new_elements_back<TestElement>
@@ -666,7 +666,7 @@ namespace natl {
         template<Size Index>
         struct PackAtAnyType {
             template<typename Type>
-            constexpr PackAtAnyType(Type) noexcept {};
+            constexpr PackAtAnyType(Type) noexcept {}
         };
     }
 

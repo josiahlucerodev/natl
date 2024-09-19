@@ -98,7 +98,7 @@ namespace natl {
 					bitsArray[i] = ~BitStorageType(0);
 				}
 			} else {
-				std::memset(&bitsArray, 0xFF, sizeof(bitsArray));
+				memset(&bitsArray, 0xFF, sizeof(bitsArray));
 			}
 		}
 
@@ -182,7 +182,7 @@ namespace natl {
 				}
 				return true;
 			} else {
-				return std::memcmp(&bitsArray, rhs.bitsArray, sizeof(bitsArray)) == 0;
+				return memcmp(&bitsArray, rhs.bitsArray, sizeof(bitsArray)) == 0;
 			}
 		}
 		constexpr Bool operator!=(const BitArrayBitStorageType& rhs) const noexcept {

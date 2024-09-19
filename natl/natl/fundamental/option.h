@@ -323,7 +323,7 @@ namespace natl {
 		}
 
 		//special
-		constexpr std::size_t staticHash(const Option& option) requires(Hashable<DataType>) {
+		constexpr Size staticHash(const Option& option) requires(Hashable<DataType>) {
 			if (option.hasValue()) {
 				return Hash<DataType>::hash(value());
 			} else {

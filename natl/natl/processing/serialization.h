@@ -26,11 +26,11 @@ namespace natl {
 	constexpr SerializeID operator|(const SerializeID& lhs, const SerializeID& rhs) noexcept {
 		return natl::fromUnderlying<SerializeID>(toUnderlying<SerializeID>(lhs) | toUnderlying<SerializeID>(rhs));
 	}
-	constexpr SerializeID& operator&(SerializeID& lhs, const SerializeID& rhs) noexcept {
+	constexpr SerializeID& operator&=(SerializeID& lhs, const SerializeID& rhs) noexcept {
 		lhs = lhs & rhs;
 		return lhs;
 	}
-	constexpr SerializeID& operator|(SerializeID& lhs, const SerializeID& rhs) noexcept {
+	constexpr SerializeID& operator|=(SerializeID& lhs, const SerializeID& rhs) noexcept {
 		lhs = lhs | rhs;
 		return lhs;
 	}
@@ -68,47 +68,47 @@ namespace natl {
 
 	template<typename Type> struct IsSerializeCharTypeV : FalseType {};
 	template<> struct IsSerializeCharTypeV<SerializeCharType> : TrueType {};
-	template<typename Type> constexpr inline Bool IsSerializeCharType = IsSerializeCharType<Type>::value;
+	template<typename Type> constexpr inline Bool IsSerializeCharType = IsSerializeCharTypeV<Type>::value;
 	template<typename Type> concept IsSerializeCharTypeC = IsSerializeCharType<Type>;
 
 	template<typename Type> struct IsSerializeStrTypeV : FalseType {};
 	template<> struct IsSerializeStrTypeV<SerializeStrType> : TrueType {};
-	template<typename Type> constexpr inline Bool IsSerializeStrType = IsSerializeStrType<Type>::value;
+	template<typename Type> constexpr inline Bool IsSerializeStrType = IsSerializeStrTypeV<Type>::value;
 	template<typename Type> concept IsSerializeStrTypeC = IsSerializeStrType<Type>;
 
 	template<typename Type> struct IsSerializeFlagTypeV : FalseType {};
 	template<> struct IsSerializeFlagTypeV<SerializeFlagType> : TrueType {};
-	template<typename Type> constexpr inline Bool IsSerializeFlagType = IsSerializeFlagType<Type>::value;
+	template<typename Type> constexpr inline Bool IsSerializeFlagType = IsSerializeFlagTypeV<Type>::value;
 	template<typename Type> concept IsSerializeFlagTypeC = IsSerializeFlagType<Type>;
 	
 	template<typename Type> struct IsSerializeStructTypeV : FalseType {};
 	template<> struct IsSerializeStructTypeV<SerializeStructType> : TrueType {};
-	template<typename Type> constexpr inline Bool IsSerializeStructType = IsSerializeStructType<Type>::value;
+	template<typename Type> constexpr inline Bool IsSerializeStructType = IsSerializeStructTypeV<Type>::value;
 	template<typename Type> concept IsSerializeStructTypeC = IsSerializeStructType<Type>;
 
 	template<typename Type> struct IsSerializeFileTypeV : FalseType {};
 	template<> struct IsSerializeFileTypeV<SerializeFileType> : TrueType {};
-	template<typename Type> constexpr inline Bool IsSerializeFileType = IsSerializeFileType<Type>::value;
+	template<typename Type> constexpr inline Bool IsSerializeFileType = IsSerializeFileTypeV<Type>::value;
 	template<typename Type> concept IsSerializeFileTypeC = IsSerializeFileType<Type>;
 	
 	template<typename Type> struct IsSerializeBlobTypeV : FalseType {};
 	template<> struct IsSerializeBlobTypeV<SerializeBlobType> : TrueType {};
-	template<typename Type> constexpr inline Bool IsSerializeBlobType = IsSerializeBlobType<Type>::value;
+	template<typename Type> constexpr inline Bool IsSerializeBlobType = IsSerializeBlobTypeV<Type>::value;
 	template<typename Type> concept IsSerializeBlobTypeC = IsSerializeBlobType<Type>;
 	
 	template<typename Type> struct IsSerializeOptionalTypeV : FalseType {};
 	template<typename SerializeType> struct IsSerializeOptionalTypeV<SerializeOptionalType<SerializeType>> : TrueType {};
-	template<typename Type> constexpr inline Bool IsSerializeOptionalType = IsSerializeOptionalType<Type>::value;
+	template<typename Type> constexpr inline Bool IsSerializeOptionalType = IsSerializeOptionalTypeV<Type>::value;
 	template<typename Type> concept IsSerializeOptionalTypeC = IsSerializeOptionalType<Type>;
 
 	template<typename Type> struct IsSerializeArrayTypeV : FalseType {};
 	template<typename ElementType> struct IsSerializeArrayTypeV<SerializeArrayType<ElementType>> : FalseType {};
-	template<typename Type> constexpr inline Bool IsSerializeArrayType = IsSerializeArrayType<Type>::value;
+	template<typename Type> constexpr inline Bool IsSerializeArrayType = IsSerializeArrayTypeV<Type>::value;
 	template<typename Type> concept IsSerializeArrayTypeC = IsSerializeArrayType<Type>;
 
 	template<typename Type> struct IsSerializeDicTypeV : FalseType {};
 	template<typename KeyType, typename ValueType> struct IsSerializeDicTypeV<SerializeDicType<KeyType, ValueType>> : TrueType {};
-	template<typename Type> constexpr inline Bool IsSerializeDicType = IsSerializeDicType<Type>::value;
+	template<typename Type> constexpr inline Bool IsSerializeDicType = IsSerializeDicTypeV<Type>::value;
 	template<typename Type> concept IsSerializeDicTypeC = IsSerializeDicType<Type>;
 
 	template<typename Type> struct Serialize;
@@ -173,7 +173,7 @@ namespace natl {
 		using decayed_serialize_type = Serialize<Decay<SerializeType>>;
 		using serialize_as_type = decayed_serialize_type::serialize_as_type;
 
-		serializer.beginWrite<ID>(name, serializeNameTag);
+		serializer.template beginWrite<ID>(name, serializeNameTag);
 		serializer.template as<serialize_as_type, ID>();
 		serializer.writeValue();
 		decayed_serialize_type::template write<Serializer>(serializer, serializeValue, natl::forward<SerializeArgs>(serializeArgs)...);
@@ -192,7 +192,7 @@ namespace natl {
 		using decayed_serialize_type = Serialize<Decay<SerializeType>>;
 		using serialize_as_type = decayed_serialize_type::serialize_as_type;
 
-		serializer.beginWrite<SerializeID::none, SerializeNumberTagType>(name, serializeNumberTag);
+		serializer.template beginWrite<SerializeID::none, SerializeNumberTagType>(name, serializeNumberTag);
 		serializer.template as<serialize_as_type, SerializeID::none>();
 		serializer.writeValue();
 		decayed_serialize_type::template write<Serializer>(serializer, serializeValue, natl::forward<SerializeArgs>(serializeArgs)...);
@@ -212,7 +212,7 @@ namespace natl {
 		using decayed_serialize_type = Serialize<Decay<SerializeType>>;
 		using serialize_as_type = decayed_serialize_type::serialize_as_type;
 
-		serializer.beginWrite<ID, SerializeNumberTagType>(name, serializeNameTag, serializeNumberTag);
+		serializer.template beginWrite<ID, SerializeNumberTagType>(name, serializeNameTag, serializeNumberTag);
 		serializer.template as<serialize_as_type, ID>();
 		serializer.writeValue();
 		decayed_serialize_type::template write<Serializer>(serializer, serializeValue, natl::forward<SerializeArgs>(serializeArgs)...);

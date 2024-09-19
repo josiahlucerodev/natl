@@ -285,7 +285,7 @@ namespace natl {
 
 	template<typename Float>
 		requires(IsBuiltInFloatingPointC<Float>)
-	constexpr Float stringToFloatDecimal(const ConstStringView& string, StringNumericConvertError& convertError) noexcept {
+	constexpr Float stringDecimalToFloat(const ConstStringView& string, StringNumericConvertError& convertError) noexcept {
 		if (string.size() == 0) {
 			convertError = StringNumericConvertError::invalid;
 			return 0;
@@ -350,16 +350,16 @@ namespace natl {
 
 	template<typename Float>
 		requires(IsBuiltInFloatingPointC<Float>)
-	constexpr Float stringToFloatDecimal(const ConstStringView& string) noexcept {
+	constexpr Float stringDecimalToFloat(const ConstStringView& string) noexcept {
 		StringNumericConvertError convertError;
-		return stringToFloatDecimal<Float>(string, convertError);
+		return stringDecimalToFloat<Float>(string, convertError);
 	}
 
 	template<typename Float>
 		requires(IsBuiltInFloatingPointC<Float>)
 	constexpr Expect<Float, StringNumericConvertError> stringToFloatExpect(const ConstStringView& string) noexcept {
 		StringNumericConvertError convertError = StringNumericConvertError::unknown;
-		Float value = stringToFloatDecimal<Float>(string, convertError);
+		Float value = stringDecimalToFloat<Float>(string, convertError);
 		if (convertError != StringNumericConvertError::none) {
 			return unexpected<StringNumericConvertError>(convertError);
 		} else {

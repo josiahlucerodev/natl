@@ -8,6 +8,7 @@
 
 //own
 #include "../util/iterators.h"
+#include "../util/typeTraits.h"
 
 //interface
 namespace natl {
@@ -33,7 +34,7 @@ namespace natl {
 
 	template<class Iter>
 	concept IteratorConvertableToPtr = requires(Iter iter) {
-		{&*iter} -> std::convertible_to<typename std::iterator_traits<Iter>::value_type*>;
+		{&*iter} -> ConvertibleTo<typename Iter::value_type*>;
 	};
 
 	template<class Contanier>
@@ -58,27 +59,27 @@ namespace natl {
 
 	template<class Contanier>
 	concept HasSizeMethod = requires(const Contanier container) {
-		{ container.size() } -> std::convertible_to<std::size_t>;
+		{ container.size() } -> ConvertibleTo<Size>;
 	};
 
 	template<class Container, class DataType>
 	concept ContainerHasPushBackFunction = requires(Container container) {
-		{ container.push_back(std::declval<DataType>()) };
+		{ container.push_back(natl::declval<DataType>()) };
 	};
 
 	template<class Contanier>
 		requires(HasIteratorType<Contanier>)
 	struct ContainerIteratorTraits {
 	public:
-		using difference_type = std::iterator_traits<typename Contanier::iterator>::difference_type;
-		using value_type = std::iterator_traits<typename Contanier::iterator>::value_type;
-		using pointer = std::iterator_traits<typename Contanier::iterator>::pointer;
-		using reference = std::iterator_traits<typename Contanier::iterator>::reference;
-		using iterator_category = std::iterator_traits<typename Contanier::iterator>::iterator_category;
+		using difference_type = IteratorTraits<typename Contanier::iterator>::difference_type;
+		using value_type = IteratorTraits<typename Contanier::iterator>::value_type;
+		using pointer = IteratorTraits<typename Contanier::iterator>::pointer;
+		using reference = IteratorTraits<typename Contanier::iterator>::reference;
+		using iterator_category = IteratorTraits<typename Contanier::iterator>::iterator_category;
 	};
 
 	template <typename... Contaniers>
-	constexpr std::size_t sumContaniersSizes(const Contaniers&... contaniers) noexcept {
+	constexpr Size sumContaniersSizes(const Contaniers&... contaniers) noexcept {
 		return (contaniers.size() + ...);
 	}
 
@@ -91,13 +92,13 @@ namespace natl {
 
 	template<class ForwardIter1, class ForwardIter2>
 	constexpr void iterSwap(ForwardIter1 a, ForwardIter2 b) noexcept {
-		swap<typename IterPtrTraits<ForwardIter1>::value_type>(*a, *b);
+		swap<typename IteratorTraits<ForwardIter1>::value_type>(*a, *b);
 	}
 
 	template<class BidirectionalIter>
 	constexpr void reverse(BidirectionalIter first, BidirectionalIter last) noexcept {
-		using iterator_category = typename std::iterator_traits<BidirectionalIter>::iterator_category;
-		if constexpr (std::is_base_of_v<std::random_access_iterator_tag, iterator_category>) {
+		using iterator_category = typename natl::IteratorTraits<BidirectionalIter>::iterator_category;
+		if constexpr (IsSameC<RandomAccessIteratorTag, iterator_category>) {
 			if (first == last) { return; }
 			for (--last; first < last; (void)++first, --last) {
 				iterSwap<BidirectionalIter, BidirectionalIter>(first, last);

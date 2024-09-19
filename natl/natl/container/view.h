@@ -1,8 +1,5 @@
 #pragma once
 
-//std
-#include <cstdint>
-
 //own
 #include "container.h"
 #include "../util/iterators.h"
@@ -24,10 +21,10 @@ namespace natl {
 	};
 
 	template<class Container>
-	concept ViewConstructable = HasIteratorType<Container> && std::contiguous_iterator<typename Container::iterator> && 
+	concept ViewConstructable = HasIteratorType<Container> && IsRandomAccessIterator<typename Container::iterator> && 
 		requires(Container container) {
-			{ container.end() } -> std::convertible_to<typename Container::iterator>;
-			{ container.begin() } -> std::convertible_to<typename Container::iterator>;
+			{ container.end() } -> ConvertibleTo<typename Container::iterator>;
+			{ container.begin() } -> ConvertibleTo<typename Container::iterator>;
 	};
 
 	template<class Container, class Iter = Container::iterator>

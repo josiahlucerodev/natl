@@ -36,7 +36,7 @@ namespace natl {
 		return hash;
 	}
 	constexpr Size hashStringLessThan8(const Ascii* begin, const Ascii* end) noexcept {
-		return hashStringLessThan8(begin, end - begin);
+		return hashStringLessThan8(begin, static_cast<Size>(end - begin));
 	}
 	constexpr Size hashStringLessThan8(const Ascii* str) noexcept {
 		return hashStringLessThan8(str, cstringLength(str));

@@ -8313,7 +8313,7 @@ namespace natl::simd {
 			using SrcDataType = SrcInfo::value_type;
 			using UIntByteType = UIntOfByteSize<sizeof(SrcDataType)>;
 			SimdRegisterAny<simd_arch> output;
-			if (std::is_constant_evaluated()) {
+			if (isConstantEvaluated()) {
 				Size dstIndex = 0;
 				for (Size srcIndex = 0; srcIndex < SrcInfo::count(); srcIndex++) {
 					for (Size wordIndex = 0; wordIndex < sizeof(SrcDataType) / sizeof(ui8); wordIndex++, dstIndex++) {
@@ -8365,7 +8365,7 @@ namespace natl::simd {
 			using DstDataType = SrcInfo::value_type;
 			using UIntByteType = UIntOfByteSize<sizeof(DstDataType)>;
 
-			if (std::is_constant_evaluated()) {
+			if (isConstantEvaluated()) {
 				Src output{};
 				Size srcIndex = 0;
 				for (Size dstIndex = 0; dstIndex < SrcInfo::count(); dstIndex++) {
