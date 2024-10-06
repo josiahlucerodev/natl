@@ -208,6 +208,16 @@ namespace natl {
     constexpr DataType TemplatePackOpFoldWithIndexAndArgValue = impl::TemplatePackOpFoldWithIndexAndArgImpl<DataType, 0, ValuePredicateArg, ValuePredicate, OpPredicate, ArgTypes...>::value;
 
 
+    template<template<typename, typename> typename TypeCompare, typename TestElement, typename... Elements>
+    struct TemplatePackHasElementV {
+        constexpr static Bool value = (TypeCompare<TestElement, Elements>::value || ...);
+    };
+    template<template<typename, typename> typename TypeCompare, typename TestElement, typename... Elements>
+    constexpr natl::Bool TemplatePackHasElement = TemplatePackHasElementV<TypeCompare, TestElement, Elements...>::value;
+    template<template<typename, typename> typename TypeCompare, typename TestElement, typename... Elements>
+    concept TemplatePackHasElementC = TemplatePackHasElement<TypeCompare, TestElement, Elements...>;
+    
+
     template<typename... Elements>
     struct TypePack {
         template<typename... NewElements>
@@ -215,6 +225,8 @@ namespace natl {
         template<typename... NewElements>
         using add_new_elements_front = TypePack<NewElements..., Elements...>;
         constexpr static Size size = sizeof...(Elements);
+        template<Size Index>
+        using at = TemplatePackNthElement<Index, Elements...>::type;
     };
 
     namespace impl {
@@ -356,6 +368,8 @@ namespace natl {
     template<template<typename, typename> typename TypeCompare, typename TestElement, typename InputTypePack>
         requires(IsTypePackC<InputTypePack>)
     constexpr Bool TypePackHasElement = impl::TypePackHasElementImpl<TypeCompare, TestElement, InputTypePack>::value;
+    template<template<typename, typename> typename TypeCompare, typename TestElement, typename InputTypePack>
+    concept TypePackHasElementC = IsTypePackC<InputTypePack> && TypePackHasElement<TypeCompare, TestElement, InputTypePack>;
 
     namespace impl {
         template <template<typename, typename> typename TypeCompare, typename ExistingTypePack, typename... TestElements>

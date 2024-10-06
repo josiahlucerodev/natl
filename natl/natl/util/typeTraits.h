@@ -333,7 +333,7 @@ namespace natl {
 
 	//misc op
 	template<typename DataType> AddRValueReference<DataType> declval() noexcept {
-		//static_assert(false, "natl: declval not allowed in an evaluated context");
+		return AddRValueReference<DataType>{};
 	}
 	template <typename DataType>
 	constexpr RemoveReference<DataType>&& move(DataType&& arg) noexcept {
