@@ -14,7 +14,7 @@
 
 //interface
 namespace natl {
-	template<class CharType>
+	template<typename CharType>
 	class BaseStringView {
 	public:
 		using value_type = CharType;
@@ -33,12 +33,6 @@ namespace natl {
 		using const_reverse_iterator = ReverseRandomAccessIterator<const value_type>;
 
 		static constexpr size_type npos = size_type(-1);
-
-		//movement info 
-		constexpr static Bool triviallyRelocatable = true;
-		constexpr static Bool triviallyDefaultConstructible = true;
-		constexpr static Bool triviallyCompareable = false;
-		constexpr static Bool triviallyDestructible = true;
 
 		using ConstBaseStringView = BaseStringView<const CharType>;
 	private:
@@ -867,6 +861,34 @@ namespace natl {
 			return os;
 		}
 	};
+
+	template<typename CharType>
+	struct IsTriviallyCompareableV<BaseStringView<CharType>>
+		: FalseType {};
+
+	template<typename CharType>
+	struct IsTriviallyRelocatableV<BaseStringView<CharType>>
+		: TrueType {};
+	template<typename CharType>
+	struct IsTriviallyConstructibleV<BaseStringView<CharType>>
+		: TrueType {};
+	template<typename CharType>
+	struct IsTriviallyDestructibleV<BaseStringView<CharType>>
+		: TrueType {};
+
+	template<typename CharType>
+	struct IsTriviallyConstRefConstructibleV<BaseStringView<CharType>>
+		: TrueType {};
+	template<typename CharType>
+	struct IsTriviallyMoveConstructibleV<BaseStringView<CharType>>
+		: TrueType {};
+
+	template<typename CharType>
+	struct IsTriviallyConstRefAssignableV<BaseStringView<CharType>>
+		: TrueType {};
+	template<typename CharType>
+	struct IsTriviallyMoveAssignableV<BaseStringView<CharType>>
+		: TrueType {};
 
 	using StringView = BaseStringView<Ascii>;
 	using ConstStringView = BaseStringView<const Ascii>;

@@ -35,11 +35,11 @@ namespace natl {
 		private:
 			mutable Functor functor;
 		public:
-			constexpr Callable(const Functor& functorIn) noexcept requires(IsCopyConstructible<Functor>) : functor(functorIn) {}
+			constexpr Callable(const Functor& functorIn) noexcept requires(IsCopyConstructibleC<Functor>) : functor(functorIn) {}
 			constexpr Callable(Functor&& functorIn) noexcept : functor(natl::move(functorIn)) {}
 
 			constexpr callable_base* copyCallable(callable_base* location) const noexcept override {
-				if constexpr (IsCopyConstructible<Functor>) {
+				if constexpr (IsCopyConstructibleC<Functor>) {
 					if (location) {
 						natl::construct<Callable>(static_cast<Callable*>(location), functor);
 						return nullptr;
@@ -94,7 +94,7 @@ namespace natl {
 			using typename constexpr_callable_base::destory_callable_function_type;
 
 			Functor functor;
-			constexpr ConstexprCallable(const Functor& functorIn) noexcept requires(IsCopyConstructible<Functor>) : functor(functorIn) {}
+			constexpr ConstexprCallable(const Functor& functorIn) noexcept requires(IsCopyConstructibleC<Functor>) : functor(functorIn) {}
 			constexpr ConstexprCallable(Functor&& functorIn) noexcept : functor(natl::move(functorIn)) {}
 
 			constexpr ~ConstexprCallable() noexcept = default;
@@ -107,7 +107,7 @@ namespace natl {
 
 			constexpr copy_functor_storage_function_type getCopyFunctorStorageFunction() const noexcept override {
 				return [](const constexpr_callable_base* callableBase) noexcept -> constexpr_callable_base* {
-					if constexpr (IsCopyConstructible<Functor>) {
+					if constexpr (IsCopyConstructibleC<Functor>) {
 						using constexpr_callable_alloc = DefaultAllocator<ConstexprCallable>;
 						ConstexprCallable* newCallable = constexpr_callable_alloc::allocate(1);
 						natl::construct<ConstexprCallable>(newCallable, static_cast<const ConstexprCallable*>(callableBase)->functor);
@@ -148,14 +148,6 @@ namespace natl {
 			using arg_types = TypePack<ArgTypes...>;
 			using allocator_type = Alloc;
 			using function_ptr_type = ReturnType(*)(ArgTypes...) noexcept;
-
-			//movement info 
-			constexpr static Bool triviallyRelocatable = true;
-			constexpr static Bool triviallyDefaultConstructible = true;
-			constexpr static Bool triviallyCompareable = false;
-			constexpr static Bool triviallyDestructible = false;
-			constexpr static Bool triviallyConstRefConstructedable = false;
-			constexpr static Bool triviallyMoveConstructedable = false;
 
 			constexpr static Size smallBufferSize = Capacity;
 
@@ -417,6 +409,34 @@ namespace natl {
 				self() = natl::move(temp);
 			}
 		};
+
+		template<typename ReturnType, typename... ArgTypes, Size Capacity, Bool MoveOnly, typename Alloc>
+		struct IsTriviallyCompareableV<FunctionBase<ReturnType(ArgTypes...), Capacity, MoveOnly, Alloc>>
+			: FalseType {};
+
+		template<typename ReturnType, typename... ArgTypes, Size Capacity, Bool MoveOnly, typename Alloc>
+		struct IsTriviallyRelocatableV<FunctionBase<ReturnType(ArgTypes...), Capacity, MoveOnly, Alloc>>
+			: TrueType {};
+		template<typename ReturnType, typename... ArgTypes, Size Capacity, Bool MoveOnly, typename Alloc>
+		struct IsTriviallyConstructibleV<FunctionBase<ReturnType(ArgTypes...), Capacity, MoveOnly, Alloc>>
+			: TrueType {};
+		template<typename ReturnType, typename... ArgTypes, Size Capacity, Bool MoveOnly, typename Alloc>
+		struct IsTriviallyDestructibleV<FunctionBase<ReturnType(ArgTypes...), Capacity, MoveOnly, Alloc>>
+			: FalseType {};
+
+		template<typename ReturnType, typename... ArgTypes, Size Capacity, Bool MoveOnly, typename Alloc>
+		struct IsTriviallyConstRefConstructibleV<FunctionBase<ReturnType(ArgTypes...), Capacity, MoveOnly, Alloc>>
+			: FalseType {};
+		template<typename ReturnType, typename... ArgTypes, Size Capacity, Bool MoveOnly, typename Alloc>
+		struct IsTriviallyMoveConstructibleV<FunctionBase<ReturnType(ArgTypes...), Capacity, MoveOnly, Alloc>>
+			: FalseType {};
+
+		template<typename ReturnType, typename... ArgTypes, Size Capacity, Bool MoveOnly, typename Alloc>
+		struct IsTriviallyConstRefAssignableV<FunctionBase<ReturnType(ArgTypes...), Capacity, MoveOnly, Alloc>>
+			: FalseType {};
+		template<typename ReturnType, typename... ArgTypes, Size Capacity, Bool MoveOnly, typename Alloc>
+		struct IsTriviallyMoveAssignableV<FunctionBase<ReturnType(ArgTypes...), Capacity, MoveOnly, Alloc>>
+			: FalseType {};
 	}
 
 
@@ -476,14 +496,6 @@ namespace natl {
 		using arg_types = function_base::arg_types;
 		using allocator_type = function_base::allocator_type;
 		using function_signature = ReturnType(ArgTypes...) noexcept;
-
-		//movement info 
-		constexpr static Bool triviallyRelocatable = function_base::triviallyRelocatable;
-		constexpr static Bool triviallyDefaultConstructible = function_base::triviallyDefaultConstructible;
-		constexpr static Bool triviallyCompareable = function_base::triviallyCompareable;
-		constexpr static Bool triviallyDestructible = function_base::triviallyDestructible;
-		constexpr static Bool triviallyConstRefConstructedable = function_base::triviallyConstRefConstructedable;
-		constexpr static Bool triviallyMoveConstructedable = function_base::triviallyMoveConstructedable;
 
 		constexpr static Size smallBufferSize = function_base::smallBufferSize;
 
@@ -575,6 +587,34 @@ namespace natl {
 	};
 
 	template<typename ReturnType, typename... ArgTypes, Size Capacity, typename Alloc>
+	struct IsTriviallyCompareableV<MoveOnlyFunction<ReturnType(ArgTypes...), Capacity, Alloc>>
+		: FalseType {};
+
+	template<typename ReturnType, typename... ArgTypes, Size Capacity, typename Alloc>
+	struct IsTriviallyRelocatableV<MoveOnlyFunction<ReturnType(ArgTypes...), Capacity, Alloc>>
+		: TrueType {};
+	template<typename ReturnType, typename... ArgTypes, Size Capacity, typename Alloc>
+	struct IsTriviallyConstructibleV<MoveOnlyFunction<ReturnType(ArgTypes...), Capacity, Alloc>>
+		: TrueType {};
+	template<typename ReturnType, typename... ArgTypes, Size Capacity, typename Alloc>
+	struct IsTriviallyDestructibleV<MoveOnlyFunction<ReturnType(ArgTypes...), Capacity, Alloc>>
+		: FalseType {};
+
+	template<typename ReturnType, typename... ArgTypes, Size Capacity, typename Alloc>
+	struct IsTriviallyConstRefConstructibleV<MoveOnlyFunction<ReturnType(ArgTypes...), Capacity, Alloc>>
+		: FalseType {};
+	template<typename ReturnType, typename... ArgTypes, Size Capacity, typename Alloc>
+	struct IsTriviallyMoveConstructibleV<MoveOnlyFunction<ReturnType(ArgTypes...), Capacity, Alloc>>
+		: FalseType {};
+
+	template<typename ReturnType, typename... ArgTypes, Size Capacity, typename Alloc>
+	struct IsTriviallyConstRefAssignableV<MoveOnlyFunction<ReturnType(ArgTypes...), Capacity, Alloc>>
+		: FalseType {};
+	template<typename ReturnType, typename... ArgTypes, Size Capacity, typename Alloc>
+	struct IsTriviallyMoveAssignableV<MoveOnlyFunction<ReturnType(ArgTypes...), Capacity, Alloc>>
+		: FalseType {};
+
+	template<typename ReturnType, typename... ArgTypes, Size Capacity, typename Alloc>
 	class MoveOnlyFunction<ReturnType(ArgTypes...) const, Capacity, Alloc> final {
 	public:
 		using function_base = impl::FunctionBase<ReturnType(ArgTypes...), Capacity, true, Alloc>;
@@ -582,14 +622,6 @@ namespace natl {
 		using arg_types = function_base::arg_types;
 		using allocator_type = function_base::allocator_type;
 		using function_signature = ReturnType(ArgTypes...) const noexcept;
-
-		//movement info 
-		constexpr static Bool triviallyRelocatable = function_base::triviallyRelocatable;
-		constexpr static Bool triviallyDefaultConstructible = function_base::triviallyDefaultConstructible;
-		constexpr static Bool triviallyCompareable = function_base::triviallyCompareable;
-		constexpr static Bool triviallyDestructible = function_base::triviallyDestructible;
-		constexpr static Bool triviallyConstRefConstructedable = function_base::triviallyConstRefConstructedable;
-		constexpr static Bool triviallyMoveConstructedable = function_base::triviallyMoveConstructedable;
 
 		constexpr static Size smallBufferSize = function_base::smallBufferSize;
 	private:
@@ -660,6 +692,34 @@ namespace natl {
 		}
 	};
 
+	template<typename ReturnType, typename... ArgTypes, Size Capacity, typename Alloc>
+	struct IsTriviallyCompareableV<MoveOnlyFunction<ReturnType(ArgTypes...) const, Capacity, Alloc>>
+		: FalseType {};
+
+	template<typename ReturnType, typename... ArgTypes, Size Capacity, typename Alloc>
+	struct IsTriviallyRelocatableV<MoveOnlyFunction<ReturnType(ArgTypes...) const, Capacity, Alloc>>
+		: TrueType {};
+	template<typename ReturnType, typename... ArgTypes, Size Capacity, typename Alloc>
+	struct IsTriviallyConstructibleV<MoveOnlyFunction<ReturnType(ArgTypes...) const, Capacity, Alloc>>
+		: TrueType {};
+	template<typename ReturnType, typename... ArgTypes, Size Capacity, typename Alloc>
+	struct IsTriviallyDestructibleV<MoveOnlyFunction<ReturnType(ArgTypes...) const, Capacity, Alloc>>
+		: FalseType {};
+
+	template<typename ReturnType, typename... ArgTypes, Size Capacity, typename Alloc>
+	struct IsTriviallyConstRefConstructibleV<MoveOnlyFunction<ReturnType(ArgTypes...) const, Capacity, Alloc>>
+		: FalseType {};
+	template<typename ReturnType, typename... ArgTypes, Size Capacity, typename Alloc>
+	struct IsTriviallyMoveConstructibleV<MoveOnlyFunction<ReturnType(ArgTypes...) const, Capacity, Alloc>>
+		: FalseType {};
+
+	template<typename ReturnType, typename... ArgTypes, Size Capacity, typename Alloc>
+	struct IsTriviallyConstRefAssignableV<MoveOnlyFunction<ReturnType(ArgTypes...) const, Capacity, Alloc>>
+		: FalseType {};
+	template<typename ReturnType, typename... ArgTypes, Size Capacity, typename Alloc>
+	struct IsTriviallyMoveAssignableV<MoveOnlyFunction<ReturnType(ArgTypes...) const, Capacity, Alloc>>
+		: FalseType {};
+
 	template<class Signature, Size ByteSize, typename Alloc = DefaultAllocatorByte>
 	using MoveOnlyFunctionByteSize = MoveOnlyFunction<Signature, ByteSize - alignof(char*), Alloc>;
 
@@ -674,14 +734,6 @@ namespace natl {
 		using arg_types = function_base::arg_types;
 		using allocator_type = function_base::allocator_type;
 		using function_signature = ReturnType(ArgTypes...) noexcept;
-
-		//movement info 
-		constexpr static Bool triviallyRelocatable = function_base::triviallyRelocatable;
-		constexpr static Bool triviallyDefaultConstructible = function_base::triviallyDefaultConstructible;
-		constexpr static Bool triviallyCompareable = function_base::triviallyCompareable;
-		constexpr static Bool triviallyDestructible = function_base::triviallyDestructible;
-		constexpr static Bool triviallyConstRefConstructedable = function_base::triviallyConstRefConstructedable;
-		constexpr static Bool triviallyMoveConstructedable = function_base::triviallyMoveConstructedable;
 
 		constexpr static Size smallBufferSize = function_base::smallBufferSize;
 
@@ -716,7 +768,7 @@ namespace natl {
 		template<class Functor>
 			requires(
 			HasFunctionSignature<Functor, ReturnType, ArgTypes...> 
-			&& IsCopyConstructible<Functor>
+			&& IsCopyConstructibleC<Functor>
 			&& impl::IsNotNatlFunctionV<Decay<Functor>>)
 		constexpr Function(Functor&& functor) noexcept : functionBase(natl::move(functor)) {}
 
@@ -797,6 +849,34 @@ namespace natl {
 	};
 
 	template<typename ReturnType, typename... ArgTypes, Size Capacity, typename Alloc>
+	struct IsTriviallyCompareableV<Function<ReturnType(ArgTypes...), Capacity, Alloc>>
+		: FalseType {};
+
+	template<typename ReturnType, typename... ArgTypes, Size Capacity, typename Alloc>
+	struct IsTriviallyRelocatableV<Function<ReturnType(ArgTypes...), Capacity, Alloc>>
+		: TrueType {};
+	template<typename ReturnType, typename... ArgTypes, Size Capacity, typename Alloc>
+	struct IsTriviallyConstructibleV<Function<ReturnType(ArgTypes...), Capacity, Alloc>>
+		: TrueType {};
+	template<typename ReturnType, typename... ArgTypes, Size Capacity, typename Alloc>
+	struct IsTriviallyDestructibleV<Function<ReturnType(ArgTypes...), Capacity, Alloc>>
+		: FalseType {};
+
+	template<typename ReturnType, typename... ArgTypes, Size Capacity, typename Alloc>
+	struct IsTriviallyConstRefConstructibleV<Function<ReturnType(ArgTypes...), Capacity, Alloc>>
+		: FalseType {};
+	template<typename ReturnType, typename... ArgTypes, Size Capacity, typename Alloc>
+	struct IsTriviallyMoveConstructibleV<Function<ReturnType(ArgTypes...), Capacity, Alloc>>
+		: FalseType {};
+
+	template<typename ReturnType, typename... ArgTypes, Size Capacity, typename Alloc>
+	struct IsTriviallyConstRefAssignableV<Function<ReturnType(ArgTypes...), Capacity, Alloc>>
+		: FalseType {};
+	template<typename ReturnType, typename... ArgTypes, Size Capacity, typename Alloc>
+	struct IsTriviallyMoveAssignableV<Function<ReturnType(ArgTypes...), Capacity, Alloc>>
+		: FalseType {};
+
+	template<typename ReturnType, typename... ArgTypes, Size Capacity, typename Alloc>
 	class Function<ReturnType(ArgTypes...) const, Capacity, Alloc> final {
 	public:
 		using function_base = impl::FunctionBase<ReturnType(ArgTypes...), Capacity, false, Alloc>;
@@ -804,14 +884,6 @@ namespace natl {
 		using arg_types = function_base::arg_types;
 		using allocator_type = function_base::allocator_type;
 		using function_signature = ReturnType(ArgTypes...) const noexcept;
-
-		//movement info 
-		constexpr static Bool triviallyRelocatable = function_base::triviallyRelocatable;
-		constexpr static Bool triviallyDefaultConstructible = function_base::triviallyDefaultConstructible;
-		constexpr static Bool triviallyCompareable = function_base::triviallyCompareable;
-		constexpr static Bool triviallyDestructible = function_base::triviallyDestructible;
-		constexpr static Bool triviallyConstRefConstructedable = function_base::triviallyConstRefConstructedable;
-		constexpr static Bool triviallyMoveConstructedable = function_base::triviallyMoveConstructedable;
 
 		constexpr static Size smallBufferSize = function_base::smallBufferSize;
 	private:
@@ -910,6 +982,34 @@ namespace natl {
 		}
 	};
 
+	template<typename ReturnType, typename... ArgTypes, Size Capacity, typename Alloc>
+	struct IsTriviallyCompareableV<Function<ReturnType(ArgTypes...) const, Capacity, Alloc>>
+		: FalseType {};
+
+	template<typename ReturnType, typename... ArgTypes, Size Capacity, typename Alloc>
+	struct IsTriviallyRelocatableV<Function<ReturnType(ArgTypes...) const, Capacity, Alloc>>
+		: TrueType {};
+	template<typename ReturnType, typename... ArgTypes, Size Capacity, typename Alloc>
+	struct IsTriviallyConstructibleV<Function<ReturnType(ArgTypes...) const, Capacity, Alloc>>
+		: TrueType {};
+	template<typename ReturnType, typename... ArgTypes, Size Capacity, typename Alloc>
+	struct IsTriviallyDestructibleV<Function<ReturnType(ArgTypes...) const, Capacity, Alloc>>
+		: FalseType {};
+
+	template<typename ReturnType, typename... ArgTypes, Size Capacity, typename Alloc>
+	struct IsTriviallyConstRefConstructibleV<Function<ReturnType(ArgTypes...) const, Capacity, Alloc>>
+		: FalseType {};
+	template<typename ReturnType, typename... ArgTypes, Size Capacity, typename Alloc>
+	struct IsTriviallyMoveConstructibleV<Function<ReturnType(ArgTypes...) const, Capacity, Alloc>>
+		: FalseType {};
+
+	template<typename ReturnType, typename... ArgTypes, Size Capacity, typename Alloc>
+	struct IsTriviallyConstRefAssignableV<Function<ReturnType(ArgTypes...) const, Capacity, Alloc>>
+		: FalseType {};
+	template<typename ReturnType, typename... ArgTypes, Size Capacity, typename Alloc>
+	struct IsTriviallyMoveAssignableV<Function<ReturnType(ArgTypes...) const, Capacity, Alloc>>
+		: FalseType {};
+
 	template<class Signature, Size ByteSize, typename Alloc = DefaultAllocatorByte>
 	using FunctionByteSize = Function<Signature, ByteSize - alignof(char*), Alloc>;
 
@@ -986,15 +1086,6 @@ namespace natl {
 			using result_type = ReturnType;
 			using arg_types = TypePack<ArgTypes...>;
 			using function_ptr_type = ReturnType(*)(ArgTypes...) noexcept;
-
-			//movement info 
-			constexpr static Bool triviallyRelocatable = true;
-			constexpr static Bool triviallyDefaultConstructible = true;
-			constexpr static Bool triviallyCompareable = false;
-			constexpr static Bool triviallyDestructible = true;
-			constexpr static Bool triviallyConstRefConstructedable = true;
-			constexpr static Bool triviallyMoveConstructedable = true;
-
 		private:
 			constexpr static Size smallBufferSize = sizeof(void*) * 2;
 			using callable_base = CallableBase<ReturnType, ArgTypes...>;
@@ -1241,6 +1332,34 @@ namespace natl {
 				self() = natl::move(temp);
 			}
 		};
+
+		template<typename ReturnType, typename... ArgTypes>
+		struct IsTriviallyCompareableV<FunctionRefBase<ReturnType(ArgTypes...)>>
+			: FalseType {};
+
+		template<typename ReturnType, typename... ArgTypes>
+		struct IsTriviallyRelocatableV<FunctionRefBase<ReturnType(ArgTypes...)>>
+			: TrueType {};
+		template<typename ReturnType, typename... ArgTypes>
+		struct IsTriviallyConstructibleV<FunctionRefBase<ReturnType(ArgTypes...)>>
+			: TrueType {};
+		template<typename ReturnType, typename... ArgTypes>
+		struct IsTriviallyDestructibleV<FunctionRefBase<ReturnType(ArgTypes...)>>
+			: FalseType {};
+
+		template<typename ReturnType, typename... ArgTypes>
+		struct IsTriviallyConstRefConstructibleV<FunctionRefBase<ReturnType(ArgTypes...)>>
+			: FalseType {};
+		template<typename ReturnType, typename... ArgTypes>
+		struct IsTriviallyMoveConstructibleV<FunctionRefBase<ReturnType(ArgTypes...)>>
+			: FalseType {};
+
+		template<typename ReturnType, typename... ArgTypes>
+		struct IsTriviallyConstRefAssignableV<FunctionRefBase<ReturnType(ArgTypes...)>>
+			: FalseType {};
+		template<typename ReturnType, typename... ArgTypes>
+		struct IsTriviallyMoveAssignableV<FunctionRefBase<ReturnType(ArgTypes...)>>
+			: FalseType {};
 	}
 
 	template<typename ReturnType, typename... ArgTypes>
@@ -1250,14 +1369,6 @@ namespace natl {
 		using result_type = function_ref_base::result_type;
 		using arg_types = function_ref_base::arg_types;
 		using function_signature = ReturnType(ArgTypes...) noexcept;
-		//movement info 
-		constexpr static Bool triviallyRelocatable = function_ref_base::triviallyRelocatable;
-		constexpr static Bool triviallyDefaultConstructible = function_ref_base::triviallyDefaultConstructible;
-		constexpr static Bool triviallyCompareable = function_ref_base::triviallyCompareable;
-		constexpr static Bool triviallyDestructible = function_ref_base::triviallyDestructible;
-		constexpr static Bool triviallyConstRefConstructedable = function_ref_base::triviallyConstRefConstructedable;
-		constexpr static Bool triviallyMoveConstructedable = function_ref_base::triviallyMoveConstructedable;
-
 	private:
 		function_ref_base functionRefBase;
 	public:
@@ -1355,20 +1466,40 @@ namespace natl {
 	};
 
 	template<typename ReturnType, typename... ArgTypes>
+	struct IsTriviallyCompareableV<FunctionRef<ReturnType(ArgTypes...)>>
+		: FalseType {};
+
+	template<typename ReturnType, typename... ArgTypes>
+	struct IsTriviallyRelocatableV<FunctionRef<ReturnType(ArgTypes...)>>
+		: TrueType {};
+	template<typename ReturnType, typename... ArgTypes>
+	struct IsTriviallyConstructibleV<FunctionRef<ReturnType(ArgTypes...)>>
+		: TrueType {};
+	template<typename ReturnType, typename... ArgTypes>
+	struct IsTriviallyDestructibleV<FunctionRef<ReturnType(ArgTypes...)>>
+		: FalseType {};
+
+	template<typename ReturnType, typename... ArgTypes>
+	struct IsTriviallyConstRefConstructibleV<FunctionRef<ReturnType(ArgTypes...)>>
+		: FalseType {};
+	template<typename ReturnType, typename... ArgTypes>
+	struct IsTriviallyMoveConstructibleV<FunctionRef<ReturnType(ArgTypes...)>>
+		: FalseType {};
+
+	template<typename ReturnType, typename... ArgTypes>
+	struct IsTriviallyConstRefAssignableV<FunctionRef<ReturnType(ArgTypes...)>>
+		: FalseType {};
+	template<typename ReturnType, typename... ArgTypes>
+	struct IsTriviallyMoveAssignableV<FunctionRef<ReturnType(ArgTypes...)>>
+		: FalseType {};
+
+	template<typename ReturnType, typename... ArgTypes>
 	class FunctionRef<ReturnType(ArgTypes...) const> final {
 	public:
 		using function_ref_base = impl::FunctionRefBase<ReturnType(ArgTypes...)>;
 		using result_type = function_ref_base::result_type;
 		using arg_types = function_ref_base::arg_types;
 		using function_signature = ReturnType(ArgTypes...) const noexcept;
-		//movement info 
-		constexpr static Bool triviallyRelocatable = function_ref_base::triviallyRelocatable;
-		constexpr static Bool triviallyDefaultConstructible = function_ref_base::triviallyDefaultConstructible;
-		constexpr static Bool triviallyCompareable = function_ref_base::triviallyCompareable;
-		constexpr static Bool triviallyDestructible = function_ref_base::triviallyDestructible;
-		constexpr static Bool triviallyConstRefConstructedable = function_ref_base::triviallyConstRefConstructedable;
-		constexpr static Bool triviallyMoveConstructedable = function_ref_base::triviallyMoveConstructedable;
-
 	private:
 		function_ref_base functionRefBase;
 	public:
@@ -1459,8 +1590,35 @@ namespace natl {
 			other = natl::move(self());
 			self() = natl::move(temp);
 		}
-
 	};
+
+	template<typename ReturnType, typename... ArgTypes>
+	struct IsTriviallyCompareableV<FunctionRef<ReturnType(ArgTypes...) const>>
+		: FalseType {};
+
+	template<typename ReturnType, typename... ArgTypes>
+	struct IsTriviallyRelocatableV<FunctionRef<ReturnType(ArgTypes...) const>>
+		: TrueType {};
+	template<typename ReturnType, typename... ArgTypes>
+	struct IsTriviallyConstructibleV<FunctionRef<ReturnType(ArgTypes...) const>>
+		: TrueType {};
+	template<typename ReturnType, typename... ArgTypes>
+	struct IsTriviallyDestructibleV<FunctionRef<ReturnType(ArgTypes...) const>>
+		: FalseType {};
+
+	template<typename ReturnType, typename... ArgTypes>
+	struct IsTriviallyConstRefConstructibleV<FunctionRef<ReturnType(ArgTypes...) const>>
+		: FalseType {};
+	template<typename ReturnType, typename... ArgTypes>
+	struct IsTriviallyMoveConstructibleV<FunctionRef<ReturnType(ArgTypes...) const>>
+		: FalseType {};
+
+	template<typename ReturnType, typename... ArgTypes>
+	struct IsTriviallyConstRefAssignableV<FunctionRef<ReturnType(ArgTypes...) const>>
+		: FalseType {};
+	template<typename ReturnType, typename... ArgTypes>
+	struct IsTriviallyMoveAssignableV<FunctionRef<ReturnType(ArgTypes...) const>>
+		: FalseType {};
 
 #ifdef NATL_COMPILER_MSVC
 #pragma warning(pop)

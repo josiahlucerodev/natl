@@ -35,12 +35,6 @@ namespace natl {
 		using reverse_iterator = ReverseRandomAccessIterator<DataType>;
 		using const_reverse_iterator = ReverseRandomAccessIterator<const DataType>;
 
-		//movement info 
-		constexpr static Bool triviallyRelocatable = true;
-		constexpr static Bool triviallyDefaultConstructible = true;
-		constexpr static Bool triviallyCompareable = false;
-		constexpr static Bool triviallyDestructible = true;
-
 		constexpr static Size npos = Limits<Size>::max();
 	private:
 		mutable pointer dataPtr;
@@ -52,7 +46,7 @@ namespace natl {
 		constexpr ArrayView(ArrayView& other) noexcept : dataPtr(other.data()), arraySize(other.size()) {}
 		constexpr ArrayView(const ArrayView& other) noexcept : dataPtr(other.data()), arraySize(other.size()) {}
 		constexpr ArrayView(std::initializer_list<DataType> initList) noexcept : dataPtr(initList.begin()), arraySize(initList.size()) {}
-		template<class ArrayViewLike>
+		template<typename ArrayViewLike>
 			requires(!IsSameC<ArrayViewLike, std::initializer_list<DataType>>&& IsArrayViewLike<ArrayViewLike, DataType>)
 		constexpr ArrayView(const ArrayViewLike& arrayViewLike) noexcept : dataPtr(arrayViewLike.data()), arraySize(arrayViewLike.size()) {}
 
@@ -206,12 +200,12 @@ namespace natl {
 		friend constexpr Bool operator==(const ArrayView& lhs, const DataType rhs) noexcept {
 			return lhs == ArrayView<const DataType>(&rhs, 1);
 		}
-		template<class ArrayViewLike>
+		template<typename ArrayViewLike>
 			requires(IsArrayViewLike<ArrayViewLike, const DataType>)
 		friend constexpr Bool operator==(const ArrayView& lhs, const ArrayViewLike& rhs) noexcept {
 			return lhs == ArrayView<const DataType>(rhs.data(), rhs.size());
 		}
-		template<class ArrayViewLike>
+		template<typename ArrayViewLike>
 			requires(IsConvertible<ArrayViewLike, ArrayView<const DataType>> && !IsArrayViewLike<ArrayViewLike, const DataType>)
 		friend constexpr Bool operator==(const ArrayView& lhs, const ArrayViewLike& rhs) noexcept {
 			return lhs == static_cast<const ArrayView<DataType>>(rhs);
@@ -229,12 +223,12 @@ namespace natl {
 		friend constexpr Bool operator!=(const ArrayView& lhs, const DataType rhs) noexcept {
 			return lhs != ArrayView<const DataType>(&rhs, 1);
 		}
-		template<class ArrayViewLike>
+		template<typename ArrayViewLike>
 			requires(IsArrayViewLike<ArrayViewLike, const DataType>)
 		friend constexpr Bool operator!=(const ArrayView& lhs, const ArrayViewLike& rhs) noexcept {
 			return lhs != ArrayView<const DataType>(rhs.data(), rhs.size());
 		}
-		template<class ArrayViewLike>
+		template<typename ArrayViewLike>
 			requires(IsConvertibleC<ArrayViewLike, ArrayView<const DataType>> && !IsArrayViewLike<ArrayViewLike, const DataType>)
 		friend constexpr Bool operator!=(const ArrayView& lhs, const ArrayViewLike& rhs) noexcept {
 			return lhs != static_cast<const ArrayView<DataType>>(rhs);
@@ -252,12 +246,12 @@ namespace natl {
 		friend constexpr Bool operator<(const ArrayView& lhs, const DataType rhs) noexcept {
 			return lhs < ArrayView<const DataType>(&rhs, 1);
 		}
-		template<class ArrayViewLike>
+		template<typename ArrayViewLike>
 			requires(IsArrayViewLike<ArrayViewLike, const DataType>)
 		friend constexpr Bool operator<(const ArrayView& lhs, const ArrayViewLike& rhs) noexcept {
 			return lhs < ArrayView<const DataType>(rhs.data(), rhs.size());
 		}
-		template<class ArrayViewLike>
+		template<typename ArrayViewLike>
 			requires(IsConvertibleC<ArrayViewLike, ArrayView<const DataType>> && !IsArrayViewLike<ArrayViewLike, const DataType>)
 		friend constexpr Bool operator<(const ArrayView& lhs, const ArrayViewLike& rhs) noexcept {
 			return lhs < static_cast<const ArrayView<DataType>>(rhs);
@@ -275,12 +269,12 @@ namespace natl {
 		friend constexpr Bool operator<=(const ArrayView& lhs, const DataType rhs) noexcept {
 			return lhs <= ArrayView<const DataType>(&rhs, 1);
 		}
-		template<class ArrayViewLike>
+		template<typename ArrayViewLike>
 			requires(IsArrayViewLike<ArrayViewLike, const DataType>)
 		friend constexpr Bool operator<=(const ArrayView& lhs, const ArrayViewLike& rhs) noexcept {
 			return lhs <= ArrayView<const DataType>(rhs.data(), rhs.size());
 		}
-		template<class ArrayViewLike>
+		template<typename ArrayViewLike>
 			requires(IsConvertibleC<ArrayViewLike, ArrayView<const DataType>> && !IsArrayViewLike<ArrayViewLike, const DataType>)
 		friend constexpr Bool operator<=(const ArrayView& lhs, const ArrayViewLike& rhs) noexcept {
 			return lhs <= static_cast<const ArrayView<DataType>>(rhs);
@@ -298,12 +292,12 @@ namespace natl {
 		friend constexpr Bool operator>(const ArrayView& lhs, const DataType rhs) noexcept {
 			return lhs > ArrayView<const DataType>(&rhs, 1);
 		}
-		template<class ArrayViewLike>
+		template<typename ArrayViewLike>
 			requires(IsArrayViewLike<ArrayViewLike, const DataType>)
 		friend constexpr Bool operator>(const ArrayView& lhs, const ArrayViewLike& rhs) noexcept {
 			return lhs > ArrayView<const DataType>(rhs.data(), rhs.size());
 		}
-		template<class ArrayViewLike>
+		template<typename ArrayViewLike>
 			requires(IsConvertibleC<ArrayViewLike, ArrayView<const DataType>> && !IsArrayViewLike<ArrayViewLike, const DataType>)
 		friend constexpr Bool operator>(const ArrayView& lhs, const ArrayViewLike& rhs) noexcept {
 			return lhs > static_cast<const ArrayView<DataType>>(rhs);
@@ -321,12 +315,12 @@ namespace natl {
 		friend constexpr Bool operator>=(const ArrayView& lhs, const DataType rhs) noexcept {
 			return lhs >= ArrayView<const DataType>(&rhs, 1);
 		}
-		template<class ArrayViewLike>
+		template<typename ArrayViewLike>
 			requires(IsArrayViewLike<ArrayViewLike, const DataType>)
 		friend constexpr Bool operator>=(const ArrayView& lhs, const ArrayViewLike& rhs) noexcept {
 			return lhs >= ArrayView<const DataType>(rhs.data(), rhs.size());
 		}
-		template<class ArrayViewLike>
+		template<typename ArrayViewLike>
 			requires(IsConvertibleC<ArrayViewLike, ArrayView<const DataType>> && !IsArrayViewLike<ArrayViewLike, const DataType>)
 		friend constexpr Bool operator>=(const ArrayView& lhs, const ArrayViewLike& rhs) noexcept {
 			return lhs >= static_cast<const ArrayView<DataType>>(rhs);
@@ -344,12 +338,12 @@ namespace natl {
 		friend constexpr StrongOrdering operator<=>(const ArrayView& lhs, const DataType rhs) noexcept {
 			return lhs <=> ArrayView<const DataType>(&rhs, 1);
 		}
-		template<class ArrayViewLike>
+		template<typename ArrayViewLike>
 			requires(IsArrayViewLike<ArrayViewLike, const DataType>)
 		friend constexpr StrongOrdering operator<=>(const ArrayView& lhs, const ArrayViewLike& rhs) noexcept {
 			return lhs <=> ArrayView<const DataType>(rhs.data(), rhs.size());
 		}
-		template<class ArrayViewLike>
+		template<typename ArrayViewLike>
 			requires(IsConvertibleC<ArrayViewLike, ArrayView<const DataType>> && !IsArrayViewLike<ArrayViewLike, const DataType>)
 		friend constexpr StrongOrdering operator<=>(const ArrayView& lhs, const ArrayViewLike& rhs) noexcept {
 			return lhs <=> static_cast<const ArrayView<DataType>>(rhs);
@@ -365,20 +359,20 @@ namespace natl {
 	template<typename DataType>
 	struct IsCopyableStorageDstT<ArrayView<DataType>> : TrueType {};
 
-	template<class Container>
+	template<typename Container>
 	concept IsContainerArrayViewConstructable =
 		HasIteratorType<Container> &&
 		HasBeginIteratorToPtr<Container> &&
 		HasSizeMethod<Container> &&
 		IsRandomAccessIterator<typename Container::iterator>;
 
-	template<class Container>
+	template<typename Container>
 		requires(IsArrayViewLike<Container, typename Container::value_type>)
 	constexpr ArrayView<typename Container::value_type> makeArrayView(Container& container) noexcept {
 		return ArrayView<typename Container::value_type>(container.data(), container.size());
 	}
 
-	template<class Container>
+	template<typename Container>
 		requires(IsContainerArrayViewConstructable<Container> && !IsArrayViewLike<Container, typename ContainerIteratorTraits<Container>::value_type>)
 	constexpr ArrayView<typename ContainerIteratorTraits<Container>::value_type> makeArrayView(Container& container) noexcept {
 		return ArrayView<typename ContainerIteratorTraits<Container>::value_type>(&*container.begin(), container.size());
@@ -398,7 +392,7 @@ namespace natl {
 	namespace impl {
 		struct MDArrayViewDim {};
 
-		template<class DataType, MDArrayViewDim... Dimensions>
+		template<typename DataType, MDArrayViewDim... Dimensions>
 		class OffsetMDArrayViewDimensions {
 		public:
 			using value_type = DataType;
@@ -410,12 +404,6 @@ namespace natl {
 			using optional_const_pointer = Option<const DataType*>;
 			using difference_type = PtrDiff;
 			using size_type = Size;
-
-			//movement info  
-			constexpr static Bool triviallyRelocatable = IsTriviallyRelocatable<DataType>;
-			constexpr static Bool triviallyDefaultConstructible = IsTriviallyDefaultConstructible<DataType>;
-			constexpr static Bool triviallyCompareable = IsTriviallyCompareable<DataType>;
-			constexpr static Bool triviallyDestructible = IsTriviallyDestructible<DataType>;
 
 			using BaseArrayView = ArrayView<DataType>;
 		private:
@@ -540,6 +528,35 @@ namespace natl {
 			}
 		};
 
+		template<typename DataType>
+		struct IsTriviallyCompareableV<ArrayView<DataType>>
+			: FalseType {};
+
+		template<typename DataType>
+		struct IsTriviallyRelocatableV<ArrayView<DataType>>
+			: TrueType {};
+		template<typename DataType>
+		struct IsTriviallyConstructibleV<ArrayView<DataType>>
+			: TrueType {};
+		template<typename DataType>
+		struct IsTriviallyDestructibleV<ArrayView<DataType>>
+			: TrueType {};
+
+		template<typename DataType>
+		struct IsTriviallyConstRefConstructibleV<ArrayView<DataType>>
+			: TrueType {};
+		template<typename DataType>
+		struct IsTriviallyMoveConstructibleV<ArrayView<DataType>>
+			: TrueType {};
+
+		template<typename DataType>
+		struct IsTriviallyConstRefAssignableV<ArrayView<DataType>>
+			: TrueType {};
+		template<typename DataType>
+		struct IsTriviallyMoveAssignableV<ArrayView<DataType>>
+			: TrueType {};
+
+
 
 		template <typename DataType, typename Seq> struct OffsetsMDArrayViewImpl;
 		template <typename DataType, Size... Is>
@@ -551,7 +568,7 @@ namespace natl {
 				> ;
 		};
 
-		template<class DataType, MDArrayViewDim... Dimensions>
+		template<typename DataType, MDArrayViewDim... Dimensions>
 		class MDArrayViewDimensions {
 		public:
 			using value_type = DataType;
@@ -563,12 +580,6 @@ namespace natl {
 			using optional_const_pointer = Option<const DataType*>;
 			using difference_type = PtrDiff;
 			using size_type = Size;
-
-			//movement info  
-			constexpr static Bool triviallyRelocatable = true;
-			constexpr static Bool triviallyDefaultConstructible = true;
-			constexpr static Bool triviallyCompareable = false;
-			constexpr static Bool triviallyDestructible = true;
 
 			using BaseArrayView = ArrayView<DataType>;
 		private:
@@ -701,12 +712,6 @@ namespace natl {
 		using OffsetsMDArrayViewImplType = impl::OffsetsMDArrayViewImpl<DataType, MakeIndexSequence<DimensionNumber>>::OffsetsMDArrayViewType;
 		using BaseArrayView = OffsetsMDArrayViewImplType::BaseArrayView;
 	public:
-		//movement info  
-		constexpr static Bool triviallyRelocatable = true;
-		constexpr static Bool triviallyDefaultConstructible = true;
-		constexpr static Bool triviallyCompareable = false;
-		constexpr static Bool triviallyDestructible = true;
-
 		//constructor
 		constexpr OffsetsMDArrayView() noexcept = default;
 		constexpr OffsetsMDArrayView(const OffsetsMDArrayView& other) noexcept = default;
@@ -740,12 +745,6 @@ namespace natl {
 		using MDArrayViewImplType = impl::MDArrayViewImpl<DataType, MakeIndexSequence<DimensionNumber>>::MDArrayViewType;
 		using BaseArrayView = MDArrayViewImplType::BaseArrayView;
 	public:
-		//movement info  
-		constexpr static Bool triviallyRelocatable = true;
-		constexpr static Bool triviallyDefaultConstructible = true;
-		constexpr static Bool triviallyCompareable = false;
-		constexpr static Bool triviallyDestructible = true;
-
 		//constructor
 		constexpr MDArrayView() noexcept = default;
 		constexpr MDArrayView(const MDArrayView& other) noexcept = default;
@@ -762,6 +761,34 @@ namespace natl {
 		constexpr MDArrayView& operator=(const MDArrayView& other) noexcept = default;
 		constexpr MDArrayView& operator=(MDArrayView&& other) noexcept = default;
 	};
+
+	template<typename DataType, Size DimensionNumber>
+	struct IsTriviallyCompareableV<MDArrayView<DataType, DimensionNumber>>
+		: FalseType {};
+
+	template<typename DataType, Size DimensionNumber>
+	struct IsTriviallyRelocatableV<MDArrayView<DataType, DimensionNumber>>
+		: TrueType {};
+	template<typename DataType, Size DimensionNumber>
+	struct IsTriviallyConstructibleV<MDArrayView<DataType, DimensionNumber>>
+		: TrueType {};
+	template<typename DataType, Size DimensionNumber>
+	struct IsTriviallyDestructibleV<MDArrayView<DataType, DimensionNumber>>
+		: TrueType {};
+
+	template<typename DataType, Size DimensionNumber>
+	struct IsTriviallyConstRefConstructibleV<MDArrayView<DataType, DimensionNumber>>
+		: TrueType {};
+	template<typename DataType, Size DimensionNumber>
+	struct IsTriviallyMoveConstructibleV<MDArrayView<DataType, DimensionNumber>>
+		: TrueType {};
+
+	template<typename DataType, Size DimensionNumber>
+	struct IsTriviallyConstRefAssignableV<MDArrayView<DataType, DimensionNumber>>
+		: TrueType {};
+	template<typename DataType, Size DimensionNumber>
+	struct IsTriviallyMoveAssignableV<MDArrayView<DataType, DimensionNumber>>
+		: TrueType {};
 
 	template<typename ArrayViewLike>
 		requires(IsBroadlyArrayViewLike<ArrayViewLike>)

@@ -55,14 +55,6 @@ namespace natl {
 
 		using allocation_move_adapater = AllocationMoveAdapater<value_type, Alloc>;
 
-		//movement info 
-		constexpr static Bool triviallyRelocatable = true;
-		constexpr static Bool triviallyDefaultConstructible = true;
-		constexpr static Bool triviallyCompareable = false;
-		constexpr static Bool triviallyDestructible = false;
-		constexpr static Bool triviallyConstRefConstructedable = false;
-		constexpr static Bool triviallyMoveConstructedable = false;
-
 		constexpr static Bool enableSmallString = true;
 	private:
 		constexpr static Bool enableIncreasedSmallBufferSize = 
@@ -2021,6 +2013,34 @@ namespace natl {
 			return Utf32String512(str, static_cast<Size>(len));
 		}
 	}
+
+	template<typename CharType, Size bufferSize, typename Alloc, Bool EnableDynAllocation, Bool EnableIncreasedSmallBufferSize>
+	struct IsTriviallyCompareableV<BaseString<CharType, bufferSize, Alloc, EnableDynAllocation, EnableIncreasedSmallBufferSize>> 
+		: FalseType {};
+
+	template<typename CharType, Size bufferSize, typename Alloc, Bool EnableDynAllocation, Bool EnableIncreasedSmallBufferSize>
+	struct IsTriviallyRelocatableV<BaseString<CharType, bufferSize, Alloc, EnableDynAllocation, EnableIncreasedSmallBufferSize>>
+		: TrueType {};
+	template<typename CharType, Size bufferSize, typename Alloc, Bool EnableDynAllocation, Bool EnableIncreasedSmallBufferSize>
+	struct IsTriviallyConstructibleV<BaseString<CharType, bufferSize, Alloc, EnableDynAllocation, EnableIncreasedSmallBufferSize>>
+		: TrueType {};
+	template<typename CharType, Size bufferSize, typename Alloc, Bool EnableDynAllocation, Bool EnableIncreasedSmallBufferSize>
+	struct IsTriviallyDestructibleV<BaseString<CharType, bufferSize, Alloc, EnableDynAllocation, EnableIncreasedSmallBufferSize>>
+		: FalseType {};
+
+	template<typename CharType, Size bufferSize, typename Alloc, Bool EnableDynAllocation, Bool EnableIncreasedSmallBufferSize>
+	struct IsTriviallyConstRefConstructibleV<BaseString<CharType, bufferSize, Alloc, EnableDynAllocation, EnableIncreasedSmallBufferSize>>
+		: FalseType {};
+	template<typename CharType, Size bufferSize, typename Alloc, Bool EnableDynAllocation, Bool EnableIncreasedSmallBufferSize>
+	struct IsTriviallyMoveConstructibleV<BaseString<CharType, bufferSize, Alloc, EnableDynAllocation, EnableIncreasedSmallBufferSize>>
+		: FalseType {};
+
+	template<typename CharType, Size bufferSize, typename Alloc, Bool EnableDynAllocation, Bool EnableIncreasedSmallBufferSize>
+	struct IsTriviallyConstRefAssignableV<BaseString<CharType, bufferSize, Alloc, EnableDynAllocation, EnableIncreasedSmallBufferSize>>
+		: FalseType {};
+	template<typename CharType, Size bufferSize, typename Alloc, Bool EnableDynAllocation, Bool EnableIncreasedSmallBufferSize>
+	struct IsTriviallyMoveAssignableV<BaseString<CharType, bufferSize, Alloc, EnableDynAllocation, EnableIncreasedSmallBufferSize>>
+		: FalseType {};
 
 	template<typename CharType, Size bufferSize, typename Alloc,
 		Bool EnableDynAllocation, Bool EnableIncreasedSmallBufferSize>

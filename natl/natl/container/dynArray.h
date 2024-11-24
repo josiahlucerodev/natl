@@ -56,14 +56,6 @@ namespace natl {
 		using array_view = ArrayView<value_type>;
 		using const_array_view = ConstArrayView<value_type>;
 
-		//movement info 
-		constexpr static Bool triviallyRelocatable = true;
-		constexpr static Bool triviallyDefaultConstructible = true;
-		constexpr static Bool triviallyCompareable = false;
-		constexpr static Bool triviallyDestructible = false;
-		constexpr static Bool triviallyConstRefConstructedable = false;
-		constexpr static Bool triviallyMoveConstructedable = false;
-
 		constexpr static Size npos = Limits<Size>::max();
 	private:
 		size_type arraySize;
@@ -1155,4 +1147,32 @@ namespace natl {
 			return {};
 		}
 	};
+
+	template<class DataType, class Alloc>
+	struct IsTriviallyCompareableV<DynArray<DataType, Alloc>>
+		: FalseType {};
+
+	template<class DataType, class Alloc>
+	struct IsTriviallyRelocatableV<DynArray<DataType, Alloc>>
+		: TrueType {};
+	template<class DataType, class Alloc>
+	struct IsTriviallyConstructibleV<DynArray<DataType, Alloc>>
+		: TrueType {};
+	template<class DataType, class Alloc>
+	struct IsTriviallyDestructibleV<DynArray<DataType, Alloc>>
+		: FalseType {};
+
+	template<class DataType, class Alloc>
+	struct IsTriviallyConstRefConstructibleV<DynArray<DataType, Alloc>>
+		: FalseType {};
+	template<class DataType, class Alloc>
+	struct IsTriviallyMoveConstructibleV<DynArray<DataType, Alloc>>
+		: FalseType {};
+
+	template<class DataType, class Alloc>
+	struct IsTriviallyConstRefAssignableV<DynArray<DataType, Alloc>>
+		: FalseType {};
+	template<class DataType, class Alloc>
+	struct IsTriviallyMoveAssignableV<DynArray<DataType, Alloc>>
+		: FalseType {};
 }

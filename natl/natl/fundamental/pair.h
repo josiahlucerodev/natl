@@ -7,16 +7,11 @@
 
 //interface
 namespace natl {
-	template<class DataTypeFirst, class DataTypeSecond>
+	template<typename DataTypeFirst, typename DataTypeSecond>
 	struct Pair {
 	public:
-		//movement info 
-		constexpr static Bool triviallyRelocatable = IsTriviallyRelocatable<DataTypeFirst> && IsTriviallyRelocatable<DataTypeSecond>;
-		constexpr static Bool triviallyDefaultConstructible = IsTriviallyDefaultConstructible<DataTypeFirst> && IsTriviallyDefaultConstructible<DataTypeSecond>;
-		constexpr static Bool triviallyCompareable = IsTriviallyCompareable<DataTypeFirst> && IsTriviallyCompareable<DataTypeSecond>;
-		constexpr static Bool triviallyDestructible = IsTriviallyDestructible<DataTypeFirst> && IsTriviallyDestructible<DataTypeSecond>;
-		constexpr static Bool triviallyConstRefConstructedable = IsTriviallyConstRefConstructible<DataTypeFirst> && IsTriviallyConstRefConstructible<DataTypeSecond>;
-		constexpr static Bool triviallyMoveConstructedable = IsTriviallyMoveConstructible<DataTypeFirst> && IsTriviallyMoveConstructible<DataTypeSecond>;
+		using first_type = DataTypeFirst;
+		using second_type = DataTypeSecond;
 	public:
 		DataTypeFirst first;
 		DataTypeFirst second;
@@ -87,6 +82,34 @@ namespace natl {
 		}
 	}
 
+	template<typename DataTypeFirst, typename DataTypeSecond>
+	struct IsTriviallyCompareableV<Pair<DataTypeFirst, DataTypeSecond>>
+		: BoolConstant<IsTriviallyCompareable<DataTypeFirst>&& IsTriviallyCompareable<DataTypeSecond>> {};
+
+	template<typename DataTypeFirst, typename DataTypeSecond>
+	struct IsTriviallyRelocatableV<Pair<DataTypeFirst, DataTypeSecond>>
+		: BoolConstant<IsTriviallyRelocatable<DataTypeFirst>&& IsTriviallyRelocatable<DataTypeSecond>> {};
+	template<typename DataTypeFirst, typename DataTypeSecond>
+	struct IsTriviallyConstructibleV<Pair<DataTypeFirst, DataTypeSecond>>
+		: BoolConstant<IsTriviallyConstructible<DataTypeFirst>&& IsTriviallyConstructible<DataTypeSecond>> {};
+	template<typename DataTypeFirst, typename DataTypeSecond>
+	struct IsTriviallyDestructibleV<Pair<DataTypeFirst, DataTypeSecond>>
+		: BoolConstant<IsTriviallyDestructible<DataTypeFirst>&& IsTriviallyDestructible<DataTypeSecond>> {};
+
+	template<typename DataTypeFirst, typename DataTypeSecond>
+	struct IsTriviallyConstRefConstructibleV<Pair<DataTypeFirst, DataTypeSecond>>
+		: BoolConstant<IsTriviallyConstRefConstructible<DataTypeFirst>&& IsTriviallyConstRefConstructible<DataTypeSecond>> {};
+	template<typename DataTypeFirst, typename DataTypeSecond>
+	struct IsTriviallyMoveConstructibleV<Pair<DataTypeFirst, DataTypeSecond>>
+		: BoolConstant<IsTriviallyMoveConstructible<DataTypeFirst>&& IsTriviallyMoveConstructible<DataTypeSecond>> {};
+
+	template<typename DataTypeFirst, typename DataTypeSecond>
+	struct IsTriviallyConstRefAssignableV<Pair<DataTypeFirst, DataTypeSecond>>
+		: BoolConstant<IsTriviallyConstRefAssignable<DataTypeFirst>&& IsTriviallyConstRefAssignable<DataTypeSecond>> {};
+	template<typename DataTypeFirst, typename DataTypeSecond>
+	struct IsTriviallyMoveAssignableV<Pair<DataTypeFirst, DataTypeSecond>>
+		: BoolConstant<IsTriviallyMoveAssignable<DataTypeFirst>&& IsTriviallyMoveAssignable<DataTypeSecond>> {};
+
 	template<class DataTypeFirst, class DataTypeSecond>
 	constexpr Pair<typename Decay<DataTypeFirst>::type, typename Decay<DataTypeSecond>::type> makePair(DataTypeFirst&& first, DataTypeSecond&& second) {
 		return Pair<typename Decay<DataTypeFirst>::type, typename Decay<DataTypeSecond>::type>(first, second);
@@ -95,13 +118,8 @@ namespace natl {
 	template<class DataTypeFirst, class DataTypeSecond>
 	struct CompressedPair {
 	public:
-		//movement info 
-		constexpr static Bool triviallyRelocatable = IsTriviallyRelocatable<DataTypeFirst> && IsTriviallyRelocatable<DataTypeSecond>;
-		constexpr static Bool triviallyDefaultConstructible = IsTriviallyDefaultConstructible<DataTypeFirst> && IsTriviallyDefaultConstructible<DataTypeSecond>;
-		constexpr static Bool triviallyCompareable = IsTriviallyCompareable<DataTypeFirst> && IsTriviallyCompareable<DataTypeSecond>;
-		constexpr static Bool triviallyDestructible = IsTriviallyDestructible<DataTypeFirst> && IsTriviallyDestructible<DataTypeSecond>;
-		constexpr static Bool triviallyConstRefConstructedable = IsTriviallyConstRefConstructible<DataTypeFirst> && IsTriviallyConstRefConstructible<DataTypeSecond>;
-		constexpr static Bool triviallyMoveConstructedable = IsTriviallyMoveConstructible<DataTypeFirst> && IsTriviallyMoveConstructible<DataTypeSecond>;
+		using first_type = DataTypeFirst;
+		using second_type = DataTypeSecond;
 	public:
 		[[no_unique_address]] DataTypeFirst first;
 		[[no_unique_address]] DataTypeFirst second;
@@ -171,6 +189,34 @@ namespace natl {
 			return CompareThreeWay{}(lhs.second, rhs.second);
 		}
 	}
+
+	template<typename DataTypeFirst, typename DataTypeSecond>
+	struct IsTriviallyCompareableV<CompressedPair<DataTypeFirst, DataTypeSecond>>
+		: BoolConstant<IsTriviallyCompareable<DataTypeFirst>&& IsTriviallyCompareable<DataTypeSecond>> {};
+
+	template<typename DataTypeFirst, typename DataTypeSecond>
+	struct IsTriviallyRelocatableV<CompressedPair<DataTypeFirst, DataTypeSecond>>
+		: BoolConstant<IsTriviallyRelocatable<DataTypeFirst>&& IsTriviallyRelocatable<DataTypeSecond>> {};
+	template<typename DataTypeFirst, typename DataTypeSecond>
+	struct IsTriviallyConstructibleV<CompressedPair<DataTypeFirst, DataTypeSecond>>
+		: BoolConstant<IsTriviallyConstructible<DataTypeFirst>&& IsTriviallyConstructible<DataTypeSecond>> {};
+	template<typename DataTypeFirst, typename DataTypeSecond>
+	struct IsTriviallyDestructibleV<CompressedPair<DataTypeFirst, DataTypeSecond>>
+		: BoolConstant<IsTriviallyDestructible<DataTypeFirst>&& IsTriviallyDestructible<DataTypeSecond>> {};
+
+	template<typename DataTypeFirst, typename DataTypeSecond>
+	struct IsTriviallyConstRefConstructibleV<CompressedPair<DataTypeFirst, DataTypeSecond>>
+		: BoolConstant<IsTriviallyConstRefConstructible<DataTypeFirst>&& IsTriviallyConstRefConstructible<DataTypeSecond>> {};
+	template<typename DataTypeFirst, typename DataTypeSecond>
+	struct IsTriviallyMoveConstructibleV<CompressedPair<DataTypeFirst, DataTypeSecond>>
+		: BoolConstant<IsTriviallyMoveConstructible<DataTypeFirst>&& IsTriviallyMoveConstructible<DataTypeSecond>> {};
+
+	template<typename DataTypeFirst, typename DataTypeSecond>
+	struct IsTriviallyConstRefAssignableV<CompressedPair<DataTypeFirst, DataTypeSecond>>
+		: BoolConstant<IsTriviallyConstRefAssignable<DataTypeFirst>&& IsTriviallyConstRefAssignable<DataTypeSecond>> {};
+	template<typename DataTypeFirst, typename DataTypeSecond>
+	struct IsTriviallyMoveAssignableV<CompressedPair<DataTypeFirst, DataTypeSecond>>
+		: BoolConstant<IsTriviallyMoveAssignable<DataTypeFirst>&& IsTriviallyMoveAssignable<DataTypeSecond>> {};
 
 	template<class DataTypeFirst, class DataTypeSecond>
 	constexpr CompressedPair<typename Decay<DataTypeFirst>::type, typename Decay<DataTypeSecond>::type> makePair(DataTypeFirst&& first, DataTypeSecond&& second) {

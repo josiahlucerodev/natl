@@ -7,7 +7,7 @@
 
 //interface 
 namespace natl {
-	template<class DataType, class Alloc = DefaultAllocator<DataType>>
+	template<typename DataType, typename Alloc = DefaultAllocator<DataType>>
 		requires(IsAllocator<Alloc>)
 	class HeapArray {
 	public:
@@ -30,15 +30,6 @@ namespace natl {
 		using const_reverse_iterator = ReverseConstRandomAccessIteratorAlloc<value_type, Alloc>;
 
 		using allocation_move_adapater = AllocationMoveAdapater<value_type, Alloc>;
-
-		//movement info  
-		constexpr static Bool triviallyRelocatable = true;
-		constexpr static Bool triviallyDefaultConstructible = true;
-		constexpr static Bool triviallyCompareable = true;
-		constexpr static Bool triviallyDestructible = false;
-		constexpr static Bool triviallyConstRefConstructedable = false;
-		constexpr static Bool triviallyMoveConstructedable = false;
-
 	private:
 		pointer arrayDataPtr;
 		size_type arraySize;
@@ -266,4 +257,32 @@ namespace natl {
 			natl::fill<pointer, value_type>(fillDstFirst, fillDstLast, value);
 		}
 	};
+
+	template<class DataType, class Alloc>
+	struct IsTriviallyCompareableV<HeapArray<DataType, Alloc>>
+		: TrueType {};
+
+	template<class DataType, class Alloc>
+	struct IsTriviallyRelocatableV<HeapArray<DataType, Alloc>>
+		: TrueType {};
+	template<class DataType, class Alloc>
+	struct IsTriviallyConstructibleV<HeapArray<DataType, Alloc>>
+		: TrueType {};
+	template<class DataType, class Alloc>
+	struct IsTriviallyDestructibleV<HeapArray<DataType, Alloc>>
+		: FalseType {};
+
+	template<class DataType, class Alloc>
+	struct IsTriviallyConstRefConstructibleV<HeapArray<DataType, Alloc>>
+		: FalseType {};
+	template<class DataType, class Alloc>
+	struct IsTriviallyMoveConstructibleV<HeapArray<DataType, Alloc>>
+		: FalseType {};
+
+	template<class DataType, class Alloc>
+	struct IsTriviallyConstRefAssignableV<HeapArray<DataType, Alloc>>
+		: FalseType {};
+	template<class DataType, class Alloc>
+	struct IsTriviallyMoveAssignableV<HeapArray<DataType, Alloc>>
+		: FalseType {};
 }

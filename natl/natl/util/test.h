@@ -43,16 +43,6 @@ namespace natl {
 	class TestTypeCustomTrivialStdOut {
 		ui8 addressableData;
 	public:
-		//movement info  
-		constexpr static Bool triviallyRelocatable = true;
-		constexpr static Bool triviallyDefaultConstructible = true;
-		constexpr static Bool triviallyCompareable = true;
-		constexpr static Bool triviallyDestructible = true;
-		constexpr static Bool triviallyConstRefConstructedable = true;
-		constexpr static Bool triviallyMoveConstructedable = true;
-		constexpr static Bool triviallyMoveAssignable = true;
-		constexpr static Bool triviallyConstRefAssignable = true;
-
 		//constructor
 		TestTypeCustomTrivialStdOut() noexcept : addressableData(0) { natl::println("default constructed"); }
 		TestTypeCustomTrivialStdOut(TestTypeCustomTrivialStdOut&) noexcept : addressableData(0) { natl::println("ref constructed"); }
@@ -75,6 +65,34 @@ namespace natl {
 		//element access 
 		const ui8* getAddress() const noexcept { return &addressableData; }
 	};
+
+	template<>
+	struct IsTriviallyCompareableV<TestTypeCustomTrivialStdOut>
+		: TrueType {};
+
+	template<>
+	struct IsTriviallyRelocatableV<TestTypeCustomTrivialStdOut>
+		: TrueType {};
+	template<>
+	struct IsTriviallyConstructibleV<TestTypeCustomTrivialStdOut>
+		: TrueType {};
+	template<>
+	struct IsTriviallyDestructibleV<TestTypeCustomTrivialStdOut>
+		: TrueType {};
+
+	template<>
+	struct IsTriviallyConstRefConstructibleV<TestTypeCustomTrivialStdOut>
+		: TrueType {};
+	template<>
+	struct IsTriviallyMoveConstructibleV<TestTypeCustomTrivialStdOut>
+		: TrueType {};
+
+	template<>
+	struct IsTriviallyConstRefAssignableV<TestTypeCustomTrivialStdOut>
+		: TrueType {};
+	template<>
+	struct IsTriviallyMoveAssignableV<TestTypeCustomTrivialStdOut>
+		: TrueType {};
 
 	enum class TestType {
 		root,

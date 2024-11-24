@@ -193,14 +193,6 @@ namespace natl {
 		using entry_size_type = typename entry_allocator_type::size_type;
 
 		static constexpr f64 load_factor = 0.7;
-
-		//movement info 
-		constexpr static Bool triviallyRelocatable = true;
-		constexpr static Bool triviallyDefaultConstructible = true;
-		constexpr static Bool triviallyCompareable = false;
-		constexpr static Bool triviallyDestructible = false;
-		constexpr static Bool triviallyConstRefConstructedable = false;
-		constexpr static Bool triviallyMoveConstructedable = false;
 	private:
 		size_type internalSize;
 		DynamicArrayType table;
@@ -469,6 +461,34 @@ namespace natl {
 			table = natl::move(newTable);
 		}
 	};
+
+	template<typename DynamicArrayType, typename Key, typename DataType, typename Hash, typename Compare, typename Alloc>
+	struct IsTriviallyCompareableV<BaseFlatHashMap<DynamicArrayType, Key, DataType, Hash, Compare, Alloc>>
+		: FalseType {};
+
+	template<typename DynamicArrayType, typename Key, typename DataType, typename Hash, typename Compare, typename Alloc>
+	struct IsTriviallyRelocatableV<BaseFlatHashMap<DynamicArrayType, Key, DataType, Hash, Compare, Alloc>>
+		: TrueType {};
+	template<typename DynamicArrayType, typename Key, typename DataType, typename Hash, typename Compare, typename Alloc>
+	struct IsTriviallyConstructibleV<BaseFlatHashMap<DynamicArrayType, Key, DataType, Hash, Compare, Alloc>>
+		: TrueType {};
+	template<typename DynamicArrayType, typename Key, typename DataType, typename Hash, typename Compare, typename Alloc>
+	struct IsTriviallyDestructibleV<BaseFlatHashMap<DynamicArrayType, Key, DataType, Hash, Compare, Alloc>>
+		: FalseType {};
+
+	template<typename DynamicArrayType, typename Key, typename DataType, typename Hash, typename Compare, typename Alloc>
+	struct IsTriviallyConstRefConstructibleV<BaseFlatHashMap<DynamicArrayType, Key, DataType, Hash, Compare, Alloc>>
+		: FalseType {};
+	template<typename DynamicArrayType, typename Key, typename DataType, typename Hash, typename Compare, typename Alloc>
+	struct IsTriviallyMoveConstructibleV<BaseFlatHashMap<DynamicArrayType, Key, DataType, Hash, Compare, Alloc>>
+		: FalseType {};
+
+	template<typename DynamicArrayType, typename Key, typename DataType, typename Hash, typename Compare, typename Alloc>
+	struct IsTriviallyConstRefAssignableV<BaseFlatHashMap<DynamicArrayType, Key, DataType, Hash, Compare, Alloc>>
+		: FalseType {};
+	template<typename DynamicArrayType, typename Key, typename DataType, typename Hash, typename Compare, typename Alloc>
+	struct IsTriviallyMoveAssignableV<BaseFlatHashMap<DynamicArrayType, Key, DataType, Hash, Compare, Alloc>>
+		: FalseType {};
 
 	template<class Key, class DataType,
 		class Hash = Hash<Key>,

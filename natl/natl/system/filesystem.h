@@ -552,14 +552,6 @@ namespace natl {
 
 		using allocation_move_adapater = string_type::allocation_move_adapater;
 
-		//movement info 
-		constexpr static Bool triviallyRelocatable = string_type::triviallyRelocatable;
-		constexpr static Bool triviallyDefaultConstructible = string_type::triviallyDefaultConstructible;
-		constexpr static Bool triviallyCompareable = string_type::triviallyCompareable;
-		constexpr static Bool triviallyDestructible = string_type::triviallyDestructible;
-		constexpr static Bool triviallyConstRefConstructedable = string_type::triviallyConstRefConstructedable;
-		constexpr static Bool triviallyMoveConstructedable = string_type::triviallyMoveConstructedable;
-
 		constexpr static value_type pathSeparator = getPlatformPreferredPathSeparator();
 		constexpr static PathFormat autoFormat = PathFormat::standard;
 	private:
@@ -941,7 +933,6 @@ namespace natl {
 	using PathByteSize = BasePath<ByteSize - sizeof(BaseStringBaseMembersRef<Ascii>), Alloc>;
 
 	using Path = PathByteSize<128>;
-
 	using Path128 = PathByteSize<128>;
 	using Path256 = PathByteSize<256>;
 	using Path512 = PathByteSize<512>;
@@ -961,6 +952,34 @@ namespace natl {
 			return Path512(ConstStringView{ str, static_cast<Size>(len) });
 		}
 	}
+
+	template<Size BufferSize, typename Alloc>
+	struct IsTriviallyCompareableV<BasePath<BufferSize, Alloc>>
+		: IsTriviallyCompareableV<typename BasePath<BufferSize, Alloc>::string_type> {};
+
+	template<Size BufferSize, typename Alloc>
+	struct IsTriviallyRelocatableV<BasePath<BufferSize, Alloc>>
+		: IsTriviallyRelocatableV<typename BasePath<BufferSize, Alloc>::string_type> {};
+	template<Size BufferSize, typename Alloc>
+	struct IsTriviallyConstructibleV<BasePath<BufferSize, Alloc>>
+		: IsTriviallyConstructibleV<typename BasePath<BufferSize, Alloc>::string_type> {};
+	template<Size BufferSize, typename Alloc>
+	struct IsTriviallyDestructibleV<BasePath<BufferSize, Alloc>>
+		: IsTriviallyDestructibleV<typename BasePath<BufferSize, Alloc>::string_type> {};
+
+	template<Size BufferSize, typename Alloc>
+	struct IsTriviallyConstRefConstructibleV<BasePath<BufferSize, Alloc>>
+		: IsTriviallyConstRefConstructibleV<typename BasePath<BufferSize, Alloc>::string_type> {};
+	template<Size BufferSize, typename Alloc>
+	struct IsTriviallyMoveConstructibleV<BasePath<BufferSize, Alloc>>
+		: IsTriviallyMoveConstructibleV<typename BasePath<BufferSize, Alloc>::string_type> {};
+
+	template<Size BufferSize, typename Alloc>
+	struct IsTriviallyConstRefAssignableV<BasePath<BufferSize, Alloc>>
+		: IsTriviallyConstRefAssignableV<typename BasePath<BufferSize, Alloc>::string_type> {};
+	template<Size BufferSize, typename Alloc>
+	struct IsTriviallyMoveAssignableV<BasePath<BufferSize, Alloc>>
+		: IsTriviallyMoveAssignableV<typename BasePath<BufferSize, Alloc>::string_type> {};
 
 	enum class FileOpenMode {
 		readStart, //file must exist

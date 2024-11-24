@@ -11,21 +11,14 @@
 
 //interface
 namespace natl {
-	template<class DataType>
+	template<typename DataType>
 	class Ptr {
+	public:
 		using value_type = DataType;
 		using reference = DataType&;
 		using const_reference = const DataType&;
 		using pointer = DataType*;
 		using const_pointer = const DataType*;
-	public:
-		//movement info 
-		constexpr static Bool triviallyRelocatable = true;
-		constexpr static Bool triviallyDefaultConstructible = true;
-		constexpr static Bool triviallyCompareable = true;
-		constexpr static Bool triviallyDestructible = true;
-		constexpr static Bool triviallyConstRefConstructedable = true;
-		constexpr static Bool triviallyMoveConstructedable = true;
 	private:
 		DataType* dataPtr;
 	public:
@@ -49,6 +42,34 @@ namespace natl {
 		constexpr reference operator->() noexcept requires(IsNotConst<DataType>) { return *dataPtr; };
 		constexpr const_reference operator->() const noexcept { return *dataPtr; };
 	};
+
+	template<typename DataType>
+	struct IsTriviallyCompareableV<Ptr<DataType>>
+		: TrueType {};
+
+	template<typename DataType>
+	struct IsTriviallyRelocatableV<Ptr<DataType>>
+		: TrueType {};
+	template<typename DataType>
+	struct IsTriviallyConstructibleV<Ptr<DataType>>
+		: TrueType {};
+	template<typename DataType>
+	struct IsTriviallyDestructibleV<Ptr<DataType>>
+		: TrueType {};
+
+	template<typename DataType>
+	struct IsTriviallyConstRefConstructibleV<Ptr<DataType>>
+		: TrueType {};
+	template<typename DataType>
+	struct IsTriviallyMoveConstructibleV<Ptr<DataType>>
+		: TrueType {};
+
+	template<typename DataType>
+	struct IsTriviallyConstRefAssignableV<Ptr<DataType>>
+		: TrueType {};
+	template<typename DataType>
+	struct IsTriviallyMoveAssignableV<Ptr<DataType>>
+		: TrueType {};
 
 	template<typename Deleter, typename DataType>
 	concept IsDeleter = HasFunctionSignature<Deleter, void, DataType*>;
@@ -79,9 +100,10 @@ namespace natl {
 		}
 	};
 
-	template<class DataType, class Alloc = DefaultAllocator<DataType>, class Deleter = DefaultDeleter<DataType, Alloc>>
+	template<typename DataType, typename Alloc = DefaultAllocator<DataType>, typename Deleter = DefaultDeleter<DataType, Alloc>>
 		requires(IsAllocator<Alloc> && IsDeleter<Deleter, DataType>)
 	class UniquePtr {
+	public:
 		using value_type = DataType;
 		using reference = DataType&;
 		using const_reference = const DataType&;
@@ -90,14 +112,6 @@ namespace natl {
 
 		using element_type = DataType;
 		using deleter_type = Deleter;
-	public:
-		//movement info 
-		constexpr static Bool triviallyRelocatable = true && (IsEmpty<Deleter> || IsTriviallyRelocatable<Deleter>);
-		constexpr static Bool triviallyDefaultConstructible = true && (IsEmpty<Deleter> || IsTriviallyDefaultConstructible<Deleter>);
-		constexpr static Bool triviallyCompareable = true && (IsEmpty<Deleter> || IsTriviallyCompareable<Deleter>);
-		constexpr static Bool triviallyDestructible = false;
-		constexpr static Bool triviallyConstRefConstructedable = false;
-		constexpr static Bool triviallyMoveConstructedable = false;
 	private:
 		pointer dataPtr;
 		[[no_unique_address]] deleter_type deleter;
@@ -234,6 +248,34 @@ namespace natl {
 		}
 	};
 
+	template<typename DataType, typename Alloc, typename Deleter>
+	struct IsTriviallyCompareableV<UniquePtr<DataType, Alloc, Deleter>>
+		: BoolConstant<IsEmpty<Deleter> || IsTriviallyCompareable<Deleter>> {};
+
+	template<typename DataType, typename Alloc, typename Deleter>
+	struct IsTriviallyRelocatableV<UniquePtr<DataType, Alloc, Deleter>>
+		: BoolConstant<IsEmpty<Deleter> || IsTriviallyRelocatable<Deleter>> {};
+	template<typename DataType, typename Alloc, typename Deleter>
+	struct IsTriviallyConstructibleV<UniquePtr<DataType, Alloc, Deleter>>
+		: BoolConstant<IsEmpty<Deleter> || IsTriviallyConstructible<Deleter>> {};
+	template<typename DataType, typename Alloc, typename Deleter>
+	struct IsTriviallyDestructibleV<UniquePtr<DataType, Alloc, Deleter>>
+		: FalseType {};
+
+	template<typename DataType, typename Alloc, typename Deleter>
+	struct IsTriviallyConstRefConstructibleV<UniquePtr<DataType, Alloc, Deleter>>
+		: FalseType {};
+	template<typename DataType, typename Alloc, typename Deleter>
+	struct IsTriviallyMoveConstructibleV<UniquePtr<DataType, Alloc, Deleter>>
+		: FalseType {};
+
+	template<typename DataType, typename Alloc, typename Deleter>
+	struct IsTriviallyConstRefAssignableV<UniquePtr<DataType, Alloc, Deleter>>
+		: FalseType {};
+	template<typename DataType, typename Alloc, typename Deleter>
+	struct IsTriviallyMoveAssignableV<UniquePtr<DataType, Alloc, Deleter>>
+		: FalseType {};
+
 	template<class CharT, class Traits, class DataType, class Alloc, class Deleter> 
 	std::basic_ostream<CharT, Traits>& operator<<(std::basic_ostream<CharT, Traits>& os, const UniquePtr<DataType, Alloc, Deleter>& ptr) {
 		os << ptr.get();
@@ -245,13 +287,6 @@ namespace natl {
 	public:
 		using pointer_type = PtrDataType*;
 		using small_data_type = SmallDataType;
-
-		constexpr static Bool triviallyRelocatable = true;
-		constexpr static Bool triviallyDefaultConstructible = true;
-		constexpr static Bool triviallyCompareable = true;
-		constexpr static Bool triviallyDestructible = true;
-		constexpr static Bool triviallyConstRefConstructedable = true;
-		constexpr static Bool triviallyMoveConstructedable = true;
 	private:
 		constexpr static Size convertPtrToInt(const PtrDataType* ptr) noexcept {
 			return natl::bitCast<Size, const PtrDataType*>(ptr);
@@ -467,6 +502,34 @@ namespace natl {
 			}
 		}
 	};
+
+	template<typename PtrDataType, typename SmallDataType>
+	struct IsTriviallyCompareableV<PackedPtrAndSmallData<PtrDataType, SmallDataType>>
+		: TrueType {};
+
+	template<typename PtrDataType, typename SmallDataType>
+	struct IsTriviallyRelocatableV<PackedPtrAndSmallData<PtrDataType, SmallDataType>>
+		: TrueType {};
+	template<typename PtrDataType, typename SmallDataType>
+	struct IsTriviallyConstructibleV<PackedPtrAndSmallData<PtrDataType, SmallDataType>>
+		: TrueType {};
+	template<typename PtrDataType, typename SmallDataType>
+	struct IsTriviallyDestructibleV<PackedPtrAndSmallData<PtrDataType, SmallDataType>>
+		: TrueType {};
+
+	template<typename PtrDataType, typename SmallDataType>
+	struct IsTriviallyConstRefConstructibleV<PackedPtrAndSmallData<PtrDataType, SmallDataType>>
+		: TrueType {};
+	template<typename PtrDataType, typename SmallDataType>
+	struct IsTriviallyMoveConstructibleV<PackedPtrAndSmallData<PtrDataType, SmallDataType>>
+		: TrueType {};
+
+	template<typename PtrDataType, typename SmallDataType>
+	struct IsTriviallyConstRefAssignableV<PackedPtrAndSmallData<PtrDataType, SmallDataType>>
+		: TrueType {};
+	template<typename PtrDataType, typename SmallDataType>
+	struct IsTriviallyMoveAssignableV<PackedPtrAndSmallData<PtrDataType, SmallDataType>>
+		: TrueType {};
 
 #ifdef NATL_COMPILER_MSVC
 #pragma warning(push)
@@ -821,7 +884,425 @@ namespace natl {
 
 	struct SharedPtrFusedConstruct {};
 
-	template<class DataType>
+	template<typename DataType>
+	class SharedPtr;
+
+	//weak ptr 
+	template<typename DataType>
+	class WeakPtr {
+	public:
+		using element_type = DataType;
+		using element_pointer = DataType*;
+
+		using control_block_seperate = impl::SharedPtrControlBlockSeperate<DataType>;
+		using control_block_seperate_polymorphic = impl::SharedPtrControlBlockSeperatePolymorphic;
+		using control_block_fused = impl::SharedPtrControlBlockFused<DataType>;
+		using control_block_fused_polymorphic = impl::SharedPtrControlBlockFusedPolymorphic;
+		using control_block_seperate_polymorphic_constexpr = impl::SharedPtrControlBlockSeperatePolymorphicConstexpr;
+	private:
+		using weak_ptr_pointer_and_control_block_state = PackedPtrAndSmallData<DataType, impl::SharedPtrControlBlockState>;
+		weak_ptr_pointer_and_control_block_state dataPtrAndControlBlockState;
+		union {
+			control_block_seperate* controlBlockSeperate;
+			control_block_fused* controlBlockFused;
+			control_block_seperate_polymorphic* controlBlockSeperatePolymorphic;
+			control_block_fused_polymorphic* controlBlockFusedPolymorphic;
+			control_block_seperate_polymorphic_constexpr* controlBlockSeperatePolymorphicConstexpr;
+		};
+	public:
+		//constructor 
+		constexpr WeakPtr() noexcept : dataPtrAndControlBlockState(nullptr, impl::SharedPtrControlBlockState::seperate), controlBlockSeperate() {}
+		constexpr WeakPtr(NullptrType) noexcept : dataPtrAndControlBlockState(nullptr, impl::SharedPtrControlBlockState::seperate), controlBlockSeperate() {}
+
+	private:
+		template<class OtherType>
+		constexpr void constructCopy(const OtherType& other) noexcept {
+			if (other.dataPtr == nullptr) {
+				dataPtrAndControlBlockState.setValues(nullptr, impl::SharedPtrControlBlockState::seperate);
+				controlBlockSeperate = nullptr;
+			} else {
+				dataPtrAndControlBlockState = other.dataPtrAndControlBlockState;
+
+				switch (other.controlBlockState) {
+				case impl::SharedPtrControlBlockState::seperate:
+					controlBlockSeperate = other.controlBlockSeperate;
+					controlBlockSeperate->weakCount++;
+					break;
+				case impl::SharedPtrControlBlockState::fused:
+					controlBlockFused = other.controlBlockFused;
+					controlBlockFused->weakCount++;
+					break;
+				case impl::SharedPtrControlBlockState::seperatePolymorphic:
+					controlBlockSeperatePolymorphic = other.controlBlockSeperatePolymorphic;
+					controlBlockSeperatePolymorphic->weakRefIncrement(controlBlockSeperatePolymorphic);
+					break;
+				case impl::SharedPtrControlBlockState::fusedPolymorphic:
+					controlBlockFusedPolymorphic = other.controlBlockFusedPolymorphic;
+					controlBlockFusedPolymorphic->weakRefIncrement(controlBlockFusedPolymorphic);
+					break;
+				case impl::SharedPtrControlBlockState::seperatePolymorphicConstexpr:
+					if (isConstantEvaluated()) {
+						controlBlockSeperatePolymorphicConstexpr = other.controlBlockSeperatePolymorphicConstexpr;
+						controlBlockSeperatePolymorphicConstexpr->getWeakRefIncrementFunction()(controlBlockSeperatePolymorphicConstexpr);
+					} else {
+						unreachable();
+					}
+					break;
+				default:
+					unreachable();
+				}
+			}
+		}
+		template<class OtherType>
+		constexpr void constructMove(OtherType&& other) noexcept {
+			if (other.dataPtrAndControlBlockState.getPtr() == nullptr) {
+				dataPtrAndControlBlockState.setValues(nullptr, impl::SharedPtrControlBlockState::seperate);
+				controlBlockSeperate = nullptr;
+			} else {
+				dataPtrAndControlBlockState = other.dataPtrAndControlBlockState;
+
+				switch (other.dataPtrAndControlBlockState.getSmallData()) {
+				case impl::SharedPtrControlBlockState::seperate:
+					controlBlockSeperate = other.controlBlockSeperate;
+					break;
+				case impl::SharedPtrControlBlockState::fused:
+					controlBlockFused = other.controlBlockFused;
+					break;
+				case impl::SharedPtrControlBlockState::seperatePolymorphic:
+					controlBlockSeperatePolymorphic = other.controlBlockSeperatePolymorphic;
+					break;
+				case impl::SharedPtrControlBlockState::fusedPolymorphic:
+					controlBlockFusedPolymorphic = other.controlBlockFusedPolymorphic;
+					break;
+				case impl::SharedPtrControlBlockState::seperatePolymorphicConstexpr:
+					if (isConstantEvaluated()) {
+						controlBlockSeperatePolymorphicConstexpr = other.controlBlockSeperatePolymorphicConstexpr;
+					} else {
+						unreachable();
+					}
+					break;
+				default:
+					unreachable();
+				}
+			}
+
+			other.dataPtr = nullptr;
+		}
+		template<class OtherType>
+		constexpr void constructPolymorphicCopy(const OtherType& other) noexcept {
+			if (other.dataPtrAndControlBlockState.getSmallData() == nullptr) {
+				dataPtrAndControlBlockState.setValues(nullptr, impl::SharedPtrControlBlockState::seperate);
+				controlBlockSeperate = nullptr;
+			} else {
+				dataPtrAndControlBlockState.setPtr(static_cast<DataType*>(dataPtrAndControlBlockState.getPtr()));
+
+				switch (other.dataPtrAndControlBlockState.getSmallData()) {
+				case impl::SharedPtrControlBlockState::seperate:
+					dataPtrAndControlBlockState.setSmallData(impl::SharedPtrControlBlockState::seperatePolymorphic);
+					controlBlockSeperatePolymorphic = static_cast<control_block_seperate_polymorphic*>(other.controlBlockSeperate);
+					controlBlockSeperatePolymorphic->weakRefIncrement(controlBlockSeperatePolymorphic);
+					break;
+				case impl::SharedPtrControlBlockState::fused:
+					dataPtrAndControlBlockState.setSmallData(impl::SharedPtrControlBlockState::fusedPolymorphic);
+					controlBlockFusedPolymorphic = static_cast<control_block_fused_polymorphic*>(other.controlBlockFused);
+					controlBlockFusedPolymorphic->weakRefIncrement(controlBlockFusedPolymorphic);
+					break;
+				case impl::SharedPtrControlBlockState::seperatePolymorphic:
+					dataPtrAndControlBlockState.setSmallData(impl::SharedPtrControlBlockState::seperatePolymorphic);
+					controlBlockSeperatePolymorphic = other.controlBlockSeperatePolymorphic;
+					controlBlockSeperatePolymorphic->weakRefIncrement(controlBlockSeperatePolymorphic);
+					break;
+				case impl::SharedPtrControlBlockState::fusedPolymorphic:
+					dataPtrAndControlBlockState.setSmallData(impl::SharedPtrControlBlockState::fusedPolymorphic);
+					controlBlockFusedPolymorphic = other.controlBlockFusedPolymorphic;
+					controlBlockFusedPolymorphic->weakRefIncrement(controlBlockFusedPolymorphic);
+					break;
+				case impl::SharedPtrControlBlockState::seperatePolymorphicConstexpr:
+					if (isConstantEvaluated()) {
+						dataPtrAndControlBlockState.setSmallData(impl::SharedPtrControlBlockState::seperatePolymorphicConstexpr);
+						controlBlockSeperatePolymorphicConstexpr = other.controlBlockSeperatePolymorphicConstexpr;
+						controlBlockSeperatePolymorphicConstexpr->getWeakRefIncrementFunction()(controlBlockSeperatePolymorphicConstexpr);
+					} else {
+						unreachable();
+					}
+					break;
+				default:
+					unreachable();
+				}
+			}
+		}
+		template<class OtherType>
+		constexpr void constructPolymorphicMove(const OtherType& other) noexcept {
+			if (other.dataPtrAndControlBlockState.getPtr() == nullptr) {
+				dataPtrAndControlBlockState.setValues(nullptr, impl::SharedPtrControlBlockState::seperate);
+				controlBlockSeperate = nullptr;
+			} else {
+				dataPtrAndControlBlockState.setPtr(static_cast<DataType*>(other.dataPtrAndControlBlockState.getPtr()));
+
+				switch (other.dataPtrAndControlBlockState.getSmallData()) {
+				case impl::SharedPtrControlBlockState::seperate:
+					dataPtrAndControlBlockState.setSmallData(impl::SharedPtrControlBlockState::seperatePolymorphic);
+					controlBlockSeperatePolymorphic = static_cast<control_block_seperate_polymorphic*>(other.controlBlockSeperate);
+					break;
+				case impl::SharedPtrControlBlockState::fused:
+					dataPtrAndControlBlockState.setSmallData(impl::SharedPtrControlBlockState::fusedPolymorphic);
+					controlBlockFusedPolymorphic = static_cast<control_block_fused_polymorphic*>(other.controlBlockFused);
+					break;
+				case impl::SharedPtrControlBlockState::seperatePolymorphic:
+					dataPtrAndControlBlockState.setSmallData(impl::SharedPtrControlBlockState::seperatePolymorphic);
+					controlBlockSeperatePolymorphic = other.controlBlockSeperatePolymorphic;
+					break;
+				case impl::SharedPtrControlBlockState::fusedPolymorphic:
+					dataPtrAndControlBlockState.setSmallData(impl::SharedPtrControlBlockState::fusedPolymorphic);
+					controlBlockFusedPolymorphic = other.controlBlockFusedPolymorphic;
+					break;
+				case impl::SharedPtrControlBlockState::seperatePolymorphicConstexpr:
+					if (isConstantEvaluated()) {
+						dataPtrAndControlBlockState.setSmallData(impl::SharedPtrControlBlockState::seperatePolymorphicConstexpr);
+						controlBlockSeperatePolymorphicConstexpr = other.controlBlockSeperatePolymorphicConstexpr;
+					} else {
+						unreachable();
+					}
+					break;
+				default:
+					unreachable();
+				}
+			}
+
+			other.dataPtr = nullptr;
+		}
+	public:
+
+		constexpr WeakPtr(const WeakPtr& other) noexcept {
+			constructCopy<WeakPtr>(other);
+		}
+		constexpr WeakPtr(WeakPtr&& other) noexcept {
+			constructMove<WeakPtr>(forward<WeakPtr>(other));
+		}
+
+		template<class OtherDataType>
+			requires(IsPolymorphicCastable<OtherDataType, DataType>)
+		constexpr WeakPtr(const WeakPtr<OtherDataType>& other) noexcept {
+			constructPolymorphicCopy<WeakPtr<OtherDataType>>(other);
+		}
+		template<class OtherDataType>
+			requires(IsPolymorphicCastable<OtherDataType, DataType>)
+		constexpr WeakPtr(WeakPtr<OtherDataType>&& other) noexcept {
+			constructPolymorphicMove<WeakPtr<OtherDataType>>(forward<WeakPtr<OtherDataType>>(other));
+		}
+
+		constexpr WeakPtr(const SharedPtr<DataType>& other) noexcept {
+			constructCopy<SharedPtr<DataType>>(other);
+		}
+		template<class OtherDataType>
+			requires(IsPolymorphicCastable<OtherDataType, DataType>)
+		constexpr WeakPtr(const SharedPtr<DataType>& other) noexcept {
+			constructPolymorphicCopy<SharedPtr<OtherDataType>>(other);
+		}
+	private:
+		constexpr void destruct() noexcept {
+			if (dataPtrAndControlBlockState.getPtr()) {
+				switch (dataPtrAndControlBlockState.getSmallData()) {
+				case impl::SharedPtrControlBlockState::seperate:
+					control_block_seperate::destoryWeak(controlBlockSeperate);
+					break;
+				case impl::SharedPtrControlBlockState::fused:
+					control_block_fused::destoryWeak(controlBlockFused);
+					break;
+				case impl::SharedPtrControlBlockState::seperatePolymorphic:
+					controlBlockSeperatePolymorphic->getWeakDestoryFunction()(controlBlockSeperatePolymorphic);
+					break;
+				case impl::SharedPtrControlBlockState::fusedPolymorphic:
+					controlBlockFusedPolymorphic->getWeakDestoryFunction()(controlBlockFusedPolymorphic);
+					break;
+				case impl::SharedPtrControlBlockState::seperatePolymorphicConstexpr:
+					if (isConstantEvaluated()) {
+						controlBlockSeperatePolymorphicConstexpr->getWeakDestoryFunction()(controlBlockSeperatePolymorphicConstexpr);
+					} else {
+						unreachable();
+					}
+					break;
+				default:
+					unreachable();
+				}
+			}
+		}
+	public:
+		//destructor
+		constexpr ~WeakPtr() noexcept {
+			destruct();
+		}
+
+		//util 
+		constexpr WeakPtr& self() noexcept { return *this; }
+		constexpr const WeakPtr& self() const noexcept { return *this; }
+
+
+		//assignment
+		constexpr WeakPtr& operator=(const WeakPtr& other) noexcept {
+			destruct();
+			constructCopy<WeakPtr>(other);
+			return self();
+		}
+		constexpr WeakPtr& operator=(WeakPtr&& other) noexcept {
+			destruct();
+			constructMove<WeakPtr>(forward<WeakPtr>(other));
+			return self();
+		}
+
+		template<class OtherDataType>
+			requires(IsPolymorphicCastable<OtherDataType, DataType>)
+		constexpr WeakPtr& operator=(const WeakPtr<OtherDataType>& other) noexcept {
+			destruct();
+			constructPolymorphicCopy<WeakPtr<OtherDataType>>(other);
+			return self();
+		}
+		template<class OtherDataType>
+			requires(IsPolymorphicCastable<OtherDataType, DataType>)
+		constexpr WeakPtr& operator=(WeakPtr<OtherDataType>&& other) noexcept {
+			destruct();
+			constructPolymorphicMove<WeakPtr<OtherDataType>>(forward<WeakPtr<OtherDataType>>(other));
+			return self();
+		}
+
+		constexpr WeakPtr& operator=(const SharedPtr<DataType>& other) noexcept {
+			destruct();
+			constructCopy<SharedPtr<DataType>>(other);
+			return self();
+		}
+		template<class OtherDataType>
+			requires(IsPolymorphicCastable<OtherDataType, DataType>)
+		constexpr WeakPtr& operator=(const SharedPtr<DataType>& other) noexcept {
+			destruct();
+			constructPolymorphicCopy<SharedPtr<OtherDataType>>(other);
+			return self();
+		}
+
+		//modifiers
+		constexpr void reset() noexcept {
+			destruct();
+			dataPtrAndControlBlockState.setValues(nullptr, impl::SharedPtrControlBlockState::seperate);
+			controlBlockSeperate = nullptr;
+		}
+
+		constexpr void swap(WeakPtr& other) noexcept {
+			weak_ptr_pointer_and_control_block_state dataPtrAndControlBlockStateTemp = other.dataPtrAndControlBlockState;
+			other.dataPtrAndControlBlockState = dataPtrAndControlBlockState;
+			dataPtrAndControlBlockState = dataPtrAndControlBlockStateTemp;
+
+			switch (dataPtrAndControlBlockState.getSmallData()) {
+			case impl::SharedPtrControlBlockState::seperate: {
+				control_block_seperate* controlBlockSeperateTemp = other.controlBlockSeperate;
+				other.controlBlockSeperate = controlBlockSeperate;
+				controlBlockSeperate = controlBlockSeperateTemp;
+				break;
+			}
+			case impl::SharedPtrControlBlockState::fused: {
+				control_block_fused* controlBlockFusedTemp = other.controlBlockFused;
+				other.controlBlockFused = controlBlockFused;
+				controlBlockFused = controlBlockFusedTemp;
+				break;
+			}
+			case impl::SharedPtrControlBlockState::seperatePolymorphic: {
+				control_block_seperate_polymorphic* controlBlockSeperatePolymorphicTemp = other.controlBlockSeperatePolymorphic;
+				other.controlBlockSeperatePolymorphic = controlBlockSeperatePolymorphic;
+				controlBlockSeperatePolymorphic = controlBlockSeperatePolymorphicTemp;
+				break;
+			}
+			case impl::SharedPtrControlBlockState::fusedPolymorphic: {
+				control_block_fused_polymorphic* controlBlockFusedPolymorphicTemp = other.controlBlockFusedPolymorphic;
+				other.controlBlockFusedPolymorphic = controlBlockFusedPolymorphic;
+				controlBlockFusedPolymorphic = controlBlockFusedPolymorphicTemp;
+				break;
+			}
+			case impl::SharedPtrControlBlockState::seperatePolymorphicConstexpr: {
+				if (isConstantEvaluated()) {
+					control_block_seperate_polymorphic_constexpr* controlBlockSeperatePolymorphicConstexprTemp = other.controlBlockSeperatePolymorphicConstexpr;
+					other.controlBlockSeperatePolymorphicConstexpr = controlBlockSeperatePolymorphicConstexpr;
+					controlBlockSeperatePolymorphicConstexpr = controlBlockSeperatePolymorphicConstexprTemp;
+				} else {
+					unreachable();
+				}
+				break;
+			}
+			default:
+				unreachable();
+			}
+		}
+
+		//observers
+		constexpr Size use_count() const noexcept {
+			if (dataPtrAndControlBlockState.getPtr()) {
+				switch (dataPtrAndControlBlockState.getSmallData()) {
+				case impl::SharedPtrControlBlockState::seperate:
+					return controlBlockSeperate->useCount.load();
+				case impl::SharedPtrControlBlockState::fused:
+					return controlBlockFused->useCount.load();
+				case impl::SharedPtrControlBlockState::seperatePolymorphic:
+					return controlBlockSeperatePolymorphic->getUseCount(controlBlockSeperatePolymorphic);
+				case impl::SharedPtrControlBlockState::fusedPolymorphic:
+					return controlBlockFusedPolymorphic->getUseCount(controlBlockFusedPolymorphic);
+				case impl::SharedPtrControlBlockState::seperatePolymorphicConstexpr:
+					if (isConstantEvaluated()) {
+						return controlBlockSeperatePolymorphicConstexpr->getUseCountFunction()(controlBlockSeperatePolymorphicConstexpr);
+					} else {
+						unreachable();
+					}
+				default:
+					unreachable();
+				}
+			}
+			return 0;
+		}
+
+		constexpr Bool expired() const noexcept {
+			return use_count() == 0;
+		}
+		constexpr SharedPtr<DataType> lock() const noexcept {
+			if (isConstantEvaluated()) {
+				return expired() ? natl::move(SharedPtr<DataType>()) : natl::move(SharedPtr<DataType>(self()));
+			} else {
+				return expired() ? SharedPtr<DataType>() : SharedPtr<DataType>(self());
+			}
+		}
+
+		constexpr Bool empty() const noexcept { return dataPtrAndControlBlockState.getPtr() == nullptr; }
+		constexpr Bool isEmpty() const noexcept { return empty(); }
+		constexpr Bool isNotEmpty() const noexcept { return !empty(); }
+		explicit constexpr operator Bool() const noexcept { return isNotEmpty(); }
+
+		friend SharedPtr<DataType>;
+	};
+
+	template<typename DataType>
+	struct IsTriviallyCompareableV<WeakPtr<DataType>>
+		: FalseType {};
+
+	template<typename DataType>
+	struct IsTriviallyRelocatableV<WeakPtr<DataType>>
+		: TrueType {};
+	template<typename DataType>
+	struct IsTriviallyConstructibleV<WeakPtr<DataType>>
+		: TrueType {};
+	template<typename DataType>
+	struct IsTriviallyDestructibleV<WeakPtr<DataType>>
+		: FalseType {};
+
+	template<typename DataType>
+	struct IsTriviallyConstRefConstructibleV<WeakPtr<DataType>>
+		: FalseType {};
+	template<typename DataType>
+	struct IsTriviallyMoveConstructibleV<WeakPtr<DataType>>
+		: FalseType {};
+
+	template<typename DataType>
+	struct IsTriviallyConstRefAssignableV<WeakPtr<DataType>>
+		: FalseType {};
+	template<typename DataType>
+	struct IsTriviallyMoveAssignableV<WeakPtr<DataType>>
+		: FalseType {};
+
+	template<typename DataType>
 	class SharedPtr {
 	public:
 		using element_type = DataType;
@@ -833,15 +1314,6 @@ namespace natl {
 		using control_block_fused_polymorphic = impl::SharedPtrControlBlockFusedPolymorphic;
 		using control_block_seperate_polymorphic_constexpr = impl::SharedPtrControlBlockSeperatePolymorphicConstexpr;
 		using pointer_and_control_block_state = PackedPtrAndSmallData<element_type, impl::SharedPtrControlBlockState>;
-
-
-		//movement info 
-		constexpr static Bool triviallyRelocatable = true;
-		constexpr static Bool triviallyDefaultConstructible = true;
-		constexpr static Bool triviallyCompareable = false;
-		constexpr static Bool triviallyDestructible = false;
-		constexpr static Bool triviallyConstRefConstructedable = false;
-		constexpr static Bool triviallyMoveConstructedable = false;
 	private:
 		pointer_and_control_block_state dataPtrAndControlBlockState;
 		union {
@@ -852,406 +1324,7 @@ namespace natl {
 			control_block_seperate_polymorphic_constexpr* controlBlockSeperatePolymorphicConstexpr;
 		};
 	public:
-
-		//weak ptr 
-		template<class WeakPtrDataType>
-		class WeakPtr {
-		public:
-			using element_type = WeakPtrDataType;
-			using element_pointer = WeakPtrDataType*;
-
-			using control_block_seperate = impl::SharedPtrControlBlockSeperate<WeakPtrDataType>;
-			using control_block_seperate_polymorphic = impl::SharedPtrControlBlockSeperatePolymorphic;
-			using control_block_fused = impl::SharedPtrControlBlockFused<WeakPtrDataType>;
-			using control_block_fused_polymorphic = impl::SharedPtrControlBlockFusedPolymorphic;
-			using control_block_seperate_polymorphic_constexpr = impl::SharedPtrControlBlockSeperatePolymorphicConstexpr;
-
-			//movement info 
-			constexpr static Bool triviallyRelocatable = true;
-			constexpr static Bool triviallyDefaultConstructible = true;
-			constexpr static Bool triviallyCompareable = false;
-			constexpr static Bool triviallyDestructible = false;
-			constexpr static Bool triviallyConstRefConstructedable = false;
-			constexpr static Bool triviallyMoveConstructedable = false;
-
-		private:
-			using weak_ptr_pointer_and_control_block_state = PackedPtrAndSmallData<WeakPtrDataType, impl::SharedPtrControlBlockState>;
-			weak_ptr_pointer_and_control_block_state dataPtrAndControlBlockState;
-			union {
-				control_block_seperate* controlBlockSeperate;
-				control_block_fused* controlBlockFused;
-				control_block_seperate_polymorphic* controlBlockSeperatePolymorphic;
-				control_block_fused_polymorphic* controlBlockFusedPolymorphic;
-				control_block_seperate_polymorphic_constexpr* controlBlockSeperatePolymorphicConstexpr;
-			};
-		public:
-			//constructor 
-			constexpr WeakPtr() noexcept : dataPtrAndControlBlockState(nullptr, impl::SharedPtrControlBlockState::seperate), controlBlockSeperate() {}
-			constexpr WeakPtr(NullptrType) noexcept : dataPtrAndControlBlockState(nullptr, impl::SharedPtrControlBlockState::seperate), controlBlockSeperate() {}
-
-		private:
-			template<class OtherType>
-			constexpr void constructCopy(const OtherType& other) noexcept {
-				if (other.dataPtr == nullptr) {
-					dataPtrAndControlBlockState.setValues(nullptr, impl::SharedPtrControlBlockState::seperate);
-					controlBlockSeperate = nullptr;
-				} else {
-					dataPtrAndControlBlockState = other.dataPtrAndControlBlockState;
-
-					switch (other.controlBlockState) {
-					case impl::SharedPtrControlBlockState::seperate:
-						controlBlockSeperate = other.controlBlockSeperate;
-						controlBlockSeperate->weakCount++;
-						break;
-					case impl::SharedPtrControlBlockState::fused:
-						controlBlockFused = other.controlBlockFused;
-						controlBlockFused->weakCount++;
-						break;
-					case impl::SharedPtrControlBlockState::seperatePolymorphic:
-						controlBlockSeperatePolymorphic = other.controlBlockSeperatePolymorphic;
-						controlBlockSeperatePolymorphic->weakRefIncrement(controlBlockSeperatePolymorphic);
-						break;
-					case impl::SharedPtrControlBlockState::fusedPolymorphic:
-						controlBlockFusedPolymorphic = other.controlBlockFusedPolymorphic;
-						controlBlockFusedPolymorphic->weakRefIncrement(controlBlockFusedPolymorphic);
-						break;
-					case impl::SharedPtrControlBlockState::seperatePolymorphicConstexpr:
-						if (isConstantEvaluated()) {
-							controlBlockSeperatePolymorphicConstexpr = other.controlBlockSeperatePolymorphicConstexpr;
-							controlBlockSeperatePolymorphicConstexpr->getWeakRefIncrementFunction()(controlBlockSeperatePolymorphicConstexpr);
-						} else {
-							unreachable();
-						}
-						break;
-					default:
-						unreachable();
-					}
-				}
-			}
-			template<class OtherType>
-			constexpr void constructMove(OtherType&& other) noexcept {
-				if (other.dataPtrAndControlBlockState.getPtr() == nullptr) {
-					dataPtrAndControlBlockState.setValues(nullptr, impl::SharedPtrControlBlockState::seperate);
-					controlBlockSeperate = nullptr;
-				} else {
-					dataPtrAndControlBlockState = other.dataPtrAndControlBlockState;
-
-					switch (other.dataPtrAndControlBlockState.getSmallData()) {
-					case impl::SharedPtrControlBlockState::seperate:
-						controlBlockSeperate = other.controlBlockSeperate;
-						break;
-					case impl::SharedPtrControlBlockState::fused:
-						controlBlockFused = other.controlBlockFused;
-						break;
-					case impl::SharedPtrControlBlockState::seperatePolymorphic:
-						controlBlockSeperatePolymorphic = other.controlBlockSeperatePolymorphic;
-						break;
-					case impl::SharedPtrControlBlockState::fusedPolymorphic:
-						controlBlockFusedPolymorphic = other.controlBlockFusedPolymorphic;
-						break;
-					case impl::SharedPtrControlBlockState::seperatePolymorphicConstexpr:
-						if (isConstantEvaluated()) {
-							controlBlockSeperatePolymorphicConstexpr = other.controlBlockSeperatePolymorphicConstexpr;
-						} else {
-							unreachable();
-						}
-						break;
-					default:
-						unreachable();
-					}
-				}
-
-				other.dataPtr = nullptr;
-			}
-			template<class OtherType>
-			constexpr void constructPolymorphicCopy(const OtherType& other) noexcept {
-				if (other.dataPtrAndControlBlockState.getSmallData() == nullptr) {
-					dataPtrAndControlBlockState.setValues(nullptr, impl::SharedPtrControlBlockState::seperate);
-					controlBlockSeperate = nullptr;
-				} else {
-					dataPtrAndControlBlockState.setPtr(static_cast<WeakPtrDataType*>(dataPtrAndControlBlockState.getPtr()));
-
-					switch (other.dataPtrAndControlBlockState.getSmallData()) {
-					case impl::SharedPtrControlBlockState::seperate:
-						dataPtrAndControlBlockState.setSmallData(impl::SharedPtrControlBlockState::seperatePolymorphic);
-						controlBlockSeperatePolymorphic = static_cast<control_block_seperate_polymorphic*>(other.controlBlockSeperate);
-						controlBlockSeperatePolymorphic->weakRefIncrement(controlBlockSeperatePolymorphic);
-						break;
-					case impl::SharedPtrControlBlockState::fused:
-						dataPtrAndControlBlockState.setSmallData(impl::SharedPtrControlBlockState::fusedPolymorphic);
-						controlBlockFusedPolymorphic = static_cast<control_block_fused_polymorphic*>(other.controlBlockFused);
-						controlBlockFusedPolymorphic->weakRefIncrement(controlBlockFusedPolymorphic);
-						break;
-					case impl::SharedPtrControlBlockState::seperatePolymorphic:
-						dataPtrAndControlBlockState.setSmallData(impl::SharedPtrControlBlockState::seperatePolymorphic);
-						controlBlockSeperatePolymorphic = other.controlBlockSeperatePolymorphic;
-						controlBlockSeperatePolymorphic->weakRefIncrement(controlBlockSeperatePolymorphic);
-						break;
-					case impl::SharedPtrControlBlockState::fusedPolymorphic:
-						dataPtrAndControlBlockState.setSmallData(impl::SharedPtrControlBlockState::fusedPolymorphic);
-						controlBlockFusedPolymorphic = other.controlBlockFusedPolymorphic;
-						controlBlockFusedPolymorphic->weakRefIncrement(controlBlockFusedPolymorphic);
-						break;
-					case impl::SharedPtrControlBlockState::seperatePolymorphicConstexpr:
-						if (isConstantEvaluated()) {
-							dataPtrAndControlBlockState.setSmallData(impl::SharedPtrControlBlockState::seperatePolymorphicConstexpr);
-							controlBlockSeperatePolymorphicConstexpr = other.controlBlockSeperatePolymorphicConstexpr;
-							controlBlockSeperatePolymorphicConstexpr->getWeakRefIncrementFunction()(controlBlockSeperatePolymorphicConstexpr);
-						} else {
-							unreachable();
-						}
-						break;
-					default:
-						unreachable();
-					}
-				}
-			}
-			template<class OtherType>
-			constexpr void constructPolymorphicMove(const OtherType& other) noexcept {
-				if (other.dataPtrAndControlBlockState.getPtr() == nullptr) {
-					dataPtrAndControlBlockState.setValues(nullptr, impl::SharedPtrControlBlockState::seperate);
-					controlBlockSeperate = nullptr;
-				} else {
-					dataPtrAndControlBlockState.setPtr(static_cast<WeakPtrDataType*>(other.dataPtrAndControlBlockState.getPtr()));
-
-					switch (other.dataPtrAndControlBlockState.getSmallData()) {
-					case impl::SharedPtrControlBlockState::seperate:
-						dataPtrAndControlBlockState.setSmallData(impl::SharedPtrControlBlockState::seperatePolymorphic);
-						controlBlockSeperatePolymorphic = static_cast<control_block_seperate_polymorphic*>(other.controlBlockSeperate);
-						break;
-					case impl::SharedPtrControlBlockState::fused:
-						dataPtrAndControlBlockState.setSmallData(impl::SharedPtrControlBlockState::fusedPolymorphic);
-						controlBlockFusedPolymorphic = static_cast<control_block_fused_polymorphic*>(other.controlBlockFused);
-						break;
-					case impl::SharedPtrControlBlockState::seperatePolymorphic:
-						dataPtrAndControlBlockState.setSmallData(impl::SharedPtrControlBlockState::seperatePolymorphic);
-						controlBlockSeperatePolymorphic = other.controlBlockSeperatePolymorphic;
-						break;
-					case impl::SharedPtrControlBlockState::fusedPolymorphic:
-						dataPtrAndControlBlockState.setSmallData(impl::SharedPtrControlBlockState::fusedPolymorphic);
-						controlBlockFusedPolymorphic = other.controlBlockFusedPolymorphic;
-						break;
-					case impl::SharedPtrControlBlockState::seperatePolymorphicConstexpr:
-						if (isConstantEvaluated()) {
-							dataPtrAndControlBlockState.setSmallData(impl::SharedPtrControlBlockState::seperatePolymorphicConstexpr);
-							controlBlockSeperatePolymorphicConstexpr = other.controlBlockSeperatePolymorphicConstexpr;
-						} else {
-							unreachable();
-						}
-						break;
-					default:
-						unreachable();
-					}
-				}
-
-				other.dataPtr = nullptr;
-			}
-		public:
-
-			constexpr WeakPtr(const WeakPtr& other) noexcept {
-				constructCopy<WeakPtr>(other);
-			}
-			constexpr WeakPtr(WeakPtr&& other) noexcept {
-				constructMove<WeakPtr>(forward<WeakPtr>(other));
-			}
-
-			template<class OtherWeakPtrDataType>
-				requires(IsPolymorphicCastable<OtherWeakPtrDataType, WeakPtrDataType>)
-			constexpr WeakPtr(const WeakPtr<OtherWeakPtrDataType>& other) noexcept {
-				constructPolymorphicCopy<WeakPtr<OtherWeakPtrDataType>>(other);
-			}
-			template<class OtherWeakPtrDataType>
-				requires(IsPolymorphicCastable<OtherWeakPtrDataType, WeakPtrDataType>)
-			constexpr WeakPtr(WeakPtr<OtherWeakPtrDataType>&& other) noexcept {
-				constructPolymorphicMove<WeakPtr<OtherWeakPtrDataType>>(forward<WeakPtr<OtherWeakPtrDataType>>(other));
-			}
-
-			constexpr WeakPtr(const SharedPtr<WeakPtrDataType>& other) noexcept {
-				constructCopy<SharedPtr<WeakPtrDataType>>(other);
-			}
-			template<class OtherWeakPtrDataType>
-				requires(IsPolymorphicCastable<OtherWeakPtrDataType, WeakPtrDataType>)
-			constexpr WeakPtr(const SharedPtr<WeakPtrDataType>& other) noexcept {
-				constructPolymorphicCopy<SharedPtr<OtherWeakPtrDataType>>(other);
-			}
-		private:
-			constexpr void destruct() noexcept {
-				if (dataPtrAndControlBlockState.getPtr()) {
-					switch (dataPtrAndControlBlockState.getSmallData()) {
-					case impl::SharedPtrControlBlockState::seperate:
-						control_block_seperate::destoryWeak(controlBlockSeperate);
-						break;
-					case impl::SharedPtrControlBlockState::fused:
-						control_block_fused::destoryWeak(controlBlockFused);
-						break;
-					case impl::SharedPtrControlBlockState::seperatePolymorphic:
-						controlBlockSeperatePolymorphic->getWeakDestoryFunction()(controlBlockSeperatePolymorphic);
-						break;
-					case impl::SharedPtrControlBlockState::fusedPolymorphic:
-						controlBlockFusedPolymorphic->getWeakDestoryFunction()(controlBlockFusedPolymorphic);
-						break;
-					case impl::SharedPtrControlBlockState::seperatePolymorphicConstexpr:
-						if (isConstantEvaluated()) {
-							controlBlockSeperatePolymorphicConstexpr->getWeakDestoryFunction()(controlBlockSeperatePolymorphicConstexpr);
-						} else {
-							unreachable();
-						}
-						break;
-					default:
-						unreachable();
-					}
-				}
-			}
-		public:
-			//destructor
-			constexpr ~WeakPtr() noexcept {
-				destruct();
-			}
-
-			//util 
-			constexpr WeakPtr& self() noexcept { return *this; }
-			constexpr const WeakPtr& self() const noexcept { return *this; }
-
-
-			//assignment
-			constexpr WeakPtr& operator=(const WeakPtr& other) noexcept {
-				destruct();
-				constructCopy<WeakPtr>(other);
-				return self();
-			}
-			constexpr WeakPtr& operator=(WeakPtr&& other) noexcept {
-				destruct();
-				constructMove<WeakPtr>(forward<WeakPtr>(other));
-				return self();
-			}
-
-			template<class OtherWeakPtrDataType>
-				requires(IsPolymorphicCastable<OtherWeakPtrDataType, WeakPtrDataType>)
-			constexpr WeakPtr& operator=(const WeakPtr<OtherWeakPtrDataType>& other) noexcept {
-				destruct();
-				constructPolymorphicCopy<WeakPtr<OtherWeakPtrDataType>>(other);
-				return self();
-			}
-			template<class OtherWeakPtrDataType>
-				requires(IsPolymorphicCastable<OtherWeakPtrDataType, WeakPtrDataType>)
-			constexpr WeakPtr& operator=(WeakPtr<OtherWeakPtrDataType>&& other) noexcept {
-				destruct();
-				constructPolymorphicMove<WeakPtr<OtherWeakPtrDataType>>(forward<WeakPtr<OtherWeakPtrDataType>>(other));
-				return self();
-			}
-
-			constexpr WeakPtr& operator=(const SharedPtr<WeakPtrDataType>& other) noexcept {
-				destruct();
-				constructCopy<SharedPtr<WeakPtrDataType>>(other);
-				return self();
-			}
-			template<class OtherWeakPtrDataType>
-				requires(IsPolymorphicCastable<OtherWeakPtrDataType, WeakPtrDataType>)
-			constexpr WeakPtr& operator=(const SharedPtr<WeakPtrDataType>& other) noexcept {
-				destruct();
-				constructPolymorphicCopy<SharedPtr<OtherWeakPtrDataType>>(other);
-				return self();
-			}
-
-			//modifiers
-			constexpr void reset() noexcept {
-				destruct();
-				dataPtrAndControlBlockState.setValues(nullptr, impl::SharedPtrControlBlockState::seperate);
-				controlBlockSeperate = nullptr;
-			}
-
-			constexpr void swap(WeakPtr& other) noexcept {
-				weak_ptr_pointer_and_control_block_state dataPtrAndControlBlockStateTemp = other.dataPtrAndControlBlockState;
-				other.dataPtrAndControlBlockState = dataPtrAndControlBlockState;
-				dataPtrAndControlBlockState = dataPtrAndControlBlockStateTemp;
-
-				switch (dataPtrAndControlBlockState.getSmallData()) {
-				case impl::SharedPtrControlBlockState::seperate: {
-					control_block_seperate* controlBlockSeperateTemp = other.controlBlockSeperate;
-					other.controlBlockSeperate = controlBlockSeperate;
-					controlBlockSeperate = controlBlockSeperateTemp;
-					break;
-				}
-				case impl::SharedPtrControlBlockState::fused: {
-					control_block_fused* controlBlockFusedTemp = other.controlBlockFused;
-					other.controlBlockFused = controlBlockFused;
-					controlBlockFused = controlBlockFusedTemp;
-					break;
-				}
-				case impl::SharedPtrControlBlockState::seperatePolymorphic: {
-					control_block_seperate_polymorphic* controlBlockSeperatePolymorphicTemp = other.controlBlockSeperatePolymorphic;
-					other.controlBlockSeperatePolymorphic = controlBlockSeperatePolymorphic;
-					controlBlockSeperatePolymorphic = controlBlockSeperatePolymorphicTemp;
-					break;
-				}
-				case impl::SharedPtrControlBlockState::fusedPolymorphic: {
-					control_block_fused_polymorphic* controlBlockFusedPolymorphicTemp = other.controlBlockFusedPolymorphic;
-					other.controlBlockFusedPolymorphic = controlBlockFusedPolymorphic;
-					controlBlockFusedPolymorphic = controlBlockFusedPolymorphicTemp;
-					break;
-				}
-				case impl::SharedPtrControlBlockState::seperatePolymorphicConstexpr: {
-					if (isConstantEvaluated()) {
-						control_block_seperate_polymorphic_constexpr* controlBlockSeperatePolymorphicConstexprTemp = other.controlBlockSeperatePolymorphicConstexpr;
-						other.controlBlockSeperatePolymorphicConstexpr = controlBlockSeperatePolymorphicConstexpr;
-						controlBlockSeperatePolymorphicConstexpr = controlBlockSeperatePolymorphicConstexprTemp;
-					} else {
-						unreachable();
-					}
-					break;
-				}
-				default:
-					unreachable();
-				}
-			}
-
-			//observers
-			constexpr Size use_count() const noexcept {
-				if (dataPtrAndControlBlockState.getPtr()) {
-					switch (dataPtrAndControlBlockState.getSmallData()) {
-					case impl::SharedPtrControlBlockState::seperate:
-						return controlBlockSeperate->useCount.load();
-					case impl::SharedPtrControlBlockState::fused:
-						return controlBlockFused->useCount.load();
-					case impl::SharedPtrControlBlockState::seperatePolymorphic:
-						return controlBlockSeperatePolymorphic->getUseCount(controlBlockSeperatePolymorphic);
-					case impl::SharedPtrControlBlockState::fusedPolymorphic:
-						return controlBlockFusedPolymorphic->getUseCount(controlBlockFusedPolymorphic);
-					case impl::SharedPtrControlBlockState::seperatePolymorphicConstexpr:
-						if (isConstantEvaluated()) {
-							return controlBlockSeperatePolymorphicConstexpr->getUseCountFunction()(controlBlockSeperatePolymorphicConstexpr);
-						} else {
-							unreachable();
-						}
-					default:
-						unreachable();
-					}
-				}
-				return 0;
-			}
-
-			constexpr Bool expired() const noexcept {
-				return use_count() == 0;
-			}
-			constexpr SharedPtr lock() const noexcept {
-				if (isConstantEvaluated()) {
-					return expired() ? natl::move(SharedPtr()) : natl::move(SharedPtr(self()));
-				} else {
-					return expired() ? SharedPtr() : SharedPtr(self());
-				}
-			}
-
-			constexpr Bool empty() const noexcept { return dataPtrAndControlBlockState.getPtr() == nullptr; }
-			constexpr Bool isEmpty() const noexcept { return empty(); }
-			constexpr Bool isNotEmpty() const noexcept { return !empty(); }
-			explicit constexpr operator Bool() const noexcept { return isNotEmpty(); }
-
-			friend SharedPtr;
-		}; 
-
 		using weak_type = WeakPtr<DataType>;
-
-
 	private:
 		template<class OtherType, Bool IncrementRefCount = true>
 		constexpr void constructCopy(const OtherType& other) noexcept {
@@ -1899,8 +1972,33 @@ namespace natl {
 		explicit constexpr operator Bool() const noexcept { return isNotEmpty(); }
 	};
 
-	template<class DataType>
-	using WeakPtr = typename SharedPtr<DataType>::weak_type;
+	template<typename DataType>
+	struct IsTriviallyCompareableV<SharedPtr<DataType>>
+		: FalseType {};
+
+	template<typename DataType>
+	struct IsTriviallyRelocatableV<SharedPtr<DataType>>
+		: TrueType {};
+	template<typename DataType>
+	struct IsTriviallyConstructibleV<SharedPtr<DataType>>
+		: TrueType {};
+	template<typename DataType>
+	struct IsTriviallyDestructibleV<SharedPtr<DataType>>
+		: FalseType {};
+
+	template<typename DataType>
+	struct IsTriviallyConstRefConstructibleV<SharedPtr<DataType>>
+		: FalseType {};
+	template<typename DataType>
+	struct IsTriviallyMoveConstructibleV<SharedPtr<DataType>>
+		: FalseType {};
+
+	template<typename DataType>
+	struct IsTriviallyConstRefAssignableV<SharedPtr<DataType>>
+		: FalseType {};
+	template<typename DataType>
+	struct IsTriviallyMoveAssignableV<SharedPtr<DataType>>
+		: FalseType {};
 
 	template<class DataType>
 	class ObserverPtr {

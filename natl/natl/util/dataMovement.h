@@ -404,12 +404,6 @@ namespace natl {
         using reverse_iterator = ReverseRandomAccessIterator<DataType>;
         using const_reverse_iterator = ReverseRandomAccessIterator<const DataType>;
 
-        //movement info  
-        constexpr static Bool triviallyRelocatable = true;
-        constexpr static Bool triviallyDefaultConstructible = true;
-        constexpr static Bool triviallyCompareable = true;
-        constexpr static Bool triviallyDestructible = true;
-
         template<typename OtherDataType>
         using rebind_allocation_move_adapater = AllocationMoveAdapater<OtherDataType, typename Alloc::template rebind_alloc<OtherDataType>>;
 
@@ -523,6 +517,34 @@ namespace natl {
             dataPtrCanBeDealloc = AllocationMoveAdapaterCanDealloc::False;
         }
     };
+
+    template<typename DataType, typename Alloc>
+    struct IsTriviallyCompareableV<AllocationMoveAdapater<DataType, Alloc>>
+        : TrueType {};
+
+    template<typename DataType, typename Alloc>
+    struct IsTriviallyRelocatableV<AllocationMoveAdapater<DataType, Alloc>>
+        : FalseType {};
+    template<typename DataType, typename Alloc>
+    struct IsTriviallyConstructibleV<AllocationMoveAdapater<DataType, Alloc>>
+        : TrueType {};
+    template<typename DataType, typename Alloc>
+    struct IsTriviallyDestructibleV<AllocationMoveAdapater<DataType, Alloc>>
+        : FalseType {};
+
+    template<typename DataType, typename Alloc>
+    struct IsTriviallyConstRefConstructibleV<AllocationMoveAdapater<DataType, Alloc>>
+        : FalseType {};
+    template<typename DataType, typename Alloc>
+    struct IsTriviallyMoveConstructibleV<AllocationMoveAdapater<DataType, Alloc>>
+        : FalseType {};
+
+    template<typename DataType, typename Alloc>
+    struct IsTriviallyConstRefAssignableV<AllocationMoveAdapater<DataType, Alloc>>
+        : FalseType {};
+    template<typename DataType, typename Alloc>
+    struct IsTriviallyMoveAssignableV<AllocationMoveAdapater<DataType, Alloc>>
+        : FalseType {};
 
 
     template<typename ToDataType, typename FromAllocationMoveAdapaterType>

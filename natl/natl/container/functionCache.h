@@ -35,13 +35,13 @@ namespace natl {
 		template<typename Functor>
 			requires(
 				HasFunctionSignature<Functor, ReturnType, ArgTypes...> && 
-				IsCopyConstructible<Functor> && IsCopyAssignable<Functor> &&
+				IsCopyConstructibleC<Functor> && IsCopyAssignableC<Functor> &&
 				requires(const Functor& functor) { { function_type(functor) }; })
 		constexpr FunctionCache(const Functor& functor) noexcept : functionStorage(functor), functionArgumentStroage() {}
 		template<typename Functor>
 			requires(
 				HasFunctionSignature<Functor, ReturnType, ArgTypes...> && 
-				IsCopyConstructible<Functor> && IsCopyAssignable<Functor> &&
+				IsCopyConstructibleC<Functor> && IsCopyAssignableC<Functor> &&
 				requires(const Functor& functor) { { function_type(functor) }; })
 		constexpr FunctionCache(Functor&& functor) noexcept : functionStorage(natl::move(functor)), functionArgumentStroage() {}
 

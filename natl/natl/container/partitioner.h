@@ -9,9 +9,9 @@
 
 //interface 
 namespace natl {
-	template<class DataType, class Alloc>
+	template<typename DataType, typename Alloc>
 		requires(IsAllocator<Alloc>)
-	class DynamicPartitioner {
+	class DynPartitioner {
 	public:
 		using allocator_type = Alloc;
 
@@ -32,19 +32,11 @@ namespace natl {
 		using const_reverse_iterator = ReverseConstRandomAccessIteratorAlloc<value_type, Alloc>;
 
 		using allocation_move_adapater = AllocationMoveAdapater<value_type, Alloc>;
-
-		//movement info 
-		constexpr static Bool triviallyRelocatable = true;
-		constexpr static Bool triviallyDefaultConstructible = true;
-		constexpr static Bool triviallyCompareable = false;
-		constexpr static Bool triviallyDestructible = false;
-		constexpr static Bool triviallyConstRefConstructedable = false;
-		constexpr static Bool triviallyMoveConstructedable = false;
 	private:
 		DynArray<value_type, Alloc> data;
 		size_type partitionIndex;
 	public:
-		DynamicPartitioner() : data(), partitionIndex(0) {}
+		DynPartitioner() : data(), partitionIndex(0) {}
 
 		constexpr void resize(const size_type newCapacity) noexcept { data.resize(newCapacity); }
 		constexpr size_type size() const noexcept { return partitionIndex + 1; }
@@ -83,6 +75,34 @@ namespace natl {
 		constexpr const_reverse_iterator crend() const noexcept { return const_reverse_iterator(beginPtr()); }
 	};
 
+	template<typename DataType, typename Alloc>
+	struct IsTriviallyCompareableV<DynPartitioner<DataType, Alloc>>
+		: FalseType {};
+
+	template<typename DataType, typename Alloc>
+	struct IsTriviallyRelocatableV<DynPartitioner<DataType, Alloc>>
+		: TrueType {};
+	template<typename DataType, typename Alloc>
+	struct IsTriviallyConstructibleV<DynPartitioner<DataType, Alloc>>
+		: TrueType {};
+	template<typename DataType, typename Alloc>
+	struct IsTriviallyDestructibleV<DynPartitioner<DataType, Alloc>>
+		: FalseType {};
+
+	template<typename DataType, typename Alloc>
+	struct IsTriviallyConstRefConstructibleV<DynPartitioner<DataType, Alloc>>
+		: FalseType {};
+	template<typename DataType, typename Alloc>
+	struct IsTriviallyMoveConstructibleV<DynPartitioner<DataType, Alloc>>
+		: FalseType {};
+
+	template<typename DataType, typename Alloc>
+	struct IsTriviallyConstRefAssignableV<DynPartitioner<DataType, Alloc>>
+		: FalseType {};
+	template<typename DataType, typename Alloc>
+	struct IsTriviallyMoveAssignableV<DynPartitioner<DataType, Alloc>>
+		: FalseType {};
+
 
 	inline Size alignmentOffset(ui8* ptr, Size alignment) noexcept {
 		Size offset = static_cast<Size>(reinterpret_cast<UIntPtrSized>(ptr) & (alignment - 1));
@@ -90,9 +110,9 @@ namespace natl {
 		return offset;
 	}
 
-	template<class Alloc>
+	template<typename Alloc>
 		requires(IsAllocator<Alloc>)
-	class DynamicBytePartitioner : public DynamicPartitioner<ui8, Alloc> {
+	class DynBytePartitioner : public DynPartitioner<ui8, Alloc> {
 		using allocator_type = Alloc;
 
 		using value_type = typename Alloc::value_type;
@@ -112,16 +132,8 @@ namespace natl {
 		using const_reverse_iterator = ReverseConstRandomAccessIteratorAlloc<value_type, Alloc>;
 
 		using allocation_move_adapater = AllocationMoveAdapater<value_type, Alloc>;
-
-		//movement info 
-		constexpr static Bool triviallyRelocatable = true;
-		constexpr static Bool triviallyDefaultConstructible = true;
-		constexpr static Bool triviallyCompareable = false;
-		constexpr static Bool triviallyDestructible = false;
-		constexpr static Bool triviallyConstRefConstructedable = false;
-		constexpr static Bool triviallyMoveConstructedable = false;
 	public:
-		DynamicBytePartitioner() : DynamicPartitioner<ui8, Alloc>() {}
+		DynBytePartitioner() : DynPartitioner<ui8, Alloc>() {}
 	public:
 		template<class value_type>
 		ArrayView<value_type> newPartition(const size_type partiationSize) noexcept {
@@ -131,15 +143,44 @@ namespace natl {
 				return ArrayView<value_type>(nullptr, 0);
 			}
 
-			DynamicPartitioner<ui8, Alloc>& castSelf = *static_cast<DynamicPartitioner<ui8, Alloc>*>(this);
+			DynPartitioner<ui8, Alloc>& castSelf = *static_cast<DynPartitioner<ui8, Alloc>*>(this);
 			ArrayView<ui8> bytePartition = castSelf.newPartition(partiationByteSize);
 			ArrayView<value_type> partition(static_cast<pointer>(static_cast<void*>(bytePartition.at(offset))), partiationSize);
 			return partition;
 		}
 	};
 
-	template<class value_type>
+	template<typename Alloc>
+	struct IsTriviallyCompareableV<DynBytePartitioner<Alloc>>
+		: FalseType {};
+
+	template<typename Alloc>
+	struct IsTriviallyRelocatableV<DynBytePartitioner<Alloc>>
+		: TrueType {};
+	template<typename Alloc>
+	struct IsTriviallyConstructibleV<DynBytePartitioner<Alloc>>
+		: TrueType {};
+	template<typename Alloc>
+	struct IsTriviallyDestructibleV<DynBytePartitioner<Alloc>>
+		: FalseType {};
+
+	template<typename Alloc>
+	struct IsTriviallyConstRefConstructibleV<DynBytePartitioner<Alloc>>
+		: FalseType {};
+	template<typename Alloc>
+	struct IsTriviallyMoveConstructibleV<DynBytePartitioner<Alloc>>
+		: FalseType {};
+
+	template<typename Alloc>
+	struct IsTriviallyConstRefAssignableV<DynBytePartitioner<Alloc>>
+		: FalseType {};
+	template<typename Alloc>
+	struct IsTriviallyMoveAssignableV<DynBytePartitioner<Alloc>>
+		: FalseType {};
+
+	template<typename DataType>
 	class SubPartitioner {
+		using value_type = DataType;
 		using size_type = Size;
 	private:
 		ArrayView<value_type> partition;
@@ -165,4 +206,32 @@ namespace natl {
 			return outputPartition;
 		}
 	};
+
+	template<typename DataType>
+	struct IsTriviallyCompareableV<SubPartitioner<DataType>>
+		: TrueType {};
+
+	template<typename DataType>
+	struct IsTriviallyRelocatableV<SubPartitioner<DataType>>
+		: TrueType {};
+	template<typename DataType>
+	struct IsTriviallyConstructibleV<SubPartitioner<DataType>>
+		: TrueType {};
+	template<typename DataType>
+	struct IsTriviallyDestructibleV<SubPartitioner<DataType>>
+		: TrueType {};
+
+	template<typename DataType>
+	struct IsTriviallyConstRefConstructibleV<SubPartitioner<DataType>>
+		: TrueType {};
+	template<typename DataType>
+	struct IsTriviallyMoveConstructibleV<SubPartitioner<DataType>>
+		: TrueType {};
+
+	template<typename DataType>
+	struct IsTriviallyConstRefAssignableV<SubPartitioner<DataType>>
+		: TrueType {};
+	template<typename DataType>
+	struct IsTriviallyMoveAssignableV<SubPartitioner<DataType>>
+		: TrueType {};
 }

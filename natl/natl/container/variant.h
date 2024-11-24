@@ -113,17 +113,9 @@ namespace natl {
 	template<typename... Elements>
 		requires((IsConvertibleC<Elements, BaseNamedElement> && ...))
 	class Variant {
+	public:
 		constexpr static Size numberOfVariants = sizeof...(Elements);
 		constexpr static Size emptyVariantValue = 0;
-
-		//movement info  
-		constexpr static Bool triviallyRelocatable = (IsTriviallyRelocatable<typename Elements::value_type> && ...);
-		constexpr static Bool triviallyDefaultConstructible = true;
-		constexpr static Bool triviallyCompareable = false;
-		constexpr static Bool triviallyDestructible = (IsTriviallyDestructible<typename Elements::value_type> && ...);
-		constexpr static Bool triviallyConstRefConstructedable = (IsTriviallyConstRefConstructible<typename Elements::value_type> && ...) && triviallyDestructible;
-		constexpr static Bool triviallyMoveConstructedable = (IsTriviallyMoveConstructible<typename Elements::value_type> && ...) && triviallyDestructible;
-
 	private:
 		Size variantIndex;
 
@@ -200,10 +192,9 @@ namespace natl {
 				copyFunction(self(), other);
 			}
 			else {
-				if constexpr (!triviallyConstRefConstructedable) {
+				if constexpr (!IsTriviallyConstRefConstructibleC<Variant<Elements...>>) {
 					copyFunction(self(), other);
-				}
-				else {
+				} else {
 					uninitializedCopyInternalStorage(byteStorage, other.byteStorage);
 				}
 			}
@@ -218,7 +209,7 @@ namespace natl {
 			if (isConstantEvaluated()) {
 				moveFunction(self(), forward<Variant>(other));
 			} else {
-				if constexpr (!triviallyMoveConstructedable) {
+				if constexpr (!IsTriviallyMoveConstructibleC<Variant>) {
 					moveFunction(self(), forward<Variant>(other));
 				} else {
 					uninitializedCopyInternalStorage(byteStorage, other.byteStorage);
@@ -276,7 +267,7 @@ namespace natl {
 			}
 		}
 		constexpr void destoryValue() noexcept {
-			if (isConstantEvaluated() || !triviallyDestructible) {
+			if (isConstantEvaluated() || !IsTriviallyDestructibleC<Variant>) {
 				actuallyDestoryValue();
 			}
 		}
@@ -347,7 +338,7 @@ namespace natl {
 				if (isConstantEvaluated()) {
 					copyFunction(self(), other);
 				} else {
-					if constexpr (!triviallyConstRefConstructedable) {
+					if constexpr (!IsTriviallyConstRefConstructibleC<Variant>) {
 						copyFunction(self(), other);
 					} else {
 						copyInternalStorage(byteStorage, other.byteStorage);
@@ -372,7 +363,7 @@ namespace natl {
 				if (isConstantEvaluated()) {
 					moveFunction(self(), forward<Variant>(other));
 				} else {
-					if constexpr (!triviallyMoveConstructedable) {
+					if constexpr (!IsTriviallyMoveConstructibleC<Variant>) {
 						moveFunction(self(), forward<Variant>(other));
 					} else {
 						copyInternalStorage(byteStorage, other.byteStorage);
@@ -667,6 +658,34 @@ namespace natl {
 			return stringToIndexNotShiftedStatic(str);
 		}
 	};
+
+	template<typename... Elements>
+	struct IsTriviallyRelocatableV<Variant<Elements...>>
+		: BoolConstant<(IsTriviallyRelocatableC<typename Elements::value_type> && ...)> {};
+	template<typename... Elements>
+	struct IsTriviallyConstructibleV<Variant<Elements...>>
+		: TrueType {};
+	template<typename... Elements>
+	struct IsTriviallyDestructibleV<Variant<Elements...>>
+		: BoolConstant<(IsTriviallyDestructibleC<typename Elements::value_type> && ...)> {};
+
+	template<typename... Elements>
+	struct IsTriviallyConstRefConstructibleV<Variant<Elements...>>
+		: BoolConstant<(IsTriviallyConstRefConstructibleC<typename Elements::value_type> && ...)
+		&& IsTriviallyDestructibleC<Variant<Elements...>>> {};
+	template<typename... Elements>
+	struct IsTriviallyMoveConstructibleV<Variant<Elements...>>
+		: BoolConstant<(IsTriviallyMoveConstructibleC<typename Elements::value_type> && ...)
+		&& IsTriviallyDestructibleC<Variant<Elements...>>> {};
+
+	template<typename... Elements>
+	struct IsTriviallyConstRefAssignableV<Variant<Elements...>>
+		: BoolConstant<(IsTriviallyConstRefAssignableC<typename Elements::value_type> && ...)
+		&& IsTriviallyDestructibleC<Variant<Elements...>>> {};
+	template<typename... Elements>
+	struct IsTriviallyMoveAssignableV<Variant<Elements...>>
+		: BoolConstant<(IsTriviallyMoveAssignableC<typename Elements::value_type> && ...)
+		&& IsTriviallyDestructibleC<Variant<Elements...>>> {};
 
 
 

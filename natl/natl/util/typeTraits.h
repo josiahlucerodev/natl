@@ -544,83 +544,93 @@ namespace natl {
 	template<typename Type, typename OtherType>
 	struct IsAssignableV : BoolConstant<IsAssignable<Type, OtherType>> {};
 
-	template <typename DataType>
-	concept IsCopyConstructible = std::is_copy_constructible_v<Decay<DataType>>;
+	template <typename Type> concept IsCopyConstructibleC = std::is_copy_constructible_v<Decay<Type>>;
+	template <typename Type> concept IsCopyAssignableC = std::is_copy_assignable_v<Decay<Type>>;
+	template <typename Type> concept IsMoveConstructibleC = std::is_move_constructible_v<Decay<Type>>;
 
-	template <typename DataType>
-	concept IsCopyAssignable = std::is_copy_assignable_v<Decay<DataType>>;
+	//comparable
+	template<typename Type> constexpr inline Bool IsBuiltInTriviallyCompareable = IsBuiltInType<Type>;
+	template<typename Type> struct IsBuiltInTriviallyCompareableV : BoolConstant<IsBuiltInTriviallyCompareable<Type>> {};
+	template<typename Type> concept IsBuiltInTriviallyCompareableC = IsBuiltInTriviallyCompareable<Type>;
 
-	template <typename DataType>
-	concept IsMoveConstructible = std::is_move_constructible_v<Decay<DataType>>;
+	template<typename Type> struct IsTriviallyCompareableV : BoolConstant<IsBuiltInTriviallyCompareable<Type>> {};
+	template<typename Type> constexpr inline Bool IsTriviallyCompareable = IsTriviallyCompareableV<Type>::value;
+	template<typename Type> concept IsTriviallyCompareableC = IsTriviallyCompareable<Type>;
 
-	namespace impl {
-#define NATL_TYPE_TRIAT_CUSTOM_TRIVIALLY_FUN(conceptName, memberName) \
-        template<typename DataType> \
-        consteval Bool customCheckIf##conceptName() noexcept { \
-            if constexpr (requires() { { DataType::trivially##memberName } -> IsConvertibleC<Bool>; }) { \
-                return DataType::trivially##memberName; \
-            } else { \
-                return false; \
-            } \
-        }
+	//relocatable
+	template<typename Type> constexpr inline Bool IsBuiltInTriviallyRelocatable =
+		std::is_trivially_copyable_v<Type> && std::is_trivially_destructible_v<Type>;
+	template<typename Type> struct IsBuiltInTriviallyRelocatableV : BoolConstant<IsBuiltInTriviallyRelocatable<Type>> {};
+	template<typename Type> concept IsBuiltInTriviallyRelocatableC = IsBuiltInTriviallyRelocatable<Type>;
 
-		NATL_TYPE_TRIAT_CUSTOM_TRIVIALLY_FUN(IsTriviallyCompareable, Compareable);
-		NATL_TYPE_TRIAT_CUSTOM_TRIVIALLY_FUN(IsTriviallyRelocatable, Relocatable);
-		NATL_TYPE_TRIAT_CUSTOM_TRIVIALLY_FUN(IsTriviallyDefaultConstructible, DefaultConstructible);
-		NATL_TYPE_TRIAT_CUSTOM_TRIVIALLY_FUN(IsTriviallyDestructible, Destructible);
-		NATL_TYPE_TRIAT_CUSTOM_TRIVIALLY_FUN(IsTriviallyMoveConstructible, MoveConstructedable);
-		NATL_TYPE_TRIAT_CUSTOM_TRIVIALLY_FUN(IsTriviallyConstRefConstructible, ConstRefConstructedable);
-		NATL_TYPE_TRIAT_CUSTOM_TRIVIALLY_FUN(IsTriviallyMoveAssignable, MoveAssignable);
-		NATL_TYPE_TRIAT_CUSTOM_TRIVIALLY_FUN(IsTriviallyConstRefAssignable, ConstRefAssignable);
+	template<typename Type> struct IsTriviallyRelocatableV : BoolConstant<IsBuiltInTriviallyRelocatable<Type>> {};
+	template<typename Type> constexpr inline Bool IsTriviallyRelocatable = IsTriviallyRelocatableV<Type>::value;
+	template<typename Type> concept IsTriviallyRelocatableC = IsTriviallyRelocatable<Type>;
 
-	}
-#undef NATL_TYPE_TRIAT_CUSTOM_TRIVIALLY_FUN
+	//constructable
+	template<typename Type> constexpr inline Bool IsBuiltInTriviallyConstructible = std::is_trivially_default_constructible_v<Type>;
+	template<typename Type> struct IsBuiltInTriviallyConstructibleV : BoolConstant<IsBuiltInTriviallyConstructible<Type>> {};
+	template<typename Type> concept IsBuiltInTriviallyConstructibleC = IsBuiltInTriviallyConstructible<Type>;
 
-	template <typename DataType>
-	concept IsTriviallyCompareable = IsBuiltInType<DataType> ||
-		impl::customCheckIfIsTriviallyCompareable<DataType>();
+	template<typename Type> struct IsTriviallyConstructibleV : BoolConstant<IsBuiltInTriviallyConstructible<Type>> {};
+	template<typename Type> constexpr inline Bool IsTriviallyConstructible = IsTriviallyConstructibleV<Type>::value;
+	template<typename Type> concept IsTriviallyConstructibleC = IsTriviallyConstructible<Type>;
 
-	template <typename DataType>
-	concept IsTriviallyRelocatable = (std::is_trivially_copyable_v<DataType> && std::is_trivially_destructible_v<DataType>) ||
-		IsBuiltInType<DataType> || impl::customCheckIfIsTriviallyRelocatable<DataType>();
+	//destructable
+	template<typename Type> constexpr inline Bool IsBuiltInTriviallyDestructible = std::is_trivially_destructible_v<Type>;
+	template<typename Type> struct IsBuiltInTriviallyDestructibleV : BoolConstant<IsBuiltInTriviallyDestructible<Type>> {};
+	template<typename Type> concept IsBuiltInTriviallyDestructibleC = IsBuiltInTriviallyDestructible<Type>;
 
-	template <typename DataType>
-	concept IsTriviallyDefaultConstructible = std::is_trivially_default_constructible_v<DataType> ||
-		impl::customCheckIfIsTriviallyDefaultConstructible<DataType>();
+	template<typename Type> struct IsTriviallyDestructibleV : BoolConstant<IsBuiltInTriviallyDestructible<Type>> {};
+	template<typename Type> constexpr inline Bool IsTriviallyDestructible = IsTriviallyDestructibleV<Type>::value;
+	template<typename Type> concept IsTriviallyDestructibleC = IsTriviallyDestructible<Type>;
 
-	template <typename DataType>
-	concept IsTriviallyDestructible = std::is_trivially_destructible_v<DataType> ||
-		impl::customCheckIfIsTriviallyDestructible<DataType>();
+	//const ref constructible
+	template<typename Type> constexpr inline Bool IsBuiltInTriviallyConstRefConstructible = std::is_trivially_constructible_v<Type, const Type&>;
+	template<typename Type> struct IsBuiltInTriviallyConstRefConstructibleV : BoolConstant<IsBuiltInTriviallyConstRefConstructible<Type>> {};
+	template<typename Type> concept IsBuiltInTriviallyConstRefConstructibleC = IsBuiltInTriviallyConstRefConstructible<Type>;
 
-	template <typename DataType>
-	concept IsTriviallyMoveConstructible = std::is_trivially_move_constructible_v<DataType> ||
-		impl::customCheckIfIsTriviallyMoveConstructible<DataType>();
+	template<typename Type> struct IsTriviallyConstRefConstructibleV : BoolConstant<IsBuiltInTriviallyConstRefConstructible<Type>> {};
+	template<typename Type> constexpr inline Bool IsTriviallyConstRefConstructible = IsTriviallyConstRefConstructibleV<Type>::value;
+	template<typename Type> concept IsTriviallyConstRefConstructibleC = IsTriviallyConstRefConstructible<Type>;
 
-	template <typename DataType>
-	concept IsTriviallyConstRefConstructible = std::is_trivially_constructible_v<DataType, const DataType&> ||
-		impl::customCheckIfIsTriviallyConstRefConstructible<DataType>();
+	//move constructible
+	template<typename Type> constexpr inline Bool IsBuiltInTriviallyMoveConstructible = std::is_trivially_move_constructible_v<Type>;
+	template<typename Type> struct IsBuiltInTriviallyMoveConstructibleV : BoolConstant<IsBuiltInTriviallyMoveConstructible<Type>> {};
+	template<typename Type> concept IsBuiltInTriviallyMoveConstructibleC = IsBuiltInTriviallyMoveConstructible<Type>;
 
-	template <typename DataType>
-	concept IsTriviallyMoveAssignable = std::is_trivially_move_assignable_v<DataType> ||
-		impl::customCheckIfIsTriviallyMoveAssignable<DataType>();
+	template<typename Type> struct IsTriviallyMoveConstructibleV : BoolConstant<IsBuiltInTriviallyMoveConstructible<Type>> {};
+	template<typename Type> constexpr inline Bool IsTriviallyMoveConstructible = IsTriviallyMoveConstructibleV<Type>::value;
+	template<typename Type> concept IsTriviallyMoveConstructibleC = IsTriviallyMoveConstructible<Type>;
 
-	template <typename DataType>
-	concept IsTriviallyConstRefAssignable = std::is_trivially_assignable_v<DataType, const DataType&> ||
-		impl::customCheckIfIsTriviallyConstRefAssignable<DataType>();
+	//const ref assignable
+	template<typename Type> constexpr inline Bool IsBuiltInTriviallyConstRefAssignable = std::is_trivially_assignable_v<Type, const Type&>;
+	template<typename Type> struct IsBuiltInTriviallyConstRefAssignableV : BoolConstant<IsBuiltInTriviallyConstRefAssignable<Type>> {};
+	template<typename Type> concept IsBuiltInTriviallyConstRefAssignableC = IsBuiltInTriviallyConstRefAssignable<Type>;
+
+	template<typename Type> struct IsTriviallyConstRefAssignableV : BoolConstant<IsBuiltInTriviallyConstRefAssignable<Type>> {};
+	template<typename Type> constexpr inline Bool IsTriviallyConstRefAssignable = IsTriviallyConstRefAssignableV<Type>::value;
+	template<typename Type> concept IsTriviallyConstRefAssignableC = IsTriviallyConstRefAssignable<Type>;
+
+	//move assignable
+	template<typename Type> constexpr inline Bool IsBuiltInTriviallyMoveAssignable = std::is_trivially_move_assignable_v<Type>;
+	template<typename Type> struct IsBuiltInTriviallyMoveAssignableV : BoolConstant<IsBuiltInTriviallyMoveAssignable<Type>> {};
+	template<typename Type> concept IsBuiltInTriviallyMoveAssignableC = IsBuiltInTriviallyMoveAssignable<Type>;
+
+	template<typename Type> struct IsTriviallyMoveAssignableV : BoolConstant<IsBuiltInTriviallyMoveAssignable<Type>> {};
+	template<typename Type> constexpr inline Bool IsTriviallyMoveAssignable = IsTriviallyMoveAssignableV<Type>::value;
+	template<typename Type> concept IsTriviallyMoveAssignableC = IsTriviallyMoveAssignable<Type>;
 
 	//memcopy
 	template <typename Type>
-	concept MemcopyConstructible = IsTriviallyDefaultConstructible<Type> && IsTriviallyRelocatable<Type>;
+	concept MemcopyConstructible = IsTriviallyConstructibleC<Type> && IsTriviallyRelocatableC<Type>;
 
 	template <typename Src, typename Dst, typename SrcRef>
-	concept MemcopyConstructibleSrcDst =
-		!IsSameC<Src, void> &&
-		!IsSameC<Dst, void> &&
-		!IsSameC<SrcRef, void> &&
-		(
-			(IsSameC<Decay<Src>, Decay<Dst>>&& MemcopyConstructible<Src>) ||
-			(sizeof(Src) == sizeof(Dst) && std::is_trivially_constructible_v<Dst, SrcRef>)
-			);
+	concept MemcopyConstructibleSrcDst = !IsSameC<Src, void> 
+		&& !IsSameC<Dst, void> 
+		&& !IsSameC<SrcRef, void> 
+		&& ((IsSameC<Decay<Src>, Decay<Dst>>&& MemcopyConstructible<Src>) 
+			|| (sizeof(Src) == sizeof(Dst) && std::is_trivially_constructible_v<Dst, SrcRef>));
 
 	template<typename Src, typename Dst, typename SrcRef, typename DstRef>
 	concept MemcopyAssignableSrcDst =
