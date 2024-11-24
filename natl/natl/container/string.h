@@ -15,6 +15,7 @@
 #include "stringView.h"
 #include "arrayView.h"
 #include "limits.h"
+#include "../processing/serialization.h"
 
 //interface 
 namespace natl {
@@ -382,7 +383,7 @@ namespace natl {
 
 			factorReserve(10);
 			for (; first != last; first++) {
-				push_back(*first);
+				pushBack(*first);
 			}
 			return self();
 		}		
@@ -1059,7 +1060,7 @@ namespace natl {
 			return iterator(dstStringPtr);
 		}
 
-		constexpr void push_back(const value_type character) noexcept {
+		constexpr void pushBack(const value_type character) noexcept {
 			const size_type newSize = size() + 1;
 			factorReserve(newSize);
 			setEnd(character);
@@ -1130,7 +1131,7 @@ namespace natl {
 		}
 
 		constexpr BaseString& append(const value_type character) noexcept {
-			push_back(character);
+			pushBack(character);
 			return self();
 		}
 
@@ -1199,7 +1200,7 @@ namespace natl {
 			return self();
 		}
 		constexpr BaseString& append(const Ascii character) noexcept requires(IsSameC<Decay<value_type>, Utf32>) {
-			push_back(character);
+			pushBack(character);
 			return self();
 		}
 
@@ -2020,4 +2021,41 @@ namespace natl {
 			return Utf32String512(str, static_cast<Size>(len));
 		}
 	}
+
+	template<typename CharType, Size bufferSize, typename Alloc,
+		Bool EnableDynAllocation, Bool EnableIncreasedSmallBufferSize>
+		requires(IsAllocator<Alloc>)
+	struct Serialize<BaseString<CharType, bufferSize, Alloc, EnableDynAllocation, EnableIncreasedSmallBufferSize>> {
+		using as_type = SerializeStr;
+		using type = BaseString<CharType, bufferSize, Alloc, EnableDynAllocation, EnableIncreasedSmallBufferSize>;
+		template<typename Serializer>
+		constexpr static void write(Serializer& serializer, const type& str) noexcept {
+			serializer.writeStr(str.toStringView());
+		}
+	};
+
+
+	template<typename CharType, Size bufferSize, typename Alloc,
+		Bool EnableDynAllocation, Bool EnableIncreasedSmallBufferSize>
+		requires(IsAllocator<Alloc>)
+	struct Deserialize<BaseString<CharType, bufferSize, Alloc, EnableDynAllocation, EnableIncreasedSmallBufferSize>> {
+		using as_type = SerializeStr;
+		using type = BaseString<CharType, bufferSize, Alloc, EnableDynAllocation, EnableIncreasedSmallBufferSize>;
+		constexpr static natl::ConstAsciiStringView sourceName = "natl::Deserialize<BaseString<...>>::read";
+		template<typename Deserializer> using error_type = StandardDeserializeError<Deserializer>;
+
+		template<typename Deserializer>
+		constexpr static natl::Option<error_type<Deserializer>>
+			read(Deserializer& deserializer,
+				typename Deserializer::template deserialize_info<as_type>& info,
+				type& dst) noexcept {
+			auto readError = deserializer.readStr<type>(info, dst);
+			if (readError.hasValue()) {
+				return readError.value().addSource(sourceName, "");
+			}
+			return {};
+		}
+	};
+
+
 }

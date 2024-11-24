@@ -68,14 +68,13 @@ namespace natl {
 	template <typename Iter>
 	using IteratorCategory = typename IteratorTraits<Iter>::iterator_category;
 
-	template <typename Iter, typename = void>
-	inline constexpr Bool IsIteratorV = false;
+	template<typename Iter>
+	concept IsIterator = requires() { 
+		typename Iter::iterator_category;
+	};
 
 	template <typename Iter>
-	inline constexpr Bool IsIteratorV<Iter, Void<IteratorCategory<Iter>>> = true;
-
-	template<typename Iter>
-	concept IsIterator = IsIteratorV<Iter>;
+	inline constexpr Bool IsIteratorV = BoolConstant<IsIterator<Iter>>;
 
 	template <typename Iter>
 	concept IsIterPtr = IsPointer<Iter> || IsIterator<Iter>;

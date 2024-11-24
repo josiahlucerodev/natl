@@ -1,6 +1,7 @@
 #pragma once 
 
 //own
+#include "../processing/serialization.h"
 #include "../util/allocator.h"
 #include "../util/iterators.h"
 #include "../util/hash.h"
@@ -9,7 +10,7 @@
 
 //interface 
 namespace natl {
-	template<class DataType, Size bufferSize, class Alloc = DefaultAllocator<DataType>>
+	template<typename DataType, Size bufferSize, typename Alloc = DefaultAllocator<DataType>>
 		requires(IsAllocator<Alloc>)
 	class SmallDynArray {
 	public:
@@ -33,6 +34,9 @@ namespace natl {
 
 		using allocation_move_adapater = AllocationMoveAdapater<value_type, Alloc>;
 
+		using array_view = ArrayView<value_type>;
+		using const_array_view = ConstArrayView<value_type>;
+
 		//movement info 
 		constexpr static Bool triviallyRelocatable = true;
 		constexpr static Bool triviallyDefaultConstructible = true;
@@ -42,6 +46,8 @@ namespace natl {
 		constexpr static Bool triviallyMoveConstructedable = false;
 
 		constexpr static Bool enableSmallArray = true;
+
+		constexpr static Size npos = Limits<Size>::max();
 	private:
 		size_type arraySizeAndSmallArrayFlag;
 		pointer arrayDataPtr;
@@ -270,7 +276,7 @@ namespace natl {
 
 			factorReserve(10);
 			for (; first != last; first++) {
-				push_back(*first);
+				pushBack(*first);
 			}
 			return self();
 		}
@@ -416,7 +422,7 @@ namespace natl {
 
 			resize(0);
 			for (; first != last; first++) {
-				push_back(*first);
+				pushBack(*first);
 			}
 			return self();
 		}
@@ -664,6 +670,27 @@ namespace natl {
 		constexpr Bool has(const size_type index) const noexcept { return index < size(); }
 		constexpr Bool notHave(const size_type index) const noexcept { return index >= size(); }
 
+		//subviews
+		constexpr array_view first(const size_type count) noexcept {
+			return toArrayView().first(count);
+		}
+		constexpr const_array_view first(const size_type count) const noexcept {
+			return toArrayView().first(count);
+		}
+
+		constexpr array_view last(const size_type count) noexcept {
+			return toArrayView().last(count);
+		}
+		constexpr const_array_view last(const size_type count) const noexcept {
+			return toArrayView().last(count);
+		}
+
+		constexpr array_view subview(size_type offset, size_type count = npos) noexcept {
+			return toArrayView().subview(offset, count);
+		}
+		constexpr const_array_view subview(size_type offset, size_type count = npos) const noexcept {
+			return toArrayView().subview(offset, count);
+		}
 
 		//iterators 
 		constexpr pointer beginPtr() noexcept { return data(); }
@@ -918,14 +945,14 @@ namespace natl {
 			return erase(begin() + index);
 		}
 
-		constexpr reference push_back(const value_type& value) noexcept {
+		constexpr reference pushBack(const value_type& value) noexcept {
 			const size_type index = size();
 			const size_type newSize = index + 1;
 			factorReserve(newSize);
 			setSize(newSize);
 			return set(index, value);
 		}
-		constexpr reference push_back(value_type&& value) noexcept {
+		constexpr reference pushBack(value_type&& value) noexcept {
 			const size_type index = size();
 			const size_type newSize = index + 1;
 			factorReserve(newSize);
@@ -1212,6 +1239,90 @@ namespace natl {
 		}
 		constexpr static size_type staticHash(const SmallDynArray& dynArray) noexcept requires(Hashable<value_type>) {
 			return dynArray.hash();
+		}
+	};
+
+	template<class DataType, Size bufferSize, typename Alloc>
+	struct Serialize<SmallDynArray<DataType, bufferSize, Alloc>> {
+		using as_type = SerializeArray<SerializeTypeOf<DataType>>;
+		using type = SmallDynArray<DataType, bufferSize, Alloc>;
+		template<typename Serializer> using error_type = void;
+
+		template<typename Serializer, typename... ElementSerializeArgs>
+		constexpr static void write(Serializer& serializer, const type& array, ElementSerializeArgs&&... elementSerializeArgs) noexcept {
+			if (array.isEmpty()) {
+				serializer.writeEmptyArray();
+			} else {
+				serializer.beginWriteArray();
+				for (Size i = 0; i < array.size(); i++) {
+					serializer.beginWriteArrayElement();
+					serializeWrite(serializer, array[i], natl::forward<ElementSerializeArgs>(elementSerializeArgs)...);
+					serializer.endWriteArrayElement();
+				}
+				serializer.endWriteArray();
+			}
+		}
+	};
+
+	template<typename DataType, Size bufferSize, typename Alloc>
+		requires(IsSerializableC<Decay<DataType>>)
+	struct Deserialize<SmallDynArray<DataType, bufferSize, Alloc>> {
+		using element_as_type = SerializeTypeOf<Decay<DataType>>;
+		using as_type = natl::SerializeArray<element_as_type>;
+		using type = SmallDynArray<DataType, bufferSize, Alloc>;
+		constexpr static natl::ConstAsciiStringView sourceName = "natl::Deserialize<SmallDynArray<...>>::read";
+		template<typename Deserializer> using error_type = StandardDeserializeError<Deserializer>;
+
+		template<typename Deserializer, typename... DeserializerArgs>
+		constexpr static Option<error_type<Deserializer>>
+			read(Deserializer& deserializer,
+				typename Deserializer::template deserialize_info<as_type>& info,
+				type& dst,
+				DeserializerArgs&&... deserializerArgs) noexcept {
+			
+			auto arraySizeExpect = deserializer.beginReadArray(info);
+			if(arraySizeExpect.hasError()) {
+				return arraySizeExpect.error().addSource(sourceName);
+			}
+			natl::Size arraySize = arraySizeExpect.value();
+
+			if(arraySize == 0) {
+				auto endArrayError = deserializer.endReadEmptyArray(info);
+				if (endArrayError.hasValue()) {
+					return endArrayError.value().addSource(sourceName, "");
+				}
+				return {};
+			} 
+
+			dst.resize(arraySize);
+			natl::Size index = 0;
+			{
+				auto arrayElementExpect = deserializer.beginReadArrayElement(info);
+				if (arrayElementExpect.hasError()) {
+					return arrayElementExpect.error().addSource(sourceName);
+				}
+				auto arrayElement = arrayElementExpect.value();
+
+				auto expectValue = deserializeRead(deserializer, arrayElement);
+				if (expectValue.hasError()) {
+					dst.resize(index);
+					return expectValue.error().addSource(sourceName);
+				}
+				dst[index] = expectValue.value();
+				index++;
+
+				auto arrayElementEndError = deserializer.endReadArrayElement(arrayElement);
+				if (arrayElementEndError.hasValue()) {
+					return arrayElementEndError.value().addSource(sourceName);
+				}
+			}
+
+			auto endArrayError = deserializer.endReadArray(info);
+			if (endArrayError.hasValue()) {
+				return endArrayError.value().addSource(sourceName);
+			}
+
+			return {};
 		}
 	};
 }

@@ -38,6 +38,7 @@ natl/natl.h
 natl/processing/format.h
 natl/processing/generator.h
 natl/processing/serialization.h
+natl/processing/serializationUtils.h
 natl/processing.h
 natl/simd/cmaskOperations.h
 natl/simd/math/basicFloatOperations.h
@@ -72,6 +73,7 @@ natl/util/allocator.h
 natl/util/assert.h
 natl/util/basicTypes.h
 natl/util/bits.h
+natl/util/bytes.h
 natl/util/characterTest.h
 natl/util/commonHashs.h
 natl/util/compare.h

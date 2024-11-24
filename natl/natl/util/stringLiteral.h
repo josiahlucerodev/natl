@@ -18,7 +18,21 @@ namespace natl {
 			requires(IsSame<StringPtrType, const Ascii*>)
 		constexpr TemplateStringLiteral(StringPtrType str) noexcept { uninitializedCopyCountNoOverlap<const Ascii*>(str, stringStorage, StringSize); }
 		constexpr const Ascii* c_str() const noexcept { return stringStorage; }
-		constexpr Size size() const noexcept { return StringSize; }
+		constexpr const Ascii* data() const noexcept { return stringStorage; }
+		constexpr Ascii* data() noexcept { return stringStorage; }
+		constexpr Size size() const noexcept { return StringSize - 1; }
+		constexpr operator AsciiStringView() noexcept {
+			return AsciiStringView(data(), size());
+		}
+		constexpr operator ConstAsciiStringView() const noexcept {
+			return ConstAsciiStringView(data(), size());
+		}
+		constexpr AsciiStringView toStringView() noexcept {
+			return AsciiStringView(data(), size());
+		}
+		constexpr ConstAsciiStringView toStringView() const noexcept {
+			return ConstAsciiStringView(data(), size());
+		}
 	};
 
 	namespace impl {

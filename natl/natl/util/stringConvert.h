@@ -103,7 +103,7 @@ namespace natl {
 		}
 
 		convertError = StringNumericConvertError::none;
-		return value;
+		return static_cast<Integer>(value);
 	}
 
 	template<typename Integer>
@@ -190,7 +190,7 @@ namespace natl {
 		}
 
 		convertError = StringNumericConvertError::none;
-		return value;
+		return static_cast<Integer>(value);
 	}
 
 	template<typename Integer>
@@ -261,7 +261,7 @@ namespace natl {
 		}
 
 		convertError = StringNumericConvertError::none;
-		return value;
+		return static_cast<Integer>(value);
 	}
 
 	template<typename Integer>
@@ -382,7 +382,7 @@ namespace natl {
 		requires(IsConvertDynStringContainer<DynStringContainer> && IsBuiltInIntegerC<Integer>)
 	constexpr void intToStringDecimal(DynStringContainer& output, Integer number) noexcept {
 		if (number == 0) { 
-			output.push_back('0');
+			output.pushBack('0');
 			return;
 		}
 
@@ -398,14 +398,14 @@ namespace natl {
 		Size count = 0;
 		while (number > 0) {
 			const char digitChar = '0' + static_cast<char>(number % 10); 
-			output.push_back(digitChar);
+			output.pushBack(digitChar);
 			number /= 10; 
 			count += 1;
 		}
 
 		if constexpr (IsBuiltInSignedInteger<Integer>) {
 			if (isNegative) {
-				output.push_back('-');
+				output.pushBack('-');
 				count += 1;
 			}
 		}
@@ -428,7 +428,7 @@ namespace natl {
 			if (addPrefix) {
 				output.append("0x0", 3);
 			} else {
-				output.push_back('0');
+				output.pushBack('0');
 			}
 			return;
 		}
@@ -475,7 +475,7 @@ namespace natl {
 		requires(IsConvertDynStringContainer<DynStringContainer> && IsBuiltInIntegerC<Integer>)
 	constexpr void intToStringBinary(DynStringContainer& output, Integer n) noexcept {
 		if (n == 0) {
-			output.push_back('0');
+			output.pushBack('0');
 			return;
 		}
 
@@ -512,15 +512,15 @@ namespace natl {
 		requires(IsConvertDynStringContainer<DynStringContainer> && IsBuiltInFloatingPointC<Float>)
 	constexpr void floatToStringDecimal(DynStringContainer& output, const Float number, Size precision) noexcept {
 		if (number > Float(-1) && number < Float(0.0)) {
-			output.push_back('-');
+			output.pushBack('-');
 		}
 
 		const i64 integerPart = static_cast<i64>(number);
 		intToStringDecimal<DynStringContainer, i64>(output, integerPart);
-		output.push_back('.');
+		output.pushBack('.');
 		Float fractionalPart = number - static_cast<Float>(static_cast<i64>(number));
 		if (fractionalPart == Float(0.0) || (fractionalPart - Float(0.000001)) / fractionalPart <= Float(0.0)) {
-			output.push_back('0');
+			output.pushBack('0');
 			return;
 		}
 
@@ -538,7 +538,7 @@ namespace natl {
 		for (Size i = 0; i < precision && fractionalPart > Float(0.00001); ++i) {
 			fractionalPart *= 10;
 			const char digitCharacter = '0' + static_cast<char>(static_cast<i64>(fractionalPart));
-			output.push_back(digitCharacter);
+			output.pushBack(digitCharacter);
 			fractionalPart -= static_cast<Float>(static_cast<i64>(fractionalPart));
 		}
 	}

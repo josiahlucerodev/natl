@@ -40,19 +40,21 @@ namespace natl {
 		constexpr static Bool triviallyDefaultConstructible = true;
 		constexpr static Bool triviallyCompareable = false;
 		constexpr static Bool triviallyDestructible = true;
+
+		constexpr static Size npos = Limits<Size>::max();
 	private:
-		pointer dataPtr;
+		mutable pointer dataPtr;
 		Size arraySize;
 	public:
 		//constructor 
 		constexpr ArrayView() : dataPtr(nullptr), arraySize(0) {}
 		constexpr ArrayView(pointer ptr, const size_type size) : dataPtr(ptr), arraySize(size) {}
 		constexpr ArrayView(ArrayView& other) noexcept : dataPtr(other.data()), arraySize(other.size()) {}
-		constexpr ArrayView(const ArrayView& other) noexcept requires(IsConst<DataType>) : dataPtr(other.data()), arraySize(other.size()) {}
-		constexpr ArrayView(std::initializer_list<DataType> initList) noexcept requires(IsConst<DataType>) : dataPtr(initList.begin()), arraySize(initList.size()) {}
+		constexpr ArrayView(const ArrayView& other) noexcept : dataPtr(other.data()), arraySize(other.size()) {}
+		constexpr ArrayView(std::initializer_list<DataType> initList) noexcept : dataPtr(initList.begin()), arraySize(initList.size()) {}
 		template<class ArrayViewLike>
 			requires(!IsSameC<ArrayViewLike, std::initializer_list<DataType>>&& IsArrayViewLike<ArrayViewLike, DataType>)
-		constexpr ArrayView(const ArrayViewLike& arrayViewLike) noexcept requires(IsConst<DataType>) : dataPtr(arrayViewLike.data()), arraySize(arrayViewLike.size()) {}
+		constexpr ArrayView(const ArrayViewLike& arrayViewLike) noexcept : dataPtr(arrayViewLike.data()), arraySize(arrayViewLike.size()) {}
 
 		//destructor
 		constexpr ~ArrayView() = default;
@@ -113,8 +115,8 @@ namespace natl {
 		constexpr reference operator[](const size_type index) noexcept requires(IsNotConst<DataType>) { return dataPtr[index]; };
 		constexpr const_reference operator[](const size_type index) const noexcept { return dataPtr[index]; };
 
-		constexpr pointer data() noexcept requires(IsNotConst<DataType>) { return dataPtr; };
-		constexpr const_pointer data() const noexcept { return dataPtr; };
+		constexpr pointer data() noexcept { return dataPtr; };
+		constexpr pointer data() const noexcept { return dataPtr; };
 
 		//observers
 		constexpr size_type size() const noexcept { return arraySize; }
@@ -142,13 +144,13 @@ namespace natl {
 			return ArrayView(data() + newCount, size() - newCount);
 		}
 
-		constexpr ArrayView subview(size_type offset, size_type count = Limits<Size>::max()) noexcept requires(IsNotConst<DataType>) {
+		constexpr ArrayView subview(size_type offset, size_type count = npos) noexcept requires(IsNotConst<DataType>) {
 			offset = min<Size>(offset, size());
 			count = min<Size>(count, size() - offset);
 			return ArrayView(data() + offset, count);
 		}
 
-		constexpr ArrayView<const DataType> subview(size_type offset, size_type count = Limits<Size>::max()) const noexcept {
+		constexpr ArrayView<const DataType> subview(size_type offset, size_type count = npos) const noexcept {
 			offset = min<Size>(offset, size());
 			count = min<Size>(count, size() - offset);
 			return ArrayView<const DataType>(data() + offset, count);
@@ -356,6 +358,12 @@ namespace natl {
 			return lhs <=> ArrayView<const DataType>(rhs.begin(), rhs.size());
 		}
 	};
+
+	template<typename DataType>
+	using ConstArrayView = ArrayView<const DataType>;
+
+	template<typename DataType>
+	struct IsCopyableStorageDstT<ArrayView<DataType>> : TrueType {};
 
 	template<class Container>
 	concept IsContainerArrayViewConstructable =
@@ -755,11 +763,9 @@ namespace natl {
 		constexpr MDArrayView& operator=(MDArrayView&& other) noexcept = default;
 	};
 
-
 	template<typename ArrayViewLike>
 		requires(IsBroadlyArrayViewLike<ArrayViewLike>)
 	constexpr Bool isInRange(ArrayViewLike arrayViewLike, const Size pos) noexcept {
 		return pos < arrayViewLike.size();
 	}
-
 }

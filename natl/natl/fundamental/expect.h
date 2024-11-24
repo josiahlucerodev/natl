@@ -71,19 +71,47 @@ namespace natl {
 		constexpr Expect(const Unexpected<ErrorType>& unexpectd) : state(ExpectState::error), errorData(unexpectd.error()) {}
 		constexpr Expect(Unexpected<ErrorType>&& unexpectd) : state(ExpectState::error), errorData(unexpectd.error()) {}
 
+		constexpr Expect(const Expect& other) {
+			switch (other.state) {
+			break; case ExpectState::dummy:
+				natl::deconstruct<Dummy>(&dummy);
+			break; case ExpectState::value:
+				natl::construct<DataType>(&data, other.data);
+			break; case ExpectState::error:
+				natl::construct<ErrorType>(&errorData, other.errorData);
+			break; default:
+				break;
+			}
+		}
+		constexpr Expect(Expect&& other) {
+			state = other.state;
+
+			switch (other.state) {
+			break; case ExpectState::dummy:
+				natl::deconstruct<Dummy>(&dummy);
+			break; case ExpectState::value:
+				natl::construct<DataType>(&data, natl::forward<DataType>(other.data));
+			break; case ExpectState::error:
+				natl::construct<ErrorType>(&errorData, natl::forward<ErrorType>(other.errorData));
+			break; default:
+				break;
+			}
+
+			other.destruct();
+			natl::construct<Dummy>(&other.dummy);
+			other.state = ExpectState::dummy;
+		}
+
 		//destructor 
 	private:
 		constexpr void destruct() noexcept {
 			switch (state) {
-			case ExpectState::dummy:
+			break; case ExpectState::dummy:
 				natl::deconstruct<Dummy>(&dummy);
-				break;
-			case ExpectState::value:
+			break; case ExpectState::value:
 				natl::deconstruct<DataType>(&data);
-				break;
-			case ExpectState::error:
+			break; case ExpectState::error:
 				natl::deconstruct<ErrorType>(&errorData);
-				break;
 			}
 		}
 	public:
@@ -102,13 +130,13 @@ namespace natl {
 			state = other.state;
 
 			switch (other.state) {
-			case ExpectState::value:
+			break; case ExpectState::dummy:
+				natl::deconstruct<Dummy>(&dummy);
+			break; case ExpectState::value:
 				natl::construct<DataType>(&data, other.data);
-				break;
-			case ExpectState::error:
+			break; case ExpectState::error:
 				natl::construct<ErrorType>(&errorData, other.errorData);
-				break;
-			default:
+			break; default:
 				break;
 			}
 
@@ -119,13 +147,13 @@ namespace natl {
 			state = other.state;
 
 			switch (other.state) {
-			case ExpectState::value:
-				natl::construct<DataType>(&data, move<DataType>(other.data));
-				break;
-			case ExpectState::error:
-				natl::construct<ErrorType>(&errorData, move<ErrorType>(other.errorData));
-				break;
-			default:
+			break; case ExpectState::dummy:
+				natl::deconstruct<Dummy>(&dummy);
+			break; case ExpectState::value:
+				natl::construct<DataType>(&data, natl::forward<DataType>(other.data));
+			break; case ExpectState::error:
+				natl::construct<ErrorType>(&errorData, natl::forward<ErrorType>(other.errorData));
+			break; default:
 				break;
 			}
 
@@ -150,7 +178,7 @@ namespace natl {
 		constexpr Expect& operator=(DataType&& value) noexcept {
 			destruct();
 			state = ExpectState::value;
-			natl::construct<ErrorType>(&data, move<DataType>(value));
+			natl::construct<DataType>(&data, natl::forward<DataType>(value));
 			return self();
 		}
 
@@ -243,11 +271,18 @@ namespace natl {
 	};
 
 	template<class ErrorType>
-	constexpr Unexpected<ErrorType> unexpected(const ErrorType& error) {
-		return Unexpected<ErrorType>(error);
+	constexpr Unexpected<Decay<ErrorType>> unexpected(const ErrorType& error) {
+		return Unexpected<Decay<ErrorType>>(error);
 	}
 	template<class ErrorType>
-	constexpr Unexpected<ErrorType> unexpected(ErrorType&& error) {
-		return Unexpected<ErrorType>(move(error));
+	constexpr Unexpected<Decay<ErrorType>> unexpected(ErrorType&& error) {
+		return Unexpected<Decay<ErrorType>>(move(error));
 	}
+
+	template<typename Type> struct IsExpectV : FalseType {};
+	template<typename Type> constexpr inline Bool IsExpect = IsExpectV<Type>::value;
+	template<typename Type> concept IsExpectC = IsExpect<Type>;
+
+	template<class DataType, class ErrorType>
+	struct IsExpectV<Expect<DataType, ErrorType>> : TrueType {};
 }

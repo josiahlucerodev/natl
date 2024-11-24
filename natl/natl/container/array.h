@@ -12,6 +12,7 @@
 #include "../util/iterators.h"
 #include "../fundamental/option.h"
 #include "container.h"
+#include "../container/arrayView.h"
 
 //interface
 namespace natl {
@@ -85,6 +86,20 @@ namespace natl {
 		constexpr const_pointer data() const noexcept { 
 			return dataStorage;
 		};
+
+		constexpr operator ArrayView<value_type>() noexcept {
+			return ArrayView<value_type>(data(), size());
+		}
+		constexpr operator ArrayView<const value_type>() const noexcept {
+			return ArrayView<const value_type>(data(), size());
+		}
+
+		constexpr ArrayView<value_type> toArrayView() noexcept {
+			return ArrayView<value_type>(data(), size());
+		}
+		constexpr ArrayView<const value_type> toArrayView() const noexcept {
+			return ArrayView<const value_type>(data(), size());
+		}
 
 		//iterators
 		constexpr pointer beginPtr() noexcept { return data(); }

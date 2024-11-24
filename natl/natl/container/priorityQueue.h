@@ -186,11 +186,11 @@ namespace natl {
 
 		//modifiers
 		constexpr void push(const value_type& value) noexcept {
-			sequentialContainer.push_back(value);
+			sequentialContainer.pushBack(value);
 			pushHeapInternalContainer();
 		}
 		constexpr void push(value_type&& value) noexcept {
-			sequentialContainer.push_back(natl::move(value));
+			sequentialContainer.pushBack(natl::move(value));
 			pushHeapInternalContainer();
 		}
 

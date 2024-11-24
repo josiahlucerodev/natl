@@ -10,5 +10,5 @@
     if (!(condition)) { \
 		if (natl::isConstantEvaluated()) { natl::constantEvaluatedError(); } \
         natl::printlnf("natl: ", " Assertion failed: ", __VA_ARGS__); \
-        natl::natlTerminate(); \
+        natl::terminate(); \
     }

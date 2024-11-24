@@ -47,7 +47,7 @@ namespace natl {
 			}
 			template<typename U> 
 			SuspendNever await_transform(U&& value) noexcept = delete;
-			[[noreturn]] void unhandled_exception() noexcept { natlTerminate(); }
+			[[noreturn]] void unhandled_exception() noexcept { natl::terminate(); }
 			void return_void() noexcept {}
 			reference value() const noexcept { return static_cast<reference>(*valuePtr); }
 		};

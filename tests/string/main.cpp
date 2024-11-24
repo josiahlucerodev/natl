@@ -144,11 +144,11 @@ public:
 		StringType str = "Hello, World";
 
 		// Test pushing back and popping back
-		str.push_back('!');
+		str.pushBack('!');
 		natl::testAssert(test, typeid(StringType).name(), str.back() == '!', "Pushing back failed");
 		str.pop_back();
 		natl::testAssert(test, typeid(StringType).name(), str.back() == 'd', "Popping back failed");
-		str.push_back('!');
+		str.pushBack('!');
 		natl::testAssert(test, typeid(StringType).name(), str.back() == '!', "Pushing back failed");
 
 		// Test changing character at a specific position
@@ -172,14 +172,14 @@ public:
 		// Test iterating forward
 		StringType forwardStr;
 		for (auto it = str.begin(); it != str.end(); ++it) {
-			forwardStr.push_back(*it);
+			forwardStr.pushBack(*it);
 		}
 		natl::testAssert(test, typeid(StringType).name(), forwardStr == str, "Forward iteration failed");
 
 		// Test iterating backward
 		StringType backwardStr;
 		for (auto it = str.rbegin(); it != str.rend(); ++it) {
-			backwardStr.push_back(*it);
+			backwardStr.pushBack(*it);
 		}
 		natl::testAssert(test, typeid(StringType).name(), backwardStr == "!dlroW ,olleH", "Backward iteration failed");
 

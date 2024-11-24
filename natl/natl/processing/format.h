@@ -281,7 +281,7 @@ namespace natl {
 	struct Formatter<Ascii, Ascii> {
 		template<typename OutputIter>
 		constexpr static OutputIter format(OutputIter outputIter, const Ascii character) noexcept {
-			outputIter += character;
+			outputIter = character;
 			return outputIter;
 		}
 	};

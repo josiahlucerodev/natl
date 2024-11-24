@@ -514,6 +514,9 @@ namespace natl {
 	using PathView = impl::BasePathView<Ascii>;
 	using ConstPathView = impl::BasePathView<const Ascii>;
 
+	template<typename CharType>
+	struct IsCopyableStorageDstT<impl::BasePathView<CharType>> : TrueType {};
+
 	enum class PathFormat {
 		nativeFormat,
 		genericFormat,

@@ -150,7 +150,7 @@ namespace natl {
     }
 
 
-    NATL_FORCE_INLINE constexpr void natlDebugBreak() noexcept {
+    NATL_FORCE_INLINE constexpr void debugBreak() noexcept {
 #ifdef NATL_IN_DEBUG
         if (isConstantEvaluated()) {
             constantEvaluatedError();
@@ -173,7 +173,7 @@ namespace natl {
 #endif
     }
 
-    [[noreturn]] NATL_FORCE_INLINE constexpr void natlTerminate() noexcept {
+    [[noreturn]] NATL_FORCE_INLINE constexpr void terminate() noexcept {
         if (isConstantEvaluated()) {
             constantEvaluatedError();
 
@@ -183,7 +183,7 @@ namespace natl {
 
         } else {
 #ifdef NATL_IN_DEBUG
-            natlDebugBreak();
+            debugBreak();
 #endif // NATL_IN_DEBUG
             abort();
         }
@@ -191,7 +191,7 @@ namespace natl {
 
 	[[noreturn]] inline void unreachable() noexcept {
         if constexpr (natlInDebug()) {
-            natlDebugBreak();
+            debugBreak();
         }
 
 #if defined(NATL_COMPILER_EMSCRIPTEN) 

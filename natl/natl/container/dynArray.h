@@ -5,6 +5,7 @@
 #include "../util/hash.h"
 #include "container.h"
 #include "arrayView.h"
+#include "../processing/serialization.h"
 
 //interface 
 namespace natl {
@@ -52,6 +53,9 @@ namespace natl {
 
 		using allocation_move_adapater = AllocationMoveAdapater<value_type, Alloc>;
 
+		using array_view = ArrayView<value_type>;
+		using const_array_view = ConstArrayView<value_type>;
+
 		//movement info 
 		constexpr static Bool triviallyRelocatable = true;
 		constexpr static Bool triviallyDefaultConstructible = true;
@@ -59,6 +63,8 @@ namespace natl {
 		constexpr static Bool triviallyDestructible = false;
 		constexpr static Bool triviallyConstRefConstructedable = false;
 		constexpr static Bool triviallyMoveConstructedable = false;
+
+		constexpr static Size npos = Limits<Size>::max();
 	private:
 		size_type arraySize;
 		size_type arrayCapacity;
@@ -178,7 +184,7 @@ namespace natl {
 
 			factorReserve(10);
 			for (; first != last; first++) {
-				push_back(*first);
+				pushBack(*first);
 			}
 			return self();
 		}
@@ -293,7 +299,7 @@ namespace natl {
 			}
 
 			for (; first != last; first++) {
-				push_back(*first);
+				pushBack(*first);
 			}
 		}
 		template<class ArrayViewLike>
@@ -517,6 +523,27 @@ namespace natl {
 		constexpr Bool has(const size_type index) const noexcept { return index < size(); }
 		constexpr Bool notHave(const size_type index) const noexcept { return index >= size(); }
 
+		//subviews
+		constexpr array_view first(const size_type count) noexcept {
+			return toArrayView().first(count);
+		}
+		constexpr const_array_view first(const size_type count) const noexcept {
+			return toArrayView().first(count);
+		}
+
+		constexpr array_view last(const size_type count) noexcept {
+			return toArrayView().last(count);
+		}
+		constexpr const_array_view last(const size_type count) const noexcept {
+			return toArrayView().last(count);
+		}
+
+		constexpr array_view subview(size_type offset, size_type count = npos) noexcept {
+			return toArrayView().subview(offset, count);
+		}
+		constexpr const_array_view subview(size_type offset, size_type count = npos) const noexcept {
+			return toArrayView().subview(offset, count);
+		}
 
 		//iterators 
 		constexpr pointer beginPtr() noexcept { return data(); }
@@ -670,7 +697,7 @@ namespace natl {
 			return iterator(data() + index);
 		}
 		template<class Iter>
-			requires(IsIterPtr<Iter>&& IsSameC<typename IteratorTraits<Iter>::value_type, value_type>)
+			requires(IsIterPtr<Iter> && IsSameC<typename IteratorTraits<Iter>::value_type, value_type>)
 		constexpr iterator insert(const_iterator pos, Iter first, Iter last) {
 			if constexpr (IsRandomAccessIterator<Iter>) {
 				const size_type count = iterDistance<Iter>(first, last);
@@ -771,14 +798,14 @@ namespace natl {
 			return erase(begin() + index); 
 		}
 
-		constexpr reference push_back(const value_type& value) noexcept {
+		constexpr reference pushBack(const value_type& value) noexcept {
 			const size_type index = size();
 			const size_type newSize = index + 1;
 			factorReserve(newSize);
 			setSize(newSize);
 			return set(index, value);
 		}
-		constexpr reference push_back(value_type&& value) noexcept {
+		constexpr reference pushBack(value_type&& value) noexcept {
 			const size_type index = size();
 			const size_type newSize = index + 1;
 			factorReserve(newSize);
@@ -1063,6 +1090,69 @@ namespace natl {
 		}
 		constexpr static size_type staticHash(const DynArray& dynArray) noexcept requires(Hashable<value_type>) {
 			return dynArray.hash();
+		}
+	};
+
+	template<typename DataType, typename Alloc>
+		requires(IsSerializableC<Decay<DataType>>)
+	struct Deserialize<DynArray<DataType, Alloc>> {
+		using deserialize_element_as_type = SerializeTypeOf<Decay<DataType>>;
+		using as_type = natl::SerializeArray<deserialize_element_as_type>;
+		using type = DynArray<DataType, Alloc>;
+		constexpr static natl::ConstAsciiStringView sourceName = "natl::Deserialize<DynArray<...>>::read";
+		template<typename Deserializer> using error_type = StandardDeserializeError<Deserializer>;
+
+		template<typename Deserializer, typename... DeserializerArgs>
+		constexpr static Option<error_type<Deserializer>>
+			read(Deserializer& deserializer,
+				typename Deserializer::template deserialize_info<as_type>& info,
+				type& dst,
+				DeserializerArgs&&... deserializerArgs) noexcept {
+
+			auto arraySizeExpect = deserializer.beginReadArray(info);
+			if (arraySizeExpect.hasError()) {
+				return arraySizeExpect.error().addSource(sourceName, "");
+			}
+			natl::Size arraySize = arraySizeExpect.value();
+
+			if (arraySize == 0) {
+				auto endArrayError = deserializer.endReadEmptyArray(info);
+				if (endArrayError.hasValue()) {
+					return endArrayError.value().addSource(sourceName, "");
+				}
+				return {};
+			}
+
+			dst.resize(arraySize);
+			natl::Size index = 0;
+			{
+				auto arrayElementExpect = deserializer.beginReadArrayElement(info);
+				if (arrayElementExpect.hasError()) {
+					return arrayElementExpect.error().addSource(sourceName, "");
+				}
+				auto arrayElement = arrayElementExpect.value();
+
+				auto expectValue = deserializeRead<Deserializer, DataType>(
+					deserializer, arrayElement, natl::forward<DeserializerArgs>(deserializerArgs)...);
+				if (expectValue.hasError()) {
+					dst.resize(index);
+					return expectValue.error().addSource(sourceName, "");
+				}
+				dst[index] = expectValue.value();
+				index++;
+
+				auto arrayElementEndError = deserializer.endReadArrayElement(arrayElement);
+				if (arrayElementEndError.hasValue()) {
+					return arrayElementEndError.value().addSource(sourceName, "");
+				}
+			}
+
+			auto endArrayError = deserializer.endReadArray(info);
+			if (endArrayError.hasValue()) {
+				return endArrayError.value().addSource(sourceName, "");
+			}
+
+			return {};
 		}
 	};
 }

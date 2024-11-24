@@ -118,7 +118,7 @@ namespace natl {
 
 			ThreadCreateResult threadCreateResult = createThread(createThreadCallingFunction, reinterpret_cast<void*>(storageTuple));
 			if (threadCreateResult.successful == false) {
-				natlTerminate();
+				natl::terminate();
 			}
 			threadHandle = threadCreateResult.threadHandel;
 			threadId = threadCreateResult.threadId;
@@ -131,7 +131,7 @@ namespace natl {
 
 			ThreadCreateResult threadCreateResult = createThread(createThreadCallingFunction, reinterpret_cast<void*>(storageTuple));
 			if (threadCreateResult.successful == false) {
-				natlTerminate();
+				natl::terminate();
 			}
 			threadHandle = threadCreateResult.threadHandel;
 			threadId = threadCreateResult.threadId;
@@ -141,7 +141,7 @@ namespace natl {
 		constexpr ~Thread() noexcept {
 			if (!isConstantEvaluated()) {
 				if (isActive() == true) {
-					natlTerminate();
+					natl::terminate();
 				}
 			}
 		}
@@ -154,7 +154,7 @@ namespace natl {
 		Thread& operator=(const Thread& other) noexcept = delete;
 		Thread& operator=(Thread&& other) noexcept {
 			if (isActive() == true) {
-				natlTerminate();
+				natl::terminate();
 			}
 			threadHandle = other.threadHandle;
 			threadId = other.threadId;
@@ -173,13 +173,13 @@ namespace natl {
 		//operations
 		void join() noexcept {
 			if (getId() == getCurrentThreadId()) {
-				natlTerminate();
+				natl::terminate();
 			}
 			if (isActive() == false) {
-				natlTerminate();
+				natl::terminate();
 			}
 			if (joinThread(threadHandle) == false) {
-				natlTerminate();
+				natl::terminate();
 			}
 			threadHandle = NATL_NATIVE_INVALID_THREAD_HANDEL_VALUE;
 			threadId.setValue(0);

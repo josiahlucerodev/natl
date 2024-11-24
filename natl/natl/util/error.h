@@ -21,10 +21,10 @@
 namespace natl {
     constexpr void fatalError(const ConstStringView message) noexcept {
         if (isConstantEvaluated()) {
-            natlTerminate();
+            natl::terminate();
         } else {
             natl::println(message.c_str());
-            natlTerminate();
+            natl::terminate();
         }
     }
     constexpr void fatalError(const Bool conditional, const ConstStringView message) noexcept {

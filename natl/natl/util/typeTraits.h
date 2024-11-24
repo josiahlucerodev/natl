@@ -324,6 +324,10 @@ namespace natl {
 	template<typename DataType> struct RemovePointerT<DataType* const volatile> { using type = DataType; };
 	template<typename DataType> using RemovePointer = RemovePointerT<DataType>::type;
 
+	template<typename Type> concept IsPointerToConstantDataC = IsPointerC<Type> && IsConstC<RemovePointer<Type>>;
+	template<typename Type> struct IsPointerToConstantDataV : BoolConstant<IsPointerToConstantDataC<Type>> {};
+	template<typename Type> constexpr inline Bool IsPointerToConstantData = IsPointerToConstantDataC<Type>;
+
 	namespace impl {
 		template<typename DataType> auto tryAddPointer(int) -> TypeIdentityT<RemoveReference<DataType>*> {};
 		template<typename DataType> auto tryAddPointer(...) -> TypeIdentityT<DataType> {};
@@ -802,7 +806,6 @@ namespace natl {
 		{ container.resize(newCapacity) };
 	};
 
-	//
 	template <typename ArrayViewLike, class DataType>
 	concept IsArrayViewLike = requires(ArrayViewLike arrayViewLike) {
 		{ arrayViewLike.data() } -> IsConvertibleC<const DataType*>;
@@ -816,11 +819,50 @@ namespace natl {
 		{ arrayViewLike[declval<Size>()] };
 	};
 
-
 	template <typename StringView, class CharType>
 	concept IsStringViewLike = requires(StringView stringView) {
 		{ stringView.data() } -> IsConvertibleC<const CharType*>;
 		{ stringView.size() } -> IsConvertibleC<Size>;
 		{ stringView[declval<Size>()] } -> IsConvertibleC<CharType>;
 	};
+
+	//apply
+	template<template<typename> typename Predicate> struct NegatePredicateT {
+		template<typename Type> using type = NegationV<Predicate<Type>>;
+	};
+
+	template<typename Type, template<typename> typename Predicate>
+	concept ApplyRequirementC = Predicate<Type>::value;
+
+
+	//byte like 
+	template <typename Type> struct IsCopyableStorageDstT : FalseType {};
+	template<typename Type> constexpr inline Bool IsCopyableStorageDst = IsCopyableStorageDstT<Type>::value;
+	template<typename Type> concept IsCopyableStorageDstC = IsCopyableStorageDstT<Type>::value;
+
+	template<typename Type> concept IsByteLikeC = IsConvertibleC<Type, ui8>;
+	template<typename Type> struct IsByteLikeT : BoolConstant<IsByteLikeC<Type>> {};
+	template<typename Type> constexpr inline Bool IsByteLike = IsByteLikeC<Type>;
+
+	template<typename Type> concept IsPtrToByteLikeC = IsPointerC<Type> && IsByteLikeC<RemovePointer<Type>>;
+	template<typename Type> struct IsPtrToByteLikeT : BoolConstant<IsPtrToByteLikeC<Type>> {};
+	template<typename Type> constexpr inline Bool IsPtrToByteLike = IsPtrToByteLikeC<Type>;
+
+	template <typename ByteViewLike>
+	concept IsByteViewLike = requires(ByteViewLike byteViewLike) {
+		typename ByteViewLike::value_type;
+		{ byteViewLike.data() } -> IsPtrToByteLikeC;
+		{ byteViewLike.data() } -> ApplyRequirementC<NegatePredicateT<IsPointerToConstantDataV>::type>;
+		{ byteViewLike.size() } -> IsConvertibleC<Size>;
+		{ byteViewLike[declval<Size>()] } -> IsByteLikeC;
+	};
+
+	template <typename ByteViewLike>
+	concept IsConstByteViewLike = requires(ByteViewLike byteViewLike) {
+		{ byteViewLike.data() } -> IsPtrToByteLikeC;
+		{ byteViewLike.size() } -> IsConvertibleC<Size>;
+		{ byteViewLike[declval<Size>()] } -> IsByteLikeC;
+	};
+
+
 }

@@ -60,7 +60,7 @@ namespace natl {
 				freeSlots.reserve(pool.size() + BatchSize);
 
 				for (Size i = 0; i < BatchSize; i++) {
-					freeSlots.push_back(pool.newElement());
+					freeSlots.pushBack(pool.newElement());
 				}
 			}
 		public:

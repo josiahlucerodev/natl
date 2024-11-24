@@ -868,12 +868,12 @@ namespace natl {
 		}
 	};
 
-	using StringView = BaseStringView<char>;
-	using ConstStringView = BaseStringView<const char>;
+	using StringView = BaseStringView<Ascii>;
+	using ConstStringView = BaseStringView<const Ascii>;
 	using AsciiStringView = StringView;
 	using ConstAsciiStringView = ConstStringView;
-	using Utf32StringView = BaseStringView<char32_t>;
-	using ConstUtf32StringView = BaseStringView<const char32_t>;
+	using Utf32StringView = BaseStringView<Utf32>;
+	using ConstUtf32StringView = BaseStringView<const Utf32>;
 
 	namespace literals {
 		constexpr ConstStringView operator ""_natl_sv(const char* str, StdSize len) noexcept {
@@ -886,4 +886,7 @@ namespace natl {
 			return ConstUtf32StringView{ str, static_cast<Size>(len) };
 		}
 	}
+
+	template<typename DataType>
+	struct IsCopyableStorageDstT<BaseStringView<DataType>> : TrueType {};
 }

@@ -64,7 +64,7 @@ namespace natl {
 
 	template<class Container, class DataType>
 	concept ContainerHasPushBackFunction = requires(Container container) {
-		{ container.push_back(natl::declval<DataType>()) };
+		{ container.pushBack(natl::declval<DataType>()) };
 	};
 
 	template<class Contanier>

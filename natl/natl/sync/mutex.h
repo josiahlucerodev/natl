@@ -41,7 +41,7 @@ namespace natl {
 			if (!isConstantEvaluated()) {
 				const Bool mutexCreated = createMutex(mutex);
 				if (mutexCreated != true) {
-					natlTerminate();
+					natl::terminate();
 				}
 			}
 		}
@@ -62,7 +62,7 @@ namespace natl {
 		constexpr void lock() noexcept {
 			if (!isConstantEvaluated()) {
 				if (lockMutex(mutex) == false) {
-					natlTerminate();
+					natl::terminate();
 				}
 			}
 		}
@@ -70,7 +70,7 @@ namespace natl {
 			if (!isConstantEvaluated()) {
 				MutexTryLockResult tryLockResult = trylockMutex(mutex);
 				if (tryLockResult.successful == false) {
-					natlTerminate();
+					natl::terminate();
 				}
 
 				return tryLockResult.locked;
@@ -148,7 +148,7 @@ namespace natl {
 						lockLevel -= 1;
 					}
 				} else {
-					natlTerminate();
+					natl::terminate();
 				}
 			}
 		}

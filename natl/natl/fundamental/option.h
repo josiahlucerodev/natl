@@ -130,7 +130,6 @@ namespace natl {
 						natl::construct(&data, natl::forward<DataType>(other.data));
 					}
 				} else {
-					isValid = true;
 					construct(natl::forward<DataType>(other.data));
 				}
 			} else {
@@ -240,7 +239,7 @@ namespace natl {
 		constexpr void checkIfValid() const noexcept {
 #ifdef NATL_IN_DEBUG
 			if (!hasValue()) {
-				natlTerminate();
+				natl::terminate();
 			}
 #endif
 		}

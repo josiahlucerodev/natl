@@ -1,12 +1,14 @@
 #pragma once 
 
 //own
+#include "../processing/serialization.h"
 #include "../util/basicTypes.h"
 #include "../util/dataMovement.h"
 #include "../util/typePack.h"
 #include "../util/stringLiteral.h"
 #include "stringView.h"
 #include "array.h"
+#include "string.h"
 
 //interface 
 namespace natl {
@@ -183,7 +185,7 @@ namespace natl {
 
 				natl::construct<ElementType, ElementType>(
 					addressof<ElementType>(variant.recursiveStorage.template getRef<Index, ElementType>()), 
-					move<ElementType>(other.recursiveStorage.template getRef<Index, ElementType>())
+					move(other.recursiveStorage.template getRef<Index, ElementType>())
 				);
 			};
 		}
@@ -280,6 +282,8 @@ namespace natl {
 		}
 
 	public:
+		constexpr static Size getIndexOfEmpty() noexcept { return 0; }
+
 		template<TemplateStringLiteral FindName> 
 		constexpr static Size getIndexOf() noexcept {
 			constexpr Size index = impl::FindIndexofStringLiteral<StringLiteral<FindName>, StringLiteral<Elements::name>...>::value;
@@ -327,7 +331,7 @@ namespace natl {
 					}
 				}
 
-				variant.recursiveStorage.template getRef<Index, ElementType>() = move<ElementType>(other.recursiveStorage.template getRef<Index, ElementType>());
+				variant.recursiveStorage.template getRef<Index, ElementType>() = move(other.recursiveStorage.template getRef<Index, ElementType>());
 			};
 		}
 	public:
@@ -376,8 +380,64 @@ namespace natl {
 				}
 			} else {
 				destoryValue();
-				moveConstruct(other);
+				moveConstruct(forward<Variant>(other));
 			}
+			return self();
+		}
+
+		template<Size Index, typename DataType>
+		constexpr Variant& assign(DataType&& value) noexcept {
+			using variant_type_at_index = TemplatePackNthElement<Index, Elements...>::type::value_type;
+
+			if (variantIndex == Index + 1) {
+				if (isConstantEvaluated()) {
+					recursiveStorage.template getRef<Index, variant_type_at_index>() = forward<DataType>(value);
+				} else {
+					*reinterpret_cast<DataType*>(byteStorage) = forward<DataType>(value);
+				}
+			} else {
+				destoryValue();
+				if (isConstantEvaluated()) {
+					natl::construct<variant_type_at_index, variant_type_at_index>(
+						&recursiveStorage.template getRef<Index, variant_type_at_index>(),
+						forward<DataType>(value)
+					);
+				} else {
+					natl::construct<variant_type_at_index, variant_type_at_index>(
+						reinterpret_cast<DataType*>(byteStorage),
+						forward<DataType>(value)
+					);
+				}
+			}
+			variantIndex = Index + 1;
+			return self();
+		}
+
+		template<Size Index, typename DataType>
+		constexpr Variant& assign(const DataType& value) noexcept {
+			using variant_type_at_index = TemplatePackNthElement<Index, Elements...>::type::value_type;
+
+			if (variantIndex == Index + 1) {
+				if (isConstantEvaluated()) {
+					recursiveStorage.template getRef<Index, variant_type_at_index>() = forward<DataType>(value);
+				} else {
+					*reinterpret_cast<DataType*>(byteStorage) = forward<DataType>(value);
+				}
+			} else {
+				destoryValue();
+				if (isConstantEvaluated()) {
+					natl::construct<variant_type_at_index, variant_type_at_index>(
+						&recursiveStorage.template getRef<Index, variant_type_at_index>(),
+						forward<DataType>(value)
+					);
+				} else {
+					natl::construct<variant_type_at_index, variant_type_at_index>(
+						reinterpret_cast<DataType*>(byteStorage),
+						forward<DataType>(value)
+					);
+				}
+			}
+			variantIndex = Index + 1;
 			return self();
 		}
 
@@ -388,7 +448,7 @@ namespace natl {
 				using VariantTypeAtIndex = typename TemplatePackNthElement<index, Elements...>::type::value_type;
 
 				if constexpr (IsConstructibleC<VariantTypeAtIndex, DataType>) {
-					if (variantIndex == index) {
+					if (variantIndex == index + 1) {
 						if (isConstantEvaluated()) {
 							recursiveStorage.template getRef<index, VariantTypeAtIndex>() = forward<DataType>(value);
 						} else {
@@ -430,23 +490,23 @@ namespace natl {
 				using VariantTypeAtIndex = typename TemplatePackNthElement<index, Elements...>::type::value_type;
 
 				if constexpr (IsConstructibleC<VariantTypeAtIndex, DataType>) {
-					if (variantIndex == index) {
+					if (variantIndex == index + 1) {
 						if (isConstantEvaluated()) {
-							recursiveStorage.template getRef<index, VariantTypeAtIndex>() = forward<DataType>(value);
+							recursiveStorage.template getRef<index, VariantTypeAtIndex>() = value;
 						} else {
-							*reinterpret_cast<DataType*>(byteStorage) = forward<DataType>(value);
+							*reinterpret_cast<DataType*>(byteStorage) = value;
 						}
 					} else {
 						destoryValue();
 						if (isConstantEvaluated()) {
-							natl::construct<VariantTypeAtIndex, VariantTypeAtIndex>(
+							natl::construct<VariantTypeAtIndex, const VariantTypeAtIndex&>(
 								&recursiveStorage.template getRef<index, VariantTypeAtIndex>(),
-								forward<DataType>(value)
+								natl::forward<const DataType&>(value)
 							);
 						} else {
-							natl::construct<VariantTypeAtIndex, VariantTypeAtIndex>(
+							natl::construct<VariantTypeAtIndex, const VariantTypeAtIndex&>(
 								reinterpret_cast<DataType*>(byteStorage),
-								forward<DataType>(value)
+								forward<const DataType&>(value)
 							);
 						}
 					}
@@ -473,12 +533,33 @@ namespace natl {
 		template<Size Index>
 		constexpr void testValidIndex() const noexcept {
 			if (variantIndex != Index + 1) [[unlikely]] {
-				std::cout << "variant index violation\n";
-				std::abort();
+				natl::fatalError("variant index violation");
 			}
 		}
 
 		public:
+		template<Size Index>
+		constexpr auto& get() noexcept {
+			testValidIndex<Index>();
+			using variant_type_at_index = TemplatePackNthElement<Index, Elements...>::type::value_type;
+			if (isConstantEvaluated()) {
+				return recursiveStorage.template getRef<Index, variant_type_at_index>();
+			} else {
+				return *reinterpret_cast<variant_type_at_index*>(byteStorage);
+			}
+		}
+
+		public:
+		template<Size Index>
+		constexpr const auto& get() const noexcept {
+			testValidIndex<Index>();
+			using variant_type_at_index = TemplatePackNthElement<Index, Elements...>::type::value_type;
+			if (isConstantEvaluated()) {
+				return recursiveStorage.template getRef<Index, variant_type_at_index>();
+			} else {
+				return *reinterpret_cast<const variant_type_at_index*>(byteStorage);
+			}
+		}
 
 		template<TemplateStringLiteral name>
 		constexpr auto& get() noexcept {
@@ -520,7 +601,7 @@ namespace natl {
 			return index;
 		}
 
-		constexpr Bool doesnotHaveValue() const noexcept {
+		constexpr Bool doesNotHaveValue() const noexcept {
 			return variantIndex == emptyVariantValue;
 		}
 		constexpr Bool hasValue() const noexcept {
@@ -533,6 +614,186 @@ namespace natl {
 		template<TemplateStringLiteral name>
 		constexpr Bool isValue() const noexcept {
 			return variantIndex == getIndexOf<name>();
+		}
+
+		//special 
+		private:
+		using test_element_str_function = Bool(*)(const ConstAsciiStringView&);
+		template<Size Index, typename Element>
+		constexpr static test_element_str_function getTestElementStrFunction() noexcept {
+			return [](const ConstAsciiStringView& str) -> Bool {
+				return str == Element::name;
+			};
+		}
+
+		public:
+		constexpr static Option<Size> stringToIndexStatic(const ConstAsciiStringView& str) noexcept {
+			return[&] <Size... Indices>(IndexSequence<Indices...>) -> Option<Size> {
+				test_element_str_function testFunctions[sizeof...(Elements)] = {
+					getTestElementStrFunction<Indices, Elements>()...
+				};
+
+				for (Size i = 0; i < sizeof...(Elements); i++) {
+					if (testFunctions[i](str)) {
+						return i + 1;
+					}
+				}
+
+				return {};
+			}(MakeIndexSequence<sizeof...(Elements)>);
+		}
+
+		constexpr Option<Size> stringToIndex(const ConstAsciiStringView& str) noexcept {
+			return stringToIndexStatic(str);
+		}
+
+		constexpr static Option<Size> stringToIndexNotShiftedStatic(const ConstAsciiStringView& str) noexcept {
+			return[&] <Size... Indices>(IndexSequence<Indices...>) -> Option<Size> {
+				test_element_str_function testFunctions[sizeof...(Elements)] = {
+					getTestElementStrFunction<Indices, Elements>()...
+				};
+
+				for (Size i = 0; i < sizeof...(Elements); i++) {
+					if (testFunctions[i](str)) {
+						return i;
+					}
+				}
+
+				return {};
+			}(MakeIndexSequence<sizeof...(Elements)>{});
+		}
+
+		constexpr Option<Size> stringToIndexNotShifted(const ConstAsciiStringView& str) noexcept {
+			return stringToIndexNotShiftedStatic(str);
+		}
+	};
+
+
+
+	template<typename... Elements>
+		requires(IsSerializableC<Decay<typename Elements::value_type>> && ...) 
+	struct Serialize<Variant<Elements...>> {
+		using as_type = SerializeVariant<SerializeUI64, SerializeTypeOf<Decay<typename Elements::value_type>>...>;
+		using type = Variant<Elements...>;
+		template<typename Serializer> using error_type = void;
+
+		template<typename Serializer>
+		using VariantSerializeFunction = void(*)(Serializer&, const type&);
+
+		template<typename Serializer, typename Element, Size Index>
+		constexpr static VariantSerializeFunction<Serializer> getSerializeFunction() noexcept {
+			return [](Serializer& serializer, const type& value) -> void {
+				serializer.template beginWriteVariant<as_type, Index>(Element::name);
+				Serialize<Decay<typename Element::value_type>>::template write<Serializer>(serializer, 
+					value.get<Index>()
+				);
+				serializer.endWriteVariant();
+			};
+		}
+
+		template<typename Serializer>
+		constexpr static void write(Serializer& serializer, const type& value) noexcept {
+			[&]<Size... Indices>(natl::IndexSequence<Indices...>) -> void {
+				VariantSerializeFunction<Serializer> serializeFunctions[sizeof...(Elements)] = {
+					getSerializeFunction<Serializer, Elements, Indices>()... 
+				};
+
+				if(value.hasValue()) {
+					serializeFunctions[value.getIndex() - 1](serializer, value);
+				} else {
+					serializer.template writeEmptyVariant<as_type>();
+				}
+			}(natl::MakeIndexSequence<sizeof...(Elements)>{});
+		}
+	};
+
+	template<typename... Elements>
+		requires(IsDeserilizableC<Decay<typename Elements::value_type>> && ...)
+	struct Deserialize<Variant<Elements...>> {
+		using as_type = SerializeTypeOf<Variant<Elements...>>;
+		using type = Variant<Elements...>;
+		constexpr static ConstAsciiStringView sourceName = "Deserialize<Variant<Elements...>>::read";
+		template<typename Deserializer> using error_type = StandardDeserializeError<Deserializer>;
+
+		template<typename Deserializer>
+		using VariantDeserializeFunction = Option<typename Deserializer::deserialize_error_handler>(*)
+			(Deserializer&, typename Deserializer::template deserialize_info<as_type>&, type&);
+
+		template<typename Deserializer, typename Element, Size Index>
+		constexpr static VariantDeserializeFunction<Deserializer> getDeserializeFunction() noexcept {
+			return [](Deserializer& deserializer,
+					typename Deserializer::template deserialize_info<as_type>& varaintInfo,
+					type& dst) -> Option<error_type<Deserializer>> {
+				using element_type = SerializeTypeOf<typename Element::value_type>;
+
+				auto varaintElementExpect = deserializer.beginReadVaraintOfType<element_type>(varaintInfo);
+				if (varaintElementExpect.hasError()) {
+					return varaintElementExpect.error();
+				}
+				auto varaintElementInfo = varaintElementExpect.value();
+
+				auto expectValue = deserializeReadMatch<element_type, Deserializer, typename Element::value_type>(
+					deserializer, varaintElementInfo);
+				if (expectValue.hasError()) {
+					return expectValue.error();
+				}
+
+				dst.assign<Index>(move(expectValue.value()));
+
+				return deserializer.endReadVariant(varaintElementInfo);
+			};
+		}
+
+		template<typename Deserializer>
+		constexpr static Option<error_type<Deserializer>>
+			read(Deserializer& deserializer,
+				typename Deserializer::template deserialize_info<as_type>& varaintInfo,
+				type& dst) noexcept {
+			auto isEmptyExpect = deserializer.readIsEmptyVariant(varaintInfo);
+			if(isEmptyExpect.hasError()) {
+				return isEmptyExpect.error().addSource(sourceName, "");
+			}
+
+			const Bool isEmpty = isEmptyExpect.value();
+			if(isEmpty == true) {
+				dst = type{};
+				return {}; 
+			}
+
+			auto variantIndexExpect = deserializer.beginReadVaraintGetIndex(
+				varaintInfo, 
+				isEmpty, 
+				type::stringToIndexNotShiftedStatic);
+			if(variantIndexExpect.hasError()) {
+				return variantIndexExpect.error().addSource(sourceName, "");
+			}
+
+			const natl::Size variantIndex = static_cast<natl::Size>(variantIndexExpect.value());
+			if(variantIndex > sizeof...(Elements)) {
+				natl::String256 errorLocationDetails = "";
+				deserializer.getLocationDetail(errorLocationDetails);
+				return error_type<Deserializer>("variant index out of range", errorLocationDetails, DeserializeErrorLocation::none, DeserializeErrorFlag::none)
+					.addSource(sourceName, "");
+			}
+
+			auto valueError = [&]<Size... Indices>(natl::IndexSequence<Indices...>) -> Option<error_type<Deserializer>> {
+				VariantDeserializeFunction<Deserializer> deserializeFunctions[sizeof...(Elements)] = {
+					getDeserializeFunction<Deserializer, Elements, Indices>()...
+				};
+				
+				auto variantOfTypeError = deserializeFunctions[variantIndex](deserializer, varaintInfo, dst);
+				if(variantOfTypeError.hasValue()) {
+					return variantOfTypeError.value().addSource(sourceName, "");
+				}
+
+				return {};
+			}(natl::MakeIndexSequence<sizeof...(Elements)>{});
+
+			if(valueError.hasValue()) {
+				return valueError.value();
+			}
+
+			return {};
 		}
 	};
 }

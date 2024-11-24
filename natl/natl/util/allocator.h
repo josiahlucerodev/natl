@@ -44,7 +44,7 @@ namespace natl {
 			if (findIter == allocMap.end()) {
 				std::cout << "natl: TrackerAllocator error: ptr " << ptr << " was not allocated from TrackerAllocator\n";
 				if constexpr (natlInDebug()) {
-					natlDebugBreak();
+					debugBreak();
 				}
 			} else {
 				allocMap.erase(ptr);
