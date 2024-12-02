@@ -72,7 +72,7 @@ namespace natl {
 
     template<typename UnsignedInteger>
         requires(IsBuiltInUnsignedIntegerC<UnsignedInteger>)
-    NATL_FORCE_INLINE constexpr UnsignedInteger boolToMask(bool value) noexcept  {
+    NATL_FORCE_INLINE constexpr UnsignedInteger boolToMask(const Bool value) noexcept  {
         return static_cast<UnsignedInteger>(-static_cast<IntOfByteSize<sizeof(UnsignedInteger)>>(value));
     }
 
@@ -293,293 +293,202 @@ namespace natl {
 
     //bitscan forward 
     namespace impl {
-        constexpr Bool bitscanForwardImplS(const ui8 value, ui8& indexDst) noexcept {
-            if (value == 0) {
-                return true;
-            }
-            ui8 n = value;
-            ui8 index = 0;
-            if (n >= (Limits<ui8>::max() >> (4))) {
-                index += 4;
-                n >>= 4;
-            }
-            if (n >= (Limits<ui8>::max() >> (4 + 2))) {
-                index += 2;
-                n >>= 2;
-            }
-            if (n >= (Limits<ui8>::max() >> (4 + 2 + 1))) {
-                index += 1;
-            }
-            indexDst = index;
-            return false;
+        NATL_FORCE_INLINE constexpr Bool bitscanForwardImplS(const ui8 value, ui8& indexDst) noexcept {
+            using namespace natl::literals;
+            if (value == 0) { return false; }
+            indexDst = popcount(ui8((value & (~value + 1_ui8)) - 1_ui8));
+            return true;
         }
-
-        constexpr Bool bitscanForwardImplS(const ui16 value, ui16& indexDst) noexcept {
-            if (value == 0) {
-                return true;
-            }
-            ui16 n = value;
-            ui16 index = 0;
-            if (n >= (Limits<ui16>::max() >> (8))) {
-                index += 8;
-                n >>= 8;
-            }
-            if (n >= (Limits<ui16>::max() >> (8 + 4))) {
-                index += 4;
-                n >>= 4;
-            }
-            if (n >= (Limits<ui16>::max() >> (8 + 4 + 2))) {
-                index += 2;
-                n >>= 2;
-            }
-            if (n >= (Limits<ui16>::max() >> (8 + 4 + 2 + 1))) {
-                index += 1;
-            }
-            indexDst = index;
-            return false;
+        NATL_FORCE_INLINE constexpr Bool bitscanForwardImplS(const ui16 value, ui16& indexDst) noexcept {
+            using namespace natl::literals;
+            if (value == 0) { return false; }
+            indexDst = popcount(ui16((value & (~value + 1_ui16)) - 1_ui16));
+            return true;
         }
-
-        constexpr Bool bitscanForwardImplS(const ui32 value, ui32& indexDst) noexcept {
-            if (value == 0) {
-                return true;
-            }
-            ui32 n = value;
-            ui32 index = 0;
-            if (n >= (Limits<ui32>::max() >> (16))) {
-                index += 16;
-                n >>= 16;
-            }
-            if (n >= (Limits<ui32>::max() >> (16 + 8))) {
-                index += 8;
-                n >>= 8;
-            }
-            if (n >= (Limits<ui32>::max() >> (16 + 8 + 4))) {
-                index += 4;
-                n >>= 4;
-            }
-            if (n >= (Limits<ui32>::max() >> (16 + 8 + 4 + 2))) {
-                index += 2;
-                n >>= 2;
-            }
-            if (n >= (Limits<ui32>::max() >> (16 + 8 + 4 + 2 + 1))) {
-                index += 1;
-            }
-            indexDst = index;
-            return false;
+        NATL_FORCE_INLINE constexpr Bool bitscanForwardImplS(const ui32 value, ui32& indexDst) noexcept {
+            if (value == 0) { return false; }
+            indexDst = popcount((value & (~value + 1)) - 1);
+            return true;
         }
-
-        constexpr Bool bitscanForwardImplS(const ui64 value, ui64& indexDst) noexcept {
-            if (value == 0) {
-                return true;
-            }
-            ui64 n = value;
-            ui64 index = 0;
-            if (n >= (Limits<ui64>::max() >> 32)) {
-                index += 32;
-                n >>= 32;
-            }
-            if (n >= (Limits<ui64>::max() >> (32 + 16))) {
-                index += 16;
-                n >>= 16;
-            }
-            if (n >= (Limits<ui64>::max() >> (32 + 16 + 8))) {
-                index += 8;
-                n >>= 8;
-            }
-            if (n >= (Limits<ui64>::max() >> (32 + 16 + 8 + 4))) {
-                index += 4;
-                n >>= 4;
-            }
-            if (n >= (Limits<ui64>::max() >> (32 + 16 + 8 + 4 + 2))) {
-                index += 2;
-                n >>= 2;
-            }
-            if (n >= (Limits<ui64>::max() >> (32 + 16 + 8 + 4 + 2 + 1))) {
-                index += 1;
-            }
-            indexDst = index;
-            return false;
+        NATL_FORCE_INLINE constexpr Bool bitscanForwardImplS(const ui64 value, ui64& indexDst) noexcept {
+            if (value == 0) { return false; }
+            indexDst = popcount((value & (~value + 1)) - 1);
+            return true;
         }
 
         NATL_FORCE_INLINE constexpr Bool bitscanForwardImplS(const i8 value, i8& indexDst) noexcept {
+            using namespace natl::literals;
             const ui8 unsignedValue = bitCast<ui8, i8>(value);
             if (unsignedValue == 0) { return false; }
-            ui8 altIndexDst;
-            bitscanForwardImplS(unsignedValue, altIndexDst);
-            indexDst = static_cast<i8>(altIndexDst);
+            indexDst = static_cast<i8>(popcount(ui8((unsignedValue & (~unsignedValue + 1_ui8)) - 1_ui8)));
             return true;
         }
         NATL_FORCE_INLINE constexpr Bool bitscanForwardImplS(const i16 value, i16& indexDst) noexcept {
+            using namespace natl::literals;
             const ui16 unsignedValue = bitCast<ui16, i16>(value);
             if (unsignedValue == 0) { return false; }
-            ui16 altIndexDst;
-            bitscanForwardImplS(unsignedValue, altIndexDst);
-            indexDst = static_cast<i16>(altIndexDst);
+            indexDst = static_cast<i16>(popcount(ui16((unsignedValue & (~unsignedValue + 1_ui8)) - 1_ui8)));
             return true;
         }
         NATL_FORCE_INLINE constexpr Bool bitscanForwardImplS(const i32 value, i32& indexDst) noexcept {
             const ui32 unsignedValue = bitCast<ui32, i32>(value);
             if (unsignedValue == 0) { return false; }
-            ui32 altIndexDst;
-            bitscanForwardImplS(unsignedValue, altIndexDst);
-            indexDst = static_cast<i32>(altIndexDst);
+            indexDst = static_cast<i32>(popcount((unsignedValue & (~unsignedValue + 1)) - 1));
             return true;
         }
         NATL_FORCE_INLINE constexpr Bool bitscanForwardImplS(const i64 value, i64& indexDst) noexcept {
             const ui64 unsignedValue = bitCast<ui64, i64>(value);
             if (unsignedValue == 0) { return false; }
-            ui64 altIndexDst;
-            bitscanForwardImplS(unsignedValue, altIndexDst);
-            indexDst = static_cast<i64>(altIndexDst);
+            indexDst = static_cast<i64>(popcount((unsignedValue & (~unsignedValue + 1)) - 1));
             return true;
         }
 #if defined(NATL_COMPILER_EMSCRIPTEN)
         NATL_FORCE_INLINE Bool bitscanForwardImplD(const i8 value, i8& indexDst) noexcept {
             if (value == 0) { return false; }
-            const i32 result = __builtin_clz(static_cast<ui32>(bitCast<ui8, i8>(value)));
+            const i32 result = __builtin_ctz(static_cast<ui32>(bitCast<ui8, i8>(value)));
             indexDst = static_cast<i8>(result);
             return true;
         }
         NATL_FORCE_INLINE Bool bitscanForwardImplD(const i16 value, i16& indexDst) noexcept {
             if (value == 0) { return false; }
-            const i32 result = __builtin_clz(static_cast<ui32>(bitCast<ui16, i16>(value)));
+            const i32 result = __builtin_ctz(static_cast<ui32>(bitCast<ui16, i16>(value)));
             indexDst = static_cast<i16>(result);
             return true;
         }
         NATL_FORCE_INLINE Bool bitscanForwardImplD(const i32 value, i32& indexDst) noexcept {
             if (value == 0) { return false; }
-            const i32 result = __builtin_clz(static_cast<ui32>(bitCast<ui32, i32>(value)));
+            const i32 result = __builtin_ctz(static_cast<ui32>(bitCast<ui32, i32>(value)));
             indexDst = static_cast<i32>(result);
             return true;
         }
         NATL_FORCE_INLINE Bool bitscanForwardImplD(const i64 value, i64& indexDst) noexcept {
             if (value == 0) { return false; }
-            const i64 result = __builtin_clzll(static_cast<ui64>(bitCast<ui64, i64>(value)));
+            const i64 result = __builtin_ctzll(static_cast<ui64>(bitCast<ui64, i64>(value)));
             indexDst = static_cast<i64>(result);
             return true;
         }
 
         NATL_FORCE_INLINE Bool bitscanForwardImplD(const ui8 value, ui8& indexDst) noexcept {
             if (value == 0) { return false; }
-            const i32 result = __builtin_clz(static_cast<ui32>(value));
+            const i32 result = __builtin_ctz(static_cast<ui32>(value));
             indexDst = static_cast<ui8>(result);
             return true;
         }
         NATL_FORCE_INLINE Bool bitscanForwardImplD(const ui16 value, ui16& indexDst) noexcept {
             if (value == 0) { return false; }
-            const i32 result = __builtin_clz(static_cast<ui32>(value));
+            const i32 result = __builtin_ctz(static_cast<ui32>(value));
             indexDst = static_cast<ui16>(result);
             return true;
         }
         NATL_FORCE_INLINE Bool bitscanForwardImplD(const ui32 value, ui32& indexDst) noexcept {
             if (value == 0) { return false; }
-            const i32 result = __builtin_clz(static_cast<ui32>(value));
+            const i32 result = __builtin_ctz(static_cast<ui32>(value));
             indexDst = static_cast<ui32>(result);
             return true;
         }
         NATL_FORCE_INLINE Bool bitscanForwardImplD(const ui64 value, ui64& indexDst) noexcept {
             if (value == 0) { return false; }
-            const i64 result = __builtin_clzll(static_cast<ui64>(value));
+            const i64 result = __builtin_ctzll(static_cast<ui64>(value));
             indexDst = static_cast<ui64>(result);
             return true;
         }
 #elif defined(NATL_COMPILER_GCC) && defined(NATL_ARCHITECTURE_X86_64)
         NATL_FORCE_INLINE Bool bitscanForwardImplD(const i8 value, i8& indexDst) noexcept {
             if(value == 0) { return false; }
-            const i32 result = __bsrd(static_cast<i32>(value));
+            const i32 result = __bsfd(static_cast<i32>(value));
             indexDst = static_cast<i8>(result);
             return true;
         }
         NATL_FORCE_INLINE Bool bitscanForwardImplD(const i16 value, i16& indexDst) noexcept {
             if(value == 0) { return false; }
-            const i32 result = __bsrd(static_cast<i32>(value));
+            const i32 result = __bsfd(static_cast<i32>(value));
             indexDst = static_cast<i16>(result);
             return true;
         }
         NATL_FORCE_INLINE Bool bitscanForwardImplD(const i32 value, i32& indexDst) noexcept {
             if(value == 0) { return false; }
-            const i32 result = __bsrd(static_cast<i32>(value));
+            const i32 result = __bsfd(static_cast<i32>(value));
             indexDst = static_cast<i32>(result);
             return true;
         }
         NATL_FORCE_INLINE Bool bitscanForwardImplD(const i64 value, i64& indexDst) noexcept {
             if(value == 0) { return false; }
-            const i64 result = __bsrq(static_cast<i64>(value));
+            const i64 result = __bsfq(static_cast<i64>(value));
             indexDst = static_cast<i64>(result);
             return true;
         }
 
         NATL_FORCE_INLINE Bool bitscanForwardImplD(const ui8 value, ui8& indexDst) noexcept {
             if (value == 0) { return false; }
-            const i32 result = __bsrd(static_cast<i32>(bitCast<i8, ui8>(value)));
+            const i32 result = __bsfd(static_cast<i32>(bitCast<i8, ui8>(value)));
             indexDst = static_cast<ui8>(result);
             return true;
         }
         NATL_FORCE_INLINE Bool bitscanForwardImplD(const ui16 value, ui16& indexDst) noexcept {
             if (value == 0) { return false; }
-            const i32 result = __bsrd(static_cast<i32>(bitCast<i16, ui16>(value)));
+            const i32 result = __bsfd(static_cast<i32>(bitCast<i16, ui16>(value)));
             indexDst = static_cast<ui16>(result);
             return true;
         }
         NATL_FORCE_INLINE Bool bitscanForwardImplD(const ui32 value, ui32& indexDst) noexcept {
             if (value == 0) { return false; }
-            const i32 result = __bsrd(static_cast<i32>(bitCast<i32, ui32>(value)));
+            const i32 result = __bsfd(static_cast<i32>(bitCast<i32, ui32>(value)));
             indexDst = static_cast<ui32>(result);
             return true;
         }
         NATL_FORCE_INLINE Bool bitscanForwardImplD(const ui64 value, ui64& indexDst) noexcept {
             if (value == 0) { return false; }
-            const i64 result = __bsrq(static_cast<i64>(bitCast<i64, ui64>(value)));
+            const i64 result = __bsfq(static_cast<i64>(bitCast<i64, ui64>(value)));
             indexDst = static_cast<ui64>(result);
             return true;
         }
 #elif defined(NATL_COMPILER_MSVC) && defined(NATL_ARCHITECTURE_X86_64)
         NATL_FORCE_INLINE Bool bitscanForwardImplD(const i8 value, i8& indexDst) noexcept {
             unsigned long altIndexDst;
-            const Bool result = _BitScanReverse(&altIndexDst, static_cast<ui32>(bitCast<ui8, i8>(value)));
+            const Bool result = _BitScanForward(&altIndexDst, static_cast<ui32>(bitCast<ui8, i8>(value)));
             indexDst = static_cast<i8>(altIndexDst);
             return result;
         }
         NATL_FORCE_INLINE Bool bitscanForwardImplD(const i16 value, i16& indexDst) noexcept {
             unsigned long altIndexDst;
-            const Bool result = _BitScanReverse(&altIndexDst, static_cast<ui32>(bitCast<ui16, i16>(value)));
+            const Bool result = _BitScanForward(&altIndexDst, static_cast<ui32>(bitCast<ui16, i16>(value)));
             indexDst = static_cast<i16>(altIndexDst);
             return result;
         }
         NATL_FORCE_INLINE Bool bitscanForwardImplD(const i32 value, i32& indexDst) noexcept {
             unsigned long altIndexDst;
-            const Bool result = _BitScanReverse(&altIndexDst, bitCast<ui32, i32>(value));
+            const Bool result = _BitScanForward(&altIndexDst, bitCast<ui32, i32>(value));
             indexDst = static_cast<i32>(altIndexDst);
             return result;
         }
         NATL_FORCE_INLINE Bool bitscanForwardImplD(const i64 value, i64& indexDst) noexcept {
             unsigned long altIndexDst;
-            const Bool result = _BitScanReverse64(&altIndexDst, bitCast<ui64, i64>(value));
+            const Bool result = _BitScanForward64(&altIndexDst, bitCast<ui64, i64>(value));
             indexDst = static_cast<i64>(altIndexDst);
             return result;
         }
 
         NATL_FORCE_INLINE Bool bitscanForwardImplD(const ui8 value, ui8& indexDst) noexcept {
             unsigned long altIndexDst;
-            const Bool result = _BitScanReverse(&altIndexDst, static_cast<ui32>(value));
+            const Bool result = _BitScanForward(&altIndexDst, static_cast<ui32>(value));
             indexDst = static_cast<ui8>(altIndexDst);
             return result;
         }
         NATL_FORCE_INLINE Bool bitscanForwardImplD(const ui16 value, ui16& indexDst) noexcept {
             unsigned long altIndexDst;
-            const Bool result = _BitScanReverse(&altIndexDst, static_cast<ui32>(value));
+            const Bool result = _BitScanForward(&altIndexDst, static_cast<ui32>(value));
             indexDst = static_cast<ui16>(altIndexDst);
             return result;
         }
         NATL_FORCE_INLINE Bool bitscanForwardImplD(const ui32 value, ui32& indexDst) noexcept {
             unsigned long altIndexDst;
-            const Bool result = _BitScanReverse(&altIndexDst, value);
+            const Bool result = _BitScanForward(&altIndexDst, value);
             indexDst = static_cast<ui32>(altIndexDst);
             return result;
         }
         NATL_FORCE_INLINE Bool bitscanForwardImplD(const ui64 value, ui64& indexDst) noexcept {
             unsigned long altIndexDst;
-            const Bool result = _BitScanReverse64(&altIndexDst, value);
+            const Bool result = _BitScanForward64(&altIndexDst, value);
             indexDst = static_cast<ui64>(altIndexDst);
             return result;
         }
@@ -650,205 +559,328 @@ namespace natl {
         return bitscanForward(bitCast<UIntOfByteSize<sizeof(FloatType)>, FloatType>(value), indexDst);
     }
 
+    template<typename NumericType> 
+        requires(IsBuiltInNumericC<NumericType>) 
+    NATL_FORCE_INLINE constexpr NumericType bitscanForward(const NumericType value) noexcept {
+        NumericType result = 0;
+        bitscanForward(value, result);
+        return result;
+    }
+
     //bitscan backword
     namespace impl {
-        NATL_FORCE_INLINE constexpr Bool bitscanBackwardImplS(const ui8 value, ui8& indexDst) noexcept {
-            using namespace natl::literals;
-            if (value == 0) { return false; }
-            indexDst = popcount(ui8((value & (~value + 1_ui8)) - 1_ui8));
+        constexpr Bool bitscanBackwardImplS(const ui8 value, ui8& indexDst) noexcept {
+            if (value == 0) {
+                return false;
+            }
+            //10010100
+            ui8 n = value;
+
+            ui8 index = TypeBitSize<ui8> -1;
+            if (n > (Limits<ui8>::max() >> (4))) {
+                n >>= 4;
+            } else {
+                index -= 4;
+            }
+            if (n > (Limits<ui8>::max() >> (4 + 2))) {
+                n >>= 2;
+            } else {
+                index -= 2;
+            }
+            if (n > (Limits<ui8>::max() >> (4 + 2 + 1))) {
+            } else {
+                index -= 1;
+            }
+
+            indexDst = index;
             return true;
         }
-        NATL_FORCE_INLINE constexpr Bool bitscanBackwardImplS(const ui16 value, ui16& indexDst) noexcept {
-            using namespace natl::literals;
-            if (value == 0) { return false; }
-            indexDst = popcount(ui16((value & (~value + 1_ui16)) - 1_ui16));
+
+        constexpr Bool bitscanBackwardImplS(const ui16 value, ui16& indexDst) noexcept {
+            if (value == 0) {
+                return false;
+            }
+            ui16 n = value;
+            ui16 index = TypeBitSize<ui16> -1;
+            if (n > (Limits<ui16>::max() >> (8))) {
+                n >>= 8;
+            } else {
+                index -= 8;
+            }
+            if (n > (Limits<ui16>::max() >> (8 + 4))) {
+                n >>= 4;
+            } else {
+                index -= 4;
+            }
+            if (n > (Limits<ui16>::max() >> (8 + 4 + 2))) {
+                n >>= 2;
+            } else {
+                index -= 2;
+            }
+            if (n > (Limits<ui16>::max() >> (8 + 4 + 2 + 1))) {
+            } else {
+                index -= 1;
+            }
+
+            indexDst = index;
             return true;
         }
-        NATL_FORCE_INLINE constexpr Bool bitscanBackwardImplS(const ui32 value, ui32& indexDst) noexcept {
-            if (value == 0) { return false; }
-            indexDst = popcount((value & (~value + 1)) - 1);
+
+        constexpr Bool bitscanBackwardImplS(const ui32 value, ui32& indexDst) noexcept {
+            if (value == 0) {
+                return false;
+            }
+            ui32 n = value;
+            ui32 index = TypeBitSize<ui32> -1;
+
+            if (n > (Limits<ui32>::max() >> (16))) {
+                n >>= 16;
+            } else {
+                index -= 16;
+            }
+            if (n > (Limits<ui32>::max() >> (16 + 8))) {
+                n >>= 8;
+            } else {
+                index -= 8;
+            }
+            if (n > (Limits<ui32>::max() >> (16 + 8 + 4))) {
+                n >>= 4;
+            } else {
+                index -= 4;
+            }
+            if (n > (Limits<ui32>::max() >> (16 + 8 + 4 + 2))) {
+                n >>= 2;
+            } else {
+                index -= 2;
+            }
+            if (n > (Limits<ui32>::max() >> (16 + 8 + 4 + 2 + 1))) {
+            } else {
+                index -= 1;
+            }
+
+            indexDst = index;
             return true;
         }
-        NATL_FORCE_INLINE constexpr Bool bitscanBackwardImplS(const ui64 value, ui64& indexDst) noexcept {
-            if (value == 0) { return false; }
-            indexDst = popcount((value & (~value + 1)) - 1);
+
+        constexpr Bool bitscanBackwardImplS(const ui64 value, ui64& indexDst) noexcept {
+            if (value == 0) {
+                return false;
+            }
+            ui64 n = value;
+            ui64 index = TypeBitSize<ui64> -1;
+            if (n > (Limits<ui64>::max() >> 32)) {
+                n >>= 32;
+            } else {
+                index -= 32;
+            }
+            if (n > (Limits<ui64>::max() >> (32 + 16))) {
+                n >>= 16;
+            } else {
+                index -= 16;
+            }
+            if (n > (Limits<ui64>::max() >> (32 + 16 + 8))) {
+                n >>= 8;
+            } else {
+                index -= 8;
+            }
+            if (n > (Limits<ui64>::max() >> (32 + 16 + 8 + 4))) {
+                n >>= 4;
+            } else {
+                index -= 4;
+            }
+            if (n > (Limits<ui64>::max() >> (32 + 16 + 8 + 4 + 2))) {
+                n >>= 2;
+            } else {
+                index -= 2;
+            }
+            if (n > (Limits<ui64>::max() >> (32 + 16 + 8 + 4 + 2 + 1))) {
+            } else {
+                index -= 1;
+            }
+            indexDst = index;
             return true;
         }
 
         NATL_FORCE_INLINE constexpr Bool bitscanBackwardImplS(const i8 value, i8& indexDst) noexcept {
-            using namespace natl::literals;
             const ui8 unsignedValue = bitCast<ui8, i8>(value);
             if (unsignedValue == 0) { return false; }
-            indexDst = static_cast<i8>(popcount(ui8((unsignedValue & (~unsignedValue + 1_ui8)) - 1_ui8)));
+            ui8 altIndexDst;
+            bitscanBackwardImplS(unsignedValue, altIndexDst);
+            indexDst = static_cast<i8>(altIndexDst);
             return true;
         }
         NATL_FORCE_INLINE constexpr Bool bitscanBackwardImplS(const i16 value, i16& indexDst) noexcept {
-            using namespace natl::literals;
             const ui16 unsignedValue = bitCast<ui16, i16>(value);
             if (unsignedValue == 0) { return false; }
-            indexDst = static_cast<i16>(popcount(ui16((unsignedValue & (~unsignedValue + 1_ui8)) - 1_ui8)));
+            ui16 altIndexDst;
+            bitscanBackwardImplS(unsignedValue, altIndexDst);
+            indexDst = static_cast<i16>(altIndexDst);
             return true;
         }
         NATL_FORCE_INLINE constexpr Bool bitscanBackwardImplS(const i32 value, i32& indexDst) noexcept {
             const ui32 unsignedValue = bitCast<ui32, i32>(value);
             if (unsignedValue == 0) { return false; }
-            indexDst = static_cast<i32>(popcount((unsignedValue & (~unsignedValue + 1)) - 1));
+            ui32 altIndexDst;
+            bitscanBackwardImplS(unsignedValue, altIndexDst);
+            indexDst = static_cast<i32>(altIndexDst);
             return true;
         }
         NATL_FORCE_INLINE constexpr Bool bitscanBackwardImplS(const i64 value, i64& indexDst) noexcept {
             const ui64 unsignedValue = bitCast<ui64, i64>(value);
             if (unsignedValue == 0) { return false; }
-            indexDst = static_cast<i64>(popcount((unsignedValue & (~unsignedValue + 1)) - 1));
+            ui64 altIndexDst;
+            bitscanBackwardImplS(unsignedValue, altIndexDst);
+            indexDst = static_cast<i64>(altIndexDst);
             return true;
         }
-
 #if defined(NATL_COMPILER_EMSCRIPTEN)
         NATL_FORCE_INLINE Bool bitscanBackwardImplD(const i8 value, i8& indexDst) noexcept {
             if (value == 0) { return false; }
-            const i32 result = __builtin_ctz(static_cast<ui32>(bitCast<ui8, i8>(value)));
+            const i32 result = i32(31) - __builtin_clz(static_cast<ui32>(bitCast<ui8, i8>(value)));
             indexDst = static_cast<i8>(result);
             return true;
         }
         NATL_FORCE_INLINE Bool bitscanBackwardImplD(const i16 value, i16& indexDst) noexcept {
             if (value == 0) { return false; }
-            const i32 result = __builtin_ctz(static_cast<ui32>(bitCast<ui16, i16>(value)));
+            const i32 result = i32(31) - __builtin_clz(static_cast<ui32>(bitCast<ui16, i16>(value)));
             indexDst = static_cast<i16>(result);
             return true;
         }
         NATL_FORCE_INLINE Bool bitscanBackwardImplD(const i32 value, i32& indexDst) noexcept {
             if (value == 0) { return false; }
-            const i32 result = __builtin_ctz(static_cast<ui32>(bitCast<ui32, i32>(value)));
-            indexDst = static_cast<i32>(result);
+            const i32 result = i32(31) - __builtin_clz(static_cast<ui32>(bitCast<ui32, i32>(value)));
+            indexDst = result;
             return true;
         }
         NATL_FORCE_INLINE Bool bitscanBackwardImplD(const i64 value, i64& indexDst) noexcept {
             if (value == 0) { return false; }
-            const i64 result = __builtin_ctzll(static_cast<ui64>(bitCast<ui64, i64>(value)));
-            indexDst = static_cast<i64>(result);
+            const i64 result = i32(63) - __builtin_clzll(static_cast<ui64>(bitCast<ui64, i64>(value)));
+            indexDst = result;
             return true;
         }
 
         NATL_FORCE_INLINE Bool bitscanBackwardImplD(const ui8 value, ui8& indexDst) noexcept {
             if (value == 0) { return false; }
-            const i32 result = __builtin_ctz(static_cast<ui32>(value));
+            const i32 result =  i32(31) - __builtin_clz(static_cast<ui32>(value));
             indexDst = static_cast<ui8>(result);
             return true;
         }
         NATL_FORCE_INLINE Bool bitscanBackwardImplD(const ui16 value, ui16& indexDst) noexcept {
             if (value == 0) { return false; }
-            const i32 result = __builtin_ctz(static_cast<ui32>(value));
+            const i32 result =  i32(31) - __builtin_clz(static_cast<ui32>(value));
             indexDst = static_cast<ui16>(result);
             return true;
         }
         NATL_FORCE_INLINE Bool bitscanBackwardImplD(const ui32 value, ui32& indexDst) noexcept {
             if (value == 0) { return false; }
-            const i32 result = __builtin_ctz(static_cast<ui32>(value));
+            const i32 result =  i32(31) - __builtin_clz(value);
             indexDst = static_cast<ui32>(result);
             return true;
         }
         NATL_FORCE_INLINE Bool bitscanBackwardImplD(const ui64 value, ui64& indexDst) noexcept {
             if (value == 0) { return false; }
-            const i64 result = __builtin_ctzll(static_cast<ui64>(value));
+            const i64 result =  i32(63) - __builtin_clzll(value);
             indexDst = static_cast<ui64>(result);
             return true;
         }
+
 #elif defined(NATL_COMPILER_GCC) && defined(NATL_ARCHITECTURE_X86_64)
         NATL_FORCE_INLINE Bool bitscanBackwardImplD(const i8 value, i8& indexDst) noexcept {
             if (value == 0) { return false; }
-            const i32 result = __bsfd(static_cast<i32>(value));
+            const i32 result = __bsrd(static_cast<i32>(value));
             indexDst = static_cast<i8>(result);
             return true;
         }
         NATL_FORCE_INLINE Bool bitscanBackwardImplD(const i16 value, i16& indexDst) noexcept {
             if (value == 0) { return false; }
-            const i32 result = __bsfd(static_cast<i32>(value));
+            const i32 result = __bsrd(static_cast<i32>(value));
             indexDst = static_cast<i16>(result);
             return true;
         }
         NATL_FORCE_INLINE Bool bitscanBackwardImplD(const i32 value, i32& indexDst) noexcept {
             if (value == 0) { return false; }
-            const i32 result = __bsfd(static_cast<i32>(value));
-            indexDst = static_cast<i32>(result);
+            const i32 result = __bsrd(value);
+            indexDst = result;
             return true;
         }
         NATL_FORCE_INLINE Bool bitscanBackwardImplD(const i64 value, i64& indexDst) noexcept {
             if (value == 0) { return false; }
-            const i64 result = __bsfq(static_cast<i64>(value));
-            indexDst = static_cast<i64>(result);
+            const i64 result = __bsrq(value);
+            indexDst = result;
             return true;
         }
 
         NATL_FORCE_INLINE Bool bitscanBackwardImplD(const ui8 value, ui8& indexDst) noexcept {
             if (value == 0) { return false; }
-            const i32 result = __bsfd(static_cast<i32>(bitCast<i8, ui8>(value)));
-            indexDst = bitCast<ui8, i8>(static_cast<i8>(result));
+            const i32 result = __bsrd(bitCast<i32, ui32>(ui32(0) | static_cast<ui32>(value)));
+            indexDst = static_cast<ui8>(result);
             return true;
         }
         NATL_FORCE_INLINE Bool bitscanBackwardImplD(const ui16 value, ui16& indexDst) noexcept {
             if (value == 0) { return false; }
-            const i32 result = __bsfd(static_cast<i32>(bitCast<i16, ui16>(value)));
-            indexDst = bitCast<ui16, i16>(static_cast<i16>(result));
+            const i32 result = __bsrd(bitCast<i32, ui32>(ui32(0) | static_cast<ui32>(value)));
+            indexDst = static_cast<ui16>(result);
             return true;
         }
         NATL_FORCE_INLINE Bool bitscanBackwardImplD(const ui32 value, ui32& indexDst) noexcept {
             if (value == 0) { return false; }
-            const i32 result = __bsfd(static_cast<i32>(bitCast<i32, ui32>(value)));
-            indexDst = bitCast<ui32, i32>(static_cast<i32>(result));
+            const i32 result = __bsrd(bitCast<i32, ui32>(value));
+            indexDst = static_cast<ui32>(result);
             return true;
         }
         NATL_FORCE_INLINE Bool bitscanBackwardImplD(const ui64 value, ui64& indexDst) noexcept {
             if (value == 0) { return false; }
-            const i64 result = __bsfq(static_cast<i64>(bitCast<i64, ui64>(value)));
-            indexDst = bitCast<ui64, i64>(static_cast<i64>(result));
+            const i64 result = __bsrq(bitCast<i64, ui64>(value));
+            indexDst = static_cast<ui64>(result);
             return true;
         }
 #elif defined(NATL_COMPILER_MSVC) && defined(NATL_ARCHITECTURE_X86_64)
         NATL_FORCE_INLINE Bool bitscanBackwardImplD(const i8 value, i8& indexDst) noexcept {
             unsigned long altIndexDst;
-            const Bool result = _BitScanForward(&altIndexDst, static_cast<ui32>(bitCast<ui8, i8>(value)));
+            const Bool result = _BitScanReverse(&altIndexDst, static_cast<ui32>(bitCast<ui8, i8>(value)));
             indexDst = static_cast<i8>(altIndexDst);
             return result;
         }
         NATL_FORCE_INLINE Bool bitscanBackwardImplD(const i16 value, i16& indexDst) noexcept {
             unsigned long altIndexDst;
-            const Bool result = _BitScanForward(&altIndexDst, static_cast<ui32>(bitCast<ui16, i16>(value)));
+            const Bool result = _BitScanReverse(&altIndexDst, static_cast<ui32>(bitCast<ui16, i16>(value)));
             indexDst = static_cast<i16>(altIndexDst);
             return result;
         }
         NATL_FORCE_INLINE Bool bitscanBackwardImplD(const i32 value, i32& indexDst) noexcept {
             unsigned long altIndexDst;
-            const Bool result = _BitScanForward(&altIndexDst, bitCast<ui32, i32>(value));
+            const Bool result = _BitScanReverse(&altIndexDst, bitCast<ui32, i32>(value));
             indexDst = static_cast<i32>(altIndexDst);
             return result;
         }
         NATL_FORCE_INLINE Bool bitscanBackwardImplD(const i64 value, i64& indexDst) noexcept {
             unsigned long altIndexDst;
-            const Bool result = _BitScanForward64(&altIndexDst, bitCast<ui64, i64>(value));
+            const Bool result = _BitScanReverse64(&altIndexDst, bitCast<ui64, i64>(value));
             indexDst = static_cast<i64>(altIndexDst);
             return result;
         }
 
         NATL_FORCE_INLINE Bool bitscanBackwardImplD(const ui8 value, ui8& indexDst) noexcept {
             unsigned long altIndexDst;
-            const Bool result = _BitScanForward(&altIndexDst, static_cast<ui32>(value));
+            const Bool result = _BitScanReverse(&altIndexDst, static_cast<ui32>(value));
             indexDst = static_cast<ui8>(altIndexDst);
             return result;
         }
         NATL_FORCE_INLINE Bool bitscanBackwardImplD(const ui16 value, ui16& indexDst) noexcept {
             unsigned long altIndexDst;
-            const Bool result = _BitScanForward(&altIndexDst, static_cast<ui32>(value));
+            const Bool result = _BitScanReverse(&altIndexDst, static_cast<ui32>(value));
             indexDst = static_cast<ui16>(altIndexDst);
             return result;
         }
         NATL_FORCE_INLINE Bool bitscanBackwardImplD(const ui32 value, ui32& indexDst) noexcept {
             unsigned long altIndexDst;
-            const Bool result = _BitScanForward(&altIndexDst, value);
+            const Bool result = _BitScanReverse(&altIndexDst, value);
             indexDst = static_cast<ui32>(altIndexDst);
             return result;
         }
         NATL_FORCE_INLINE Bool bitscanBackwardImplD(const ui64 value, ui64& indexDst) noexcept {
             unsigned long altIndexDst;
-            const Bool result = _BitScanForward64(&altIndexDst, value);
+            const Bool result = _BitScanReverse64(&altIndexDst, value);
             indexDst = static_cast<ui64>(altIndexDst);
             return result;
         }
@@ -920,6 +952,14 @@ namespace natl {
     }
 
     template<typename NumericType>
+        requires(IsBuiltInNumericC<NumericType>)
+    NATL_FORCE_INLINE constexpr NumericType bitscanBackward(const NumericType value) noexcept {
+        NumericType result = 0;
+        bitscanBackward(value, result);
+        return result;
+    }
+
+    template<typename NumericType>
     struct BitscanResult {
         Bool result;
         NumericType index;
@@ -945,8 +985,6 @@ namespace natl {
         result.result = bitscanBackward(value, result.index);
         return result;
     }
-
-
 
     //bitwise
     template<typename IntegerType>
@@ -1028,6 +1066,21 @@ namespace natl {
             );
         } else {
             return ~value;
+        }
+    }
+
+    //is power of tywo 
+    template<typename IntegerType>
+        requires(IsBuiltInIntegerC<IntegerType>)
+    NATL_FORCE_INLINE constexpr Bool isPowerOf2(const IntegerType value) noexcept {
+        if constexpr(IsBuiltInSignedIntegerC<IntegerType>) {
+            if(value > 0) {
+                return popcount(value) == 1;
+            } else{
+                return popcount(-value) == 1;
+            }
+        } else {
+            return popcount(value) == 1;
         }
     }
 }

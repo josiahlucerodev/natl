@@ -1857,7 +1857,7 @@ namespace natl {
 
 		//operations 
 		constexpr BaseString& reverse() noexcept {
-			reverse<iterator>(begin(), end());
+			natl::reverse<iterator>(begin(), end());
 			return self();
 		}
 
@@ -2069,7 +2069,7 @@ namespace natl {
 			read(Deserializer& deserializer,
 				typename Deserializer::template deserialize_info<as_type>& info,
 				type& dst) noexcept {
-			auto readError = deserializer.readStr<type>(info, dst);
+			auto readError = deserializer.template readStr<type>(info, dst);
 			if (readError.hasValue()) {
 				return readError.value().addSource(sourceName, "");
 			}

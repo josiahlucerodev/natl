@@ -4,20 +4,10 @@
 #include "../util/basicTypes.h"
 #include "../system/printFormatted.h"
 #include "../system/printColor.h"
-#include "../system/timer.h"
+#include "../fundamental/option.h"
 
 //interface
 namespace natl {
-	struct TestTimer {
-		ConstAsciiStringView testFrom;
-		Timer timer;
-		TestTimer(ConstAsciiStringView testFromIn) noexcept : testFrom(testFromIn) {}
-		~TestTimer() noexcept {
-			natl::printlnf("natl: ", testFrom, " time: ", timer.getMillisecondsInt());
-		}
-	};
-
-
 	class TestTypeStdOut {
 	public:
 		//constructor
@@ -131,7 +121,9 @@ namespace natl {
 					if (noFailures()) {
 						natl::printlnfc(": ", PrintColor::green, successCount, " tests passed");
 					} else {
-						natl::printlnfc("natl: ", from, " test ", name, ": ", PrintColor::green, successCount, " tests passed ", PrintColor::red, failureCount, " tests failed");
+						natl::printlnfc("natl: ", from, " test ", name, ": ", 
+							PrintColor::green, successCount, " tests passed ", 
+							PrintColor::red, failureCount, " tests failed");
 					}
 				} 
 			}
@@ -167,10 +159,70 @@ namespace natl {
 				natl::constantEvaluatedError();
 			} else {
 				test.failedTest();
-				natl::printlnfc("natl: ", test.from, natl::PrintColor::red, " test failed: ", assertArgs...);
+				natl::printlnfc("natl: ", test.from, natl::PrintColor::red, 
+					" test failed: ", forward<AssertArgs>(assertArgs)...);
 			}
 		}
 	}
+
+	template<typename LhsType, typename RhsType, typename... AssertArgs>
+		requires(requires(const LhsType& expected, const RhsType& actual) { {expected == actual} -> IsConvertibleC<Bool>; } )
+	constexpr void testAssertEquals(Test& test, const LhsType& expected, const RhsType& actual, AssertArgs&&... assertArgs) noexcept {
+		if (expected == actual) {
+			test.passedTest();
+		} else {
+			if (natl::isConstantEvaluated()) {
+				natl::constantEvaluatedError();
+			} else {
+				test.failedTest();
+				if constexpr(IsFormattableC<Decay<LhsType>, natl::Ascii> && IsFormattableC<Decay<RhsType>, natl::Ascii>) {
+					natl::printlnfc("natl: ", test.from, natl::PrintColor::red, 
+						" test failed: ", forward<AssertArgs>(assertArgs)...,
+						" expected: ", expected, ", actual: ", actual);
+				} else {
+					natl::printlnfc("natl: ", test.from, natl::PrintColor::red, 
+						" test failed: ", forward<AssertArgs>(assertArgs)...);
+				}
+			}
+		}
+	}
+
+	template<typename LhsType, typename RhsType, typename... AssertArgs>
+		requires(requires(const LhsType& expected, const RhsType& actual) { { expected == actual } -> IsConvertibleC<Bool>; })
+	constexpr void testOptionAssertEquals(Test& test, const LhsType& expected, const Option<RhsType>& actual, AssertArgs&&... assertArgs) noexcept {
+		if (actual.hasValue() && (expected == actual.value())) {
+			test.passedTest();
+		} else {
+			if (natl::isConstantEvaluated()) {
+				natl::constantEvaluatedError();
+			}
+			else {
+				test.failedTest();
+
+				if constexpr (IsFormattableC<Decay<LhsType>, natl::Ascii> && IsFormattableC<Decay<RhsType>, natl::Ascii>) {
+					if (actual.hasValue()) {
+						natl::printlnfc("natl: ", test.from, natl::PrintColor::red,
+							" test failed: ", forward<AssertArgs>(assertArgs)...,
+							" expected: ", expected, ", actual: ", actual);
+					} else {
+						natl::printlnfc("natl: ", test.from, natl::PrintColor::red,
+							" test failed: ", forward<AssertArgs>(assertArgs)...,
+							" expected: ", expected, ", actual: null");
+					}
+				} else {
+					if (actual.hasValue()) {
+						natl::printlnfc("natl: ", test.from, natl::PrintColor::red,
+							" test failed: ", forward<AssertArgs>(assertArgs)...);
+					} else {
+						natl::printlnfc("natl: ", test.from, natl::PrintColor::red,
+							" test failed: ", forward<AssertArgs>(assertArgs)..., " actual: null");
+					}
+				}
+			}
+		}
+	}
+
+	
 
 	template<typename... AssertArgs>
 	constexpr void subTestAssert(Test& test, Bool condition) noexcept {

@@ -45,7 +45,9 @@ namespace natl {
 
 
     template <Size Index, class... Types>
+        requires(Index < sizeof...(Types))
     struct TemplatePackNthElement {};
+
     template<Size Index>
     struct TemplatePackNthElement<Index> {
         // static_assert(false, "natl: TemplatePackNthElement could not find element because the index is out of range");

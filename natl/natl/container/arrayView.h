@@ -19,7 +19,7 @@
 namespace natl {
 	template <class DataType>
 	class ArrayView {
-	public:
+	public:	
 		using value_type = DataType;
 		using reference = DataType&;
 		using const_reference = const DataType&;
@@ -187,7 +187,7 @@ namespace natl {
 			fillCount<pointer, DataType>(data(), value, size());
 		}
 		constexpr void swap(ArrayView& other) noexcept {
-			swap<ArrayView>(self(), other);
+			natl::swap<ArrayView>(self(), other);
 		}
 
 		//compare operators 
@@ -524,39 +524,9 @@ namespace natl {
 				}
 			}
 			constexpr void swap(OffsetMDArrayViewDimensions& other) noexcept {
-				swap<OffsetMDArrayViewDimensions>(self(), other);
+				natl::swap<OffsetMDArrayViewDimensions>(self(), other);
 			}
 		};
-
-		template<typename DataType>
-		struct IsTriviallyCompareableV<ArrayView<DataType>>
-			: FalseType {};
-
-		template<typename DataType>
-		struct IsTriviallyRelocatableV<ArrayView<DataType>>
-			: TrueType {};
-		template<typename DataType>
-		struct IsTriviallyConstructibleV<ArrayView<DataType>>
-			: TrueType {};
-		template<typename DataType>
-		struct IsTriviallyDestructibleV<ArrayView<DataType>>
-			: TrueType {};
-
-		template<typename DataType>
-		struct IsTriviallyConstRefConstructibleV<ArrayView<DataType>>
-			: TrueType {};
-		template<typename DataType>
-		struct IsTriviallyMoveConstructibleV<ArrayView<DataType>>
-			: TrueType {};
-
-		template<typename DataType>
-		struct IsTriviallyConstRefAssignableV<ArrayView<DataType>>
-			: TrueType {};
-		template<typename DataType>
-		struct IsTriviallyMoveAssignableV<ArrayView<DataType>>
-			: TrueType {};
-
-
 
 		template <typename DataType, typename Seq> struct OffsetsMDArrayViewImpl;
 		template <typename DataType, Size... Is>
@@ -680,7 +650,7 @@ namespace natl {
 				fillCount<DataType*, DataType>(data(), value, size());
 			}
 			constexpr void swap(MDArrayViewDimensions& other) noexcept {
-				swap<MDArrayViewDimensions>(self(), other);
+				natl::swap<MDArrayViewDimensions>(self(), other);
 			}
 		};
 
@@ -695,6 +665,34 @@ namespace natl {
 				> ;
 		};
 	}
+
+	template<typename DataType>
+	struct IsTriviallyCompareableV<ArrayView<DataType>>
+		: FalseType {};
+
+	template<typename DataType>
+	struct IsTriviallyRelocatableV<ArrayView<DataType>>
+		: TrueType {};
+	template<typename DataType>
+	struct IsTriviallyConstructibleV<ArrayView<DataType>>
+		: TrueType {};
+	template<typename DataType>
+	struct IsTriviallyDestructibleV<ArrayView<DataType>>
+		: TrueType {};
+
+	template<typename DataType>
+	struct IsTriviallyConstRefConstructibleV<ArrayView<DataType>>
+		: TrueType {};
+	template<typename DataType>
+	struct IsTriviallyMoveConstructibleV<ArrayView<DataType>>
+		: TrueType {};
+
+	template<typename DataType>
+	struct IsTriviallyConstRefAssignableV<ArrayView<DataType>>
+		: TrueType {};
+	template<typename DataType>
+	struct IsTriviallyMoveAssignableV<ArrayView<DataType>>
+		: TrueType {};
 
 	template <typename DataType, Size DimensionNumber>
 	class OffsetsMDArrayView : public impl::OffsetsMDArrayViewImpl<DataType, MakeIndexSequence<DimensionNumber>>::OffsetsMDArrayViewType {

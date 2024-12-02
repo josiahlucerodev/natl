@@ -35,20 +35,23 @@ namespace natl {
 		static constexpr size_type npos = size_type(-1);
 
 		using ConstBaseStringView = BaseStringView<const CharType>;
-	private:
-		CharType* dataPtr;
-		size_type stringLength;
+	public:
+		CharType* _dataPtr;
+		size_type _stringLength;
 	public:
 		//constructors
-		constexpr BaseStringView() noexcept : dataPtr(nullptr), stringLength(0) {}
+		constexpr BaseStringView() noexcept : _dataPtr(nullptr), _stringLength(0) {}
 		constexpr BaseStringView(const BaseStringView& str) noexcept = default;
-		constexpr BaseStringView(CharType* stringPtr, const size_type length) noexcept : dataPtr(stringPtr), stringLength(length) {}
-		constexpr BaseStringView(CharType* str) noexcept : dataPtr(str), stringLength(cstringLength(str)) {}
+		constexpr BaseStringView(CharType* stringPtr, const size_type length) noexcept : _dataPtr(stringPtr), _stringLength(length) {}
+		constexpr BaseStringView(CharType* str) noexcept : _dataPtr(str), _stringLength(cstringLength(str)) {}
+		template<Size StrArraySize> 
+		constexpr BaseStringView(const CharType(&str)[StrArraySize]) noexcept : _dataPtr(str), _stringLength(cstringLength(str)) {}
+
 
 		template<typename StringViewLike>
 			requires(IsStringViewLike<StringViewLike, RemoveConctVolatile<CharType>>)
 		explicit constexpr BaseStringView(const StringViewLike& stringViewLike) noexcept : 
-			dataPtr(stringViewLike.data()), stringLength(stringViewLike.size()) {}
+			_dataPtr(stringViewLike.data()), _stringLength(stringViewLike.size()) {}
 
 		//destrutor
 		constexpr ~BaseStringView() = default;
@@ -63,10 +66,10 @@ namespace natl {
 		constexpr const BaseStringView& self() const noexcept { return *this; }
 
 		//iterators
-		constexpr pointer beginPtr() requires(IsNotConst<CharType>) { return dataPtr; }
-		constexpr const_pointer beginPtr() const noexcept { return dataPtr; }
-		constexpr pointer endPtr() requires(IsNotConst<CharType>) { return dataPtr + stringLength; }
-		constexpr const_pointer endPtr() const noexcept { return dataPtr + stringLength; }
+		constexpr pointer beginPtr() requires(IsNotConst<CharType>) { return _dataPtr; }
+		constexpr const_pointer beginPtr() const noexcept { return _dataPtr; }
+		constexpr pointer endPtr() requires(IsNotConst<CharType>) { return _dataPtr + _stringLength; }
+		constexpr const_pointer endPtr() const noexcept { return _dataPtr + _stringLength; }
 
 		constexpr iterator begin() noexcept requires(IsNotConst<CharType>) { return iterator(beginPtr()); }
 		constexpr const_iterator begin() const noexcept { return const_iterator(beginPtr()); }
@@ -86,8 +89,8 @@ namespace natl {
 		constexpr reference operator[] (const size_type index) requires(IsNotConst<CharType>) { return at(index); }
 		constexpr const_reference operator[] (const size_type index) const { return at(index); }
 
-		constexpr reference at(const size_type index) noexcept requires(IsNotConst<CharType>) { return dataPtr[index]; };
-		constexpr const_reference at(const size_type index) const noexcept { return dataPtr[index]; };
+		constexpr reference at(const size_type index) noexcept requires(IsNotConst<CharType>) { return _dataPtr[index]; };
+		constexpr const_reference at(const size_type index) const noexcept { return _dataPtr[index]; };
 
 		constexpr size_type frontIndex() const noexcept { return 0; }
 		constexpr size_type backIndex() const noexcept { return size() ? size() - 1 : 0; }
@@ -97,32 +100,34 @@ namespace natl {
 		constexpr reference back() noexcept requires(IsNotConst<CharType>) { return at(backIndex()); }
 		constexpr const_reference back() const noexcept { return at(backIndex()); }
 
-		constexpr CharType* data() noexcept requires(IsNotConst<CharType>) { return dataPtr; }
-		constexpr const CharType* data() const noexcept { return dataPtr; }
+		constexpr CharType* data() noexcept requires(IsNotConst<CharType>) { return _dataPtr; }
+		constexpr const CharType* data() const noexcept { return _dataPtr; }
 
-		constexpr CharType* c_str() noexcept requires(IsNotConst<CharType>) { return dataPtr; }
-		constexpr const CharType* c_str() const noexcept { return dataPtr; }
+		constexpr CharType* c_str() noexcept requires(IsNotConst<CharType>) { return _dataPtr; }
+		constexpr const CharType* c_str() const noexcept { return _dataPtr; }
 
 		//capacity 
-		constexpr size_type size() const noexcept { return stringLength; }
-		constexpr size_type length() const noexcept { return stringLength; }
+		constexpr size_type size() const noexcept { return _stringLength; }
+		constexpr size_type length() const noexcept { return _stringLength; }
 		constexpr size_type max_size() const noexcept { return ~size_type(1); };
-		constexpr Bool empty() const noexcept { return !dataPtr || stringLength == 0; }
+		constexpr Bool empty() const noexcept { return !_dataPtr || _stringLength == 0; }
 		constexpr Bool isEmpty() const noexcept { return empty(); }
 		constexpr Bool isNotEmpty() const noexcept { return !empty(); }
 
 		//modifiers 
 		constexpr void swap(BaseStringView& other) noexcept {
-			swap<BaseStringView>(self(), other);
+			natl::swap<BaseStringView>(self(), other);
 		}
-		constexpr void remove_prefix(const size_type n) noexcept {
+		constexpr BaseStringView removePrefix(const size_type n) noexcept {
 			const size_type removeCount = min<size_type>(n, size());
-			dataPtr += removeCount;
-			stringLength -= removeCount;
+			_dataPtr += removeCount;
+			_stringLength -= removeCount;
+			return self();
 		}
-		constexpr void remove_suffix(const size_type n) noexcept {
+		constexpr BaseStringView removeSuffix(const size_type n) noexcept {
 			const size_type removeCount = min<size_type>(n, size());
-			stringLength -= removeCount;
+			_stringLength -= removeCount;
+			return self();
 		}
 
 		//operations
@@ -362,7 +367,7 @@ namespace natl {
 		}
 
 		constexpr BaseStringView& reverse() noexcept requires(IsNotConst<CharType>) {
-			reverse<iterator>(begin(), end());
+			natl::reverse<iterator>(begin(), end());
 			return self();
 		}
 

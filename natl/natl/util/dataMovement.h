@@ -369,12 +369,6 @@ namespace natl {
         return isConstantEvaluated() || !IsTriviallyDestructible<DataType>;
     }
 
-
-    template<typename DataType>
-    constexpr static Size TypeBitSize = sizeof(DataType) * Size(8);
-    template<typename DataType>
-    constexpr static Size TypeByteSize = sizeof(DataType);
-
     enum class AllocationMoveAdapaterRequireCopy : Bool {
         False = false,
         True = true

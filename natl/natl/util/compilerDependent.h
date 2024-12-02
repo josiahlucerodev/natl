@@ -65,12 +65,12 @@ static_cast(false, "natl: force inline for compiler not implemented");
 #endif // ! NATL_64BIT || NATL_32BIT
 
 //platform
-#ifdef __unix__
+#if defined(NATL_COMPILER_EMSCRIPTEN)
+#define NATL_WEB_PLATFORM
+#elif defined(__unix__)
 #define NATL_UNIX_PLATFORM
 #elif defined(_WIN32) || defined(WIN32)
 #define NATL_WINDOWS_PLATFORM
-#elif defined(NATL_COMPILER_EMSCRIPTEN)
-define NATL_WEB_PLATFORM
 #else 
 static_assert(false, "natl: platform type not supported");
 #endif
@@ -104,9 +104,6 @@ static_assert(false, "natl: unknown architecture");
 static_cast(false, "natl: architecture for compiler not implemented");
 #endif
 
-
-
-
 //c
 #include  <stdlib.h>
 
@@ -123,7 +120,7 @@ namespace natl {
     };
 
     consteval ProgramPlatformType getPlatformType() noexcept {
-#ifdef NATL_UNIX_PLATFORM
+#if defined(NATL_UNIX_PLATFORM)
         return ProgramPlatformType::unixPlatform;
 #elif defined(NATL_WINDOWS_PLATFORM)
         return ProgramPlatformType::windowsPlatform;
@@ -134,7 +131,7 @@ namespace natl {
 #endif
     }
 
-    consteval Bool natlInDebug() noexcept {
+    consteval bool natlInDebug() noexcept {
 #ifdef NATL_IN_DEBUG
         return true;
 #else
@@ -207,7 +204,7 @@ namespace natl {
 #endif 
 	}
 
-    constexpr const Ascii* platformTypeToString(const ProgramPlatformType platformType) noexcept {
+    constexpr const char* platformTypeToString(const ProgramPlatformType platformType) noexcept {
         switch (platformType) {
         case ProgramPlatformType::unixPlatform:
             return "unix";
@@ -222,7 +219,7 @@ namespace natl {
         }
     }
 
-    consteval const Ascii* getPlatformName() noexcept {
+    consteval const char* getPlatformName() noexcept {
         return platformTypeToString(getPlatformType());
     }
 }

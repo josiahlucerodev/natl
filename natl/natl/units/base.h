@@ -861,7 +861,7 @@ namespace natl {
 
     
     template<typename CharType, typename DataType, typename... UnitTypes>
-        requires(Formattable<DataType, CharType>)
+        requires(IsFormattableC<Decay<DataType>, CharType>)
     struct Formatter<BaseUnitValue<DataType, UnitTypes...>, CharType> {
         using value_type = BaseUnitValue<DataType, UnitTypes...>;
 

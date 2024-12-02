@@ -74,7 +74,7 @@ namespace natl {
 	};
 
 	template <typename Iter>
-	inline constexpr Bool IsIteratorV = BoolConstant<IsIterator<Iter>>;
+	constexpr inline Bool IsIteratorV = IsIterator<Iter>;
 
 	template <typename Iter>
 	concept IsIterPtr = IsPointer<Iter> || IsIterator<Iter>;

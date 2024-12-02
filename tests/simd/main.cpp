@@ -717,7 +717,6 @@ constexpr natl::Bool genericSimdArchTest() noexcept {
 }
 
 natl::Bool tests() noexcept {
-	natl::TestTimer timer(natlTestFrom);
 	natl::Test test(natlTestFrom, "all", natl::TestType::root);
 	natl::subTestAssert(test, genericSimdArchTest<nasimd::StandardArch<256>>());
 	return test;

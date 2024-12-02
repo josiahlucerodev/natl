@@ -831,7 +831,6 @@ natl::Bool hyperbolicTests() noexcept {
 }
 
 natl::Bool tests() noexcept {
-	natl::TestTimer timer(natlTestFrom);
 	natl::Test test(natlTestFrom, "all", natl::TestType::root);
 	natl::subTestAssert(test, saturatedArithmeticTests());
 	natl::subTestAssert(test, floatOperationTests());

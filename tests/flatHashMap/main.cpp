@@ -79,7 +79,6 @@ static_assert(testErase());
 static_assert(testFind());
 
 natl::Bool tests() noexcept {
-	natl::TestTimer timer(natlTestFrom);
 	natl::Test test(natlTestFrom, "all", natl::TestType::root);
 	natl::testAssert(test, testIteration(), "iteration");
 	natl::testAssert(test, testConstIteration(), "const iteration");

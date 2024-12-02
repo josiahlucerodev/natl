@@ -13,10 +13,21 @@ namespace natl {
 		constexpr static Size stringSize = StringSize;
 		constexpr TemplateStringLiteral() noexcept = default;
 		constexpr ~TemplateStringLiteral() noexcept = default;
-		constexpr TemplateStringLiteral(const Ascii(&str)[StringSize]) noexcept { uninitializedCopyCountNoOverlap<const Ascii*>(str, stringStorage, StringSize); }
+		constexpr TemplateStringLiteral(const Ascii(&str)[StringSize]) noexcept { 
+			uninitializedCopyCountNoOverlap<const Ascii*>(str, stringStorage, StringSize); 
+		}
 		template<typename StringPtrType>
 			requires(IsSame<StringPtrType, const Ascii*>)
-		constexpr TemplateStringLiteral(StringPtrType str) noexcept { uninitializedCopyCountNoOverlap<const Ascii*>(str, stringStorage, StringSize); }
+		constexpr TemplateStringLiteral(StringPtrType str) noexcept { 
+			uninitializedCopyCountNoOverlap<const Ascii*>(str, stringStorage, StringSize);
+			//TODO
+			//addEndNullTerminator();
+		}
+		constexpr TemplateStringLiteral(const ConstAsciiStringView& str) noexcept { 
+			uninitializedCopyCountNoOverlap<const Ascii*>(str.data(), stringStorage, str.size());
+			addEndNullTerminator();
+		}
+
 		constexpr const Ascii* c_str() const noexcept { return stringStorage; }
 		constexpr const Ascii* data() const noexcept { return stringStorage; }
 		constexpr Ascii* data() noexcept { return stringStorage; }
@@ -32,6 +43,11 @@ namespace natl {
 		}
 		constexpr ConstAsciiStringView toStringView() const noexcept {
 			return ConstAsciiStringView(data(), size());
+		}
+
+	private:
+		constexpr void addEndNullTerminator() {
+			stringStorage[StringSize - 1] = '\n';
 		}
 	};
 
@@ -51,13 +67,6 @@ namespace natl {
 		concat_string_literal_type stringLiteral{};
 		(impl::concatTemplateStringLiteralArg<concat_string_literal_type, TemplatStringLiterals>(stringLiteral, index), ...);
 		return stringLiteral;
-	}
-
-
-	template <Size Number>
-		requires (Number > 0)
-	constexpr TemplateStringLiteral<Number> makeTemplateStringLiteral(const Ascii(&str)[Number]) noexcept {
-		return TemplateStringLiteral<Number>(str);
 	}
 
 	template <TemplateStringLiteral StringL>
@@ -98,3 +107,25 @@ namespace natl {
 	template<auto> struct AsStringLiteralT {};
 	template<auto Value> using AsStringLiteral = AsStringLiteralT<Value>::type;
 }
+
+#if defined(NATL_COMPILER_EMSCRIPTEN)
+
+#define NATL_MAKE_TEMPLATE_STRING_LITERAL_FROM_STRING_VIEW(stringView) natl::TemplateStringLiteral<stringView.size() + 1>(stringView.c_str())
+
+#elif defined(NATL_COMPILER_GCC)
+
+#define NATL_MAKE_TEMPLATE_STRING_LITERAL_FROM_STRING_VIEW(stringView) natl::TemplateStringLiteral<stringView.size() + 1>(stringView.c_str())
+
+#elif defined(NATL_COMPILER_MSVC)
+
+namespace natl {
+	template<ConstAsciiStringView Name>
+	consteval inline TemplateStringLiteral<Name.size() + 1> makeTemplateStringLiteral() noexcept {
+		return TemplateStringLiteral<Name.size() + 1>(Name);
+	};
+}
+#define NATL_MAKE_TEMPLATE_STRING_LITERAL_FROM_STRING_VIEW(stringView) natl::makeTemplateStringLiteral<stringView>()
+
+#else
+static_assert("natl: macro NATL_MAKE_TEMPLATE_STRING_LITERAL_FROM_STRING_VIEW not implemented");
+#endif 

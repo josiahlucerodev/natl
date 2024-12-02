@@ -1,11 +1,8 @@
 #pragma once 
 
-//own
-#include "basicTypes.h"
-
 //interface
 namespace natl {
-	[[nodiscard]] constexpr natl::Bool isConstantEvaluated() noexcept {
+	[[nodiscard]] constexpr bool isConstantEvaluated() noexcept {
 		return std::is_constant_evaluated();
 	}
 	template<typename ToType, typename FormType>

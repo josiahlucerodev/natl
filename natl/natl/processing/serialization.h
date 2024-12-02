@@ -594,7 +594,7 @@ namespace natl {
 
 	template<typename Serializer, typename Type, typename... SerializeArgs>
 		requires(IsSerializerC<Serializer>
-	&& IsSerializableC<Decay<Type>>
+		&& IsSerializableC<Decay<Type>>
 		&& CanSerializeC<Serializer, typename Serialize<Decay<Type>>::as_type>)
 		constexpr SerializeErrorResult<Serializer, Type> serializeWriteNamed(
 			Serializer& serializer,
@@ -603,7 +603,7 @@ namespace natl {
 			SerializeArgs&&... serializeArgs) noexcept {
 		using decayed_serialize_type = Serialize<Decay<Type>>;
 		using as_type = decayed_serialize_type::as_type;
-		serializer.beginWrite<as_type>(name);
+		serializer.template beginWrite<as_type>(name);
 		serializer.writeValue();
 
 		if constexpr (IsSameC<SerializeErrorResult<Serializer, Type>, void>) {
@@ -632,7 +632,7 @@ namespace natl {
 			SerializeArgs&&... serializeArgs) noexcept {
 		using decayed_serialize_type = Serialize<Decay<Type>>;
 		using as_type = decayed_serialize_type::as_type;
-		serializer.beginWrite<as_type>(name);
+		serializer.template beginWrite<as_type>(name);
 		serializer.writeValue();
 
 		if constexpr (IsSameC<SerializeErrorResult<Serializer, Type>, void>) {
@@ -1003,7 +1003,7 @@ namespace natl {
 		constexpr DummyDeserializeErrorHandler& addSource(
 			const ConstAsciiStringView&, const ConstAsciiStringView&) noexcept { return *this; }
 		template<typename DynStringType>
-		constexpr void getErrorMessage(DynStringType& dst) {}
+		constexpr void getErrorMessage(DynStringType&) {}
 	};
 
 	struct DummyDeserializer {
@@ -1032,7 +1032,7 @@ namespace natl {
 	using StandardDeserializeError = Deserializer::deserialize_error_handler;
 
 	template<typename Deserializer, typename Type> constexpr inline Bool IsStandardDeserializeError = IsSameC<
-		Decay<Deserializer>::deserialize_error_handler, Type>;
+		typename Decay<Deserializer>::deserialize_error_handler, Type>;
 	template<typename Deserializer, typename Type> struct IsStandardDeserializeErrorV 
 		: BoolConstant<IsStandardDeserializeError<Deserializer, Type>> {};
 	template<typename Deserializer, typename Type> concept IsStandardDeserializeErrorC = IsStandardDeserializeError<Deserializer, Type>;
@@ -1143,7 +1143,7 @@ namespace natl {
 			return unexpected(valueExpect.error().addSource(sourceName, name));
 		}
 
-		auto endReadNameError = deserializer.endReadNamed<as_type>(readNamedInfo);
+		auto endReadNameError = deserializer.template endReadNamed<as_type>(readNamedInfo);
 		if (endReadNameError.hasValue()) {
 			return unexpected(endReadNameError.value().addSource(sourceName, name));
 		}
@@ -1187,7 +1187,7 @@ namespace natl {
 			return error.value().addSource(sourceName, name);
 		}
 
-		auto endReadNameError = deserializer.endReadNamed<as_type>(readNamedInfo);
+		auto endReadNameError = deserializer.template endReadNamed<as_type>(readNamedInfo);
 		if (endReadNameError.hasValue()) {
 			return endReadNameError.value().addSource(sourceName, name);
 		}
@@ -1478,8 +1478,8 @@ namespace natl {
 
 		template<typename ErrorType, typename Deserializer, typename DerializeInfoType>
 		constexpr void chainDeserializeReadHelper(
-			Option<ErrorType>& error, const natl::ConstAsciiStringView& source, Deserializer& deserializer,
-			DerializeInfoType& info) {}
+			Option<ErrorType>&, const natl::ConstAsciiStringView&, Deserializer&,
+			DerializeInfoType&) {}
 
 		template<typename ErrorType, typename Deserializer, typename DerializeInfoType,
 			typename ReadFunctor, typename... OtherReadFunctors>
@@ -1504,7 +1504,7 @@ namespace natl {
 
 		template<typename ErrorType>
 		constexpr void chainDeserializeReadNoArgsHelper(
-			Option<ErrorType>& error, const natl::ConstAsciiStringView& source) {};
+			Option<ErrorType>&, const natl::ConstAsciiStringView&) {};
 
 		template<typename ErrorType, typename ReadFunctor, typename... OtherReadFunctors>
 		constexpr void chainDeserializeReadNoArgsHelper(

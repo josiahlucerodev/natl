@@ -1066,7 +1066,7 @@ namespace natl {
 
 		//operations 
 		constexpr DynArray& reverse() noexcept {
-			reverse<iterator>(begin(), end());
+			natl::reverse<iterator>(begin(), end());
 			return self();
 		}
 

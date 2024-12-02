@@ -127,7 +127,7 @@ namespace natl {
 			fillCount<pointer, DataType>(data(), value, size());
 		}
 		constexpr void swap(Array& other) noexcept {
-			swap<Array>(self(), other);
+			natl::swap<Array>(self(), other);
 		}
 	};
 

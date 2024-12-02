@@ -115,10 +115,10 @@ namespace natl {
 			switch (alignPtrExpect.error()) {
 			case AlignPtrError::invalidAlignment:
 				fatalError("natl: alignPtr error - invalid alignment");
-				unreachable();
+				break;
 			case AlignPtrError::outOfSpace:
 				fatalError("natl: alignPtr error - out of space");
-				unreachable();
+				break;
 			default:
 				unreachable();
 			}

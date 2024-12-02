@@ -874,5 +874,9 @@ namespace natl {
 		{ byteViewLike[declval<Size>()] } -> IsByteLikeC;
 	};
 
+	template<typename DataType> constexpr inline Size TypeBitSize = sizeof(DataType) * Size(8);
+	template<typename DataType> consteval Size getTypeBitSize() noexcept { return sizeof(DataType) * Size(8); }
 
+	template<typename DataType> constexpr inline Size TypeByteSize = sizeof(DataType);
+	template<typename DataType> consteval Size getTypeByteSize() noexcept { return sizeof(DataType); }
 }

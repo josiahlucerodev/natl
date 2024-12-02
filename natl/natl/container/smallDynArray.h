@@ -1215,7 +1215,7 @@ namespace natl {
 
 		//operations 
 		constexpr SmallDynArray& reverse() noexcept {
-			reverse<iterator>(begin(), end());
+			natl::reverse<iterator>(begin(), end());
 			return self();
 		}
 
@@ -1295,7 +1295,7 @@ namespace natl {
 				}
 				auto arrayElement = arrayElementExpect.value();
 
-				auto expectValue = deserializeRead(deserializer, arrayElement);
+				auto expectValue = deserializeRead(deserializer, arrayElement, forward<DeserializerArgs>(deserializerArgs)...);
 				if (expectValue.hasError()) {
 					dst.resize(index);
 					return expectValue.error().addSource(sourceName);

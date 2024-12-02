@@ -272,7 +272,6 @@ natl::Bool stringTypeTest(natl::ConstAsciiStringView name) noexcept {
 }
 
 natl::Bool tests() noexcept {
-	natl::TestTimer timer(natlTestFrom);
 	natl::Test test(natlTestFrom, "all", natl::TestType::root);
 	natl::subTestAssert(test, stringTypeTest<StringTest<natl::AsciiString32>>("natl::AsciiString32"));
 	natl::subTestAssert(test, stringTypeTest<StringTest<natl::AsciiString64>>("natl::AsciiString64"));

@@ -25,14 +25,14 @@ namespace natl {
 	}
 
 	template<typename... ArgTypes>
-		requires(Formattable<ArgTypes, Ascii> && ...)
+		requires(IsFormattableC<Decay<ArgTypes>, Ascii> && ...)
 	inline Bool printf(ArgTypes&&... args) noexcept {
 		using string_type = AsciiStringByteSize<impl::defaultPrintfBufferSize>;
 		string_type output = format<string_type>(natl::forward<ArgTypes>(args)...);
 		return print(output);
 	}
 	template<typename... ArgTypes>
-		requires(Formattable<ArgTypes, Ascii> && ...)
+		requires(IsFormattableC<Decay<ArgTypes>, Ascii> && ...)
 	inline Bool printlnf(ArgTypes&&... args) noexcept {
 		using string_type = AsciiStringByteSize<impl::defaultPrintfBufferSize>;
 		string_type output = format<string_type>(natl::forward<ArgTypes>(args)...);
@@ -40,12 +40,12 @@ namespace natl {
 	}
 
 	template<typename... ArgTypes>
-		requires(Formattable<ArgTypes, Ascii> && ...)
+		requires(IsFormattableC<Decay<ArgTypes>, Ascii> && ...)
 	inline Bool printfc(ArgTypes&&... args) noexcept {
 		return printf(natl::forward<ArgTypes>(args)..., natl::PrintAllDefaultColor{});
 	}
 	template<typename... ArgTypes>
-		requires(Formattable<ArgTypes, Ascii> && ...)
+		requires(IsFormattableC<Decay<ArgTypes>, Ascii> && ...)
 	inline Bool printlnfc(ArgTypes&&... args) noexcept {
 		return printlnf(natl::forward<ArgTypes>(args)..., natl::PrintAllDefaultColor{});
 	}

@@ -79,7 +79,7 @@ namespace natl {
 		template<typename Functor>
 			requires(
 				HasFunctionSignature<Functor, ReturnType, ArgTypes...> && 
-				IsCopyConstructible<Functor> && IsCopyAssignable<Functor> && 
+				IsCopyConstructibleC<Functor> && IsCopyAssignableC<Functor> && 
 				requires(const Functor& functor) { { function_type(functor) }; })
 		constexpr FunctionCache& bindFunction(const Functor& functor) noexcept {
 			functionStorage = functor;
@@ -88,7 +88,7 @@ namespace natl {
 		template<typename Functor>
 			requires(
 				HasFunctionSignature<Functor, ReturnType, ArgTypes...> && 
-				IsCopyConstructible<Functor> && IsCopyAssignable<Functor> &&
+				IsCopyConstructibleC<Functor> && IsCopyAssignableC<Functor> &&
 				requires(const Functor& functor) { { function_type(functor) }; })
 		constexpr FunctionCache& bindFunction(Functor&& functor) noexcept {
 			functionStorage = natl::move(functor);

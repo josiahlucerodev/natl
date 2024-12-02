@@ -69,12 +69,12 @@ namespace natl {
 		}
 
 		template<typename OtherDataType>
-			requires(IsNotSame<Decay<OtherDataType>, OptionEmpty> && IsConstructibleC<DataType, OtherDataType>)
+			requires(IsNotSameC<Decay<OtherDataType>, OptionEmpty> && IsConstructibleC<DataType, OtherDataType>)
 		constexpr Option(const OtherDataType& valueIn) noexcept : isValid(false) {
 			construct(valueIn);
 		}
 		template<typename OtherDataType>
-			requires(IsNotSame<Decay<OtherDataType>, OptionEmpty> && IsConstructibleC<DataType, OtherDataType>)
+			requires(IsNotSameC<Decay<OtherDataType>, OptionEmpty> && IsConstructibleC<DataType, OtherDataType>)
 		constexpr Option(OtherDataType&& valueIn) noexcept : isValid(false) {
 			construct(natl::forward<OtherDataType>(valueIn));
 		}

@@ -11,8 +11,9 @@ namespace natl {
 	consteval auto getNameOfType() noexcept {
 #ifdef NATL_COMPILER_EMSCRIPTEN
 		ConstAsciiStringView name = __PRETTY_FUNCTION__;
-		const ConstAsciiStringView prefix = "consteval auto natl::getNameOfType() [with Type = ";
-		const ConstAsciiStringView suffix = "]";
+		//prefix: "auto natl::getNameOfType() [Type = "
+		//suffix: "]"
+		return ConstAsciiStringView(__PRETTY_FUNCTION__ + 35).removeSuffix(1); 
 #endif // NATL_COMPILER_EMSCRIPTEN
 
 #ifdef NATL_COMPILER_CLANG
@@ -22,20 +23,16 @@ namespace natl {
 #endif // NATL_COMPILER_CLANG
 
 #ifdef NATL_COMPILER_GCC 
-		ConstAsciiStringView name = __PRETTY_FUNCTION__;
-		const ConstAsciiStringView prefix = "consteval auto natl::getNameOfType() [with Type = ";
-		const ConstAsciiStringView suffix = "]";
+		//prefix: "consteval auto natl::getNameOfType() [with Type = ";
+		//suffix: "]";
+		return ConstAsciiStringView(__PRETTY_FUNCTION__ + 50).removeSuffix(1);
 #endif // NATL_COMPILER_GCC
 
 #ifdef NATL_COMPILER_MSVC
-		ConstAsciiStringView name = __FUNCSIG__;
-		const ConstAsciiStringView prefix = "auto __cdecl natl::getNameOfType<";
-		const ConstAsciiStringView suffix = ">(void) noexcept";
+		//prefix: "auto __cdecl natl::getNameOfType<"
+		//suffix:  ">(void) noexcept"
+		return ConstAsciiStringView(__FUNCSIG__ + 33).removeSuffix(16);
 #endif // NATL_COMPILER_MSVC
-
-		name.remove_prefix(prefix.size());
-		name.remove_suffix(suffix.size());
-		return name;
 	}
 
 	constexpr natl::Size getHashCodeFromNameOfType(const ConstAsciiStringView nameOfType) noexcept {

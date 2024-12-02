@@ -27,7 +27,6 @@ constexpr natl::Bool testHeap(const natl::ConstAsciiStringView& name) noexcept {
 }
 
 natl::Bool tests() noexcept {
-	natl::TestTimer timer(natlTestFrom);
 	natl::Test test(natlTestFrom, "all", natl::TestType::root);
 	testHeap<natl::PriorityQueue<int>>("priority queue");
 	testHeap<natl::MinHeap<int>>("min heap");

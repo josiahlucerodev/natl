@@ -631,7 +631,7 @@ namespace natl {
 				}
 
 				return {};
-			}(MakeIndexSequence<sizeof...(Elements)>);
+			}(MakeIndexSequence<sizeof...(Elements)>{});
 		}
 
 		constexpr Option<Size> stringToIndex(const ConstAsciiStringView& str) noexcept {
@@ -687,8 +687,6 @@ namespace natl {
 		: BoolConstant<(IsTriviallyMoveAssignableC<typename Elements::value_type> && ...)
 		&& IsTriviallyDestructibleC<Variant<Elements...>>> {};
 
-
-
 	template<typename... Elements>
 		requires(IsSerializableC<Decay<typename Elements::value_type>> && ...) 
 	struct Serialize<Variant<Elements...>> {
@@ -704,7 +702,7 @@ namespace natl {
 			return [](Serializer& serializer, const type& value) -> void {
 				serializer.template beginWriteVariant<as_type, Index>(Element::name);
 				Serialize<Decay<typename Element::value_type>>::template write<Serializer>(serializer, 
-					value.get<Index>()
+					value.template get<Index>()
 				);
 				serializer.endWriteVariant();
 			};
@@ -745,7 +743,7 @@ namespace natl {
 					type& dst) -> Option<error_type<Deserializer>> {
 				using element_type = SerializeTypeOf<typename Element::value_type>;
 
-				auto varaintElementExpect = deserializer.beginReadVaraintOfType<element_type>(varaintInfo);
+				auto varaintElementExpect = deserializer.template beginReadVaraintOfType<element_type>(varaintInfo);
 				if (varaintElementExpect.hasError()) {
 					return varaintElementExpect.error();
 				}

@@ -15,7 +15,7 @@
 //interface
 namespace natl {
 	template<typename Type, typename CharType = Ascii>
-	struct  Formatter;
+	struct Formatter { using not_formattable = void; };
 
 	template<typename Type, typename CharType = Ascii>
 	using MakeFormatter = Formatter<RemoveConctVolatile<RemoveReference<Type>>, Ascii>;
@@ -147,9 +147,11 @@ namespace natl {
 	}
 
 	template<typename Type>
-	struct IsFormatArgFlagsT : FalseType {};
+	struct IsFormatArgFlagsV : FalseType {};
 	template<typename ArgType, typename... FlagTypes>
-	struct IsFormatArgFlagsT<FormatArgFlags<ArgType, FlagTypes...>> : TrueType {};
+	struct IsFormatArgFlagsV<FormatArgFlags<ArgType, FlagTypes...>> : TrueType {};
+	template<typename Type> concept IsFormatArgFlagC = IsFormatArgFlagsV<Type>::value;
+	template<typename Type> constexpr inline Bool IsFormatArgFlag = IsFormatArgFlagsV<Type>::value;
 
 	template<typename ArgType, typename CharType, typename... FlagTypes>
 	struct InstantiateFormatterWithTemplateFlagsTypePackT;
@@ -179,7 +181,7 @@ namespace natl {
 
 		template<typename OutputIter, typename ArgType, typename CharType>
 		constexpr void formatToArgLevel(OutputIter& outputIter, ArgType&& arg) noexcept {
-			if constexpr (IsFormatArgFlagsT<ArgType>::value) {
+			if constexpr (IsFormatArgFlagsV<ArgType>::value) {
 				using FormatArgType = ArgType;
 				using arg_flags_storage_tuple = FormatArgType::arg_flags_storage_tuple;
 				using arg_type = FormatArgType::arg_type;
@@ -203,13 +205,26 @@ namespace natl {
 	}
 
 	template<typename ArgType, typename CharType>
-	concept Formattable = requires(ArgType&& arg, 
+	concept IsFormattableC = requires(ArgType&& arg, 
 		FormatOutputIter<BackInsertIterator<BaseStringByteSize<CharType, 32>>> outputIter) {
 		{ impl::formatToArgLevel<decltype(outputIter), ArgType, CharType>(outputIter, natl::forward<ArgType>(arg)) };
-	};
+	} && (!requires() { typename Formatter<Decay<ArgType>, CharType>::not_formattable; } || IsFormatArgFlagC<Decay<ArgType>>);
+
+	template<typename ArgType, typename CharType>
+	constexpr inline Bool IsFormattable = IsFormattableC<ArgType, CharType>;
+	template<typename ArgType, typename CharType>
+	struct IsFormattableV : BoolConstant<IsFormattableC<ArgType, CharType>> {};
+
+	template<typename ArgType> concept IsFormattableAsciiC = IsFormattableC<ArgType, Ascii>;
+	template<typename ArgType> constexpr inline Bool IsFormattableAscii = IsFormattableAsciiC<ArgType>;
+	template<typename ArgType> struct IsFormattableAsciiV : BoolConstant<IsFormattableAsciiC<ArgType>> {};
+
+	template<typename ArgType> concept IsFormattableUtf32C = IsFormattableC<ArgType, Utf32>;
+	template<typename ArgType> constexpr inline Bool IsFormattableUtf32 = IsFormattableUtf32C<ArgType>;
+	template<typename ArgType> struct IsFormattableUtf32V : BoolConstant<IsFormattableUtf32C<ArgType>> {};
 
 	template<typename OutputIter, typename... ArgTypes>
-		requires(Formattable<ArgTypes, Ascii> && ...)
+		requires(IsFormattableC<Decay<ArgTypes>, Ascii> && ...)
 	constexpr OutputIter formatTo(OutputIter outputIter, ArgTypes&&... args) noexcept {
 		using format_output_iter = FormatOutputIter<OutputIter>;
 		format_output_iter formatOutputIter = format_output_iter(outputIter);
@@ -217,14 +232,21 @@ namespace natl {
 		return formatOutputIter.getOutputIter();
 	}
 
+	template<typename OutputIter, typename ArgType>
+		requires(IsFormattableC<Decay<ArgType>, Ascii>)
+	constexpr OutputIter rawFormat(OutputIter outputIter, ArgType&& arg) noexcept {
+		impl::formatToArgLevel<OutputIter, ArgType, Ascii>(outputIter, natl::forward<ArgType>(arg));
+		return outputIter;
+	}
+
 	template<typename Container, typename... ArgTypes>
-		requires(Formattable<ArgTypes, Ascii> && ...)
+		requires(IsFormattableC<Decay<ArgTypes>, Ascii> && ...)
 	constexpr BackInsertIterator<Container> formatToBack(Container& container, ArgTypes&&... args) noexcept {
 		return formatTo<BackInsertIterator<Container>>(backInserter(container), natl::forward<ArgTypes>(args)...);
 	}
 
 	template<typename DynStringType, typename... ArgTypes>
-		requires(Formattable<ArgTypes, Ascii> && ...)
+		requires(IsFormattableC<Decay<ArgTypes>, Ascii> && ...)
 	constexpr DynStringType format(ArgTypes&&... args) noexcept {
 		DynStringType outputString;
 		natl::BackInsertIterator<DynStringType> outputIter = natl::backInserter(outputString);
@@ -233,10 +255,19 @@ namespace natl {
 	}
 
 	template<typename... ArgTypes>
-		requires(Formattable<ArgTypes, Ascii> && ...)
+		requires(IsFormattableC<Decay<ArgTypes>, Ascii> && ...)
 	constexpr String sformat(ArgTypes&&... args) noexcept {
 		return natl::format<String>(natl::forward<ArgTypes>(args)...);
 	}
+
+	template<typename Type, typename CharType>
+	concept IsFormattableTypeInfoC = IsFormattable<Type, CharType> && requires() { 
+		typename MakeFormatter<Type, CharType>::formattable_type_info; 
+	};
+	template<typename Type, typename CharType>
+	constexpr inline Bool IsFormattableTypeInfo = IsFormattableTypeInfoC<Type, CharType>;
+	template<typename Type, typename CharType>
+	struct IsFormattableTypeInfoV : BoolConstant<IsFormattableTypeInfoC<Type, CharType>> {};
 
 	struct FormatColumn {
 		Size columnNumber;
@@ -815,7 +846,7 @@ namespace natl {
 	}
 
 	template<typename... DataTypes, typename CharType>
-		requires(Formattable<DataTypes, CharType> && ...)
+		requires(IsFormattableC<Decay<DataTypes>, CharType> && ...)
 	struct Formatter<Tuple<DataTypes...>, CharType> {
 		using value_type = Tuple<DataTypes...>;
 		constexpr static Size tupleArgSize = sizeof...(DataTypes);
@@ -1154,35 +1185,68 @@ namespace natl {
 		}
 	};
 
+	struct FormatTypePackAsValues {};
+
 	template<typename... Types, typename CharType>
 	struct Formatter<TypePack<Types...>, CharType> {
 		using value_type = TypePack<Types...>;
 
-		template<typename OutputIter, typename Type, Size Index>
+		template<typename OutputIter, Bool AsValues, typename Type, Size Index>
 		constexpr static void formatType(OutputIter& outputIter) noexcept {
 			if constexpr (Index > 0) {
 				outputIter = ',';
 				outputIter = ' ';
 			}
-			outputIter = Formatter<TypeInfo, CharType>::template format<OutputIter>(outputIter, getTypeInfo<Type>());
+			if constexpr (AsValues && IsFormattableTypeInfoC<Type, CharType>) {
+				outputIter = rawFormat<OutputIter>(outputIter, Type{});
+			} else {
+				outputIter = rawFormat<OutputIter>(outputIter, getTypeInfo<Type>());
+			}
 		}
 
-		template<typename OutputIter, Size... Indices>
+		template<typename OutputIter, Bool AsValues, Size... Indices>
 		constexpr static void formatTypes(OutputIter& outputIter, IndexSequence<Indices...>) noexcept {
 			outputIter = '{';
-			(formatType<OutputIter, Types, Indices>(outputIter), ...);
+			(formatType<OutputIter, AsValues, Types, Indices>(outputIter), ...);
 			outputIter = '}';
 		}
 
+		template<typename... TemplateFlags>
+		struct WithTemplateFlags {
+		public:
+
+			template<typename TemplateFlag>
+			constexpr static void handelTemplateFlag() noexcept {
+				if constexpr (IsStringLiteral<TemplateFlag>) {
+					constexpr ConstAsciiStringView tflagName = TemplateFlag::toStringView();
+					if constexpr (!(tflagName == "asvalues" || tflagName == "as values" || tflagName == "as_values")) {
+						unreachable();
+					}
+				} else {
+					if constexpr (!IsSame<TemplateFlag, FormatTypePackAsValues>) {
+						unreachable();
+					}
+				}
+			}
+
+		public:
+			template<typename OutputIter>
+			constexpr static OutputIter format(OutputIter outputIter, value_type = value_type{}) noexcept {
+				(handelTemplateFlag<TemplateFlags>(), ...);
+				formatTypes<OutputIter, true>(outputIter, MakeIndexSequence<value_type::size>{});
+				return outputIter;
+			}
+		};
+
 		template<typename OutputIter>
 		constexpr static OutputIter format(OutputIter outputIter, value_type = value_type{}) noexcept {
-			formatTypes(outputIter, MakeIndexSequence<value_type::size>{});
+			formatTypes<OutputIter, false>(outputIter, MakeIndexSequence<value_type::size>{});
 			return outputIter;
 		}
 	};
 
 	template<typename ElementType, typename CharType>
-		requires(Formattable<ElementType, CharType>)
+		requires(IsFormattableC<Decay<ElementType>, CharType>)
 	struct Formatter<ArrayView<ElementType>, CharType> {
 		using value_type = ArrayView<ElementType>;
 

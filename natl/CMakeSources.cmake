@@ -80,6 +80,7 @@ natl/util/compare.h
 natl/util/compilerDependent.h
 natl/util/coroutines.h
 natl/util/dataMovement.h
+natl/util/enum.h
 natl/util/error.h
 natl/util/hash.h
 natl/util/iteration.h

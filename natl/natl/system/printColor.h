@@ -272,45 +272,64 @@ namespace natl {
 		return string;
 	}
 
+	namespace impl {
+		inline PrintColorString processPrintColorString(const PrintColorString& colorString) noexcept {
+			if constexpr(getPlatformType() == ProgramPlatformType::unixPlatform || 
+				getPlatformType() == ProgramPlatformType::windowsPlatform) {
+				return colorString;
+			} else {
+				PrintColorString emptyColorString;
+				emptyColorString.stringSize = 0;
+				emptyColorString.stringData[0] = '\0';
+				return emptyColorString;
+			} 
+		}
+
+		inline Bool printColorString(const PrintColorString& colorString) noexcept {
+			PrintColorString outputColorString = processPrintColorString(colorString); 
+			return print(outputColorString.data(), outputColorString.size());
+		}
+	}
+
 	inline Bool setPrintColor(const PrintColor printColor, const PrintColorAttribute colorAttribute = PrintColorAttribute::standard) noexcept {
 		PrintColorString colorString = printColorToString(printColor, colorAttribute);
-		return print(colorString.data(), colorString.size());
+		return impl::printColorString(colorString);
 	}
 	inline Bool setPrintColor(const PrintBackgroundColor printColor) noexcept {
 		PrintColorString colorString = printColorToString(printColor);
-		return print(colorString.data(), colorString.size());
+		return impl::printColorString(colorString);
 	}
 	inline Bool setPrintColor(const PrintForegroundColor printColor) noexcept {
 		PrintColorString colorString = printColorToString(printColor);
-		return print(colorString.data(), colorString.size());
+		return impl::printColorString(colorString);
 	}
 	inline Bool setPrintColor(const PrintExtendedColor printColor, const PrintColorAttribute colorAttribute = PrintColorAttribute::standard) noexcept {
 		PrintColorString colorString = printColorToString(printColor, colorAttribute);
-		return print(colorString.data(), colorString.size());
+		return impl::printColorString(colorString);
 	}
 	inline Bool setPrintColor(const PrintExtendedForegroundColor printColor) noexcept {
 		PrintColorString colorString = printColorToString(printColor);
-		return print(colorString.data(), colorString.size());
+		return impl::printColorString(colorString);
 	}
 	inline Bool setPrintColor(const PrintExtendedBackgroundColor printColor) noexcept {
 		PrintColorString colorString = printColorToString(printColor);
-		return print(colorString.data(), colorString.size());
+		return impl::printColorString(colorString);
 	}
 	inline Bool setPrintColor(const PrintDefaultColor printColor, const PrintColorAttribute colorAttribute = PrintColorAttribute::standard) noexcept {
 		PrintColorString colorString = printColorToString(printColor, colorAttribute);
-		return print(colorString.data(), colorString.size());
+		return impl::printColorString(colorString);
 	}
 	inline Bool setPrintColor(const PrintDefaultForegroundColor printColor) noexcept {
 		PrintColorString colorString = printColorToString(printColor);
-		return print(colorString.data(), colorString.size());
+		return impl::printColorString(colorString);
 	}
 	inline Bool setPrintColor(const PrintDefaultBackgroundColor printColor) noexcept {
 		PrintColorString colorString = printColorToString(printColor);
-		return print(colorString.data(), colorString.size());
+		return impl::printColorString(colorString);
 	}
 	inline Bool setPrintColor(const PrintAllDefaultColor printColor) noexcept {
 		PrintColorString colorString = printColorToString(printColor);
-		return print(colorString.data(), colorString.size());
+		return impl::printColorString(colorString);
 	}
 
 	inline Bool printc(const Ascii* string, const Size size, const PrintColor printColor, const PrintColorAttribute colorAttribute = PrintColorAttribute::standard) noexcept {
@@ -624,7 +643,8 @@ namespace natl {
 	struct Formatter<PrintColorString, Ascii> {
 		template<typename OutputIter>
 		constexpr static OutputIter format(OutputIter outputIter, const PrintColorString colorString) noexcept {
-			const ConstAsciiStringView colorStringView(colorString.c_str(), colorString.length());
+			const PrintColorString outputColorString = impl::processPrintColorString(colorString);
+			const ConstAsciiStringView colorStringView(outputColorString.c_str(), outputColorString.length());
 			for (const Ascii character : colorStringView) {
 				outputIter = character;
 			}
