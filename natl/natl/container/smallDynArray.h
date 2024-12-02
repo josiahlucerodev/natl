@@ -10,29 +10,29 @@
 
 //interface 
 namespace natl {
-	template<typename DataType, Size bufferSize, typename Alloc = DefaultAllocator<DataType>>
+	template<typename DataType, Size bufferSize, typename Alloc = DefaultAllocatorByte>
 		requires(IsAllocator<Alloc>)
 	class SmallDynArray {
 	public:
-		using allocator_type = Alloc;
+		using allocator_type = typename Alloc::template rebind_alloc<DataType>;
 
-		using value_type = typename Alloc::value_type;
-		using reference = typename Alloc::reference;
-		using const_reference = typename Alloc::const_reference;
-		using pointer = typename Alloc::pointer;
-		using const_pointer = typename Alloc::const_pointer;
-		using difference_type = typename Alloc::difference_type;
-		using size_type = typename Alloc::size_type;
+		using value_type = typename allocator_type::value_type;
+		using reference = typename allocator_type::reference;
+		using const_reference = typename allocator_type::const_reference;
+		using pointer = typename allocator_type::pointer;
+		using const_pointer = typename allocator_type::const_pointer;
+		using difference_type = typename allocator_type::difference_type;
+		using size_type = typename allocator_type::size_type;
 
 		using optional_pointer = Option<pointer>;
 		using optional_const_pointer = Option<const_pointer>;
 
-		using iterator = RandomAccessIteratorAlloc<value_type, Alloc>;
-		using const_iterator = ConstRandomAccessIteratorAlloc<value_type, Alloc>;
-		using reverse_iterator = ReverseRandomAccessIteratorAlloc<value_type, Alloc>;
-		using const_reverse_iterator = ReverseConstRandomAccessIteratorAlloc<value_type, Alloc>;
+		using iterator = RandomAccessIteratorAlloc<value_type, allocator_type>;
+		using const_iterator = ConstRandomAccessIteratorAlloc<value_type, allocator_type>;
+		using reverse_iterator = ReverseRandomAccessIteratorAlloc<value_type, allocator_type>;
+		using const_reverse_iterator = ReverseConstRandomAccessIteratorAlloc<value_type, allocator_type>;
 
-		using allocation_move_adapater = AllocationMoveAdapater<value_type, Alloc>;
+		using allocation_move_adapater = AllocationMoveAdapater<value_type, allocator_type>;
 
 		using array_view = ArrayView<value_type>;
 		using const_array_view = ConstArrayView<value_type>;
@@ -174,7 +174,7 @@ namespace natl {
 		//destructor 
 		constexpr ~SmallDynArray() {
 			if (isNotSmallArray() && arrayDataPtr) {
-				Alloc::deallocate(arrayDataPtr, capacity());
+				allocator_type::deallocate(arrayDataPtr, capacity());
 			}
 		}
 
@@ -515,7 +515,7 @@ namespace natl {
 			if (reserveTest(newCapacity)) { return; }
 			if (newCapacity < capacity()) { return; }
 
-			pointer newDataPtr = Alloc::allocate(newCapacity);
+			pointer newDataPtr = allocator_type::allocate(newCapacity);
 
 			if (data()) {
 				const_pointer srcDataPtrFirst = data();
@@ -531,7 +531,7 @@ namespace natl {
 				}
 			}
 			if (arrayDataPtr) {
-				Alloc::deallocate(arrayDataPtr, capacity());
+				allocator_type::deallocate(arrayDataPtr, capacity());
 			}
 
 			arrayDataPtr = newDataPtr;
@@ -559,7 +559,7 @@ namespace natl {
 				const_pointer srcDataPtrLast = arrayDataPtr + newCapacity;
 				uninitializedCopyNoOverlap<const_pointer, pointer>(srcDataPtrFirst, srcDataPtrLast, dstDataPtr);
 
-				Alloc::deallocate(arrayDataPtr, capacity());
+				allocator_type::deallocate(arrayDataPtr, capacity());
 				arrayCapacity = 0;
 				arrayDataPtr = nullptr;
 
@@ -569,7 +569,7 @@ namespace natl {
 			}
 
 
-			pointer newDataPtr = Alloc::allocate(newCapacity);
+			pointer newDataPtr = allocator_type::allocate(newCapacity);
 			const_pointer srcDataPtrFirst = data();
 			const_pointer srcDataPtrLast = srcDataPtrFirst + size();
 			uninitializedCopyNoOverlap<const_pointer, pointer>(srcDataPtrFirst, srcDataPtrLast, newDataPtr);
@@ -578,7 +578,7 @@ namespace natl {
 				deconstructAll<value_type>(data(), size());
 			}
 
-			Alloc::deallocate(arrayDataPtr, capacity());
+			allocator_type::deallocate(arrayDataPtr, capacity());
 
 			arrayDataPtr = newDataPtr;
 			arrayCapacity = newCapacity;
@@ -603,7 +603,7 @@ namespace natl {
 					deconstructAll<value_type>(data(), size());
 				}
 
-				Alloc::deallocate(arrayDataPtr, capacity());
+				allocator_type::deallocate(arrayDataPtr, capacity());
 				arrayDataPtr = nullptr;
 			}
 		}
@@ -1234,10 +1234,10 @@ namespace natl {
 		}
 	};
 
-	template<class DataType, Size bufferSize, typename Alloc>
-	struct Serialize<SmallDynArray<DataType, bufferSize, Alloc>> {
+	template<class DataType, Size bufferSize, typename allocator_type>
+	struct Serialize<SmallDynArray<DataType, bufferSize, allocator_type>> {
 		using as_type = SerializeArray<SerializeTypeOf<DataType>>;
-		using type = SmallDynArray<DataType, bufferSize, Alloc>;
+		using type = SmallDynArray<DataType, bufferSize, allocator_type>;
 		template<typename Serializer> using error_type = void;
 
 		template<typename Serializer, typename... ElementSerializeArgs>
@@ -1256,12 +1256,12 @@ namespace natl {
 		}
 	};
 
-	template<typename DataType, Size bufferSize, typename Alloc>
+	template<typename DataType, Size bufferSize, typename allocator_type>
 		requires(IsSerializableC<Decay<DataType>>)
-	struct Deserialize<SmallDynArray<DataType, bufferSize, Alloc>> {
+	struct Deserialize<SmallDynArray<DataType, bufferSize, allocator_type>> {
 		using element_as_type = SerializeTypeOf<Decay<DataType>>;
 		using as_type = natl::SerializeArray<element_as_type>;
-		using type = SmallDynArray<DataType, bufferSize, Alloc>;
+		using type = SmallDynArray<DataType, bufferSize, allocator_type>;
 		constexpr static natl::ConstAsciiStringView sourceName = "natl::Deserialize<SmallDynArray<...>>::read";
 		template<typename Deserializer> using error_type = StandardDeserializeError<Deserializer>;
 
@@ -1345,4 +1345,11 @@ namespace natl {
 	template<class DataType, Size bufferSize, class Alloc>
 	struct IsTriviallyMoveAssignableV<SmallDynArray<DataType, bufferSize, Alloc>>
 		: FalseType {};
+
+
+	template<Size bufferSize, typename Alloc = DefaultAllocatorByte>
+		requires(IsAllocator<Alloc>)
+	struct SmallDynArrayUnboundTypeT {
+		template<typename DataType> using type = SmallDynArray<DataType, bufferSize, Alloc>;
+	};
 }

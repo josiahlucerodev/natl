@@ -100,15 +100,11 @@ namespace natl {
 		constexpr const Option& self() const noexcept { return *this; }
 
 		//assignment 
-		constexpr Option& operator=(const Option& other) noexcept {
+		constexpr Option& operator=(const Option& other) noexcept 
+			requires(IsAssignableC<DataType, DataType>) {
 			if (other.isValid == true) {
 				if (isValid == true) {
-					if constexpr (IsAssignableC<DataType, DataType>) {
-						data = other.data;
-					} else {
-						natl::deconstruct<DataType>(&data);
-						natl::construct(&data, other.data);
-					}
+					data = other.data;
 				} else {
 					isValid = true;
 					construct(other.data);
@@ -120,15 +116,11 @@ namespace natl {
 			}
 			return self();
 		}
-		constexpr Option& operator=(Option&& other) noexcept {
+		constexpr Option& operator=(Option&& other) noexcept 
+			requires(IsAssignableC<DataType, DataType>) {
 			if (other.isValid == true) {
 				if (isValid == true) {
-					if constexpr (IsAssignableC<DataType, DataType>) {
-						data = natl::forward<DataType>(other.data);
-					} else {
-						natl::deconstruct<DataType>(&data);
-						natl::construct(&data, natl::forward<DataType>(other.data));
-					}
+					data = natl::forward<DataType>(other.data);
 				} else {
 					construct(natl::forward<DataType>(other.data));
 				}
@@ -175,7 +167,8 @@ namespace natl {
 			return self();
 		}
 
-		constexpr Option& operator=(const DataType& valueIn) noexcept {
+		constexpr Option& operator=(const DataType& valueIn) noexcept 
+			requires(IsAssignableC<DataType, const DataType&>) {
 			if (isValid == true) {
 				if constexpr (IsAssignableC<DataType, DataType>) {
 					data = valueIn;
@@ -189,14 +182,10 @@ namespace natl {
 			}
 			return self();
 		}
-		constexpr Option& operator=(DataType&& valueIn) noexcept {
+		constexpr Option& operator=(DataType&& valueIn) noexcept 
+			requires(IsAssignableC<DataType, DataType&&>) {
 			if (isValid == true) {
-				if constexpr (IsAssignableC<DataType, DataType>) {
-					data = natl::forward<DataType>(valueIn);
-				} else {
-					natl::deconstruct<DataType>(&data);
-					natl::construct(&data, natl::forward<DataType>(valueIn));
-				}
+				data = natl::forward<DataType>(valueIn);
 			} else {
 				isValid = true;
 				construct(natl::forward<DataType>(valueIn));
@@ -290,14 +279,10 @@ namespace natl {
 		}
 		template<typename... ConstructArgTypes>
 			requires(IsConstructibleC<DataType, ConstructArgTypes...>)
-		constexpr DataType* construct(ConstructArgTypes&&... constructArgs) noexcept {
+		constexpr DataType* construct(ConstructArgTypes&&... constructArgs) noexcept 
+			requires(requires() { { DataType(natl::forward<ConstructArgTypes>(constructArgs)...) }; }) {
 			if (hasValue()) {
-				if constexpr (IsAssignableC<DataType, DataType>) {
-					data = DataType(natl::forward<ConstructArgTypes>(constructArgs)...);
-				} else {
-					natl::deconstruct<DataType>(&data);
-					natl::construct(&data, DataType(natl::forward<ConstructArgTypes>(constructArgs)...));
-				}
+				data = DataType(natl::forward<ConstructArgTypes>(constructArgs)...);
 				return &data;
 			} else {
 				return unsafeConstruct<ConstructArgTypes...>(natl::forward<ConstructArgTypes>(constructArgs)...);

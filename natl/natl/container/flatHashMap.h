@@ -12,496 +12,586 @@
 
 //interface
 namespace natl {
-	template<typename Key, typename Value>
-	struct KeyValuePair {
-	public:
-		using key_type = Key;
-		using map_type = Value;
+	template<typename KeyType, typename ValueType>
+	struct KeyValueRef {
+		using key_type = KeyType;
+		using mapped_type = ValueType;
 
-		Key key;
-		Value value;
-
-		//constructor 
-		constexpr KeyValuePair() noexcept = default;
-		constexpr KeyValuePair(const KeyValuePair& other) noexcept
-			: key(other.key), value(other.value) {}
-		constexpr KeyValuePair(KeyValuePair&& other) noexcept
-			: key(natl::move(other.key)), value(natl::move(other.value)) {}
-		constexpr KeyValuePair(const Key& keyIn, const Value& dataIn) noexcept
-			: key(keyIn), value(dataIn) {}
-		constexpr KeyValuePair(Key&& keyIn, Value&& dataIn) noexcept
-			: key(natl::forward<Key>(keyIn)), value(natl::forward<Value>(dataIn)) {}
-
-		//destructor
-		constexpr ~KeyValuePair() noexcept = default;
-
-		//util 
-		constexpr KeyValuePair& self() noexcept { return *this; };
-		constexpr const KeyValuePair& self() const noexcept { return *this; };
+		key_type& key;
+		mapped_type& value;
 	};
 
-	template<typename Key, typename Value>
-	using FlatHashMapEntry = Option<KeyValuePair<Key, Value>>;
-
-	template<typename entry_type, typename Alloc>
-	class FlatHashMapIterator {
-	public:
-		using iterator_traits = DefaultIteratorTraits<typename entry_type::value_type>;
-		using entry_iterator_traits = DefaultIteratorTraits<entry_type>;
-		using iterator_category = BidirectionalIteratorTag;
-
-		using value_type = iterator_traits::value_type;
-		using reference = iterator_traits::reference;
-		using const_reference = iterator_traits::const_reference;
-		using pointer = iterator_traits::pointer;
-		using const_pointer = iterator_traits::const_pointer;
-		using difference_type = iterator_traits::difference_type;
-		using size_type = iterator_traits::size_type;
-
-		using allocator_type = Alloc::template rebind_alloc<value_type>;
-
-		using entry_allocator_type = Alloc;
-		using entry_value_type = entry_iterator_traits::value_type;
-		using entry_reference = entry_iterator_traits::reference;
-		using entry_const_reference = entry_iterator_traits::const_reference;
-		using entry_pointer = entry_iterator_traits::pointer;
-		using entry_const_pointer = entry_iterator_traits::const_pointer;
-		using entry_difference_type = entry_iterator_traits::difference_type;
-		using entry_size_type = entry_iterator_traits::size_type;
-
-		using iterator = FlatHashMapIterator;
-
-		//friends
-		template<typename, typename, typename, typename, typename, typename>
-		friend class BaseFlatHashMap;
-	private:
-		entry_pointer dataPtr;
-		entry_pointer beginPtr;
-		entry_pointer endPtr;
-	public:
-		constexpr FlatHashMapIterator() : dataPtr(nullptr), beginPtr(nullptr), endPtr(nullptr) {};
-		constexpr FlatHashMapIterator(entry_pointer dataPtrIn, entry_pointer beginPtrIn, entry_pointer endPtrIn) noexcept
-			: dataPtr(dataPtrIn), beginPtr(beginPtrIn), endPtr(endPtrIn) {}
-	private:
-		constexpr iterator& self() noexcept { return *this; }
-		constexpr const iterator& self() const noexcept { return *this; }
-	public:
-		constexpr reference operator*() noexcept requires(IsNotConst<entry_type>) {
-			return dataPtr->value();
-		}
-		constexpr const_reference operator*() const noexcept {
-			return dataPtr->value();
-		}
-		constexpr pointer operator->() noexcept requires(IsNotConst<entry_type>) {
-			return dataPtr->valueAsPtr();
-		}
-		constexpr const_pointer operator->() const noexcept {
-			return dataPtr->valueAsPtr();
-		}
-		constexpr reference entry() noexcept requires(IsNotConst<entry_type>) {
-			return dataPtr->value();
-		}
-		constexpr const_reference entry() const noexcept {
-			return dataPtr->value();
-		}
-		constexpr iterator& operator++() noexcept { 
-			while (true) {
-				dataPtr++;
-				if (dataPtr == endPtr) {
-					return self();
-				}
-				if (dataPtr->hasValue()) { 
-					return self(); 
-				}
-			}
-		}
-		constexpr iterator operator++(int) noexcept { 
-			iterator tempIt = self(); 
-			++self(); 
-			return tempIt; 
-		}
-		constexpr iterator& operator--() noexcept { 
-			while (dataPtr > beginPtr) {
-				dataPtr--;
-				if (dataPtr->hasValue()) { 
-					return self(); 
-				}
-			}
-			return self(); 
-		}
-		constexpr iterator operator--(int) noexcept { 
-			iterator tempIt = self(); 
-			--self(); 
-			return tempIt; 
-		}
-		constexpr Bool operator== (const iterator rhs) const noexcept { return dataPtr == rhs.dataPtr; }
-		constexpr Bool operator!= (const iterator rhs) const noexcept { return dataPtr != rhs.dataPtr; }
-		constexpr Bool operator<(const iterator rhs) const noexcept { return dataPtr < rhs.dataPtr; }
-		constexpr Bool operator>(const iterator rhs) const noexcept { return dataPtr > rhs.dataPtr; }
-		constexpr Bool operator<=(const iterator rhs) const noexcept { return dataPtr <= rhs.dataPtr; }
-		constexpr Bool operator>=(const iterator rhs) const noexcept { return dataPtr >= rhs.dataPtr; }
-	};
-
-	template<class DataType>
+	template<typename DataType>
 	class FlatMapHashCompare {
 	public:
-		constexpr static Bool compare(const DataType& lhs, const DataType& rhs) {
+		constexpr static Bool compare(const DataType& lhs, const DataType& rhs) noexcept {
 			return lhs == rhs;
 		}
 	};
 
-	template<
-		typename DynamicArrayType,
-		typename Key, typename DataType,
-		typename Hash = Hash<Key>,
-		typename Compare = FlatMapHashCompare<Key>,
-		typename Alloc = DefaultAllocatorByte>
-	class BaseFlatHashMap {
-	public:
-		using key_type = Key;
-		using map_type = DataType;
-		using key_value_pair = KeyValuePair<const key_type, map_type>;
-		using entry_type = Option<key_value_pair>;
+	namespace impl {
+		template<typename KeyType, typename ValueType>
+		struct FlatMapHashKeyValueUnit {
+		public:
+			using key_type = KeyType;
+			using mapped_type = ValueType;
 
-		using allocator_type = Alloc::template rebind_alloc<key_value_pair>;
-		using entry_allocator_type = Alloc::template rebind_alloc<entry_type>;
+			using key_value_ref = KeyValueRef<key_type, mapped_type>;
+			using key_value_const_ref = KeyValueRef<const key_type, const mapped_type>;
+		public:
+			natl::Bool isActive;
 
-		using iterator = FlatHashMapIterator<entry_type, entry_allocator_type>;
-		using const_iterator = FlatHashMapIterator<const entry_type, entry_allocator_type>;
-		using reverse_iterator = ReverseIterator<FlatHashMapIterator<entry_type, entry_allocator_type>>;
-		using const_reverse_iterator = ReverseIterator<FlatHashMapIterator<const entry_type, entry_allocator_type>>;
+			union KeyDetachedLifetime{
+				Dummy dummy;
+				key_type key;
+				KeyDetachedLifetime() {}
+				~KeyDetachedLifetime() {}
+			} key_detachedLifetime;
+			union ValueDetachedLifetime {
+				Dummy dummy;
+				mapped_type value;
+				ValueDetachedLifetime() {}
+				~ValueDetachedLifetime() {}
+			} value_detachedLifetime;
 
-		using key_value_traits = DefaultIteratorTraits<key_value_pair>;
-
-		using value_type = key_value_traits::value_type;
-		using reference = key_value_traits::reference;
-		using const_reference = key_value_traits::const_reference;
-		using pointer = key_value_traits::pointer;
-		using const_pointer = key_value_traits::const_pointer;
-		using difference_type = key_value_traits::difference_type;
-		using size_type = key_value_traits::size_type;
-
-		using optional_pointer = Option<pointer>;
-		using optional_const_pointer = Option<const_pointer>;
-
-		using entry_value_type = typename entry_allocator_type::value_type;
-		using entry_reference = typename entry_allocator_type::reference;
-		using entry_const_reference = typename entry_allocator_type::const_reference;
-		using entry_pointer = typename entry_allocator_type::pointer;
-		using entry_const_pointer = typename entry_allocator_type::const_pointer;
-		using entry_difference_type = typename entry_allocator_type::difference_type;
-		using entry_size_type = typename entry_allocator_type::size_type;
-
-		static constexpr f64 load_factor = 0.7;
-	private:
-		size_type internalSize;
-		DynamicArrayType table;
-	public:
-		//constructor
-		constexpr BaseFlatHashMap() noexcept : internalSize(0), table() {}
-		constexpr BaseFlatHashMap(const BaseFlatHashMap& other) noexcept 
-			: internalSize(other.internalSize), table(other.table) {}
-		constexpr BaseFlatHashMap(BaseFlatHashMap&& other) noexcept 
-			: internalSize(other.internalSize), table(natl::move(other.table)) {}
-
-		//destructor
-		constexpr ~BaseFlatHashMap() noexcept = default;
-
-		//util 
-		constexpr BaseFlatHashMap& self() noexcept { return *this; }
-		constexpr const BaseFlatHashMap& self() const noexcept { return *this; }
-
-		//assignment 
-		constexpr BaseFlatHashMap& operator=(const BaseFlatHashMap& other) noexcept {
-			internalSize = other.internalSize;
-			table = other.table;
-			return self();
-		}
-
-		constexpr BaseFlatHashMap& operator=(BaseFlatHashMap&& other) noexcept {
-			internalSize = other.internalSize;
-			table = natl::move(other.table);
-			return self();
-		}
-
-		//capacity
-		constexpr size_type size() const noexcept { return internalSize; }
-		constexpr size_type count() const noexcept { return internalSize; }
-		constexpr size_type capacity() const noexcept { return table.size(); }
-		constexpr Bool isEmpty() const noexcept { return !Bool(size()); }
-		constexpr Bool isNotEmpty() const noexcept { return Bool(size()); }
-		explicit constexpr operator Bool() const noexcept { return isNotEmpty(); }
-
-		//iterators
-	private:
-		constexpr entry_pointer beginPtr() noexcept requires(IsNotConst<DataType>) { return table.data(); }
-		constexpr entry_const_pointer beginPtr() const noexcept { return table.data(); }
-		constexpr entry_pointer endPtr() noexcept requires(IsNotConst<DataType>) { return table.data() + table.size(); }
-		constexpr entry_const_pointer endPtr() const noexcept { return table.data() + table.size(); }
-
-	public:
-		constexpr iterator begin() noexcept requires(IsNotConst<DataType>) { 
-			entry_pointer dataPtr = beginPtr();
-			iterator firstIter = iterator(dataPtr, beginPtr(), endPtr());
-			if (dataPtr->hasValue()) {
-				return firstIter;
-			} else {
-				return ++firstIter;
-			}
-		}
-		constexpr const_iterator begin() const noexcept { 
-			entry_const_pointer dataPtr = beginPtr();
-			const_iterator firstIter = const_iterator(dataPtr, beginPtr(), endPtr());
-			if (dataPtr->hasValue()) {
-				return firstIter;
-			} else {
-				return ++firstIter;
-			}
-		}
-		constexpr const_iterator cbegin() const noexcept { 
-			return begin();
-		}
-
-		constexpr iterator end() noexcept requires(IsNotConst<DataType>) { return iterator(endPtr(), beginPtr(), endPtr()); }
-		constexpr const_iterator end() const noexcept { return const_iterator(endPtr(), beginPtr(), endPtr()); }
-		constexpr const_iterator cend() const noexcept { return const_iterator(endPtr(), beginPtr(), endPtr()); }
-
-		constexpr reverse_iterator rbegin() noexcept requires(IsNotConst<DataType>) { 
-			entry_pointer dataPtr = endPtr();
-			reverse_iterator firstIter = reverse_iterator(dataPtr, beginPtr(), endPtr());
-			if (dataPtr->hasValue()) {
-				return firstIter;
-			} else {
-				return ++firstIter;
-			}
-		}
-		constexpr const_reverse_iterator rbegin() const noexcept { 
-			entry_const_pointer dataPtr = endPtr();
-			const_reverse_iterator firstIter = const_reverse_iterator(dataPtr, beginPtr(), endPtr());
-			if (dataPtr->hasValue()) {
-				return firstIter;
-			} else {
-				return ++firstIter;
-			}
-		}
-		constexpr const_reverse_iterator crbegin() const noexcept { 
-			return rbegin();
-		}
-
-		constexpr reverse_iterator rend() noexcept requires(IsNotConst<DataType>) { return reverse_iterator(beginPtr(), beginPtr(), endPtr()); }
-		constexpr const_reverse_iterator rend() const noexcept { return const_reverse_iterator(beginPtr(), beginPtr(), endPtr()); }
-		constexpr const_reverse_iterator crend() const noexcept { return const_reverse_iterator(beginPtr(), beginPtr(), endPtr()); }
-
-	public:
-		//modifiers 
-		constexpr void clear() noexcept {
-			table.clear();
-			internalSize = 0;
-		}
-		constexpr void reserve(const size_type& newCapacity) noexcept {
-			resizeAndRehash(newCapacity);
-		}
-
-		constexpr iterator insert(const Key& key, const DataType& value) noexcept {
-			resizeAndRehash();
-
-			entry_pointer dataLocation = nullptr;
-			size_type index = Hash::hash(key) % capacity();
-			while (table[index].hasValue()) {
-				if (Compare::compare(table[index].value().key, key)) {
-					dataLocation = &table[index];
-					dataLocation->value().value = value;
-					return iterator(dataLocation, beginPtr(), endPtr());
-				}
-				index = (index + 1) % capacity();
-			}
-
-			dataLocation = &table[index];
-			dataLocation->construct(key, value);
-			++internalSize;
-
-			return iterator(dataLocation, beginPtr(), endPtr());
-		};
-
-		constexpr iterator insert(Key&& key, DataType&& value) noexcept {
-			resizeAndRehash();
-
-			entry_pointer dataLocation = nullptr;
-			size_type index = Hash::hash(key) % capacity();
-			while (table[index].hasValue()) {
-				if (Compare::compare(table[index].value().key, key)) {
-					dataLocation = &table[index];
-					dataLocation->value().value = natl::forward<DataType>(value);
-					return iterator(dataLocation, beginPtr(), endPtr());
-				}
-				index = (index + 1) % capacity();
-			}
-
-			dataLocation = &table[index];
-			dataLocation->construct(natl::forward<Key>(key), natl::forward<DataType>(value));
-			++internalSize;
-
-			return iterator(dataLocation, beginPtr(), endPtr());
-		};
-
-		constexpr Bool erase(const Key& key) noexcept {
-			iterator location = findIterator(key);
-			if (location != end()) {
-				internalSize -= 1;
-				location.dataPtr->deconstruct();
-				return true;
-			} else {
-				return false;
-			}
-		}
-
-		//lookups
-		constexpr iterator findIterator(const Key& key) noexcept {
-			if (size() == 0) { return end(); }
-			size_type index = Hash::hash(key) % capacity();
-			size_type originalIndex = index;
-
-			while (true) {
-				if (table[index].hasValue() && Compare::compare(table[index].value().key, key)) {
-					return iterator(&table[index], beginPtr(), endPtr());
-				}
-
-				index = (index + 1) % capacity();
-				if (index == originalIndex) {
-					break;
+		public:
+			//constructor
+			constexpr FlatMapHashKeyValueUnit() noexcept : isActive(false) {}
+			constexpr FlatMapHashKeyValueUnit(const FlatMapHashKeyValueUnit& other) noexcept {
+				isActive = other.isActive;
+				if (other.isActive) {
+					natl::construct(&key_detachedLifetime.key, other.key_detachedLifetime.key);
+					natl::construct(&value_detachedLifetime.value, other.value_detachedLifetime.value);
 				}
 			}
-			return end();
-		}
-
-		constexpr const_iterator findIterator(const Key& key) const noexcept {
-			if (size() == 0) { return end(); }
-			size_type index = Hash::hash(key) % capacity();
-			size_type originalIndex = index;
-
-			while (true) {
-				if (Compare::compare(table[index].value().key, key)) {
-					return const_iterator(&table[index], beginPtr(), endPtr());
-				}
-
-				index = (index + 1) % capacity();
-				if (index == originalIndex) {
-					break;
+			constexpr FlatMapHashKeyValueUnit(FlatMapHashKeyValueUnit&& other) noexcept {
+				isActive = other.isActive;
+				if (other.isActive) {
+					natl::construct(&key_detachedLifetime.key, move(other.key_detachedLifetime.key));
+					natl::construct(&value_detachedLifetime.value, move(other.value_detachedLifetime.value));
+					natl::deconstruct(&other.key_detachedLifetime.key);
+					natl::deconstruct(&other.value_detachedLifetime.value);
+					other.isActive = false;
 				}
 			}
-			return end();
-		}
 
-		constexpr optional_pointer find(const Key& key) noexcept {
-			if (size() == 0) { return optional_pointer(natl::OptionEmpty()); }
-			size_type index = Hash::hash(key) % capacity();
-			size_type originalIndex = index;
-
-			while (true) {
-				if (table[index].hasValue() && Compare::compare(table[index].value().key, key)) {
-					return optional_pointer(table[index].valueAsPtr());
-				}
-
-				index = (index + 1) % capacity();
-				if (index == originalIndex) {
-					break; 
+			//destructor 
+			constexpr ~FlatMapHashKeyValueUnit() noexcept {
+				if (isActive) {
+					natl::deconstruct(&key_detachedLifetime.key);
+					natl::deconstruct(&value_detachedLifetime.value);
 				}
 			}
-			return optional_pointer(natl::OptionEmpty()); 
-		}
 
-		constexpr optional_const_pointer find(const Key& key) const noexcept {
-			if (size() == 0) { return optional_const_pointer(natl::OptionEmpty()); }
-			size_type index = Hash::hash(key) % capacity();
-			size_type originalIndex = index;
+			//util
+			constexpr FlatMapHashKeyValueUnit& self() noexcept { return *this; }
+			constexpr const FlatMapHashKeyValueUnit& self() const noexcept { return *this; }
 
-			while (true) {
-				if (table[index].hasValue() && Compare::compare(table[index].value().key, key)) {
-					return optional_const_pointer(table[index].valueAsPtr());
-				}
-
-				index = (index + 1) % capacity();
-				if (index == originalIndex) {
-					break;
-				}
-			}
-			return optional_const_pointer();
-		}
-
-		Bool contains(const Key& key) const noexcept {
-			return find(key).hasValue();
-		}
-	private:
-		constexpr void resizeAndRehash() noexcept {
-			 if (internalSize >= static_cast<size_type>(static_cast<f64>(capacity()) * load_factor)) {
-				if (internalSize < static_cast<size_type>(static_cast<f64>(table.capacity()) * load_factor)) {
-					table.resize(table.capacity());
-					return;
-				}
-
-				resizeAndRehash((capacity() + 10) * 2);
-			}
-		}
-		constexpr void resizeAndRehash(const size_type newCapacity) noexcept {
-			if (newCapacity <= capacity()) { return; }
-
-			DynamicArrayType newTable(newCapacity);
-
-			for (entry_type& entry : table) {
-				if (entry.hasValue()) {
-					size_type index = Hash::hash(entry.value().key) % newCapacity;
-
-					while (newTable[index].hasValue()) {
-						index = (index + 1) % newCapacity;
+			//assignment
+			constexpr FlatMapHashKeyValueUnit& operator=(const FlatMapHashKeyValueUnit& other) noexcept {
+				if (isActive) {
+					if (other.isActive) {
+						key_detachedLifetime.key = other.key_detachedLifetime.key;
+						value_detachedLifetime.value = other.value_detachedLifetime.value;
+					} else {
+						natl::deconstruct(&key_detachedLifetime.key);
+						natl::deconstruct(&value_detachedLifetime.value);
 					}
-
-					newTable[index] = natl::forward<entry_type>(entry);
+				} else {
+					if (other.isActive) {
+						natl::construct(&key_detachedLifetime.key, other.key_detachedLifetime.key);
+						natl::construct(&value_detachedLifetime.value, other.value_detachedLifetime.value);
+					}
 				}
+				isActive = other.isActive;
+				return self();
 			}
-			table = natl::move(newTable);
-		}
+
+			constexpr FlatMapHashKeyValueUnit& operator=(FlatMapHashKeyValueUnit&& other) noexcept {
+				if (isActive) {
+					if (other.isActive) {
+						key_detachedLifetime.key = forward(other.key_detachedLifetime.key);
+						value_detachedLifetime.value = forward(other.value_detachedLifetime.value);
+					} else {
+						natl::deconstruct(&key_detachedLifetime.key);
+						natl::deconstruct(&value_detachedLifetime.value);
+					}
+				} else {
+					if (other.isActive) {
+						natl::construct(&key_detachedLifetime.key, forward(other.key_detachedLifetime.key));
+						natl::construct(&value_detachedLifetime.value, forward(other.value_detachedLifetime.value));
+					}
+				}
+				isActive = other.isActive;
+				return self();
+			}
+
+			//accessors 
+			constexpr Bool hasValue() const noexcept { return isActive; }
+			constexpr Bool doesNotHaveValue() const noexcept { return !hasValue(); }
+
+			constexpr key_type& key() noexcept { return key_detachedLifetime.key; }
+			constexpr const key_type& key() const noexcept { return key_detachedLifetime.key; }
+			constexpr mapped_type& value() noexcept { return value_detachedLifetime.value; }
+			constexpr const mapped_type& value() const noexcept { return value_detachedLifetime.value; }
+
+			constexpr key_value_ref ref() noexcept {
+				return key_value_ref{ key_detachedLifetime.key, value_detachedLifetime.value };
+			}
+			constexpr key_value_const_ref ref() const noexcept {
+				return key_value_const_ref{ key_detachedLifetime.key, value_detachedLifetime.value };
+			}
+
+			constexpr void deconstruct() noexcept {
+				if (isActive) {
+					natl::deconstruct(&key_detachedLifetime.key);
+					natl::deconstruct(&value_detachedLifetime.value);
+				}
+				isActive = false;
+			}
+
+			template<typename OtherKeyType, typename OtherValueType>
+			constexpr void constructKeyValue(OtherKeyType&& otherKey, OtherValueType&& otherValue) noexcept {
+				natl::construct(&key_detachedLifetime.key, forward<OtherKeyType>(otherKey));
+				natl::construct(&value_detachedLifetime.value, forward<OtherValueType>(otherValue));
+				isActive = true;
+			}
+		};
+	}
+
+	template<typename KeyType, typename ValueType>
+	struct IsTriviallyCompareableV<impl::FlatMapHashKeyValueUnit<KeyType, ValueType>>
+		: BoolConstant<IsTriviallyCompareableC<KeyType>> {
 	};
 
-	template<typename DynamicArrayType, typename Key, typename DataType, typename Hash, typename Compare, typename Alloc>
-	struct IsTriviallyCompareableV<BaseFlatHashMap<DynamicArrayType, Key, DataType, Hash, Compare, Alloc>>
-		: FalseType {};
+	template<typename KeyType, typename ValueType>
+	struct IsTriviallyRelocatableV<impl::FlatMapHashKeyValueUnit<KeyType, ValueType>>
+		: BoolConstant<IsTriviallyRelocatableC<KeyType>&& IsTriviallyRelocatableC<ValueType>> {
+	};
+	template<typename KeyType, typename ValueType>
+	struct IsTriviallyConstructibleV<impl::FlatMapHashKeyValueUnit<KeyType, ValueType>>
+		: BoolConstant<IsTriviallyConstructibleC<KeyType>&& IsTriviallyConstructibleC<ValueType>> {
+	};
+	template<typename KeyType, typename ValueType>
+	struct IsTriviallyDestructibleV<impl::FlatMapHashKeyValueUnit<KeyType, ValueType>>
+		: BoolConstant<IsTriviallyDestructibleC<KeyType>&& IsTriviallyDestructibleC<ValueType>> {
+	};
 
-	template<typename DynamicArrayType, typename Key, typename DataType, typename Hash, typename Compare, typename Alloc>
-	struct IsTriviallyRelocatableV<BaseFlatHashMap<DynamicArrayType, Key, DataType, Hash, Compare, Alloc>>
-		: TrueType {};
-	template<typename DynamicArrayType, typename Key, typename DataType, typename Hash, typename Compare, typename Alloc>
-	struct IsTriviallyConstructibleV<BaseFlatHashMap<DynamicArrayType, Key, DataType, Hash, Compare, Alloc>>
-		: TrueType {};
-	template<typename DynamicArrayType, typename Key, typename DataType, typename Hash, typename Compare, typename Alloc>
-	struct IsTriviallyDestructibleV<BaseFlatHashMap<DynamicArrayType, Key, DataType, Hash, Compare, Alloc>>
-		: FalseType {};
+	template<typename KeyType, typename ValueType>
+	struct IsTriviallyConstRefConstructibleV<impl::FlatMapHashKeyValueUnit<KeyType, ValueType>>
+		: BoolConstant<IsTriviallyConstRefConstructibleC<KeyType>&& IsTriviallyConstRefConstructibleC<ValueType>> {
+	};
+	template<typename KeyType, typename ValueType>
+	struct IsTriviallyMoveConstructibleV<impl::FlatMapHashKeyValueUnit<KeyType, ValueType>>
+		: BoolConstant<IsTriviallyMoveConstructibleC<KeyType>&& IsTriviallyMoveConstructibleC<ValueType>> {
+	};
 
-	template<typename DynamicArrayType, typename Key, typename DataType, typename Hash, typename Compare, typename Alloc>
-	struct IsTriviallyConstRefConstructibleV<BaseFlatHashMap<DynamicArrayType, Key, DataType, Hash, Compare, Alloc>>
-		: FalseType {};
-	template<typename DynamicArrayType, typename Key, typename DataType, typename Hash, typename Compare, typename Alloc>
-	struct IsTriviallyMoveConstructibleV<BaseFlatHashMap<DynamicArrayType, Key, DataType, Hash, Compare, Alloc>>
-		: FalseType {};
+	template<typename KeyType, typename ValueType>
+	struct IsTriviallyConstRefAssignableV<impl::FlatMapHashKeyValueUnit<KeyType, ValueType>>
+		: BoolConstant<IsTriviallyConstRefAssignableC<KeyType>&& IsTriviallyConstRefAssignableC<ValueType>> {
+	};
+	template<typename KeyType, typename ValueType>
+	struct IsTriviallyMoveAssignableV<impl::FlatMapHashKeyValueUnit<KeyType, ValueType>>
+		: BoolConstant<IsTriviallyMoveAssignableC<KeyType>&& IsTriviallyMoveAssignableC<ValueType>> {
+	};
 
-	template<typename DynamicArrayType, typename Key, typename DataType, typename Hash, typename Compare, typename Alloc>
-	struct IsTriviallyConstRefAssignableV<BaseFlatHashMap<DynamicArrayType, Key, DataType, Hash, Compare, Alloc>>
-		: FalseType {};
-	template<typename DynamicArrayType, typename Key, typename DataType, typename Hash, typename Compare, typename Alloc>
-	struct IsTriviallyMoveAssignableV<BaseFlatHashMap<DynamicArrayType, Key, DataType, Hash, Compare, Alloc>>
-		: FalseType {};
+	namespace impl {
+		template<typename unit_type, typename Alloc>
+		class BaseFlatHashMapIterator {
+		public:
+			using iterator_traits = DefaultIteratorTraits<unit_type>;
+			using iterator_category = BidirectionalIteratorTag;
+
+			using value_type = iterator_traits::value_type;
+			using reference = iterator_traits::reference;
+			using const_reference = iterator_traits::const_reference;
+			using pointer = iterator_traits::pointer;
+			using const_pointer = iterator_traits::const_pointer;
+			using difference_type = iterator_traits::difference_type;
+			using size_type = iterator_traits::size_type;
+
+			using allocator_type = Alloc::template rebind_alloc<value_type>;
+			using iterator = BaseFlatHashMapIterator;
+
+			//friends
+			template<template<typename> typename, typename, typename, typename, typename>
+			friend class BaseFlatHashMap;
+		private:
+			pointer dataPtr;
+			pointer beginPtr;
+			pointer endPtr;
+		public:
+			constexpr BaseFlatHashMapIterator() : dataPtr(nullptr), beginPtr(nullptr), endPtr(nullptr) {};
+			constexpr BaseFlatHashMapIterator(pointer dataPtrIn, pointer beginPtrIn, pointer endPtrIn) noexcept
+				: dataPtr(dataPtrIn), beginPtr(beginPtrIn), endPtr(endPtrIn) {
+			}
+		private:
+			constexpr iterator& self() noexcept { return *this; }
+			constexpr const iterator& self() const noexcept { return *this; }
+		public:
+			constexpr reference operator*() noexcept requires(IsNotConst<unit_type>) { return *dataPtr; }
+			constexpr const_reference operator*() const noexcept { return *dataPtr; }
+			constexpr pointer operator->() noexcept requires(IsNotConst<unit_type>) { return dataPtr; }
+			constexpr const_pointer operator->() const noexcept { return dataPtr; }
+			constexpr reference value() noexcept requires(IsNotConst<unit_type>) { return *dataPtr; }
+			constexpr const_reference value() const noexcept { return *dataPtr; }
+
+			constexpr iterator& operator++() noexcept {
+				while (true) {
+					dataPtr++;
+					if (dataPtr == endPtr) {
+						return self();
+					}
+					if (dataPtr->isActive) {
+						return self();
+					}
+				}
+			}
+			constexpr iterator operator++(int) noexcept {
+				iterator tempIt = self();
+				++self();
+				return tempIt;
+			}
+			constexpr iterator& operator--() noexcept {
+				while (dataPtr > beginPtr) {
+					dataPtr--;
+					if (dataPtr->isActive) {
+						return self();
+					}
+				}
+				return self();
+			}
+			constexpr iterator operator--(int) noexcept {
+				iterator tempIt = self();
+				--self();
+				return tempIt;
+			}
+			constexpr Bool operator== (const iterator rhs) const noexcept { return dataPtr == rhs.dataPtr; }
+			constexpr Bool operator!= (const iterator rhs) const noexcept { return dataPtr != rhs.dataPtr; }
+			constexpr Bool operator<(const iterator rhs) const noexcept { return dataPtr < rhs.dataPtr; }
+			constexpr Bool operator>(const iterator rhs) const noexcept { return dataPtr > rhs.dataPtr; }
+			constexpr Bool operator<=(const iterator rhs) const noexcept { return dataPtr <= rhs.dataPtr; }
+			constexpr Bool operator>=(const iterator rhs) const noexcept { return dataPtr >= rhs.dataPtr; }
+		};
+
+		template<
+			template<typename> typename DynamicArrayType,
+			typename KeyType, typename ValueType,
+			typename Hash = Hash<KeyType>,
+			typename Compare = FlatMapHashCompare<KeyType>>
+		class BaseFlatHashMap {
+		public:
+			using size_type = Size;
+			using key_type = KeyType;
+			using mapped_type = ValueType;
+
+			using key_value_unit = FlatMapHashKeyValueUnit<key_type, mapped_type>;
+			using storage_array = DynamicArrayType<key_value_unit>;
+
+			using allocator_type = storage_array::allocator_type;
+
+			using key_value_ref = KeyValueRef<key_type, mapped_type>;
+			using key_value_const_ref = KeyValueRef<const key_type, const mapped_type>;
+
+			using option_key_value_ref = Option<key_value_ref>;
+			using option_key_value_const_ref = Option<key_value_const_ref>;
+
+
+			using iterator_traits = DefaultIteratorTraits<key_value_unit>;
+			using iterator_category = BidirectionalIteratorTag;
+
+			using value_type = allocator_type::value_type;
+			using reference = allocator_type::reference;
+			using const_reference = allocator_type::const_reference;
+			using pointer = allocator_type::pointer;
+			using const_pointer = allocator_type::const_pointer;
+			using difference_type = allocator_type::difference_type;
+
+			using iterator = BaseFlatHashMapIterator<key_value_unit, allocator_type>;
+			using const_iterator = BaseFlatHashMapIterator<const key_value_unit, allocator_type>;
+			using reverse_iterator = ReverseIterator<BaseFlatHashMapIterator<key_value_unit, allocator_type>>;
+			using const_reverse_iterator = ReverseIterator<BaseFlatHashMapIterator<const key_value_unit, allocator_type>>;
+
+			static constexpr f64 loadFactor = 0.75;
+		private:
+			size_type _size;
+			storage_array _storageArray;
+		public:
+			//constructor
+			constexpr BaseFlatHashMap() noexcept : _size(0), _storageArray() {}
+			constexpr BaseFlatHashMap(const BaseFlatHashMap& other) noexcept
+				: _size(other._size), _storageArray(other._storageArray) {
+			}
+			constexpr BaseFlatHashMap(BaseFlatHashMap&& other) noexcept
+				: _size(other._size), _storageArray(natl::move(other._storageArray)) {
+			}
+
+			//deconstructor 
+			constexpr ~BaseFlatHashMap() noexcept {}
+
+			//util 
+			constexpr BaseFlatHashMap& self() noexcept { return *this; }
+			constexpr const BaseFlatHashMap& self() const noexcept { return *this; }
+
+			//assignment 
+			constexpr BaseFlatHashMap& operator=(const BaseFlatHashMap& other) noexcept {
+				_size = other._size;
+				_storageArray = other._storageArray;
+				return self();
+			}
+			constexpr BaseFlatHashMap& operator=(BaseFlatHashMap&& other) noexcept {
+				_size = other._size;
+				_storageArray = natl::move(other._storageArray);
+				return self();
+			}
+
+			//capacity
+			constexpr size_type size() const noexcept { return _size; }
+			constexpr size_type count() const noexcept { return _size; }
+			constexpr size_type capacity() const noexcept { return _storageArray.size(); }
+			constexpr Bool isEmpty() const noexcept { return !Bool(size()); }
+			constexpr Bool isNotEmpty() const noexcept { return Bool(size()); }
+			explicit constexpr operator Bool() const noexcept { return isNotEmpty(); }
+
+			//iterators
+		private:
+			constexpr pointer beginPtr() noexcept { return _storageArray.data(); }
+			constexpr const_pointer beginPtr() const noexcept { return _storageArray.data(); }
+			constexpr pointer endPtr() noexcept { return _storageArray.data() + _storageArray.size(); }
+			constexpr const_pointer endPtr() const noexcept { return _storageArray.data() + _storageArray.size(); }
+		public:
+			constexpr iterator begin() noexcept {
+				pointer dataPtr = beginPtr();
+				iterator firstIter = iterator(dataPtr, beginPtr(), endPtr());
+				if (dataPtr->hasValue()) {
+					return firstIter;
+				} else {
+					return ++firstIter;
+				}
+			}
+			constexpr const_iterator begin() const noexcept {
+				const_pointer dataPtr = beginPtr();
+				const_iterator firstIter = const_iterator(dataPtr, beginPtr(), endPtr());
+				if (dataPtr->hasValue()) {
+					return firstIter;
+				} else {
+					return ++firstIter;
+				}
+			}
+			constexpr const_iterator cbegin() const noexcept {
+				return begin();
+			}
+
+			constexpr iterator end() noexcept { return iterator(endPtr(), beginPtr(), endPtr()); }
+			constexpr const_iterator end() const noexcept { return const_iterator(endPtr(), beginPtr(), endPtr()); }
+			constexpr const_iterator cend() const noexcept { return const_iterator(endPtr(), beginPtr(), endPtr()); }
+
+			constexpr reverse_iterator rbegin() noexcept {
+				pointer dataPtr = endPtr();
+				reverse_iterator firstIter = reverse_iterator(dataPtr, beginPtr(), endPtr());
+				if (dataPtr->hasValue()) {
+					return firstIter;
+				} else {
+					return ++firstIter;
+				}
+			}
+			constexpr const_reverse_iterator rbegin() const noexcept {
+				const_pointer dataPtr = endPtr();
+				const_reverse_iterator firstIter = const_reverse_iterator(dataPtr, beginPtr(), endPtr());
+				if (dataPtr->hasValue()) {
+					return firstIter;
+				} else {
+					return ++firstIter;
+				}
+			}
+			constexpr const_reverse_iterator crbegin() const noexcept {
+				return rbegin();
+			}
+
+			constexpr reverse_iterator rend() noexcept { return reverse_iterator(beginPtr(), beginPtr(), endPtr()); }
+			constexpr const_reverse_iterator rend() const noexcept { return const_reverse_iterator(beginPtr(), beginPtr(), endPtr()); }
+			constexpr const_reverse_iterator crend() const noexcept { return const_reverse_iterator(beginPtr(), beginPtr(), endPtr()); }
+
+			//modifiers
+			constexpr void clear() noexcept {
+				_storageArray.clear();
+				_size = 0;
+			}
+			constexpr void reserve(const size_type& newCapacity) noexcept {
+				resizeAndRehash(newCapacity);
+			}
+
+			constexpr iterator insert(const key_type& key, const mapped_type& value) noexcept {
+				resizeAndRehash();
+
+				pointer dataLocation = nullptr;
+				size_type index = Hash::hash(key) % capacity();
+				while (_storageArray[index].hasValue()) {
+					if (Compare::compare(_storageArray[index].key(), key)) {
+						dataLocation = &_storageArray[index];
+						dataLocation->value() = value;
+						return iterator(dataLocation, beginPtr(), endPtr());
+					}
+					index = (index + 1) % capacity();
+				}
+
+				dataLocation = &_storageArray[index];
+				dataLocation->constructKeyValue(key, value);
+				++_size;
+
+				return iterator(dataLocation, beginPtr(), endPtr());
+			};
+
+			constexpr iterator insert(key_type&& key, mapped_type&& value) noexcept {
+				resizeAndRehash();
+
+				pointer dataLocation = nullptr;
+				size_type index = Hash::hash(key) % capacity();
+				while (_storageArray[index].hasValue()) {
+					if (Compare::compare(_storageArray[index].key(), key)) {
+						dataLocation = &_storageArray[index];
+						dataLocation->value() = natl::forward<mapped_type>(value);
+						return iterator(dataLocation, beginPtr(), endPtr());
+					}
+					index = (index + 1) % capacity();
+				}
+
+				dataLocation = &_storageArray[index];
+				dataLocation->constructKeyValue(natl::forward<key_type>(key), natl::forward<mapped_type>(value));
+				++_size;
+
+				return iterator(dataLocation, beginPtr(), endPtr());
+			};
+
+			constexpr Bool erase(const key_type& key) noexcept {
+				iterator location = findIterator(key);
+				if (location != end()) {
+					_size -= 1;
+					location.dataPtr->deconstruct();
+					return true;
+				} else {
+					return false;
+				}
+			}
+
+			//lookups
+			constexpr iterator findIterator(const key_type& key) noexcept {
+				if (size() == 0) { return end(); }
+				size_type index = Hash::hash(key) % capacity();
+				size_type originalIndex = index;
+
+				while (true) {
+					if (_storageArray[index].hasValue() && Compare::compare(_storageArray[index].key(), key)) {
+						return iterator(&_storageArray[index], beginPtr(), endPtr());
+					}
+
+					index = (index + 1) % capacity();
+					if (index == originalIndex) {
+						break;
+					}
+				}
+				return end();
+			}
+
+			constexpr const_iterator findIterator(const key_type& key) const noexcept {
+				if (size() == 0) { return end(); }
+				size_type index = Hash::hash(key) % capacity();
+				size_type originalIndex = index;
+
+				while (true) {
+					if (Compare::compare(_storageArray[index].key(), key)) {
+						return const_iterator(&_storageArray[index], beginPtr(), endPtr());
+					}
+
+					index = (index + 1) % capacity();
+					if (index == originalIndex) {
+						break;
+					}
+				}
+				return end();
+			}
+
+			constexpr option_key_value_const_ref find(const key_type& key) noexcept {
+				if (size() == 0) { return option_key_value_const_ref(natl::OptionEmpty()); }
+				size_type index = Hash::hash(key) % capacity();
+				size_type originalIndex = index;
+
+				while (true) {
+					if (_storageArray[index].hasValue() && Compare::compare(_storageArray[index].key(), key)) {
+						return option_key_value_const_ref(_storageArray[index].ref());
+					}
+
+					index = (index + 1) % capacity();
+					if (index == originalIndex) {
+						break;
+					}
+				}
+				return option_key_value_const_ref(natl::OptionEmpty());
+			}
+
+			constexpr option_key_value_const_ref find(const key_type& key) const noexcept {
+				if (size() == 0) { return option_key_value_const_ref(natl::OptionEmpty()); }
+				size_type index = Hash::hash(key) % capacity();
+				size_type originalIndex = index;
+
+				while (true) {
+					if (_storageArray[index].hasValue() && Compare::compare(_storageArray[index].key(), key)) {
+						return option_key_value_const_ref(_storageArray[index].ref());
+					}
+
+					index = (index + 1) % capacity();
+					if (index == originalIndex) {
+						break;
+					}
+				}
+				return option_key_value_const_ref();
+			}
+
+			constexpr Bool contains(const key_type& key) const noexcept {
+				return find(key).hasValue();
+			}
+
+		private:
+			constexpr void resizeAndRehash() noexcept {
+				if (size() >= static_cast<size_type>(static_cast<f64>(capacity()) * loadFactor)) {
+					if (size() < static_cast<size_type>(static_cast<f64>(_storageArray.capacity()) * loadFactor)) {
+						_storageArray.resize(_storageArray.capacity());
+						return;
+					}
+
+					resizeAndRehash((capacity() + 10) * 2);
+				}
+			}
+			constexpr void resizeAndRehash(const size_type newCapacity) noexcept {
+				if (newCapacity <= capacity()) { return; }
+
+				storage_array newTable(newCapacity);
+				for (auto& entry : _storageArray) {
+					if (entry.isActive) {
+						size_type index = Hash::hash(entry.key()) % newCapacity;
+						while (newTable[index].isActive) {
+							index = (index + 1) % newCapacity;
+						}
+						newTable[index] = forward<decltype(entry)>(entry);
+					}
+				}
+				_storageArray = natl::move(newTable);
+			}
+		};
+	}
 
 	template<class Key, class DataType,
 		class Hash = Hash<Key>,
 		class Compare = FlatMapHashCompare<Key>,
 		class Alloc = DefaultAllocatorByte>
-	using FlatHashMap = BaseFlatHashMap<DynArray<FlatHashMapEntry<const Key, DataType>, typename Alloc::template rebind_alloc<FlatHashMapEntry<const Key, DataType>>>, Key, DataType, Hash, Compare, Alloc>;
+	using FlatHashMap = impl::BaseFlatHashMap<typename DynArrayUnboundTypeT<Alloc>::type, Key, DataType, Hash, Compare>;
 
-	template<class Key, class DataType,
-		Size bufferSize,
+	template<class Key, class DataType, Size bufferSize,
 		class Hash = Hash<Key>,
 		class Compare = FlatMapHashCompare<Key>,
 		class Alloc = DefaultAllocatorByte>
-	using SmallFlatHashMap = BaseFlatHashMap<SmallDynArray<FlatHashMapEntry<const Key, DataType>, bufferSize, typename Alloc::template rebind_alloc<FlatHashMapEntry<const Key, DataType>>>, Key, DataType, Hash, Compare, Alloc>;
+	using SmallFlatHashMap = impl::BaseFlatHashMap<typename SmallDynArrayUnboundTypeT<bufferSize, Alloc>::type, Key, DataType, Hash, Compare>;
+
 
 	template<typename... TemplateFlags>
 	struct FormatKey {
@@ -511,12 +601,12 @@ namespace natl {
 	struct FormatValue {
 		using template_flags = TypePack<TemplateFlags...>;
 	};
-	
+
 	namespace impl {
 		template<typename Type>
 		struct IsFormatKeyV : FalseType {};
 		template<typename... TemplateFlags>
-		struct IsFormatKeyV<FormatKey<TemplateFlags...>> : TrueType{};
+		struct IsFormatKeyV<FormatKey<TemplateFlags...>> : TrueType {};
 		template<typename Type>
 		constexpr inline Bool IsFormatKey = IsFormatKeyV<Type>::value;
 
@@ -537,8 +627,9 @@ namespace natl {
 			using storage_tuple_type = Tuple<ArgTypes&&...>;
 		public:
 			storage_tuple_type argStorage;
-			constexpr FormatKeyArg(ArgTypes&&... formatArgs) noexcept 
-				: argStorage(natl::forward<ArgTypes>(formatArgs)...) {}
+			constexpr FormatKeyArg(ArgTypes&&... formatArgs) noexcept
+				: argStorage(natl::forward<ArgTypes>(formatArgs)...) {
+			}
 		};
 
 		template<typename... ArgTypes>
@@ -548,7 +639,8 @@ namespace natl {
 		public:
 			storage_tuple_type argStorage;
 			constexpr FormatValueArg(ArgTypes&&... formatArgs) noexcept
-				: argStorage(natl::forward<ArgTypes>(formatArgs)...) {}
+				: argStorage(natl::forward<ArgTypes>(formatArgs)...) {
+			}
 		};
 	}
 
@@ -572,11 +664,11 @@ namespace natl {
 				outputIter = '{';
 				for (typename BaseFlatHashMapType::const_reference entry : flatHashMap) {
 					outputIter = '{';
-					outputIter = KeyFormatter::format(outputIter, entry.key);
+					outputIter = KeyFormatter::format(outputIter, entry.key());
 					outputIter = ' ';
 					outputIter = ':';
 					outputIter = ' ';
-					outputIter = ValueFormatter::format(outputIter, entry.value);
+					outputIter = ValueFormatter::format(outputIter, entry.value());
 					outputIter = '}';
 
 					if (index != flatHashMapSize - 1) {
@@ -601,16 +693,16 @@ namespace natl {
 					outputIter = '{';
 
 					if constexpr (sizeof...(KeyFormatArgsTypes) == 0) {
-						outputIter = KeyFormatter::format(outputIter, entry.key);
+						outputIter = KeyFormatter::format(outputIter, entry.key());
 					} else {
-						outputIter = KeyFormatter::format(outputIter, entry.key,
+						outputIter = KeyFormatter::format(outputIter, entry.key(),
 							natl::forward<KeyFormatArgsTypes>(formatKeyArgs.argStorage.template get<KeyIndices>())...);
 					}
 
 					outputIter = ' ';
 					outputIter = ':';
 					outputIter = ' ';
-					outputIter = ValueFormatter::format(outputIter, entry.value);
+					outputIter = ValueFormatter::format(outputIter, entry.value());
 					outputIter = '}';
 
 					if (index != flatHashMapSize - 1) {
@@ -649,9 +741,9 @@ namespace natl {
 					outputIter = '{';
 
 					if constexpr (sizeof...(KeyFormatArgsTypes) == 0) {
-						outputIter = KeyFormatter::format(outputIter, entry.key);
+						outputIter = KeyFormatter::format(outputIter, entry.key());
 					} else {
-						outputIter = KeyFormatter::format(outputIter, entry.key,
+						outputIter = KeyFormatter::format(outputIter, entry.key(),
 							natl::forward<KeyFormatArgsTypes>(formatKeyArgs.argStorage.template get<KeyIndices>())...);
 					}
 
@@ -660,9 +752,9 @@ namespace natl {
 					outputIter = ' ';
 
 					if constexpr (sizeof...(KeyFormatArgsTypes) == 0) {
-						outputIter = ValueFormatter::format(outputIter, entry.value);
+						outputIter = ValueFormatter::format(outputIter, entry.value());
 					} else {
-						outputIter = ValueFormatter::format(outputIter, entry.value,
+						outputIter = ValueFormatter::format(outputIter, entry.value(),
 							natl::forward<ValueFromatArgTypes>(formatValueArgs.argStorage.template get<ValueIndices>())...);
 					}
 					outputIter = '}';
@@ -695,18 +787,17 @@ namespace natl {
 	}
 
 	template<
-		typename DynamicArrayType,
+		template<typename> typename DynamicArrayType,
 		typename Key, typename Value,
-		typename Hash, typename Compare, typename Alloc,
+		typename Hash, typename Compare,
 		typename CharType>
-	struct Formatter<BaseFlatHashMap<DynamicArrayType, Key, Value, Hash, Compare, Alloc>, CharType> 
+	struct Formatter<impl::BaseFlatHashMap<DynamicArrayType, Key, Value, Hash, Compare>, CharType>
 		: impl::BaseFlatHashMapBaseFormatImpl<
-			BaseFlatHashMap<DynamicArrayType, Key, Value, Hash, Compare, Alloc>,
-			MakeFormatter<Key, CharType>,
-			MakeFormatter<Value, CharType>
-		> {
-		using value_type = BaseFlatHashMap<DynamicArrayType, Key, Value, Hash, Compare, Alloc>;
-		using hash_map_type = value_type;
+			impl::BaseFlatHashMap<DynamicArrayType, Key, Value, Hash, Compare>,
+				MakeFormatter<Key, CharType>,
+				MakeFormatter<Value, CharType>> {
+		using mapped_type = impl::BaseFlatHashMap<DynamicArrayType, Key, Value, Hash, Compare>;
+		using hash_map_type = mapped_type;
 
 		template<typename TemplateFlag>
 		struct IsMapFormatTemplateFlagV {
@@ -793,8 +884,41 @@ namespace natl {
 			requires(IsMapFormatTemplateFlag<TemplateFlags> && ...)
 		struct WithTemplateFlags : WithTemplateFlagsFunctionImplT<TemplateFlags...>::type {};
 	};
-	
 }
+
+namespace std {
+	template<typename KeyType, typename ValueType>
+	struct tuple_size<natl::impl::FlatMapHashKeyValueUnit<KeyType, ValueType>> { 
+		constexpr static inline natl::StdSize value = 2;
+	};
+
+	template<natl::Size Index, typename KeyType, typename ValueType>
+	struct tuple_element<Index, natl::impl::FlatMapHashKeyValueUnit<KeyType, ValueType>> {
+		using type = natl::Conditional<Index == 0, KeyType, ValueType>;
+	};
+
+	template <std::size_t Index, typename KeyType, typename ValueType>
+	decltype(auto) get(const natl::impl::FlatMapHashKeyValueUnit<KeyType, ValueType>& obj) {
+		if constexpr (Index == 0) {
+			return obj.key();
+		} else if constexpr (Index == 1) {
+			return obj.value();
+		} else {
+			static_assert(Index < 2, "natl: index out of bounds");
+		}
+	}
+	template <std::size_t Index, typename KeyType, typename ValueType>
+	decltype(auto) get(natl::impl::FlatMapHashKeyValueUnit<KeyType, ValueType>& obj) {
+		if constexpr (Index == 0) {
+			return obj.key();
+		} else if constexpr (Index == 1) {
+			return obj.value();
+		} else {
+			static_assert(Index < 2, "natl: index out of bounds");
+		}
+	}
+}
+
 
 //additional includes for end use
 #include "../util/commonHashs.h"

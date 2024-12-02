@@ -5,53 +5,92 @@
 
 constexpr inline natl::ConstAsciiStringView natlTestFrom = "NatlFlatHashMapTest";
 
-constexpr natl::FlatHashMap<natl::Size, natl::Size> getTestHashMap() noexcept {
-	natl::FlatHashMap<natl::Size, natl::Size> map;
-	map.reserve(8);
-	map.insert(1, 1);
-	map.insert(2, 2);
-	map.insert(3, 3);
-	map.insert(4, 4);
-	map.insert(5, 5);
-	map.insert(6, 6);
-	map.insert(7, 7);
-	map.insert(8, 8);
+constexpr natl::Size getIterationCount() noexcept {
+	if (natl::isConstantEvaluated()) {
+		return 10;
+	} else {
+		return 100;
+	}
+}
+
+template<typename HashMapType> 
+constexpr HashMapType generateTestHashMapIntPair() noexcept {
+	HashMapType map;
+	for (natl::Size i : natl::Repeat(getIterationCount())) {
+		map.insert(i, i);
+	}
 	return map;
 }
 
-constexpr natl::Bool testIteration() noexcept {
-	natl::FlatHashMap<natl::Size, natl::Size> testMap = getTestHashMap();
-	for (auto&& [key, value] : testMap) {
-		if (key == 4 && value == 4) {
-			return true;
-		}
+template<typename HashMapType>
+constexpr HashMapType generateTestHashMapStringPair() noexcept {
+	HashMapType map;
+	for (natl::Size i : natl::Repeat(getIterationCount())) {
+		map.insert(natl::intToStringDecimal(i), natl::intToStringDecimal(i));
 	}
-	return false;
+	return map;
 }
 
-constexpr natl::Bool testConstIteration() noexcept {
-	natl::FlatHashMap<natl::Size, natl::Size> testMap = getTestHashMap();
-	for (const auto& [key, value] : natl::toConst(testMap)) {
-		if (key == 4 && value == 4) {
-			return true;
+template<typename HashMapType> 
+constexpr natl::Bool testMapInsertIntPair(const natl::ConstAsciiStringView& name) noexcept {
+	natl::Test test(natlTestFrom, natl::String256(name) + "int pair insert tests", natl::TestType::leaf);
+	{
+		auto intmap = generateTestHashMapIntPair<HashMapType>();
+		natl::Size index = 0;
+		for (auto&& [key, value] : intmap) {
+			natl::testAssertEquals(test, key, value, "test int key and int value equal");
+			index++;
 		}
+		natl::testAssertEquals(test, getIterationCount(), index, "all int key and int value equal tested");
 	}
-	return false;
+	return test;
 }
 
-constexpr natl::Bool testErase() noexcept {
-	auto testMap = getTestHashMap();
-	testMap.erase(1);
-	return testMap.find(1).doesNotHaveValue();
+template<typename HashMapType>
+constexpr natl::Bool testMapInsertStringPair(const natl::ConstAsciiStringView& name) noexcept {
+	natl::Test test(natlTestFrom, natl::String256(name) + "string pair insert tests", natl::TestType::leaf);
+	{
+		auto stringmap = generateTestHashMapStringPair<HashMapType>();
+		natl::Size index = 0;
+		for (auto&& [key, value] : stringmap) {
+			natl::testAssertEquals(test, key, value, "test string key and string value equal");
+			index++;
+		}
+		natl::testAssertEquals(test, getIterationCount(), index, "all string key and string value equal tested");
+	}
+	return test;
 }
 
-constexpr natl::Bool testFind() noexcept {
-	auto testMap = getTestHashMap();
-	return testMap.find(4).value()->value;
+constexpr natl::Bool flatHashMapInsertIntPairTest() noexcept {
+	return testMapInsertIntPair<natl::FlatHashMap<natl::Size, natl::Size>>("flat hash map");
+}
+constexpr natl::Bool flatHashMapInsertStringPairTest() noexcept {
+	return testMapInsertStringPair<natl::FlatHashMap<natl::String, natl::String>>("flat hash map");
 }
 
-constexpr natl::Bool testFormatter() noexcept {
-	auto testMap = getTestHashMap();
+constexpr natl::Bool flatHashMapTest() noexcept {
+	natl::Test test(natlTestFrom, "flat hash map", natl::TestType::node);
+	natl::subTestAssert(test, flatHashMapInsertIntPairTest());
+	natl::subTestAssert(test, flatHashMapInsertStringPairTest());
+	return test;
+}
+
+constexpr natl::Bool smallFlatHashMapInsertIntPairTest() noexcept {
+	return testMapInsertIntPair<natl::SmallFlatHashMap<natl::Size, natl::Size, 50>>("small flat hash map");
+}
+constexpr natl::Bool smallFlatHashMapInsertStringPairTest() noexcept {
+	return testMapInsertStringPair<natl::SmallFlatHashMap<natl::String, natl::String, 50>>("small flat hash map");
+}
+
+constexpr natl::Bool smallFlatHashMapTest() noexcept {
+	natl::Test test(natlTestFrom, "small flat hash map", natl::TestType::node);
+	natl::subTestAssert(test, smallFlatHashMapInsertIntPairTest());
+	natl::subTestAssert(test, smallFlatHashMapInsertStringPairTest());
+	return test;
+}
+
+constexpr natl::Bool formatterTest() noexcept {
+	auto testMap = generateTestHashMapIntPair<natl::FlatHashMap<natl::Size, natl::Size>>();
 	natl::sformat(
 		natl::formatArg(testMap,
 			natl::formatKey(natl::IntFormat::hexadecimal)
@@ -72,19 +111,11 @@ constexpr natl::Bool testFormatter() noexcept {
 	return true;
 }
 
-static_assert(testIteration());
-static_assert(testConstIteration());
-static_assert(testFormatter());
-static_assert(testErase());
-static_assert(testFind());
-
 natl::Bool tests() noexcept {
 	natl::Test test(natlTestFrom, "all", natl::TestType::root);
-	natl::testAssert(test, testIteration(), "iteration");
-	natl::testAssert(test, testConstIteration(), "const iteration");
-	natl::testAssert(test, testFormatter(), "formatter");
-	natl::testAssert(test, testErase(), "erase");
-	natl::testAssert(test, testFind(), "find");
+	natl::testAssert(test, formatterTest(), "formmatter test");
+	natl::testAssert(test, flatHashMapTest(), "flat hash map");
+	natl::testAssert(test, smallFlatHashMapTest(), "small flat hash map");
 	return test;
 }
 
