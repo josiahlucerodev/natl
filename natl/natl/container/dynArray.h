@@ -1085,12 +1085,35 @@ namespace natl {
 		}
 	};
 
-	template<typename DataType, typename allocator_type>
+	template<typename DataType, typename Alloc>
 		requires(IsSerializableC<Decay<DataType>>)
-	struct Deserialize<DynArray<DataType, allocator_type>> {
+	struct Serialize<DynArray<DataType, Alloc>> {
+		using as_type = natl::SerializeArray<Decay<DataType>>;
+		using type = DynArray<DataType, Alloc>;
+		template<typename Serializer> using error_type = void;
+
+		template<typename Serializer, typename... ElementSerializeArgs>
+		constexpr static void write(Serializer& serializer, const type& array, ElementSerializeArgs&&... elementSerializeArgs) noexcept {
+			if (array.isEmpty()) {
+				serializer.writeEmptyArray();
+			} else {
+				serializer.beginWriteArray();
+				for (Size i = 0; i < array.size(); i++) {
+					serializer.beginWriteArrayElement();
+					serializeWrite(serializer, array[i], forward<ElementSerializeArgs>(elementSerializeArgs)...);
+					serializer.endWriteArrayElement();
+				}
+				serializer.endWriteArray();
+			}
+		}
+	};
+
+	template<typename DataType, typename Alloc>
+		requires(IsSerializableC<Decay<DataType>>)
+	struct Deserialize<DynArray<DataType, Alloc>> {
 		using deserialize_element_as_type = SerializeTypeOf<Decay<DataType>>;
-		using as_type = natl::SerializeArray<deserialize_element_as_type>;
-		using type = DynArray<DataType, allocator_type>;
+		using as_type = natl::SerializeArray<Decay<DataType>>;
+		using type = DynArray<DataType, Alloc>;
 		constexpr static natl::ConstAsciiStringView sourceName = "natl::Deserialize<DynArray<...>>::read";
 		template<typename Deserializer> using error_type = StandardDeserializeError<Deserializer>;
 

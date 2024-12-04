@@ -2048,6 +2048,8 @@ namespace natl {
 	struct Serialize<BaseString<CharType, bufferSize, Alloc, EnableDynAllocation, EnableIncreasedSmallBufferSize>> {
 		using as_type = SerializeStr;
 		using type = BaseString<CharType, bufferSize, Alloc, EnableDynAllocation, EnableIncreasedSmallBufferSize>;
+		template<typename Serializer> using error_type = void;
+
 		template<typename Serializer>
 		constexpr static void write(Serializer& serializer, const type& str) noexcept {
 			serializer.writeStr(str.toStringView());

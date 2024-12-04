@@ -580,17 +580,17 @@ namespace natl {
 		};
 	}
 
-	template<class Key, class DataType,
-		class Hash = Hash<Key>,
-		class Compare = FlatMapHashCompare<Key>,
-		class Alloc = DefaultAllocatorByte>
-	using FlatHashMap = impl::BaseFlatHashMap<typename DynArrayUnboundTypeT<Alloc>::type, Key, DataType, Hash, Compare>;
+	template<typename Key, typename DataType,
+		typename Hash = Hash<Key>,
+		typename Compare = FlatMapHashCompare<Key>,
+		typename Alloc = DefaultAllocatorByte>
+	using FlatHashMap = impl::BaseFlatHashMap<DynArrayUnboundTypeT<Alloc>::template type, Key, DataType, Hash, Compare>;
 
-	template<class Key, class DataType, Size bufferSize,
-		class Hash = Hash<Key>,
-		class Compare = FlatMapHashCompare<Key>,
-		class Alloc = DefaultAllocatorByte>
-	using SmallFlatHashMap = impl::BaseFlatHashMap<typename SmallDynArrayUnboundTypeT<bufferSize, Alloc>::type, Key, DataType, Hash, Compare>;
+	template<typename Key, typename DataType, Size bufferSize,
+		typename Hash = Hash<Key>,
+		typename Compare = FlatMapHashCompare<Key>,
+		typename Alloc = DefaultAllocatorByte>
+	using SmallFlatHashMap = impl::BaseFlatHashMap<SmallDynArrayUnboundTypeT<bufferSize, Alloc>::template type, Key, DataType, Hash, Compare>;
 
 
 	template<typename... TemplateFlags>

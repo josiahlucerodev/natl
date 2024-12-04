@@ -13,6 +13,31 @@ namespace natl {
 		compress,
 	};
 
+
+	struct DummySerializer {
+		using allocator_type = DefaultAllocator<natl::Ascii>;
+		using code_point_type = natl::Ascii;
+		using container_type = void;
+
+		constexpr static inline natl::Size smallBufferSize = 0;
+		constexpr static inline natl::SerializeFlag flag = natl::SerializeFlag::compress;
+	};
+
+	template<typename Type> struct Serialize;
+
+	template<typename Type> concept IsSerializableC = requires() {
+		typename Serialize<Decay<Type>>;
+		typename Serialize<Decay<Type>>::as_type;
+		typename Serialize<Decay<Type>>::type;
+		typename Serialize<Decay<Type>>::template error_type<DummySerializer>;
+	};
+	template<typename Type> struct IsSerializableV : BoolConstant<IsSerializableC<Type>> {};
+	template<typename Type> constexpr Bool IsSerializable = IsSerializableV<Type>::value;
+
+	template<typename SerializeType>
+		requires(IsSerializableC<SerializeType>)
+	using SerializeTypeOf = Serialize<SerializeType>::as_type;
+
 	template<typename Type> struct IsSerializeTypeV : FalseType {};
 	template<typename Type> constexpr inline Bool IsSerializeType = IsSerializeTypeV<Type>::value;
 	template<typename Type> concept IsSerializeTypeC = IsSerializeType<Type>;
@@ -41,53 +66,69 @@ namespace natl {
 	struct SerializeFile {};
 	struct SerializeBlob {};
 
-	template<typename SerializeType>
-		requires(IsSerializeTypeC<SerializeType>)
+	template<typename Type>
+		requires(IsSerializableC<Type>)
 	struct SerializeOptional {
-		using type = SerializeType;
+		/*todo*/ using type = Type;
+		using serialize_type = SerializeTypeOf<Type>;
 	};
 
-	template<typename BaseSerializeType>
-		requires(IsEnumBaseSerializeTypeC<BaseSerializeType>)
+	template<typename BaseType>
+		requires(IsSerializableC<BaseType>)
 	struct SerializeEnum {
-		using base_type = BaseSerializeType;
+		/*todo*/ using base_type = BaseType;
+		using base_serialize_type = SerializeTypeOf<BaseType>;
 	};
 
 	template<typename ElementType, Size Number>
-		requires(IsSerializeTypeC<ElementType>)
+		requires(IsSerializableC<ElementType>)
 	struct SerializeFixedArray {
-		using element_type = ElementType;
+		/*todo*/ using element_type = ElementType;
+		using element_serialize_type = SerializeTypeOf<ElementType>;
+		constexpr static inline Size size = Number;
 	};
 
 	template<typename ElementType>
-		requires(IsSerializeTypeC<ElementType>)
+		requires(IsSerializableC<ElementType>)
 	struct SerializeArray {
-		using element_type = ElementType;
+		/*todo*/ using element_type = ElementType;
+		using element_serialize_type = SerializeTypeOf<ElementType>;
 	};
 
 	template<typename KeyType, typename ValueType>
-		requires(IsSerializeTypeC<KeyType> && IsSerializeTypeC<ValueType>)
+		requires(IsSerializableC<KeyType> && IsSerializableC<ValueType>)
 	struct SerializeDic {
-		using key_type = KeyType;
-		using value_type = ValueType;
+		/*todo*/ using key_type = KeyType;
+		using key_serialize_type = SerializeTypeOf<KeyType>;
+		/*todo*/ using value_type = ValueType;
+		using value_serialize_type = SerializeTypeOf<ValueType>;
 	};
 
 	template<typename KeyType, typename ValueType>
-		requires(IsSerializeTypeC<KeyType>&& IsSerializeTypeC<ValueType>)
+		requires(IsSerializableC<KeyType>&& IsSerializableC<ValueType>)
 	struct SerializeDicElement {
-		using key_type = KeyType;
-		using value_type = ValueType;
+		/*todo*/ using key_type = KeyType;
+		using key_serialize_type = SerializeTypeOf<KeyType>;
+		/*todo*/ using value_type = ValueType;
+		using value_serialize_type = SerializeTypeOf<ValueType>;
 	};
 
 	template<typename... MemberTypes>
-		requires(IsSerializeTypeC<MemberTypes> && ...)
-	struct SerializeStruct { using member_types = TypePack<MemberTypes...>; };
+		requires(IsSerializableC<MemberTypes> && ...)
+	struct SerializeStruct { 
+		/*todo*/ using members = TypePack<MemberTypes...>; 
+		using members_serialize_types = TypePack<SerializeTypeOf<MemberTypes>...>;
+	};
 
-	template<typename IndexSerializeType, typename... Types>
-		requires(IsVariantIndexSerializeTypeC<IndexSerializeType> && (IsSerializeTypeC<Types> && ...))
+	template<typename IndexType, typename... Types>
+		requires(IsSerializableC<IndexType> 
+			&& IsVariantIndexSerializeTypeC<SerializeTypeOf<IndexType>> 
+			&& (IsSerializableC<Types> && ...))
 	struct SerializeVariant { 
-		using types = TypePack<Types...>; 
-		using index_size = IndexSerializeType;
+		/*todo*/ using types = TypePack<Types...>; 
+		using serialize_types = TypePack<SerializeTypeOf<Types>...>;
+		/*todo*/ using index_type = IndexType;
+		using index_serialize_type = SerializeTypeOf<IndexType>;
 	};
 
 	template<> struct IsEnumBaseSerializeTypeV<SerializeI8> : TrueType {};
@@ -158,10 +199,10 @@ namespace natl {
 	template<> struct IsSerializeTypeV<SerializeFile> : TrueType {};
 	template<> struct IsSerializeTypeV<SerializeBlob> : TrueType {};
 
-	template<typename SerializeType> 
-	struct IsSerializeTypeV<SerializeOptional<SerializeType>> : TrueType {};
-	template<typename BaseSerializeType> 
-	struct IsSerializeTypeV<SerializeEnum<BaseSerializeType>> : TrueType {};
+	template<typename Type> 
+	struct IsSerializeTypeV<SerializeOptional<Type>> : TrueType {};
+	template<typename BaseType> 
+	struct IsSerializeTypeV<SerializeEnum<BaseType>> : TrueType {};
 	template<typename ElementType, Size Number> 
 	struct IsSerializeTypeV<SerializeFixedArray<ElementType, Number>> : TrueType {};
 	template<typename ElementType> 
@@ -170,8 +211,8 @@ namespace natl {
 	struct IsSerializeTypeV<SerializeDic<KeyType, ValueType>> : TrueType {};
 	template<typename... MemberTypes> 
 	struct IsSerializeTypeV<SerializeStruct<MemberTypes...>> : TrueType {};
-	template<typename IndexSize, typename... Types> 
-	struct IsSerializeTypeV<SerializeVariant<IndexSize, Types...>> : TrueType {};
+	template<typename IndexType, typename... Types> 
+	struct IsSerializeTypeV<SerializeVariant<IndexType, Types...>> : TrueType {};
 
 	template<typename Type> struct IsSerializeI8V : FalseType {};
 	template<> struct IsSerializeI8V<SerializeChar> : TrueType {};
@@ -279,29 +320,9 @@ namespace natl {
 	template<typename Type> concept IsSerializeStructC = IsSerializeStruct<Type>;
 
 	template<typename Type> struct IsSerializeVariantV : FalseType {};
-	template<typename IndexSize, typename... Types> struct IsSerializeVariantV<SerializeVariant<IndexSize, Types...>> : TrueType {};
+	template<typename IndexType, typename... Types> struct IsSerializeVariantV<SerializeVariant<IndexType, Types...>> : TrueType {};
 	template<typename Type> constexpr inline Bool IsSerializeVariant = IsSerializeVariantV<Type>::value;
 	template<typename Type> concept IsSerializeVariantC = IsSerializeVariant<Type>;
-
-	struct DummySerializer {
-		using allocator_type = DefaultAllocator<natl::Ascii>;
-		using code_point_type = natl::Ascii;
-		using container_type = void;
-
-		constexpr static inline natl::Size smallBufferSize = 0;
-		constexpr static inline natl::SerializeFlag flag = natl::SerializeFlag::compress;
-	};
-
-	template<typename Type> struct Serialize;
-
-	template<typename Type> concept IsSerializableC = requires() { 
-		typename Serialize<Decay<Type>>;
-		typename Serialize<Decay<Type>>::as_type;
-		typename Serialize<Decay<Type>>::type;
-		typename Serialize<Decay<Type>>::template error_type<DummySerializer>;
-	};
-	template<typename Type> struct IsSerializableV : BoolConstant<IsSerializableC<Type>> {};
-	template<typename Type> constexpr Bool IsSerializable = IsSerializableV<Type>::value;
 
 	template<typename Serilizer>
 	concept IsSerializerC = requires(Serilizer & serilizer, const ConstAsciiStringView& name) {
@@ -321,239 +342,12 @@ namespace natl {
 		{ functor(str) } -> IsSameC<Option<IndexIntegerType>>;
 	};
 
-	template<typename SerializeType>
-		requires(IsSerializableC<SerializeType>)
-	using SerializeTypeOf = Serialize<SerializeType>::as_type;
-
 	template<typename Serializer, typename SerializeType>
-	struct CanSerializeV;
+	struct CanSerializeV : FalseType {};
 	template<typename Serializer, typename SerializeType>
 	constexpr Bool CanSerialize = CanSerializeV<Serializer, SerializeType>::value;
 	template<typename Serializer, typename SerializeType>
 	concept CanSerializeC = CanSerialize<Serializer, SerializeType>;
-
-	template<typename Serializer>
-	concept CanSerializeI8 = IsSerializerC<Serializer>
-		&& requires(Serializer & serializer, const i8 value) {
-			{ serializer.writeI8(value) } -> IsSameC<void>;
-	};
-	template<typename Serializer>
-	concept CanSerializeI16 = IsSerializerC<Serializer>
-		&& requires(Serializer & serializer, const i16 value) {
-			{ serializer.writeI16(value) } -> IsSameC<void>;
-	};
-	template<typename Serializer>
-	concept CanSerializeI32 = IsSerializerC<Serializer>
-		&& requires(Serializer & serializer, const i32 value) {
-			{ serializer.writeI32(value) } -> IsSameC<void>;
-	};
-	template<typename Serializer>
-	concept CanSerializeI64 = IsSerializerC<Serializer>
-		&& requires(Serializer & serializer, const i64 value) {
-			{ serializer.writeI64(value) } -> IsSameC<void>;
-	};
-
-	template<typename Serializer>
-	concept CanSerializeUI8 = IsSerializerC<Serializer>
-		&& requires(Serializer & serializer, const ui8 value) {
-			{ serializer.writeUI8(value) } -> IsSameC<void>;
-	};
-	template<typename Serializer>
-	concept CanSerializeUI16 = IsSerializerC<Serializer>
-		&& requires(Serializer & serializer, const ui16 value) {
-			{ serializer.writeUI16(value) } -> IsSameC<void>;
-	};
-	template<typename Serializer>
-	concept CanSerializeUI32 = IsSerializerC<Serializer>
-		&& requires(Serializer & serializer, const ui32 value) {
-			{ serializer.writeUI32(value) } -> IsSameC<void>;
-	};
-	template<typename Serializer>
-	concept CanSerializeUI64 = IsSerializerC<Serializer>
-		&& requires(Serializer & serializer, const ui64 value) {
-			{ serializer.writeUI64(value) } -> IsSameC<void>;
-	};
-
-	template<typename Serializer>
-	concept CanSerializeSize = CanSerializeUI64<Serializer>;
-
-	template<typename Serializer>
-	concept CanSerializeF32 = IsSerializerC<Serializer>
-		&& requires(Serializer & serializer, const f32 value) {
-			{ serializer.writeF32(value) } -> IsSameC<void>;
-	};
-	template<typename Serializer>
-	concept CanSerializeF64 = IsSerializerC<Serializer>
-		&& requires(Serializer & serializer, const f64 value) {
-			{ serializer.writeF64(value) } -> IsSameC<void>;
-	};
-
-	template<typename Serializer>
-	concept CanSerializeBool = IsSerializerC<Serializer>
-		&& requires(Serializer & serializer, const Bool value) {
-			{ serializer.writeBool(value) } -> IsSameC<void>;
-	};
-
-	template<typename Serializer>
-	concept CanSerializeChar = IsSerializerC<Serializer>
-		&& requires(Serializer & serializer, const Ascii value) {
-			{ serializer.writeChar(value) } -> IsSameC<void>;
-	};
-	template<typename Serializer>
-	concept CanSerializeStr = IsSerializerC<Serializer>
-		&& requires(Serializer & serializer,
-			const Ascii * rawStr, const Size size,
-			const ConstAsciiStringView str) {
-				{ serializer.writeStr(rawStr, size) } -> IsSameC<void>;
-				{ serializer.writeStr(str) } -> IsSameC<void>;
-	};
-
-	template<typename Serializer>
-	concept CanSerializeFile = IsSerializerC<Serializer>
-		&& requires(Serializer & serializer, const ConstAsciiStringView& fileName, const ArrayView<const Byte>&data) {
-			{ serializer.writeFile(fileName, data) } -> IsSameC<void>;
-	};
-	template<typename Serializer>
-	concept CanSerializeBlob = IsSerializerC<Serializer>
-		&& requires(Serializer & serializer,
-			const ArrayView<const Byte>&data) {
-				{ serializer.writeBlob(data) } -> IsSameC<void>;
-	};
-
-	template<typename Serializer>
-	concept CanSerializeOptional = IsSerializerC<Serializer>
-		&& requires(Serializer & serializer) {
-			{ serializer.writeNull() } -> IsSameC<void>;
-	};
-	template<typename Serializer>
-	concept CanSerializeEnum = IsSerializerC<Serializer>
-		&& requires(Serializer& serializer) {
-			{
-				serializer.template writeEnum<SerializeUI64>(
-					declval<Size>(),
-					declval<ConstAsciiStringView>())
-			} -> IsSameC<void>;
-	};
-
-	template<typename Serializer>
-	concept CanSerializeFixedArray = IsSerializerC<Serializer>
-		&& requires(Serializer & serializer) {
-			{ serializer.beginWriteFixedArray() } -> IsSameC<void>;
-			{ serializer.endWriteFixedArray() } -> IsSameC<void>;
-			{ serializer.beginWriteFixedArrayElement() } -> IsSameC<void>;
-			{ serializer.endWriteFixedArrayElement() } -> IsSameC<void>;
-	};
-	template<typename Serializer>
-	concept CanSerializeArray = IsSerializerC<Serializer>
-		&& requires(Serializer & serializer) {
-			{ serializer.writeEmptyArray() } -> IsSameC<void>;
-			{ serializer.beginWriteArray() } -> IsSameC<void>;
-			{ serializer.endWriteArray() } -> IsSameC<void>;
-			{ serializer.beginWriteArrayElement() } -> IsSameC<void>;
-			{ serializer.endWriteArrayElement() } -> IsSameC<void>;
-	};
-	template<typename Serializer>
-	concept CanSerializeDic = IsSerializerC<Serializer>
-		&& requires(Serializer & serializer) {
-			{ serializer.writeEmptyDic() } -> IsSameC<void>;
-			{ serializer.beginWriteDic() } -> IsSameC<void>;
-			{ serializer.endWriteDic() } -> IsSameC<void>;
-			{ serializer.beginWriteDicElement() } -> IsSameC<void>;
-			{ serializer.endWriteDicElement() } -> IsSameC<void>;
-			{ serializer.writeDicValue() } -> IsSameC<void>;
-	};
-	template<typename Serializer>
-	concept CanSerializeStruct = IsSerializerC<Serializer>
-		&& requires(Serializer & serializer) {
-			{ serializer.beginWriteStruct() } -> IsSameC<void>;
-			{ serializer.endWriteStruct() } -> IsSameC<void>;
-	};
-	template<typename Serializer>
-	concept CanSerializeVariant = IsSerializerC<Serializer>
-		&& requires(Serializer & serializer) {
-			{ serializer.template beginWriteVariant<SerializeVariant<SerializeUI8, SerializeUI8>, 0>(
-				declval<ConstAsciiStringView>()) 
-			} -> IsSameC<void>;
-			{ serializer.endWriteStruct() } -> IsSameC<void>;
-	};
-
-	template<typename Serializer>
-	concept IsFullSerializer = IsSerializerC<Serializer>
-		&& CanSerializeI8<Serializer>
-		&& CanSerializeI16<Serializer>
-		&& CanSerializeI32<Serializer>
-		&& CanSerializeI64<Serializer>
-		&& CanSerializeUI8<Serializer>
-		&& CanSerializeUI16<Serializer>
-		&& CanSerializeUI32<Serializer>
-		&& CanSerializeUI64<Serializer>
-		&& CanSerializeF32<Serializer>
-		&& CanSerializeF64<Serializer>
-		&& CanSerializeBool<Serializer>
-		&& CanSerializeChar<Serializer>
-		&& CanSerializeStr<Serializer>
-		&& CanSerializeOptional<Serializer>
-		&& CanSerializeEnum<Serializer>
-		&& CanSerializeFixedArray<Serializer>
-		&& CanSerializeArray<Serializer>
-		&& CanSerializeDic<Serializer>
-		&& CanSerializeStruct<Serializer>
-		&& CanSerializeVariant<Serializer>;
-
-	template<typename Serializer>
-	struct CanSerializeV<Serializer, SerializeI8> : BoolConstant<CanSerializeI8<Serializer>> {};
-	template<typename Serializer>
-	struct CanSerializeV<Serializer, SerializeI16> : BoolConstant<CanSerializeI16<Serializer>> {};
-	template<typename Serializer>
-	struct CanSerializeV<Serializer, SerializeI32> : BoolConstant<CanSerializeI32<Serializer>> {};
-	template<typename Serializer>
-	struct CanSerializeV<Serializer, SerializeI64> : BoolConstant<CanSerializeI64<Serializer>> {};
-	template<typename Serializer>
-	struct CanSerializeV<Serializer, SerializeUI8> : BoolConstant<CanSerializeUI8<Serializer>> {};
-	template<typename Serializer>
-	struct CanSerializeV<Serializer, SerializeUI16> : BoolConstant<CanSerializeUI16<Serializer>> {};
-	template<typename Serializer>
-	struct CanSerializeV<Serializer, SerializeUI32> : BoolConstant<CanSerializeUI32<Serializer>> {};
-	template<typename Serializer>
-	struct CanSerializeV<Serializer, SerializeUI64> : BoolConstant<CanSerializeUI64<Serializer>> {};
-	template<typename Serializer>
-	struct CanSerializeV<Serializer, SerializeF32> : BoolConstant<CanSerializeF32<Serializer>> {};
-	template<typename Serializer>
-	struct CanSerializeV<Serializer, SerializeF64> : BoolConstant<CanSerializeF64<Serializer>> {};
-	template<typename Serializer>
-	struct CanSerializeV<Serializer, SerializeBool> : BoolConstant<CanSerializeBool<Serializer>> {};
-	template<typename Serializer>
-	struct CanSerializeV<Serializer, SerializeChar> : BoolConstant<CanSerializeChar<Serializer>> {};
-	template<typename Serializer>
-	struct CanSerializeV<Serializer, SerializeStr> : BoolConstant<CanSerializeStr<Serializer>> {};
-	template<typename Serializer>
-	struct CanSerializeV<Serializer, SerializeFile> : BoolConstant<CanSerializeFile<Serializer>> {};
-	template<typename Serializer>
-	struct CanSerializeV<Serializer, SerializeBlob> : BoolConstant<CanSerializeBlob<Serializer>> {};
-
-	template<typename Serializer, typename SerializeType>
-	struct CanSerializeV<Serializer, SerializeOptional<SerializeType>>
-		: BoolConstant<CanSerializeOptional<SerializeType> && CanSerialize<Serializer, SerializeType>> {};
-
-	template<typename Serializer, typename BaseSerializeType>
-	struct CanSerializeV<Serializer, SerializeEnum<BaseSerializeType>>
-		: BoolConstant<CanSerializeEnum<Serializer> && CanSerializeC<Serializer, BaseSerializeType>> {};
-	template<typename Serializer, typename ElementType, Size Number>
-	struct CanSerializeV<Serializer, SerializeFixedArray<ElementType, Number>>
-		: BoolConstant<CanSerializeFixedArray<Serializer>&& CanSerializeC<Serializer, ElementType>> {};
-	template<typename Serializer, typename ElementType>
-	struct CanSerializeV<Serializer, SerializeArray<ElementType>>
-		: BoolConstant<CanSerializeArray<Serializer> && CanSerializeC<Serializer, ElementType>> {};
-	template<typename Serializer, typename KeyType, typename ValueType>
-	struct CanSerializeV<Serializer, SerializeDic<KeyType, ValueType>>
-		: BoolConstant<CanSerializeDic<Serializer> && CanSerializeC<Serializer, KeyType> && CanSerializeC<Serializer, ValueType>> {};
-	template<typename Serializer, typename... MemberTypes>
-	struct CanSerializeV<Serializer, SerializeStruct<MemberTypes...>>
-		: BoolConstant<CanSerializeStruct<Serializer> && (CanSerializeC<Serializer, MemberTypes> && ...)> {};
-	template<typename Serializer, typename IndexSize, typename... Types>
-	struct CanSerializeV<Serializer, SerializeVariant<IndexSize, Types...>>
-		: BoolConstant<CanSerializeVariant<Serializer> && (CanSerializeC<Serializer, Types> && ...)> {};
-
 
 	template<typename Serializer, typename Type>
 	using SerializeErrorOf = Serialize<Decay<Type>>::template error_type<Serializer>;
@@ -623,7 +417,7 @@ namespace natl {
 		requires(IsSerializerC<Serializer>
 		&& IsSerializableC<Decay<Type>>
 		&& IsSerializeTypeC<SerilizeType>
-		&& CanSerializeC<Serializer, typename Serialize<Decay<Type>>::as_type>
+		&& CanSerializeC<Serializer, Decay<Type>>
 		&& natl::IsSameC<SerilizeType, typename Serialize<Decay<Type>>::as_type>)
 		constexpr SerializeErrorResult<Serializer, Type> serializeWriteNamedMatch(
 			Serializer& serializer,
@@ -807,7 +601,7 @@ namespace natl {
 	template<class ElementType>
 		requires(IsSerializableC<Decay<ElementType>>)
 	struct Serialize<ArrayView<ElementType>> {
-		using as_type = SerializeArray<SerializeTypeOf<Decay<ElementType>>>;
+		using as_type = SerializeArray<Decay<ElementType>>;
 		using type = ArrayView<ElementType>;
 		template<typename Serializer> using error_type = void;
 
@@ -825,6 +619,240 @@ namespace natl {
 				serializer.endWriteArray();
 			}
 		}
+	};
+
+	template<typename Serializer, typename SerializeType>
+		requires(IsSerializableC<SerializeType>)
+	struct CanSerializeV<Serializer, SerializeType> : CanSerializeV<Serializer, SerializeTypeOf<SerializeType>> {};
+
+	template<typename Serializer>
+	concept CanSerializeI8 = IsSerializerC<Serializer>
+		&& requires(Serializer & serializer, const i8 value) {
+			{ serializer.writeI8(value) } -> IsSameC<void>;
+	};
+	template<typename Serializer>
+	concept CanSerializeI16 = IsSerializerC<Serializer>
+		&& requires(Serializer & serializer, const i16 value) {
+			{ serializer.writeI16(value) } -> IsSameC<void>;
+	};
+	template<typename Serializer>
+	concept CanSerializeI32 = IsSerializerC<Serializer>
+		&& requires(Serializer & serializer, const i32 value) {
+			{ serializer.writeI32(value) } -> IsSameC<void>;
+	};
+	template<typename Serializer>
+	concept CanSerializeI64 = IsSerializerC<Serializer>
+		&& requires(Serializer & serializer, const i64 value) {
+			{ serializer.writeI64(value) } -> IsSameC<void>;
+	};
+
+	template<typename Serializer>
+	concept CanSerializeUI8 = IsSerializerC<Serializer>
+		&& requires(Serializer & serializer, const ui8 value) {
+			{ serializer.writeUI8(value) } -> IsSameC<void>;
+	};
+	template<typename Serializer>
+	concept CanSerializeUI16 = IsSerializerC<Serializer>
+		&& requires(Serializer & serializer, const ui16 value) {
+			{ serializer.writeUI16(value) } -> IsSameC<void>;
+	};
+	template<typename Serializer>
+	concept CanSerializeUI32 = IsSerializerC<Serializer>
+		&& requires(Serializer & serializer, const ui32 value) {
+			{ serializer.writeUI32(value) } -> IsSameC<void>;
+	};
+	template<typename Serializer>
+	concept CanSerializeUI64 = IsSerializerC<Serializer>
+		&& requires(Serializer & serializer, const ui64 value) {
+			{ serializer.writeUI64(value) } -> IsSameC<void>;
+	};
+
+	template<typename Serializer>
+	concept CanSerializeSize = CanSerializeUI64<Serializer>;
+
+	template<typename Serializer>
+	concept CanSerializeF32 = IsSerializerC<Serializer>
+		&& requires(Serializer & serializer, const f32 value) {
+			{ serializer.writeF32(value) } -> IsSameC<void>;
+	};
+	template<typename Serializer>
+	concept CanSerializeF64 = IsSerializerC<Serializer>
+		&& requires(Serializer & serializer, const f64 value) {
+			{ serializer.writeF64(value) } -> IsSameC<void>;
+	};
+
+	template<typename Serializer>
+	concept CanSerializeBool = IsSerializerC<Serializer>
+		&& requires(Serializer & serializer, const Bool value) {
+			{ serializer.writeBool(value) } -> IsSameC<void>;
+	};
+
+	template<typename Serializer>
+	concept CanSerializeChar = IsSerializerC<Serializer>
+		&& requires(Serializer & serializer, const Ascii value) {
+			{ serializer.writeChar(value) } -> IsSameC<void>;
+	};
+	template<typename Serializer>
+	concept CanSerializeStr = IsSerializerC<Serializer>
+		&& requires(Serializer & serializer,
+			const Ascii * rawStr, const Size size,
+			const ConstAsciiStringView str) {
+				{ serializer.writeStr(rawStr, size) } -> IsSameC<void>;
+				{ serializer.writeStr(str) } -> IsSameC<void>;
+	};
+
+	template<typename Serializer>
+	concept CanSerializeFile = IsSerializerC<Serializer>
+		&& requires(Serializer & serializer, const ConstAsciiStringView & fileName, const ArrayView<const Byte>&data) {
+			{ serializer.writeFile(fileName, data) } -> IsSameC<void>;
+	};
+	template<typename Serializer>
+	concept CanSerializeBlob = IsSerializerC<Serializer>
+		&& requires(Serializer & serializer,
+			const ArrayView<const Byte>&data) {
+				{ serializer.writeBlob(data) } -> IsSameC<void>;
+	};
+
+	template<typename Serializer>
+	concept CanSerializeOptional = IsSerializerC<Serializer>
+		&& requires(Serializer & serializer) {
+			{ serializer.writeNull() } -> IsSameC<void>;
+	};
+	template<typename Serializer>
+	concept CanSerializeEnum = IsSerializerC<Serializer>
+		&& requires(Serializer & serializer) {
+			{
+				serializer.template writeEnum<SerializeUI64>(
+					declval<Size>(),
+					declval<ConstAsciiStringView>())
+			} -> IsSameC<void>;
+	};
+
+	template<typename Serializer>
+	concept CanSerializeFixedArray = IsSerializerC<Serializer>
+		&& requires(Serializer & serializer) {
+			{ serializer.beginWriteFixedArray() } -> IsSameC<void>;
+			{ serializer.endWriteFixedArray() } -> IsSameC<void>;
+			{ serializer.beginWriteFixedArrayElement() } -> IsSameC<void>;
+			{ serializer.endWriteFixedArrayElement() } -> IsSameC<void>;
+	};
+	template<typename Serializer>
+	concept CanSerializeArray = IsSerializerC<Serializer>
+		&& requires(Serializer & serializer) {
+			{ serializer.writeEmptyArray() } -> IsSameC<void>;
+			{ serializer.beginWriteArray() } -> IsSameC<void>;
+			{ serializer.endWriteArray() } -> IsSameC<void>;
+			{ serializer.beginWriteArrayElement() } -> IsSameC<void>;
+			{ serializer.endWriteArrayElement() } -> IsSameC<void>;
+	};
+	template<typename Serializer>
+	concept CanSerializeDic = IsSerializerC<Serializer>
+		&& requires(Serializer & serializer) {
+			{ serializer.writeEmptyDic() } -> IsSameC<void>;
+			{ serializer.beginWriteDic() } -> IsSameC<void>;
+			{ serializer.endWriteDic() } -> IsSameC<void>;
+			{ serializer.beginWriteDicElement() } -> IsSameC<void>;
+			{ serializer.endWriteDicElement() } -> IsSameC<void>;
+			{ serializer.writeDicValue() } -> IsSameC<void>;
+	};
+	template<typename Serializer>
+	concept CanSerializeStruct = IsSerializerC<Serializer>
+		&& requires(Serializer & serializer) {
+			{ serializer.beginWriteStruct() } -> IsSameC<void>;
+			{ serializer.endWriteStruct() } -> IsSameC<void>;
+	};
+	template<typename Serializer>
+	concept CanSerializeVariant = IsSerializerC<Serializer>
+		&& requires(Serializer & serializer) {
+			{
+				serializer.template beginWriteVariant<SerializeVariant<natl::ui8, natl::ui8>, 0>(
+					declval<ConstAsciiStringView>())
+			} -> IsSameC<void>;
+			{ serializer.endWriteStruct() } -> IsSameC<void>;
+	};
+
+	template<typename Serializer>
+	concept IsFullSerializer = IsSerializerC<Serializer>
+		&& CanSerializeI8<Serializer>
+		&& CanSerializeI16<Serializer>
+		&& CanSerializeI32<Serializer>
+		&& CanSerializeI64<Serializer>
+		&& CanSerializeUI8<Serializer>
+		&& CanSerializeUI16<Serializer>
+		&& CanSerializeUI32<Serializer>
+		&& CanSerializeUI64<Serializer>
+		&& CanSerializeF32<Serializer>
+		&& CanSerializeF64<Serializer>
+		&& CanSerializeBool<Serializer>
+		&& CanSerializeChar<Serializer>
+		&& CanSerializeStr<Serializer>
+		&& CanSerializeOptional<Serializer>
+		&& CanSerializeEnum<Serializer>
+		&& CanSerializeFixedArray<Serializer>
+		&& CanSerializeArray<Serializer>
+		&& CanSerializeDic<Serializer>
+		&& CanSerializeStruct<Serializer>
+		&& CanSerializeVariant<Serializer>;
+
+	template<typename Serializer>
+	struct CanSerializeV<Serializer, SerializeI8> : BoolConstant<CanSerializeI8<Serializer>> {};
+	template<typename Serializer>
+	struct CanSerializeV<Serializer, SerializeI16> : BoolConstant<CanSerializeI16<Serializer>> {};
+	template<typename Serializer>
+	struct CanSerializeV<Serializer, SerializeI32> : BoolConstant<CanSerializeI32<Serializer>> {};
+	template<typename Serializer>
+	struct CanSerializeV<Serializer, SerializeI64> : BoolConstant<CanSerializeI64<Serializer>> {};
+	template<typename Serializer>
+	struct CanSerializeV<Serializer, SerializeUI8> : BoolConstant<CanSerializeUI8<Serializer>> {};
+	template<typename Serializer>
+	struct CanSerializeV<Serializer, SerializeUI16> : BoolConstant<CanSerializeUI16<Serializer>> {};
+	template<typename Serializer>
+	struct CanSerializeV<Serializer, SerializeUI32> : BoolConstant<CanSerializeUI32<Serializer>> {};
+	template<typename Serializer>
+	struct CanSerializeV<Serializer, SerializeUI64> : BoolConstant<CanSerializeUI64<Serializer>> {};
+	template<typename Serializer>
+	struct CanSerializeV<Serializer, SerializeF32> : BoolConstant<CanSerializeF32<Serializer>> {};
+	template<typename Serializer>
+	struct CanSerializeV<Serializer, SerializeF64> : BoolConstant<CanSerializeF64<Serializer>> {};
+	template<typename Serializer>
+	struct CanSerializeV<Serializer, SerializeBool> : BoolConstant<CanSerializeBool<Serializer>> {};
+	template<typename Serializer>
+	struct CanSerializeV<Serializer, SerializeChar> : BoolConstant<CanSerializeChar<Serializer>> {};
+	template<typename Serializer>
+	struct CanSerializeV<Serializer, SerializeStr> : BoolConstant<CanSerializeStr<Serializer>> {};
+	template<typename Serializer>
+	struct CanSerializeV<Serializer, SerializeFile> : BoolConstant<CanSerializeFile<Serializer>> {};
+	template<typename Serializer>
+	struct CanSerializeV<Serializer, SerializeBlob> : BoolConstant<CanSerializeBlob<Serializer>> {};
+
+	template<typename Serializer, typename SerializeType>
+	struct CanSerializeV<Serializer, SerializeOptional<SerializeType>>
+		: BoolConstant<CanSerializeOptional<SerializeType>&& CanSerialize<Serializer, SerializeType>> {
+	};
+
+	template<typename Serializer, typename BaseSerializeType>
+	struct CanSerializeV<Serializer, SerializeEnum<BaseSerializeType>>
+		: BoolConstant<CanSerializeEnum<Serializer>&& CanSerializeC<Serializer, BaseSerializeType>> {
+	};
+	template<typename Serializer, typename ElementType, Size Number>
+	struct CanSerializeV<Serializer, SerializeFixedArray<ElementType, Number>>
+		: BoolConstant<CanSerializeFixedArray<Serializer>&& CanSerializeC<Serializer, ElementType>> {
+	};
+	template<typename Serializer, typename ElementType>
+	struct CanSerializeV<Serializer, SerializeArray<ElementType>>
+		: BoolConstant<CanSerializeArray<Serializer>&& CanSerializeC<Serializer, ElementType>> {
+	};
+	template<typename Serializer, typename KeyType, typename ValueType>
+	struct CanSerializeV<Serializer, SerializeDic<KeyType, ValueType>>
+		: BoolConstant<CanSerializeDic<Serializer>&& CanSerializeC<Serializer, KeyType>&& CanSerializeC<Serializer, ValueType>> {
+	};
+	template<typename Serializer, typename... MemberTypes>
+	struct CanSerializeV<Serializer, SerializeStruct<MemberTypes...>>
+		: BoolConstant<CanSerializeStruct<Serializer> && (CanSerializeC<Serializer, MemberTypes> && ...)> {
+	};
+	template<typename Serializer, typename IndexType, typename... Types>
+	struct CanSerializeV<Serializer, SerializeVariant<IndexType, Types...>>
+		: BoolConstant<CanSerializeVariant<Serializer> && (CanSerializeC<Serializer, Types> && ...)> {
 	};
 
 	//deserialize 
@@ -1061,11 +1089,11 @@ namespace natl {
 	template<typename Deserializer, typename Type>
 	using DeserializeErrorOf = typename Deserialize<Decay<Type>>::template error_type<Deserializer>;
 
-	template<typename Deserializer, typename Type, typename ParentType, typename... DeserializerArgs>
-		requires(IsDeserilizableC<Type>)
+	template<typename Deserializer, typename Type, typename ParentSerializeType, typename... DeserializerArgs>
+		requires(IsDeserilizableC<Type> && IsSerializeTypeC<ParentSerializeType>)
 	constexpr Expect<Type, DeserializeErrorOf<Deserializer, Type>> deserializeRead(
 		Deserializer& deserializer,
-		typename Deserializer::template deserialize_info<ParentType>& parent,
+		typename Deserializer::template deserialize_info<ParentSerializeType>& parent,
 		DeserializerArgs&&... deserializerArgs) noexcept {
 		using type_deserialize = Deserialize<Decay<Type>>;
 		constexpr ConstAsciiStringView sourceName = "natl::deserializeRead";
@@ -1127,11 +1155,9 @@ namespace natl {
 		const ConstAsciiStringView& name,
 		DeserializerArgs&&... deserializerArgs
 	) noexcept {
-		using type_deserialize = Deserialize<Decay<Type>>;
-		using as_type = type_deserialize::as_type;
 		constexpr ConstAsciiStringView sourceName = "natl::deserializeReadNamed";
 
-		auto readNamedInfoExpect = deserializer.template beginReadNamed<as_type, ParentType>(parent, name);
+		auto readNamedInfoExpect = deserializer.template beginReadNamed<Type, ParentType>(parent, name);
 		if (readNamedInfoExpect.hasError()) {
 			return unexpected(readNamedInfoExpect.error().addSource(sourceName, name));
 		}
@@ -1143,7 +1169,7 @@ namespace natl {
 			return unexpected(valueExpect.error().addSource(sourceName, name));
 		}
 
-		auto endReadNameError = deserializer.template endReadNamed<as_type>(readNamedInfo);
+		auto endReadNameError = deserializer.template endReadNamed<SerializeTypeOf<Type>>(readNamedInfo);
 		if (endReadNameError.hasValue()) {
 			return unexpected(endReadNameError.value().addSource(sourceName, name));
 		}
@@ -1171,11 +1197,9 @@ namespace natl {
 		const ConstAsciiStringView& name,
 		Type& dst,
 		DeserializerArgs&&... deserializerArgs) noexcept {
-		using type_deserialize = Deserialize<Decay<Type>>;
-		using as_type = type_deserialize::as_type;
 		constexpr ConstAsciiStringView sourceName = "natl::deserializeReadNamedToDst";
 
-		auto readNamedInfoExpect = deserializer.template beginReadNamed<as_type, ParentType>(parent, name);
+		auto readNamedInfoExpect = deserializer.template beginReadNamed<Type, ParentType>(parent, name);
 		if (readNamedInfoExpect.hasError()) {
 			return readNamedInfoExpect.error().addSource(sourceName, name);
 		}
@@ -1187,7 +1211,7 @@ namespace natl {
 			return error.value().addSource(sourceName, name);
 		}
 
-		auto endReadNameError = deserializer.template endReadNamed<as_type>(readNamedInfo);
+		auto endReadNameError = deserializer.template endReadNamed<SerializeTypeOf<Type>>(readNamedInfo);
 		if (endReadNameError.hasValue()) {
 			return endReadNameError.value().addSource(sourceName, name);
 		}

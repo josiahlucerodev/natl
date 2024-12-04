@@ -123,7 +123,6 @@ namespace natl {
 		if (isConstantEvaluated()) {
 			return natl::forward<Functor>(functor)(natl::forward<ArgTypes>(arguments)...);
 		} else {
-
 			ArgsStorageType argumentStorage(arguments...);
 			ResultCacheType& resultCache = getThreadLocalResultCacheOfCallFunctionCached<ResultCacheType>();
 			typename ResultCacheType::optional_pointer value = resultCache.find(argumentStorage);

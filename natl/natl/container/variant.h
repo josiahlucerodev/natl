@@ -690,7 +690,7 @@ namespace natl {
 	template<typename... Elements>
 		requires(IsSerializableC<Decay<typename Elements::value_type>> && ...) 
 	struct Serialize<Variant<Elements...>> {
-		using as_type = SerializeVariant<SerializeUI64, SerializeTypeOf<Decay<typename Elements::value_type>>...>;
+		using as_type = SerializeVariant<natl::ui64, Decay<typename Elements::value_type>...>;
 		using type = Variant<Elements...>;
 		template<typename Serializer> using error_type = void;
 
@@ -741,7 +741,8 @@ namespace natl {
 			return [](Deserializer& deserializer,
 					typename Deserializer::template deserialize_info<as_type>& varaintInfo,
 					type& dst) -> Option<error_type<Deserializer>> {
-				using element_type = SerializeTypeOf<typename Element::value_type>;
+				using element_type = typename Element::value_type;
+				using element_serialize_type = SerializeTypeOf<element_type>;
 
 				auto varaintElementExpect = deserializer.template beginReadVaraintOfType<element_type>(varaintInfo);
 				if (varaintElementExpect.hasError()) {
@@ -749,13 +750,13 @@ namespace natl {
 				}
 				auto varaintElementInfo = varaintElementExpect.value();
 
-				auto expectValue = deserializeReadMatch<element_type, Deserializer, typename Element::value_type>(
+				auto expectValue = deserializeReadMatch<element_serialize_type, Deserializer, element_type>(
 					deserializer, varaintElementInfo);
 				if (expectValue.hasError()) {
 					return expectValue.error();
 				}
 
-				dst.assign<Index>(move(expectValue.value()));
+				dst.template assign<Index>(move(expectValue.value()));
 
 				return deserializer.endReadVariant(varaintElementInfo);
 			};
