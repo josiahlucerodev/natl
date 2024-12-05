@@ -9,10 +9,18 @@
 //interface 
 namespace natl {
 	enum class SerializeFlag {
-		pretty,
-		compress,
+		v_default = 0,
+		pretty = 1 << 0,
+		fullTypes = 1 << 1,
 	};
 
+	constexpr inline SerializeFlag operator|(const SerializeFlag lhs, const SerializeFlag rhs) noexcept {
+		using underlying_type = natl::UnderlyingType<SerializeFlag>; 
+		return static_cast<SerializeFlag>(static_cast<underlying_type>(lhs) | static_cast<underlying_type>(rhs));
+	} constexpr inline SerializeFlag operator&(const SerializeFlag lhs, const SerializeFlag rhs) noexcept {
+		using underlying_type = natl::UnderlyingType<SerializeFlag>; 
+		return static_cast<SerializeFlag>(static_cast<underlying_type>(lhs) & static_cast<underlying_type>(rhs));
+	};
 
 	struct DummySerializer {
 		using allocator_type = DefaultAllocator<natl::Ascii>;
@@ -20,12 +28,14 @@ namespace natl {
 		using container_type = void;
 
 		constexpr static inline natl::Size smallBufferSize = 0;
-		constexpr static inline natl::SerializeFlag flag = natl::SerializeFlag::compress;
+		constexpr static inline natl::SerializeFlag flag = natl::SerializeFlag::v_default;
 	};
 
-	template<typename Type> struct Serialize;
+	template<typename Type> 
+	struct Serialize;
 
-	template<typename Type> concept IsSerializableC = requires() {
+	template<typename Type> 
+	concept IsSerializableC = requires() {
 		typename Serialize<Decay<Type>>;
 		typename Serialize<Decay<Type>>::as_type;
 		typename Serialize<Decay<Type>>::type;
@@ -41,6 +51,51 @@ namespace natl {
 	template<typename Type> struct IsSerializeTypeV : FalseType {};
 	template<typename Type> constexpr inline Bool IsSerializeType = IsSerializeTypeV<Type>::value;
 	template<typename Type> concept IsSerializeTypeC = IsSerializeType<Type>;
+
+	template<typename Type> 
+	concept HasRegularSerializeNameC = IsSerializableC<Type> && requires() {
+		{ Serialize<Decay<Type>>::name } -> ConvertibleTo<ConstAsciiStringView>;
+	};
+	template<typename Type> constexpr inline Bool HasRegularSerializeName = HasRegularSerializeNameC<Type>;
+	template<typename Type> struct HasRegularSerializeNameV : BoolConstant<HasRegularSerializeNameC<Type>> {};
+
+	template<typename Type>
+	constexpr inline ConstAsciiStringView RegularSerializeName = Serialize<Type>::name;
+
+	template<typename Type>
+	struct OverrideSerializeNameV {
+		using not_specialized = void;
+	};
+
+	template<typename Type>
+	concept HasOverrideSerializeNameC = !requires() {
+		typename OverrideSerializeNameV<Type>::not_specialized;
+	};
+	template<typename Type> constexpr inline Bool HasOverrideSerializeName = HasOverrideSerializeNameC<Type>;
+	template<typename Type> struct HasOverrideSerializeNameV : BoolConstant<HasOverrideSerializeNameC<Type>> {};
+
+	template<typename Type> 
+	constexpr inline ConstAsciiStringView OverrideSerializeName = OverrideSerializeNameV<Type>::value;
+
+	template<typename Type>
+	concept HasSerializeNameC = HasRegularSerializeNameC<Type> || HasOverrideSerializeNameC<Type>;
+	template<typename Type> constexpr inline Bool HasSerializeName = HasSerializeNameC<Type>;
+	template<typename Type> struct HasSerializeNameV : BoolConstant<HasSerializeNameC<Type>> {};
+
+	template<typename Type>
+		requires(HasSerializeNameC<Type>)
+	struct SerializeNameV {
+		consteval static ConstAsciiStringView getName() noexcept {
+			if constexpr (HasOverrideSerializeNameC<Type>) {
+				return OverrideSerializeName<Type>;
+			} else {
+				return RegularSerializeName<Type>;
+			}
+		}
+		constexpr static inline ConstAsciiStringView value = getName();
+	};
+	template<typename Type>
+	constexpr inline ConstAsciiStringView SerializeName = SerializeNameV<Type>::value;
 
 	template<typename Type> struct IsEnumBaseSerializeTypeV : FalseType {};
 	template<typename Type> constexpr inline Bool IsEnumBaseSerializeType = IsEnumBaseSerializeTypeV<Type>::value;
@@ -1055,6 +1110,52 @@ namespace natl {
 	template<typename Type>
 		requires(IsDeserilizableC<Type>)
 	using DeserializeTypeOf = typename Deserialize<Type>::as_type;
+
+	template<typename Type>
+	concept HasRegularDeserializeNameC = IsDeserilizableC<Type> && requires() {
+		{ Deserialize<Decay<Type>>::name } -> ConvertibleTo<ConstAsciiStringView>;
+	};
+	template<typename Type> constexpr inline Bool HasRegularDeserializeName = HasRegularDeserializeNameC<Type>;
+	template<typename Type> struct HasRegularDeserializeNameV : BoolConstant<HasRegularDeserializeNameC<Type>> {};
+
+	template<typename Type>
+	constexpr inline ConstAsciiStringView RegularDeserializeName = Deserialize<Type>::name;
+
+	template<typename Type>
+	struct OverrideDeserializeNameV {
+		using not_specialized = void;
+	};
+
+	template<typename Type>
+	concept HasOverrideDeserializeNameC = !requires() {
+		typename OverrideDeserializeNameV<Type>::not_specialized;
+	};
+	template<typename Type> constexpr inline Bool HasOverrideDeserializeName = HasOverrideDeserializeNameC<Type>;
+	template<typename Type> struct HasOverrideDeserializeNameV : BoolConstant<HasOverrideDeserializeNameC<Type>> {};
+
+	template<typename Type>
+	constexpr inline ConstAsciiStringView OverrideDeserializeName = OverrideDeserializeNameV<Type>::value;
+
+	template<typename Type>
+	concept HasDeserializeNameC = HasRegularDeserializeNameC<Type> || HasOverrideDeserializeNameC<Type>;
+	template<typename Type> constexpr inline Bool HasDeserializeName = HasDeserializeNameC<Type>;
+	template<typename Type> struct HasDeserializeNameV : BoolConstant<HasDeserializeNameC<Type>> {};
+
+	template<typename Type> 
+		requires(HasDeserializeNameC<Type>)
+	struct DeserializeNameV {
+		consteval static ConstAsciiStringView getName() noexcept {
+			if constexpr (HasOverrideDeserializeNameC<Type>) {
+				return OverrideDeserializeName<Type>;
+			} else {
+				return RegularDeserializeName<Type>;
+			}
+		}
+		constexpr static inline ConstAsciiStringView value = getName();
+	};
+
+	template<typename Type>
+	constexpr inline ConstAsciiStringView DeserializeName = DeserializeNameV<Type>::value;
 
 	template<typename Deserializer>
 	using StandardDeserializeError = Deserializer::deserialize_error_handler;

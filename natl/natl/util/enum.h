@@ -577,4 +577,28 @@ namespace natl {
 	constexpr static natl::Option<EnumType> enumFromString(const DynStringType& src) {
 		return EnumOperations<EnumType>::template fromString<DynStringType>(src);
 	}
+
+	template<typename EnumType>
+		requires(IsEnumC<EnumType>)
+	constexpr natl::Bool bitFlagTest(const EnumType& value) noexcept {
+		using underlying_type = natl::UnderlyingType<EnumType>;
+		return static_cast<underlying_type>(value) != underlying_type(0);
+	}
+
+	template<typename EnumType, typename... EnumArgs>
+		requires(IsEnumC<EnumType> && (IsSameC<EnumType, Decay<EnumArgs>> && ...))
+	constexpr natl::Bool bitFlagTestAnd(const EnumType& value, const EnumArgs&... tests) noexcept {
+		using underlying_type = natl::UnderlyingType<EnumType>;
+		return (static_cast<underlying_type>(value) & (static_cast<underlying_type>(tests) | ...)) != underlying_type(0);
+	}
 }
+
+#define NATL_ADD_BIT_FLAG_OPERATIONS(EnumName) \
+constexpr inline EnumName operator|(const EnumName lhs, const EnumName rhs) noexcept { \
+	using underlying_type = natl::UnderlyingType<EnumName>; \
+	return static_cast<EnumName>(static_cast<underlying_type>(lhs) | static_cast<underlying_type>(rhs)); \
+} \
+constexpr inline EnumName operator&(const EnumName lhs, const EnumName rhs) noexcept { \
+	using underlying_type = natl::UnderlyingType<EnumName>; \
+	return static_cast<EnumName>(static_cast<underlying_type>(lhs) & static_cast<underlying_type>(rhs)); \
+} 
