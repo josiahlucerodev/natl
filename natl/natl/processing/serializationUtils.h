@@ -1,6 +1,7 @@
 #pragma once 
 
 #include "serialization.h"
+#include "serializationJump.h"
 #include "../container/smallDynArray.h"
 
 //interface 
@@ -61,4 +62,37 @@ namespace natl {
 			dst = errorMessage.toStringView();
 		}
 	};
+
+	template<typename Deserializer, DeserializeReadFlag Flags, CustomDeserializeReadFlag<Deserializer> CustomFlags,
+		typename SerializeComponentType, natl::Size SmallBufferSize, typename IdNumberType, typename ParentType>
+		requires(natl::IsSerializeComponentC<SerializeComponentType>)
+	constexpr natl::Expect<SerializeJumpTableData<SmallBufferSize, IdNumberType>, typename Deserializer::deserialize_error_handler>
+		deserializerReadJumpTable(Deserializer& deserializer, typename Deserializer::template deserialize_info<ParentType>& info) {
+		SerializeJumpTableData<SmallBufferSize, IdNumberType> jumpData;
+
+		auto beginJumpTableExpect = deserializer.template beginReadJumpTable<
+			Flags, CustomFlags, SerializeComponentType, IdNumberType>(info);
+		if (beginJumpTableExpect.hasError()) {
+			return natl::unexpected(beginJumpTableExpect.error());
+		}
+
+		jumpData.info = beginJumpTableExpect.value();
+		jumpData.jumps.resize(jumpData.info.size);
+
+		for (Size i = 0; i < jumpData.info.size; i++) {
+			auto readJumpTableElementExpect = deserializer.template readJumpTableElement<
+				Flags, CustomFlags, SerializeComponentType, IdNumberType>(info);
+			if (readJumpTableElementExpect.hasError()) {
+				return natl::unexpected(readJumpTableElementExpect.error());
+			}
+			jumpData[i] = readJumpTableElementExpect.value();
+		}
+
+		auto endJumpTableError = deserializer.template endReadJumpTable<
+			Flags, CustomFlags, SerializeComponentType, IdNumberType>(info);
+		if (endJumpTableError.hasValue()) {
+			return natl::unexpected(endJumpTableError.value());
+		}
+		return jumpData;
+	}
 }

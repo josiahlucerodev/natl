@@ -38,6 +38,7 @@ natl/natl.h
 natl/processing/format.h
 natl/processing/generator.h
 natl/processing/serialization.h
+natl/processing/serializationJump.h
 natl/processing/serializationUtils.h
 natl/processing.h
 natl/simd/cmaskOperations.h
@@ -82,6 +83,7 @@ natl/util/coroutines.h
 natl/util/dataMovement.h
 natl/util/enum.h
 natl/util/error.h
+natl/util/funcArgs.h
 natl/util/hash.h
 natl/util/iteration.h
 natl/util/iterators.h

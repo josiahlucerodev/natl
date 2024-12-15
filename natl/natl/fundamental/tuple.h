@@ -291,7 +291,7 @@ namespace std {
 	template<typename... DataTypes>
 	struct tuple_size<natl::Tuple<DataTypes...>> : natl::IntegralConstant<natl::Size, sizeof...(DataTypes)> {};
 	template<> struct tuple_size<natl::Tuple<>> : natl::IntegralConstant<natl::Size, 0> {};
-	template<natl::StdSize Index, class... DataTypes >
+	template<natl::StdSize Index, typename... DataTypes >
 	struct tuple_element<Index, natl::Tuple<DataTypes...>> { 
 		using type = natl::TupleElement<Index, natl::Tuple<DataTypes...>>;  
 	};
