@@ -723,7 +723,7 @@ namespace natl {
 				if(value.hasValue()) {
 					serializeFunctions[value.getIndex() - 1](serializer, value);
 				} else {
-					serializer.template writeEmptyVariant<Flags, CustomFlags, SerializeComponentType, as_type>();
+					serializer.template writeEmptyVariant<Flags, CustomFlags, SerializeComponentType>();
 				}
 			}(natl::MakeIndexSequence<sizeof...(Elements)>{});
 		}

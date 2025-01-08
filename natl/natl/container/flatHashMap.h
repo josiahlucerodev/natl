@@ -21,6 +21,11 @@ namespace natl {
 
 		key_type& key;
 		mapped_type& value;
+
+		constexpr operator KeyValueRef<const KeyType, const ValueType>()
+			requires(!IsConstC<KeyType> && !IsConstC<ValueType>) {
+			return KeyValueRef<const KeyType, const ValueType>(key, value);
+		}
 	};
 
 	template<typename DataType>
@@ -961,7 +966,7 @@ namespace natl {
 				if (endDicError.hasValue()) {
 					return endDicError.value().addSource(sourceName, "");
 				}
-				return {};
+				return natl::OptionEmpty{};
 			}
 
 			dst.reserve(dicSize);

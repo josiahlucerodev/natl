@@ -111,6 +111,12 @@ namespace natl {
 	//components
 	struct SerializeGlobalComponent {};
 
+	template<typename Type>
+		requires(IsSerializableC<Type>)
+	struct SerializeOptionalComponent {
+		using type = Type;
+	};
+
 	template<typename ArrayType>
 		requires(IsSerializableC<ArrayType>)
 	struct SerializeFArrayComponent {
@@ -156,6 +162,11 @@ namespace natl {
 	template<typename Type> constexpr inline Bool IsSerializeGlobalComponent = IsSerializeGlobalComponentV<Type>::value;
 	template<typename Type> concept IsSerializeGlobalComponentC = IsSerializeGlobalComponent<Type>;
 
+	template<typename Type> struct IsSerializeOptionalComponentV : FalseType {};
+	template<typename Type> struct IsSerializeOptionalComponentV<SerializeOptionalComponent<Type>> : TrueType {};
+	template<typename Type> constexpr inline Bool IsSerializeOptionalComponent = IsSerializeOptionalComponentV<Type>::value;
+	template<typename Type> concept IsSerializeOptionalComponentC = IsSerializeOptionalComponent<Type>;
+
 	template<typename Type> struct IsSerializeFArrayComponentV : FalseType {};
 	template<typename ArrayType> struct IsSerializeFArrayComponentV<SerializeFArrayComponent<ArrayType>> : TrueType {};
 	template<typename Type> constexpr inline Bool IsSerializeFArrayComponent = IsSerializeFArrayComponentV<Type>::value;
@@ -191,6 +202,7 @@ namespace natl {
 	template<typename Type> concept IsSerializeComponentC = IsSerializeComponent<Type>;
 
 	template<> struct IsSerializeComponentV<SerializeGlobalComponent> : TrueType {};
+	template<typename Type> struct IsSerializeComponentV<SerializeOptionalComponent<Type>> : TrueType {};
 	template<typename ArrayType> struct IsSerializeComponentV<SerializeFArrayComponent<ArrayType>> : TrueType {};
 	template<typename ArrayType> struct IsSerializeComponentV<SerializeArrayComponent<ArrayType>> : TrueType {};
 	template<typename DicType> struct IsSerializeComponentV<SerializeDicKeyComponent<DicType>> : TrueType {};
@@ -280,6 +292,12 @@ namespace natl {
 		using index_serialize_type = SerializeTypeOf<IndexType>;
 	};
 
+	template<typename IdNumberType>
+		requires(IsBuiltInUnsignedIntegerC<IdNumberType>)
+	struct SerializeJumpTable {
+		using id_number_type = IdNumberType;
+	};
+
 	//type traits
 	template<> struct IsEnumBaseSerializeTypeV<SerializeI8> : TrueType {};
 	template<> struct IsEnumBaseSerializeTypeV<SerializeI16> : TrueType {};
@@ -332,7 +350,6 @@ namespace natl {
 	template<> struct BasicSerializeTypeToTypeT<SerializeF32> { using type = f32; };
 	template<> struct BasicSerializeTypeToTypeT<SerializeF64> { using type = f64; };
 
-
 	template<> struct IsSerializeTypeV<SerializeI8> : TrueType {};
 	template<> struct IsSerializeTypeV<SerializeI16> : TrueType {};
 	template<> struct IsSerializeTypeV<SerializeI32> : TrueType {};
@@ -363,6 +380,8 @@ namespace natl {
 	struct IsSerializeTypeV<SerializeStruct<MemberTypes...>> : TrueType {};
 	template<typename IndexType, typename... Types> 
 	struct IsSerializeTypeV<SerializeVariant<IndexType, Types...>> : TrueType {};
+	template<typename IdNumberType> 
+	struct IsSerializeTypeV<SerializeJumpTable<IdNumberType>> : TrueType {};
 
 	template<typename Type> struct IsSerializeI8V : FalseType {};
 	template<> struct IsSerializeI8V<SerializeChar> : TrueType {};
@@ -474,6 +493,11 @@ namespace natl {
 	template<typename Type> constexpr inline Bool IsSerializeVariant = IsSerializeVariantV<Type>::value;
 	template<typename Type> concept IsSerializeVariantC = IsSerializeVariant<Type>;
 
+	template<typename Type> struct IsSerializeJumpTableV : FalseType {};
+	template<typename IdNumberType> struct IsSerializeJumpTableV<SerializeJumpTable<IdNumberType>> : TrueType {};
+	template<typename Type> constexpr inline Bool IsSerializeJumpTable = IsSerializeJumpTableV<Type>::value;
+	template<typename Type> concept IsSerializeJumpTableC = IsSerializeJumpTable<Type>;
+
 	template<typename Serializer>
 	using CustomSerializeWriteFlag = Serializer::custom_write_flag_type;
 
@@ -505,8 +529,8 @@ namespace natl {
 				DefaultCustomSerializeWriteFlag<Serilizer>,
 				SerializeGlobalComponent>()
 		} -> IsSameC<void>;
-		{ serializer.serializeBegin() } -> IsSameC<void>;
-		{ serializer.serializeEnd() } -> IsSameC<void>;
+		{ serializer.begin() } -> IsSameC<void>;
+		{ serializer.end() } -> IsSameC<void>;
 	};
 	template<typename Type> constexpr inline Bool IsSerializer = IsSerializerC<Type>;
 	template<typename Type> struct IsSerializerV : BoolConstant<IsSerializer<Type>> {};
@@ -850,7 +874,19 @@ namespace natl {
 	concept CanSerializeOptionalC = IsSerializerC<Serializer>
 		&& requires(Serializer & serializer) {
 			{
-				serializer.template writeNull<
+				serializer.template beginWriteOptional<
+					SerializeWriteFlag::v_default,
+					DefaultCustomSerializeWriteFlag<Serializer>,
+					SerializeGlobalComponent>()
+			} -> IsSameC<void>;
+			{
+				serializer.template emdWriteOptional<
+					SerializeWriteFlag::v_default,
+					DefaultCustomSerializeWriteFlag<Serializer>,
+					SerializeGlobalComponent>()
+			} -> IsSameC<void>;
+			{
+				serializer.template writeNullOptional<
 					SerializeWriteFlag::v_default,
 					DefaultCustomSerializeWriteFlag<Serializer>,
 					SerializeGlobalComponent>()
@@ -1018,6 +1054,12 @@ namespace natl {
 			} -> IsSameC<void>;
 			{
 				serializer.template endWriteStruct<
+					SerializeWriteFlag::v_default,
+					DefaultCustomSerializeWriteFlag<Serializer>,
+					SerializeGlobalComponent>()
+			} -> IsSameC<void>;
+			{
+				serializer.template writeEmptyVariant<
 					SerializeWriteFlag::v_default,
 					DefaultCustomSerializeWriteFlag<Serializer>,
 					SerializeGlobalComponent>()
@@ -1325,6 +1367,28 @@ namespace natl {
 		}
 	};
 
+	template<typename DataType> struct Serialize<Option<DataType>> {
+		using as_type = SerializeOptional<DataType>;
+		using type = Option<DataType>;
+		template<typename Serializer> using error_type = void;
+
+		template<typename Serializer, SerializeWriteFlag Flags,
+			CustomSerializeWriteFlag<Serializer> CustomFlags, typename SerializeComponentType, 
+			typename... DeserializerArgs>
+			requires(natl::CanSerializeStrC<Serializer>&& IsSerializeComponentC<SerializeComponentType>)
+		constexpr static void write(Serializer& serializer, const type& value, DeserializerArgs&&... deserializerArgs) noexcept {
+			if (!value.hasValue()) {
+				serializer.template writeEmptyOptional<Flags, CustomFlags, SerializeComponentType>();
+			} else {
+				using optional_component = SerializeOptionalComponent<type>;
+				serializer.template beginWriteOptional<Flags, CustomFlags, SerializeComponentType>();
+				serializeWrite<Serializer, Flags, CustomFlags, optional_component>(
+					serializer, value.value(), natl::forward<DeserializerArgs>(deserializerArgs)...);
+				serializer.template endWriteOptional<Flags, CustomFlags, SerializeComponentType>();
+			}
+		}
+	};
+
 	//deserialize 
 	enum class CustomDeserializerReadFlagNone {
 		none = 0
@@ -1347,6 +1411,7 @@ namespace natl {
 	};
 
 	struct DeserializeGlobalScope {};
+	template<> struct IsSerializeTypeV<DeserializeGlobalScope> : TrueType {};
 
 	enum class DeserializeErrorFlag {
 		none = 0,
@@ -1372,6 +1437,8 @@ namespace natl {
 			return "wrong name";
 		case DeserializeErrorFlag::valueParsing:
 			return "value parsing";
+		case DeserializeErrorFlag::jump:
+				return "jump";
 		default:
 			natl::unreachable();
 		}
@@ -1397,7 +1464,8 @@ namespace natl {
 		readFile,
 		readBlob,
 		readIsOptionalNull,
-		readAsOptional,
+		beginReadOptional,
+		endReadOptional,
 		readEnum,
 		beginReadArray,
 		endReadArray,
@@ -1422,6 +1490,7 @@ namespace natl {
 		readJumpTableElement,
 		readJumpLocation,
 		jumpTo,
+		skip,
 	};
 
 	constexpr ConstAsciiStringView deserializeErrorLocationToString(const DeserializeErrorLocation errorLocation) noexcept {
@@ -1464,8 +1533,10 @@ namespace natl {
 			return "readBlob";
 		case DeserializeErrorLocation::readIsOptionalNull:
 			return "readIsOptionalNull";
-		case DeserializeErrorLocation::readAsOptional:
-			return "readAsOptional";
+		case DeserializeErrorLocation::beginReadOptional:
+			return "beginReadOptional";
+		case DeserializeErrorLocation::endReadOptional:
+			return "endReadOptional";
 		case DeserializeErrorLocation::readEnum:
 			return "readEnum";
 		case DeserializeErrorLocation::beginReadArray:
@@ -1504,6 +1575,18 @@ namespace natl {
 			return "beginReadVariantOfType";
 		case DeserializeErrorLocation::endReadVariant:
 			return "endReadVariant";
+		case DeserializeErrorLocation::beginReadJumpTable:
+			return "beginReadJumpTable";
+		case DeserializeErrorLocation::endReadJumpTable:
+			return "endReadJumpTable";
+		case DeserializeErrorLocation::readJumpTableElement:
+			return "readJumpTableElement";
+		case DeserializeErrorLocation::readJumpLocation:
+			return "readJumpLocation";
+		case DeserializeErrorLocation::jumpTo:
+			return "jumpTo";
+		case DeserializeErrorLocation::skip:
+			return "skip";
 		default:
 			natl::unreachable();
 		}
@@ -1778,6 +1861,26 @@ namespace natl {
 			deserializer, parent, name, dst, natl::forward<DeserializerArgs>(deserializerArgs)...);
 	}
 
+	//deserialize skip 
+	template<typename Deserializer, DeserializeReadFlag Flags, CustomDeserializeReadFlag<Deserializer> CustomFlags,
+		typename SerializeComponentType, typename Type, typename ParentSerializeType, typename... DeserializerArgs>
+		requires(IsDeserilizableC<Type> && IsSerializeComponentC<SerializeComponentType> && IsSerializeTypeC<ParentSerializeType>)
+	constexpr Option<DeserializeErrorOf<Deserializer, Type>> deserializeSkip(
+		Deserializer& deserializer, 
+		typename Deserializer::template deserialize_info<ParentSerializeType>& parent,
+		const ConstAsciiStringView& name) noexcept {
+		using type_deserialize = Deserialize<Decay<Type>>;
+		constexpr ConstAsciiStringView sourceName = "natl::deserializeSkip";
+		
+		auto skipError = deserializer.template skip<Flags, CustomFlags, SerializeComponentType, Type, ParentSerializeType>(parent, name);
+		if (skipError.hasValue()) {
+			return skipError.value().addSource(sourceName, name);
+		}
+
+		return OptionEmpty{};
+	}
+
+	//deserialize specialization
 	template<> struct Deserialize<i8> {
 		using as_type = SerializeI8;
 		using type = i8;
@@ -1800,7 +1903,7 @@ namespace natl {
 		}
 	};
 
-	//deserialize specialization
+
 	template<> struct Deserialize<i16> {
 		using as_type = SerializeI16;
 		using type = i16;
@@ -2042,6 +2145,55 @@ namespace natl {
 			}
 		}
 	};
+
+	template<typename Type> struct Deserialize<Option<Type>> {
+		using as_type = SerializeChar;
+		using type = Option<Type>;
+		constexpr static ConstAsciiStringView sourceName = "natl::Deserialize<Ascii>::read";
+		template<typename Deserializer> using error_type = StandardDeserializeError<Deserializer>;
+
+		template<typename Deserializer, DeserializeReadFlag Flags, CustomDeserializeReadFlag<Deserializer> CustomFlags, \
+			typename SerializeComponentType, typename... DeserializerArgs>
+			requires(IsSerializeComponentC<SerializeComponentType>)
+		constexpr static Option<error_type<Deserializer>>
+			read(Deserializer& deserializer,
+				typename Deserializer::template deserialize_info<as_type>& info,
+				Ascii& dst,
+				DeserializerArgs&&... deserializerArgs) noexcept {
+			auto isNullExpect = deserializer.template readIsOptionalNull
+				<Flags, CustomFlags, SerializeComponentType>(info);
+			if (isNullExpect.hasError()) {
+				return isNullExpect.error().addSource(sourceName, "");
+			}
+			if (isNullExpect.value()) {
+				return natl::OptionEmpty{};
+			}
+
+			auto optionalInfoExpect = deserializer.template beginReadOptional
+				<Flags, CustomFlags, SerializeComponentType>(isNullExpect.value(), info);
+			if (optionalInfoExpect.hasError()) {
+				return optionalInfoExpect.error().addSource(sourceName, "");
+			}
+			auto valueInfo = optionalInfoExpect.value();
+
+			using optional_component = SerializeOptionalComponent<type>;
+			auto valueExpect = deserializeRead<Deserializer, Flags, CustomFlags, optional_component, Type>(
+				deserializer, valueInfo, natl::forward<DeserializerArgs>(deserializerArgs)...);
+			if (valueExpect.hasError()) {
+				return valueExpect.error().addSource(sourceName, "");
+			}
+			dst = valueExpect.value();
+
+			auto endReadError = deserializer.template endReadOptional
+				<Flags, CustomFlags, SerializeComponentType>(info);
+			if (endReadError.hasError()) {
+				return endReadError.value().addSource(sourceName, "");
+			}
+
+			return natl::OptionEmpty{};
+		}
+	};
+
 
 	namespace impl {
 		template<typename ErrorType, typename Deserializer, typename DerializeInfoType, typename ReadFunctor>

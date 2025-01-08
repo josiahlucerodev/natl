@@ -67,11 +67,12 @@ namespace natl {
 		typename SerializeComponentType, natl::Size SmallBufferSize, typename IdNumberType, typename ParentType>
 		requires(natl::IsSerializeComponentC<SerializeComponentType>)
 	constexpr natl::Expect<SerializeJumpTableData<SmallBufferSize, IdNumberType>, typename Deserializer::deserialize_error_handler>
-		deserializerReadJumpTable(Deserializer& deserializer, typename Deserializer::template deserialize_info<ParentType>& info) {
+		deserializeReadJumpTable(Deserializer& deserializer, typename Deserializer::template deserialize_info<ParentType>& info,
+			const natl::ConstAsciiStringView& name) {
 		SerializeJumpTableData<SmallBufferSize, IdNumberType> jumpData;
 
 		auto beginJumpTableExpect = deserializer.template beginReadJumpTable<
-			Flags, CustomFlags, SerializeComponentType, IdNumberType>(info);
+			Flags, CustomFlags, SerializeComponentType, IdNumberType>(info, name);
 		if (beginJumpTableExpect.hasError()) {
 			return natl::unexpected(beginJumpTableExpect.error());
 		}
@@ -85,11 +86,11 @@ namespace natl {
 			if (readJumpTableElementExpect.hasError()) {
 				return natl::unexpected(readJumpTableElementExpect.error());
 			}
-			jumpData[i] = readJumpTableElementExpect.value();
+			jumpData.jumps[i] = readJumpTableElementExpect.value();
 		}
 
 		auto endJumpTableError = deserializer.template endReadJumpTable<
-			Flags, CustomFlags, SerializeComponentType, IdNumberType>(info);
+			Flags, CustomFlags, SerializeComponentType, IdNumberType>(info, jumpData.info);
 		if (endJumpTableError.hasValue()) {
 			return natl::unexpected(endJumpTableError.value());
 		}
