@@ -19,7 +19,7 @@
 
 //interface 
 namespace natl {
-	template<class CharType>
+	template<typename CharType>
 	struct BaseStringBaseMembersRef {
 	public:
 		Size stringSizeAndSmallStringFlag;
@@ -33,7 +33,7 @@ namespace natl {
 		Bool EnableDynAllocation = true, 
 		Bool EnableIncreasedSmallBufferSize = true>
 		requires(IsAllocator<Alloc>)
-	class BaseString {
+	struct BaseString {
 	public:
 		using allocator_type = Alloc;
 
@@ -272,7 +272,7 @@ namespace natl {
 			construct(count, character);
 		}
 
-		template<class StringViewLike>
+		template<typename StringViewLike>
 			requires(IsStringViewLike<StringViewLike, const value_type>)
 		constexpr BaseString(const StringViewLike& str) noexcept {
 			baseConstructorInit();
@@ -298,7 +298,7 @@ namespace natl {
 			construct(character, count);
 		}
 
-		template<class StringViewLike>
+		template<typename StringViewLike>
 			requires(IsStringViewLike<StringViewLike, Ascii>)
 		constexpr BaseString(const StringViewLike& str) noexcept requires(IsSameC<Decay<value_type>, Utf32>) {
 			baseConstructorInit();
@@ -364,7 +364,7 @@ namespace natl {
 			return self();
 		}
 
-		template<class Iter>
+		template<typename Iter>
 			requires(IsIterPtr<Iter>&& IsSameC<typename IteratorTraits<Iter>::value_type, value_type>)
 		constexpr BaseString& construct(Iter first, Iter last) noexcept {
 			if constexpr (std::contiguous_iterator<Iter>) {
@@ -459,7 +459,7 @@ namespace natl {
 			return self();
 		}
 
-		template<class StringViewLike>
+		template<typename StringViewLike>
 			requires(IsStringViewLike<StringViewLike, Ascii>)
 		constexpr BaseString& construct(const StringViewLike& stringView) noexcept requires(IsSameC<Decay<value_type>, Utf32>) {
 			if (stringView.size() == 0) {
@@ -511,7 +511,7 @@ namespace natl {
 		constexpr BaseString& operator=(const value_type character) noexcept {
 			return assign(character);
 		}
-		template<class StringViewLike>
+		template<typename StringViewLike>
 			requires(IsStringViewLike<StringViewLike, const value_type>)
 		constexpr BaseString& operator=(const StringViewLike& stringView) noexcept {
 			return assign<StringViewLike>(stringView);
@@ -526,7 +526,7 @@ namespace natl {
 		constexpr BaseString& operator=(const Ascii character) noexcept requires(IsSameC<Decay<value_type>, Utf32>) {
 			return assign(character);
 		}
-		template<class StringViewLike>
+		template<typename StringViewLike>
 			requires(IsStringViewLike<StringViewLike, Ascii>)
 		constexpr BaseString& operator=(const StringViewLike& stringView) noexcept requires(IsSameC<Decay<value_type>, Utf32>) {
 			return assign<StringViewLike>(stringView);
@@ -588,7 +588,7 @@ namespace natl {
 			return self();
 		}
 
-		template<class StringViewLike>
+		template<typename StringViewLike>
 			requires(IsStringViewLike<StringViewLike, const value_type>)
 		constexpr BaseString& assign(const StringViewLike& stringView) noexcept {
 			if (stringView.size() == 0) {
@@ -699,7 +699,7 @@ namespace natl {
 			return self();
 		}
 
-		template<class StringViewLike>
+		template<typename StringViewLike>
 			requires(IsStringViewLike<StringViewLike, Ascii>)
 		constexpr BaseString& assign(const StringViewLike& stringView) noexcept requires(IsSameC<Decay<value_type>, Utf32>) {
 			if (stringView.size() == 0) {
@@ -1011,12 +1011,12 @@ namespace natl {
 			return iterator(data() + index);
 		}
 		
-		template<class StringViewLike>
+		template<typename StringViewLike>
 			requires(IsStringViewLike<StringViewLike, const value_type> && !IsSameC<StringViewLike, ConstBaseStringView>)
 		constexpr BaseString& insert(const size_type index, const StringViewLike& stringView) noexcept {
 			return insert(index, ConstBaseStringView(stringView.data(), stringView.size()));
 		}
-		template< class StringViewLike>
+		template<typename StringViewLike>
 			requires(IsStringViewLike<StringViewLike, const value_type>)
 		constexpr BaseString& insert(const size_type index, const StringViewLike& stringView, size_type t_index, size_type count = 0xFFFFFFFFFFFFFFFF) noexcept {
 			return insert(index, ConstBaseStringView(stringView.data() + t_index, min<size_type>(stringView.size(), count)));
@@ -1127,7 +1127,7 @@ namespace natl {
 			return self();
 		}
 
-		template<class InputIt>
+		template<typename InputIt>
 		constexpr BaseString& append(InputIt first, InputIt last) noexcept {
 			const size_type newSize = size() + iterDistance<InputIt>(first, last);
 			factorReserve(newSize);
@@ -1140,7 +1140,7 @@ namespace natl {
 			return self();
 		}
 
-		template<class StringViewLike>
+		template<typename StringViewLike>
 			requires(IsStringViewLike<StringViewLike, const value_type>)
 		constexpr BaseString& append(const StringViewLike& stringView) noexcept {
 			const size_type count = stringView.size();
@@ -1157,7 +1157,7 @@ namespace natl {
 			return self();
 		}
 
-		template<class StringViewLike>
+		template<typename StringViewLike>
 			requires(IsStringViewLike<StringViewLike, const value_type>)
 		constexpr BaseString& append(const StringViewLike& stringView, size_type pos, size_type count = 0xFFFFFFFFFFFFFFFF) noexcept {
 			const size_type newCount = min<size_type>(stringView.size() - pos, count);
@@ -1215,7 +1215,7 @@ namespace natl {
 			return append(BaseStringView<const Ascii>(str, count));
 		}
 
-		template<class StringViewLike>
+		template<typename StringViewLike>
 			requires(IsStringViewLike<StringViewLike, Ascii>)
 		constexpr BaseString& append(const StringViewLike& stringView) noexcept requires(IsSameC<Decay<value_type>, Utf32>) {
 			const size_type count = stringView.size();
@@ -1244,12 +1244,12 @@ namespace natl {
 		constexpr BaseString& operator+=(const value_type rhs) noexcept {
 			return append(rhs);
 		}
-		template<class StringLike>
+		template<typename StringLike>
 			requires(IsStringViewLike<StringLike, value_type>)
 		constexpr BaseString& operator+=(const StringLike& rhs) noexcept {
 			return append(rhs);
 		}
-		template<class StringLike>
+		template<typename StringLike>
 			requires(IsConvertibleC<StringLike, ConstBaseStringView> && !IsStringViewLike<StringLike, value_type>)
 		constexpr BaseString& operator+=(const StringLike& rhs) noexcept {
 			return append(rhs);
@@ -1260,13 +1260,13 @@ namespace natl {
 		constexpr BaseString& operator+=(const Ascii rhs) noexcept requires(IsSameC<Decay<value_type>, Utf32>) {
 			return append(rhs);
 		}
-		template<class StringLike>
+		template<typename StringLike>
 			requires(IsStringViewLike<StringLike, Ascii>)
 		constexpr BaseString& operator+=(const StringLike& rhs) noexcept requires(IsSameC<Decay<value_type>, Utf32>) {
 			return append(rhs);
 		}
 
-		template <class SrcCharType>
+		template<typename SrcCharType>
 		constexpr BaseString& replace(const size_type pos, const size_type count, const BaseStringView<const SrcCharType>& sv, const size_type pos2, const size_type count2 = npos) {
 			const size_type index = min<size_type>(size(), pos);
 			const size_type srcIndex = min<size_type>(sv.size(), pos2);
@@ -1302,7 +1302,7 @@ namespace natl {
 			return self();
 		}
 
-		template <class SrcCharType>
+		template<typename SrcCharType>
 		constexpr BaseString& replace(const size_type pos, const size_type count, const size_type count2, SrcCharType ch) {
 			const size_type index = min<size_type>(size(), pos);
 			const size_type srcCount = count2;
@@ -1379,7 +1379,7 @@ namespace natl {
 			return replace<value_type>(pos, count, count2, character);
 		}
 
-		template<class InputIt>
+		template<typename InputIt>
 		constexpr BaseString& replace(const_iterator first, const_iterator last, InputIt first2, InputIt last2) noexcept {
 			const size_type count = iterDistance<typename const_iterator::pointer>(&*first, &*last);
 			const size_type pos = iterDistance<typename const_iterator::pointer>(&*cbegin(), &*last);
@@ -1387,13 +1387,13 @@ namespace natl {
 			return replace<value_type>(pos, count, ConstBaseStringView(&*last, count2), 0, npos);
 		}
 
-		template< class StringViewLike>
+		template<typename StringViewLike>
 			requires(IsStringViewLike<StringViewLike, const value_type>)
 		constexpr BaseString& replace(size_type pos, size_type count, const StringViewLike& stringView) noexcept {
 			return replace<value_type>(pos, count, ConstBaseStringView(stringView.data(), stringView.size()), 0, npos);
 		}
 
-		template< class StringViewLike>
+		template<typename StringViewLike>
 			requires(IsStringViewLike<StringViewLike, const value_type>)
 		constexpr BaseString& replace(const_iterator first, const_iterator last, const StringViewLike& stringView) noexcept {
 			const size_type count = iterDistance<typename const_iterator::pointer>(&*first, &*last);
@@ -1401,7 +1401,7 @@ namespace natl {
 			return replace<value_type>(pos, count, ConstBaseStringView(stringView.data(), stringView.size()), 0, npos);
 		}
 
-		template< class StringViewLike>
+		template<typename StringViewLike>
 			requires(IsStringViewLike<StringViewLike, const value_type>)
 		constexpr BaseString& replace(size_type pos, size_type count, const StringViewLike& stringView, size_type pos2, size_type count2 = npos) noexcept {
 			return replace<value_type>(pos, count, ConstBaseStringView(stringView.data(), stringView.size()), pos2, count2);
@@ -1444,12 +1444,12 @@ namespace natl {
 		constexpr size_type find(const_pointer s, const size_type pos = 0) const noexcept {
 			return toStringView().find(ConstBaseStringView(s), pos);
 		}
-		template<class StringViewLike>
+		template<typename StringViewLike>
 			requires(IsStringViewLike<StringViewLike, const value_type> && !IsSameC<StringViewLike, ConstBaseStringView>)
 		constexpr size_type find(const StringViewLike& sv, const size_type pos = 0) noexcept {
 			return toStringView().find(ConstBaseStringView(sv.data(), sv.size()), pos);
 		}
-		template<class StringLike>
+		template<typename StringLike>
 			requires(IsConvertibleC<StringLike, BaseStringView<value_type>> && !IsStringViewLike<StringLike, value_type>)
 		constexpr size_type find(const StringLike& sv, const size_type pos = 0) noexcept {
 			return toStringView().find(static_cast<ConstBaseStringView>(sv), pos);
@@ -1464,12 +1464,12 @@ namespace natl {
 		constexpr size_type find(const Ascii* s, const size_type pos = 0) const noexcept requires(IsSameC<Decay<value_type>, Utf32>) {
 			return toStringView().find(BaseStringView<const Ascii>(s), pos);
 		}
-		template<class StringViewLike>
+		template<typename StringViewLike>
 			requires(IsStringViewLike<StringViewLike, Ascii>)
 		constexpr size_type find(const StringViewLike& sv, const size_type pos = 0) const noexcept requires(IsSameC<Decay<value_type>, Utf32>) {
 			return toStringView().find(BaseStringView<const Ascii>(sv.data(), sv.size()), pos);
 		}
-		template<class StringLike>
+		template<typename StringLike>
 			requires(IsConvertibleC<StringLike, ConstBaseStringView> && !IsStringViewLike<StringLike, Ascii>)
 		constexpr size_type find(const StringLike& sv, const size_type pos = 0) noexcept requires(IsSameC<Decay<value_type>, Utf32>) {
 			return toStringView().find(static_cast<ConstBaseStringView>(sv), pos);
@@ -1487,7 +1487,7 @@ namespace natl {
 		constexpr size_type rfind(const_pointer s, const size_type pos = npos) const {
 			return toStringView().rfind(ConstBaseStringView(s), pos);
 		}
-		template<class StringLike>
+		template<typename StringLike>
 			requires(IsConvertibleC<StringLike, ConstBaseStringView> && !IsStringViewLike<StringLike, value_type>)
 		constexpr size_type rfind(const StringLike& sv, const size_type pos = npos) noexcept {
 			return toStringView().rfind(static_cast<ConstBaseStringView>(sv), pos);
@@ -1502,12 +1502,12 @@ namespace natl {
 		constexpr size_type rfind(const Ascii* s, const size_type pos = npos) const noexcept requires(IsSameC<Decay<value_type>, Utf32>) {
 			return toStringView().rfind(BaseStringView<const Ascii>(s), pos);
 		}
-		template<class StringLike>
+		template<typename StringLike>
 			requires(IsStringViewLike<StringLike, Ascii>)
 		constexpr size_type rfind(const StringLike& sv, const size_type pos = npos) const noexcept requires(IsSameC<Decay<value_type>, Utf32>) {
 			return toStringView().rfind(BaseStringView<const Ascii>(sv.data(), sv.size()), pos);
 		}
-		template<class StringLike>
+		template<typename StringLike>
 			requires(IsConvertibleC<StringLike, ConstBaseStringView> && !IsStringViewLike<StringLike, Ascii>)
 		constexpr size_type rfind(const StringLike& sv, const size_type pos = npos) noexcept requires(IsSameC<Decay<value_type>, Utf32>) {
 			return toStringView().rfind(static_cast<ConstBaseStringView>(sv), pos);
@@ -1590,7 +1590,7 @@ namespace natl {
 			temp.append(rhs);
 			return temp;
 		}
-		template<class StringViewLike>
+		template<typename StringViewLike>
 			requires(IsStringViewLike<StringViewLike, const value_type>)
 		friend constexpr BaseString operator+(const BaseString& lhs, const StringViewLike& rhs) noexcept {
 			BaseString temp;
@@ -1599,7 +1599,7 @@ namespace natl {
 			temp.append<StringViewLike>(rhs);
 			return temp;
 		}
-		template<class StringLike>
+		template<typename StringLike>
 			requires(IsConvertibleC<StringLike, BaseStringView<value_type>> && !IsStringViewLike<StringLike, value_type>)
 		friend constexpr BaseString operator+(const BaseString& lhs, const StringLike& rhs) noexcept {
 			BaseStringView<value_type> rhsSringView = static_cast<BaseStringView<value_type>>(rhs);
@@ -1626,7 +1626,7 @@ namespace natl {
 			temp.append(rhs);
 			return temp;
 		}
-		template<class StringViewLike>
+		template<typename StringViewLike>
 			requires(IsStringViewLike<StringViewLike, Ascii>)
 		friend constexpr BaseString operator+(const BaseString& lhs, const StringViewLike& rhs) noexcept requires(IsSameC<Decay<value_type>, Utf32>) {
 			BaseString temp;
@@ -1647,12 +1647,12 @@ namespace natl {
 		friend constexpr Bool operator==(const BaseString& lhs, const value_type rhs) noexcept {
 			return lhs.toStringView() == rhs;
 		}
-		template<class StringLike>
+		template<typename StringLike>
 			requires(IsStringViewLike<StringLike, value_type>)
 		friend constexpr Bool operator==(const BaseString& lhs, const StringLike& rhs) noexcept {
 			return lhs.toStringView() == rhs;
 		}
-		template<class StringLike>
+		template<typename StringLike>
 			requires(IsConvertibleC<StringLike, BaseStringView<value_type>> && !IsStringViewLike<StringLike, value_type>)
 		friend constexpr Bool operator==(const BaseString& lhs, const StringLike& rhs) noexcept {
 			return lhs.toStringView() == rhs;
@@ -1663,7 +1663,7 @@ namespace natl {
 		friend constexpr Bool operator==(const BaseString& lhs, const Ascii rhs) noexcept requires(IsSameC<Decay<value_type>, Utf32>) {
 			return lhs.toStringView() == rhs;
 		}
-		template<class StringLike>
+		template<typename StringLike>
 			requires(IsStringViewLike<StringLike, Ascii>)
 		friend constexpr Bool operator==(const BaseString& lhs, const StringLike& rhs) noexcept requires(IsSameC<Decay<value_type>, Utf32>) {
 			return lhs.toStringView() == rhs;
@@ -1678,12 +1678,12 @@ namespace natl {
 		friend constexpr Bool operator!=(const BaseString& lhs, const value_type rhs) noexcept {
 			return lhs.toStringView() != rhs;
 		}
-		template<class StringLike>
+		template<typename StringLike>
 			requires(IsStringViewLike<StringLike, value_type>)
 		friend constexpr Bool operator!=(const BaseString& lhs, const StringLike& rhs) noexcept {
 			return lhs.toStringView() != rhs;
 		}
-		template<class StringLike>
+		template<typename StringLike>
 			requires(IsConvertibleC<StringLike, BaseStringView<value_type>> && !IsStringViewLike<StringLike, value_type>)
 		friend constexpr Bool operator!=(const BaseString& lhs, const StringLike& rhs) noexcept {
 			return lhs.toStringView() != rhs;
@@ -1694,7 +1694,7 @@ namespace natl {
 		friend constexpr Bool operator!=(const BaseString& lhs, const Ascii rhs) noexcept requires(IsSameC<Decay<value_type>, Utf32>) {
 			return lhs.toStringView() != rhs;
 		}
-		template<class StringLike>
+		template<typename StringLike>
 			requires(IsStringViewLike<StringLike, Ascii>)
 		friend constexpr Bool operator!=(const BaseString& lhs, const StringLike& rhs) noexcept requires(IsSameC<Decay<value_type>, Utf32>) {
 			return lhs.toStringView() != rhs;
@@ -1709,12 +1709,12 @@ namespace natl {
 		friend constexpr Bool operator<(const BaseString& lhs, const value_type rhs) noexcept {
 			return lhs.toStringView() < rhs;
 		}
-		template<class StringLike>
+		template<typename StringLike>
 			requires(IsStringViewLike<StringLike, value_type>)
 		friend constexpr Bool operator<(const BaseString& lhs, const StringLike& rhs) noexcept {
 			return lhs.toStringView() < rhs;
 		}
-		template<class StringLike>
+		template<typename StringLike>
 			requires(IsConvertibleC<StringLike, BaseStringView<value_type>> && !IsStringViewLike<StringLike, value_type>)
 		friend constexpr Bool operator<(const BaseString& lhs, const StringLike& rhs) noexcept {
 			return lhs.toStringView() < rhs;
@@ -1725,7 +1725,7 @@ namespace natl {
 		friend constexpr Bool operator<(const BaseString& lhs, const Ascii rhs) noexcept requires(IsSameC<Decay<value_type>, Utf32>) {
 			return lhs.toStringView() < rhs;
 		}
-		template<class StringLike>
+		template<typename StringLike>
 			requires(IsStringViewLike<StringLike, Ascii>)
 		friend constexpr Bool operator<(const BaseString& lhs, const StringLike& rhs) noexcept requires(IsSameC<Decay<value_type>, Utf32>) {
 			return lhs.toStringView() < rhs;
@@ -1740,12 +1740,12 @@ namespace natl {
 		friend constexpr Bool operator<=(const BaseString& lhs, const value_type rhs) noexcept {
 			return lhs.toStringView() <= rhs;
 		}
-		template<class StringLike>
+		template<typename StringLike>
 			requires(IsStringViewLike<StringLike, value_type>)
 		friend constexpr Bool operator<=(const BaseString& lhs, const StringLike& rhs) noexcept {
 			return lhs.toStringView() <= rhs;
 		}
-		template<class StringLike>
+		template<typename StringLike>
 			requires(IsConvertibleC<StringLike, BaseStringView<value_type>> && !IsStringViewLike<StringLike, value_type>)
 		friend constexpr Bool operator<=(const BaseString& lhs, const StringLike& rhs) noexcept {
 			return lhs.toStringView() <= rhs;
@@ -1756,7 +1756,7 @@ namespace natl {
 		friend constexpr Bool operator<=(const BaseString& lhs, const Ascii rhs) noexcept requires(IsSameC<Decay<value_type>, Utf32>) {
 			return lhs.toStringView() <= rhs;
 		}
-		template<class StringLike>
+		template<typename StringLike>
 			requires(IsStringViewLike<StringLike, Ascii>)
 		friend constexpr Bool operator<=(const BaseString& lhs, const StringLike& rhs) noexcept requires(IsSameC<Decay<value_type>, Utf32>) {
 			return lhs.toStringView() <= rhs;
@@ -1771,12 +1771,12 @@ namespace natl {
 		friend constexpr Bool operator>(const BaseString& lhs, const value_type rhs) noexcept {
 			return lhs.toStringView() > rhs;
 		}
-		template<class StringLike>
+		template<typename StringLike>
 			requires(IsStringViewLike<StringLike, value_type>)
 		friend constexpr Bool operator>(const BaseString& lhs, const StringLike& rhs) noexcept {
 			return lhs.toStringView() > rhs;
 		}
-		template<class StringLike>
+		template<typename StringLike>
 			requires(IsConvertibleC<StringLike, BaseStringView<value_type>> && !IsStringViewLike<StringLike, value_type>)
 		friend constexpr Bool operator>(const BaseString& lhs, const StringLike& rhs) noexcept {
 			return lhs.toStringView() > rhs;
@@ -1787,7 +1787,7 @@ namespace natl {
 		friend constexpr Bool operator>(const BaseString& lhs, const Ascii rhs) noexcept requires(IsSameC<Decay<value_type>, Utf32>) {
 			return lhs.toStringView() > rhs;
 		}
-		template<class StringLike>
+		template<typename StringLike>
 			requires(IsStringViewLike<StringLike, Ascii>)
 		friend constexpr Bool operator>(const BaseString& lhs, const StringLike& rhs) noexcept requires(IsSameC<Decay<value_type>, Utf32>) {
 			return lhs.toStringView() > rhs;
@@ -1802,12 +1802,12 @@ namespace natl {
 		friend constexpr Bool operator>=(const BaseString& lhs, const value_type rhs) noexcept {
 			return lhs.toStringView() >= rhs;
 		}
-		template<class StringLike>
+		template<typename StringLike>
 			requires(IsStringViewLike<StringLike, value_type>)
 		friend constexpr Bool operator>=(const BaseString& lhs, const StringLike& rhs) noexcept {
 			return lhs.toStringView() >= rhs;
 		}
-		template<class StringLike>
+		template<typename StringLike>
 			requires(IsConvertibleC<StringLike, BaseStringView<value_type>> && !IsStringViewLike<StringLike, value_type>)
 		friend constexpr Bool operator>=(const BaseString& lhs, const StringLike& rhs) noexcept {
 			return lhs.toStringView() >= rhs;
@@ -1818,7 +1818,7 @@ namespace natl {
 		friend constexpr Bool operator>=(const BaseString& lhs, const Ascii rhs) noexcept requires(IsSameC<Decay<value_type>, Utf32>) {
 			return lhs.toStringView() >= rhs;
 		}
-		template<class StringLike>
+		template<typename StringLike>
 			requires(IsStringViewLike<StringLike, Ascii>)
 		friend constexpr Bool operator>=(const BaseString& lhs, const StringLike& rhs) noexcept requires(IsSameC<Decay<value_type>, Utf32>) {
 			return lhs.toStringView() >= rhs;
@@ -1833,12 +1833,12 @@ namespace natl {
 		friend constexpr StrongOrdering operator<=>(const BaseString& lhs, const value_type rhs) noexcept {
 			return lhs.toStringView() <=> rhs;
 		}
-		template<class StringLike>
+		template<typename StringLike>
 			requires(IsStringViewLike<StringLike, value_type>)
 		friend constexpr StrongOrdering operator<=>(const BaseString& lhs, const StringLike& rhs) noexcept {
 			return lhs.toStringView() <=> rhs;
 		}
-		template<class StringLike>
+		template<typename StringLike>
 			requires(IsConvertibleC<StringLike, BaseStringView<value_type>> && !IsStringViewLike<StringLike, value_type>)
 		friend constexpr StrongOrdering operator<=>(const BaseString& lhs, const StringLike& rhs) noexcept {
 			return lhs.toStringView() <=> rhs;
@@ -1849,7 +1849,7 @@ namespace natl {
 		friend constexpr StrongOrdering operator<=>(const BaseString& lhs, const Ascii rhs) noexcept requires(IsSameC<Decay<value_type>, Utf32>) {
 			return lhs.toStringView() <=> rhs;
 		}
-		template<class StringLike>
+		template<typename StringLike>
 			requires(IsStringViewLike<StringLike, Ascii>)
 		friend constexpr StrongOrdering operator<=>(const BaseString& lhs, const StringLike& rhs) noexcept requires(IsSameC<Decay<value_type>, Utf32>) {
 			return lhs.toStringView() <=> rhs;
@@ -1879,15 +1879,15 @@ namespace natl {
 		}
 	};
 
-	template<class DataType, Size ByteSize, class Alloc = DefaultAllocator<DataType>>
+	template<typename DataType, Size ByteSize, typename Alloc = DefaultAllocator<DataType>>
 		requires(ByteSize >= 32 && IsAllocator<Alloc>)
 	using BaseStringByteSize = BaseString<DataType, (ByteSize - sizeof(BaseStringBaseMembersRef<DataType>)) / sizeof(DataType), Alloc>;
 
-	template<Size ByteSize, class Alloc = DefaultAllocator<Ascii>>
+	template<Size ByteSize, typename Alloc = DefaultAllocator<Ascii>>
 		requires(ByteSize >= 32 && IsAllocator<Alloc>)
 	using StringByteSize = BaseString<Ascii, (ByteSize - sizeof(BaseStringBaseMembersRef<Ascii>)) / sizeof(Ascii), Alloc>;
 
-	template<Size ByteSize, class Alloc = DefaultAllocator<Ascii>>
+	template<Size ByteSize, typename Alloc = DefaultAllocator<Ascii>>
 		requires(ByteSize >= 32 && IsAllocator<Alloc>)
 	using AsciiStringByteSize = StringByteSize<ByteSize, Alloc>;
 

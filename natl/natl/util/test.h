@@ -8,7 +8,7 @@
 
 //interface
 namespace natl {
-	class TestTypeStdOut {
+	struct TestTypeStdOut {
 	public:
 		//constructor
 		TestTypeStdOut() noexcept { natl::print("default constructed"); }
@@ -30,7 +30,7 @@ namespace natl {
 		TestTypeStdOut& operator=(const TestTypeStdOut&&) noexcept { natl::println("const moved assigned"); return self(); }
 	};
 	//custom 
-	class TestTypeCustomTrivialStdOut {
+	struct TestTypeCustomTrivialStdOut {
 		ui8 addressableData;
 	public:
 		//constructor
@@ -84,7 +84,7 @@ namespace natl {
 	struct IsTriviallyMoveAssignableV<TestTypeCustomTrivialStdOut>
 		: TrueType {};
 
-	enum class TestType {
+	enum struct TestType {
 		root,
 		leaf,
 		node,

@@ -6,22 +6,22 @@
 
 constexpr inline natl::ConstAsciiStringView natlTestFrom = "NatlEnumTest";
 
-enum class TestSequentialEnum {
+enum struct TestSequentialEnum {
 	value0 = 0, value1 = 1, value2 = 2, value3 = 3,
 	value4 = 4, value5 = 5, value6 = 6, value7 = 7,
 };
 
-enum class TestSequentialEnumBase1 {
+enum struct TestSequentialEnumBase1 {
 	value0 = 1, value1 = 2, value2 = 3, value3 = 4,
 	value4 = 5, value5 = 6, value6 = 7, value7 = 8,
 };
 
-enum class TestBitFlagEnum {
+enum struct TestBitFlagEnum {
 	value0 = 0,      value1 = 1 << 0, value2 = 1 << 1, value3 = 1 << 2,
 	value4 = 1 << 3, value5 = 1 << 4, value6 = 1 << 5, value7 = 1 << 6,
 };
 
-enum class TestBitFlagEnumBase1 {
+enum struct TestBitFlagEnumBase1 {
 	value0 = 1 << 0, value1 = 1 << 1, value2 = 1 << 2, value3 = 1 << 3,
 	value4 = 1 << 4, value5 = 1 << 5, value6 = 1 << 6, value7 = 1 << 7,
 };
@@ -29,7 +29,7 @@ enum class TestBitFlagEnumBase1 {
 
 constexpr natl::Size c_GapValue = 5;
 
-enum class TestSequentialEnumGap {
+enum struct TestSequentialEnumGap {
 	value0 = 0, value1 = 1, value2 = 2, value3 = 3,
 	value4 = 4 + c_GapValue, value5 = 5 + c_GapValue,
 	value6 = 6 + c_GapValue, value7 = 7 + c_GapValue,
@@ -44,7 +44,7 @@ template<> struct natl::EnumTraits<TestSequentialEnumGap> {
 		TestSequentialEnumGap::value4, TestSequentialEnumGap::value7>;
 };
 
-enum class TestBitFlagEnumGap {
+enum struct TestBitFlagEnumGap {
 	value0 = 0, value1 = 1 << 0, value2 = 1 << 1, value3 = 1 << 2,
 	value4 = 1 << (3 + c_GapValue), value5 = 1 << (4 + c_GapValue),
 	value6 = 1 << (5 + c_GapValue), value7 = 1 << (6 + c_GapValue),
@@ -63,7 +63,7 @@ static_assert(natl::IsSameC<
 	natl::BitFlagEnumValuesInIndexRange<TestBitFlagEnumGap, 0, 1 + 3 + c_GapValue, 1 + 6 + c_GapValue>
 >);
 
-enum class TestAllValuesEnum {
+enum struct TestAllValuesEnum {
 	value0 = 0 + c_GapValue, value1 = 1 + c_GapValue,
 	value2 = 2 + c_GapValue, value3 = 3 + c_GapValue,
 	value4 = 1 << (3 + c_GapValue), value5 = 1 << (4 + c_GapValue),
@@ -80,7 +80,7 @@ template<> struct natl::EnumTraits<TestAllValuesEnum> {
 	>;
 };
 
-enum class TestNothingEnum {
+enum struct TestNothingEnum {
 	value0 = 69,
 	value1 = 420,
 	value2 = 1337,

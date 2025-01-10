@@ -5,7 +5,7 @@
 
 //interface
 namespace natl {
-    enum class MetricLengthType {
+    enum struct MetricLengthType {
         millimeter,
         centimeter,
         decimeter,
@@ -146,7 +146,7 @@ namespace natl {
     }
 
     //mass
-    enum class MetricMassType {
+    enum struct MetricMassType {
         milligram,
         centigram,
         decigram,

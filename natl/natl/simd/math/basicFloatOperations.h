@@ -45,26 +45,26 @@ namespace natl::math {
 
 	template<typename FloatType, typename SimdArchType>
 		requires(natl::IsBuiltInFloatingPointC<FloatType> && nasimd::IsSimdArch<SimdArchType>)
-	NATL_FORCE_INLINE constexpr nasimd::SimdMMaskClass<FloatType, SimdArchType> isRelativelyClose(
-		nasimd::SimdRegisterClass<FloatType, SimdArchType> lhs,
-		nasimd::SimdRegisterClass<FloatType, SimdArchType> rhs,
+	NATL_FORCE_INLINE constexpr nasimd::SimdMMaskstruct<FloatType, SimdArchType> isRelativelyClose(
+		nasimd::SimdRegisterstruct<FloatType, SimdArchType> lhs,
+		nasimd::SimdRegisterstruct<FloatType, SimdArchType> rhs,
 		FloatType tolerance) noexcept {
 		return isRelativelyClose<FloatType, SimdArchType>(lhs.getRegister(), rhs.getRegister(), tolerance);
 	}
 
 	template<typename SimdArchType>
 		requires(nasimd::IsSimdArch<SimdArchType>)
-	NATL_FORCE_INLINE constexpr nasimd::SimdMMaskClassF32<SimdArchType> isRelativelyCloseF32(
-		nasimd::SimdRegisterClassF32<SimdArchType> lhs,
-		nasimd::SimdRegisterClassF32<SimdArchType> rhs, const f32 tolerance) noexcept {
+	NATL_FORCE_INLINE constexpr nasimd::SimdMMaskstructF32<SimdArchType> isRelativelyCloseF32(
+		nasimd::SimdRegisterstructF32<SimdArchType> lhs,
+		nasimd::SimdRegisterstructF32<SimdArchType> rhs, const f32 tolerance) noexcept {
 		return isRelativelyClose<f32, SimdArchType>(lhs.getRegister(), rhs.getRegister(), tolerance);
 	}
 
 	template<typename SimdArchType>
 		requires(nasimd::IsSimdArch<SimdArchType>)
-	NATL_FORCE_INLINE constexpr nasimd::SimdMMaskClassF64<SimdArchType> isRelativelyCloseF64(
-		nasimd::SimdRegisterClassF64<SimdArchType> lhs,
-		nasimd::SimdRegisterClassF64<SimdArchType> rhs, const f64 tolerance) noexcept {
+	NATL_FORCE_INLINE constexpr nasimd::SimdMMaskstructF64<SimdArchType> isRelativelyCloseF64(
+		nasimd::SimdRegisterstructF64<SimdArchType> lhs,
+		nasimd::SimdRegisterstructF64<SimdArchType> rhs, const f64 tolerance) noexcept {
 		return isRelativelyClose<f64, SimdArchType>(lhs.getRegister(), rhs.getRegister(), tolerance);
 	}
 
@@ -103,26 +103,26 @@ namespace natl::math {
 
 	template<typename FloatType, typename SimdArchType>
 		requires(natl::IsBuiltInFloatingPointC<FloatType>&& nasimd::IsSimdArch<SimdArchType>)
-	NATL_FORCE_INLINE constexpr nasimd::SimdMMaskClass<FloatType, SimdArchType> isRoughtlyEqual(
-		nasimd::SimdRegisterClass<FloatType, SimdArchType> lhs,
-		nasimd::SimdRegisterClass<FloatType, SimdArchType> rhs,
+	NATL_FORCE_INLINE constexpr nasimd::SimdMMaskstruct<FloatType, SimdArchType> isRoughtlyEqual(
+		nasimd::SimdRegisterstruct<FloatType, SimdArchType> lhs,
+		nasimd::SimdRegisterstruct<FloatType, SimdArchType> rhs,
 		FloatType tolerance) noexcept {
 		return isRoughtlyEqual<FloatType, SimdArchType>(lhs.getRegister(), rhs.getRegister(), tolerance);
 	}
 
 	template<typename SimdArchType>
 		requires(nasimd::IsSimdArch<SimdArchType>)
-	NATL_FORCE_INLINE constexpr nasimd::SimdMMaskClassF32<SimdArchType> isRoughtlyEqualF32(
-		nasimd::SimdRegisterClassF32<SimdArchType> lhs,
-		nasimd::SimdRegisterClassF32<SimdArchType> rhs, const f32 tolerance) noexcept {
+	NATL_FORCE_INLINE constexpr nasimd::SimdMMaskstructF32<SimdArchType> isRoughtlyEqualF32(
+		nasimd::SimdRegisterstructF32<SimdArchType> lhs,
+		nasimd::SimdRegisterstructF32<SimdArchType> rhs, const f32 tolerance) noexcept {
 		return isRoughtlyEqual<f32, SimdArchType>(lhs.getRegister(), rhs.getRegister(), tolerance);
 	}
 
 	template<typename SimdArchType>
 		requires(nasimd::IsSimdArch<SimdArchType>)
-	NATL_FORCE_INLINE constexpr nasimd::SimdMMaskClassF64<SimdArchType> isRoughtlyEqualF64(
-		nasimd::SimdRegisterClassF64<SimdArchType> lhs,
-		nasimd::SimdRegisterClassF64<SimdArchType> rhs, const f64 tolerance) noexcept {
+	NATL_FORCE_INLINE constexpr nasimd::SimdMMaskstructF64<SimdArchType> isRoughtlyEqualF64(
+		nasimd::SimdRegisterstructF64<SimdArchType> lhs,
+		nasimd::SimdRegisterstructF64<SimdArchType> rhs, const f64 tolerance) noexcept {
 		return isRoughtlyEqual<f64, SimdArchType>(lhs.getRegister(), rhs.getRegister(), tolerance);
 	}
 }

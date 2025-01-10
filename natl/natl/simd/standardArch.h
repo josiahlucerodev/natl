@@ -39,7 +39,7 @@ namespace natl::simd {
 	};
 
 	template<Size RegisterSize>
-	class StandardArch {
+	struct StandardArch {
 	public:
 		constexpr static inline Size registerSize = RegisterSize;
 	};
@@ -86,17 +86,17 @@ namespace natl::simd {
 		using SimdRegisterAnyInfo = StandardSimdRegisterBaseInfo<ui8, simd_arch::registerSize>;
 	};
 
-	template<class DataType, Size RegisterSize>
+	template<typename DataType, Size RegisterSize>
 	struct SimdRegisterToInfoT<StandardSimdRegisterBase<DataType, RegisterSize>> {
 		using type = StandardSimdRegisterBaseInfo<DataType, RegisterSize>;
 	};
 
 	//mask
 	template<Size RegisterSize>
-	class ArchSimdMask<StandardArch<RegisterSize>> : public DefaultArchSimdMask<RegisterSize> {};
+	struct ArchSimdMask<StandardArch<RegisterSize>> : public DefaultArchSimdMask<RegisterSize> {};
 
 	template<Size RegisterSize>
-	class ArchSimdMaskInfo<StandardArch<RegisterSize>> : public DefaultArchSimdMaskInfo<RegisterSize> {};
+	struct ArchSimdMaskInfo<StandardArch<RegisterSize>> : public DefaultArchSimdMaskInfo<RegisterSize> {};
 
 	//simd control mask op 
 	template<Size RegisterSize>
@@ -7633,7 +7633,7 @@ namespace natl::simd {
 		}
 
 		//pack//
-		template<class Src, class SrcInfo, class Dst>
+		template<typename Src, typename SrcInfo, typename Dst>
 		constexpr inline static void pack(const Src& srcReg, Dst& dstReg, Size& dstIndex) {
 			for (Size i = 0; i < SrcInfo::count(); i++, dstIndex++) {
 				using dst_type = decltype(dstReg[dstIndex]);
@@ -7819,7 +7819,7 @@ namespace natl::simd {
 		}
 
 		//unpack//
-		template<class Src, class Dst, class DstInfo>
+		template<typename Src, typename Dst, typename DstInfo>
 		constexpr inline static void unpack(const Src srcReg, Dst& dstReg, Size& srcIndex) noexcept {
 			for (Size i = 0; i < DstInfo::count(); i++, srcIndex++) {
 				dstReg[i] = srcReg[srcIndex];
@@ -8308,7 +8308,7 @@ namespace natl::simd {
 			return rmaskedTestAllOne<simd_register_f64>(value, mask);
 		}
 
-		template<class Src, class SrcInfo>
+		template<typename Src, typename SrcInfo>
 		constexpr inline static SimdRegisterAny<simd_arch> convert_to_any(Src value) noexcept {
 			using SrcDataType = SrcInfo::value_type;
 			using UIntByteType = UIntOfByteSize<sizeof(SrcDataType)>;
@@ -8359,8 +8359,8 @@ namespace natl::simd {
 		constexpr inline static SimdRegisterAny<simd_arch> convert_f64_to_any(simd_register_f64 value) noexcept {
 			return convert_to_any<simd_register_f64, SimdRegisterF64Info<simd_arch>>(value);
 		}
-		
-		template<class Src, class SrcInfo>
+
+		template<typename Src, typename SrcInfo>
 		constexpr inline static Src convert_any_to(SimdRegisterAny<simd_arch> src) noexcept {
 			using DstDataType = SrcInfo::value_type;
 			using UIntByteType = UIntOfByteSize<sizeof(DstDataType)>;

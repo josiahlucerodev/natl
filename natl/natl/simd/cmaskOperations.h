@@ -5,7 +5,7 @@
 
 //interface
 namespace natl::simd {
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 		requires(IsBuiltInNumericC<DataType>&& IsSimdArch<Arch>)
 	NATL_FORCE_INLINE constexpr SimdCMask<DataType, Arch> createEvenCMask() noexcept {
 		SimdCMask<DataType, Arch> evenCMask{};
@@ -14,14 +14,14 @@ namespace natl::simd {
 		}
 		return evenCMask;
 	}
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 		requires(IsBuiltInNumericC<DataType> && IsSimdArch<Arch>)
 	NATL_FORCE_INLINE constexpr SimdMask<DataType, Arch> createEvenMMask() noexcept {
 		constexpr SimdCMask<DataType, Arch> evenCMask = createEvenCMask<DataType, Arch>();
 		return simd_cmask_to_mmask<DataType, Arch>(evenCMask);
 	}
 
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 		requires(IsBuiltInNumericC<DataType>&& IsSimdArch<Arch>)
 	NATL_FORCE_INLINE constexpr SimdCMask<DataType, Arch> createOddCMask() noexcept {
 		SimdCMask<DataType, Arch> oddCMask{};
@@ -30,7 +30,7 @@ namespace natl::simd {
 		}
 		return oddCMask;
 	}
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 		requires(IsBuiltInNumericC<DataType> && IsSimdArch<Arch>)
 	NATL_FORCE_INLINE constexpr SimdMask<DataType, Arch> createOddMMask() noexcept {
 		constexpr SimdCMask<DataType, Arch> oddCMask = createOddCMask<DataType, Arch>();

@@ -23,7 +23,7 @@ namespace natl {
 	};
 
 	template<typename DataType>
-	class ColonyBlock {
+	struct ColonyBlock {
 	public:
 		using SkipFieldType = ColonySkipFieldType;
 	public:
@@ -48,7 +48,7 @@ namespace natl {
 	};
 
 	template<typename DataType, typename Alloc>
-	class ColonyIterator {
+	struct ColonyIterator {
 	public:
 		using iterator = ColonyIterator;
 		using iterator_category = BidirectionalIteratorTag;
@@ -172,7 +172,7 @@ namespace natl {
 
 	template<typename DataType, typename Alloc = DefaultAllocator<DataType>>
 		requires(IsAllocator<Alloc>)
-	class Colony {
+	struct Colony {
 	public:
 		using allocator_type = Alloc;
 

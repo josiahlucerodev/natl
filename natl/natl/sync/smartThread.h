@@ -39,7 +39,7 @@ namespace natl {
 		}
 	};
 
-	class ThreadStopAlert {
+	struct ThreadStopAlert {
 	private:
 		ThreadStopData* threadStopData;
 	public:
@@ -92,7 +92,7 @@ namespace natl {
 		}
 	};
 
-	class ThreadStopControl {
+	struct ThreadStopControl {
 	private:
 		ThreadStopData* threadStopData;
 	public:
@@ -164,7 +164,7 @@ namespace natl {
 		};
 	}
 
-	class SmartThread {
+	struct SmartThread {
 	public:
 		using native_handle_type = Thread::native_handle_type;
 	private:

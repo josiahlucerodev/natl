@@ -10,10 +10,10 @@
 
 //interface 
 namespace natl {
-	template<typename... DataType> class Tuple;
+	template<typename... DataType> struct Tuple;
 	
 	template<>
-	class Tuple<> {
+	struct Tuple<> {
 	public:
 		//special 
 		constexpr Size hash() const noexcept { return 0; }
@@ -29,7 +29,7 @@ namespace natl {
 	};
 
 	template<typename FirstDataType, typename... RestDataTypes>
-	class Tuple<FirstDataType, RestDataTypes...> {
+	struct Tuple<FirstDataType, RestDataTypes...> {
 	public:
 		using first_value_type = FirstDataType;
 		using rest_value_types = TypePack<RestDataTypes...>;
@@ -84,7 +84,7 @@ namespace natl {
 		}
 
 	private:
-		template<Size Index, class ReturnType>
+		template<Size Index, typename ReturnType>
 		constexpr ReturnType& internalGet() noexcept {
 			if constexpr (Index == 0) {
 				return first;
@@ -94,7 +94,7 @@ namespace natl {
 				}
 			}
 		}
-		template<Size Index, class ReturnType>
+		template<Size Index, typename ReturnType>
 		constexpr const ReturnType& internalGet() const noexcept {
 			if constexpr (Index == 0) {
 				return first;
@@ -168,7 +168,7 @@ namespace natl {
 		//special 
 	private:
 		template<typename Tuple, Size... Indices>
-		constexpr Size internalHash([[maybe_unused]] const Tuple& tuple, IndexSequence<Indices...>) const noexcept 
+		constexpr Size internalHash([[maybe_unused]] const Tuple& tuple, IndexSequence<Indices...>) const noexcept
 			requires(Hashable<FirstDataType> && (Hashable<RestDataTypes> && ...)) {
 			Size result = 0;
 			const Size hashValues[] = { hashValue(tuple.template get<Indices>())... };
@@ -180,13 +180,13 @@ namespace natl {
 		}
 	public:
 
-		constexpr Size hash() const noexcept 
+		constexpr Size hash() const noexcept
 			requires(Hashable<FirstDataType> && (Hashable<RestDataTypes> && ...)) {
 			return internalHash(self(), MakeIndexSequence<tupleSize>());
 		}
 
 		template<typename... OtherDataTypes>
-		friend class Tuple;
+		friend struct Tuple;
 
 		//compare 
 		template<typename... RhsDataTypes>
@@ -203,7 +203,7 @@ namespace natl {
 		}
 		template<typename... RhsDataTypes>
 			requires(tupleSize == sizeof...(RhsDataTypes) && IsOneWayLessThanTestable<FirstDataType, typename Tuple<RhsDataTypes...>::first_value_type>)
-		constexpr Bool operator<(const Tuple<RhsDataTypes...>&rhs) const noexcept {
+		constexpr Bool operator<(const Tuple<RhsDataTypes...>& rhs) const noexcept {
 			const Tuple& lhs = self();
 			return lhs.first < rhs.first && lhs.rest < rhs.rest;
 		}
@@ -253,22 +253,22 @@ namespace natl {
 	}
 
 	namespace impl {
-		template<class TupleType> struct TupleSizeTypeImpl : IntegralConstant<Size, 0> {};
-		template<class... Types> struct TupleSizeTypeImpl<Tuple<Types...>> : IntegralConstant<Size, sizeof...(Types)> {};
+		template<typename TupleType> struct TupleSizeTypeImpl : IntegralConstant<Size, 0> {};
+		template<typename... Types> struct TupleSizeTypeImpl<Tuple<Types...>> : IntegralConstant<Size, sizeof...(Types)> {};
 
-		template<Size Index, class TupleType> struct TupleElementTypeImpl;
+		template<Size Index, typename TupleType> struct TupleElementTypeImpl;
 
-		template<Size Index, class... DataTypes>
+		template<Size Index, typename... DataTypes>
 		struct TupleElementTypeImpl<Index, Tuple<DataTypes...>> {
 			using type = TypePackNthElement<Index, typename Tuple<DataTypes...>::value_types>;
 		};
 
 	}
 
-	template<class TupleType> using TupleSizeTypeImpl = impl::TupleSizeTypeImpl<Decay<TupleType>>;
-	template<class TupleType> constexpr inline Size TupleSize = impl::TupleSizeTypeImpl<Decay<TupleType>>::value;
-	template<Size Index, class TupleType> using TupleElementType = impl::TupleElementTypeImpl<Index, Decay<TupleType>>;
-	template<Size Index, class TupleType> using TupleElement = impl::TupleElementTypeImpl<Index, Decay<TupleType>>::type;
+	template<typename TupleType> using TupleSizeTypeImpl = impl::TupleSizeTypeImpl<Decay<TupleType>>;
+	template<typename TupleType> constexpr inline Size TupleSize = impl::TupleSizeTypeImpl<Decay<TupleType>>::value;
+	template<Size Index, typename TupleType> using TupleElementType = impl::TupleElementTypeImpl<Index, Decay<TupleType>>;
+	template<Size Index, typename TupleType> using TupleElement = impl::TupleElementTypeImpl<Index, Decay<TupleType>>::type;
 
 	namespace impl {
 		template<typename Functor, typename Tuple, Size... Indices>
@@ -277,11 +277,11 @@ namespace natl {
 		}
 	}
 
-	template<typename Functor, typename Tuple> 
+	template<typename Functor, typename Tuple>
 	constexpr decltype(auto) callFunctionWithTuple(Functor&& functor, Tuple&& tuple) noexcept {
 		return impl::callFunctionWithTupleImpl(
-			natl::forward<Functor>(functor), 
-			natl::forward<Tuple>(tuple), 
+			natl::forward<Functor>(functor),
+			natl::forward<Tuple>(tuple),
 			MakeIndexSequence<TupleSize<Tuple>>{}
 		);
 	}
@@ -291,7 +291,7 @@ namespace std {
 	template<typename... DataTypes>
 	struct tuple_size<natl::Tuple<DataTypes...>> : natl::IntegralConstant<natl::Size, sizeof...(DataTypes)> {};
 	template<> struct tuple_size<natl::Tuple<>> : natl::IntegralConstant<natl::Size, 0> {};
-	template<natl::StdSize Index, class... DataTypes >
+	template<natl::StdSize Index, typename... DataTypes >
 	struct tuple_element<Index, natl::Tuple<DataTypes...>> { 
 		using type = natl::TupleElement<Index, natl::Tuple<DataTypes...>>;  
 	};

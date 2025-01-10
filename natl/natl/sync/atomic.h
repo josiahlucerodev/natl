@@ -11,7 +11,7 @@
 
 //interface 
 namespace natl {
-	enum class MemoryOrder {
+	enum struct MemoryOrder {
 		relaxed, consume, acquire, release, acq_rel, seq_cst
 	};
 	inline constexpr MemoryOrder memory_order_relaxed = MemoryOrder::relaxed;
@@ -46,7 +46,7 @@ namespace natl {
 
 	namespace impl {
 
-		template<class DataType>
+		template<typename DataType>
 			requires(
 				std::is_trivially_copyable_v<DataType> &&  
 				std::is_copy_constructible_v<DataType> && 
@@ -54,7 +54,7 @@ namespace natl {
 				std::is_copy_assignable_v<DataType> &&
 				std::is_move_assignable_v<DataType>
 			)
-		class AtomicBase {
+		struct AtomicBase {
 		public:
 			using value_type = DataType;
 			using atomic_value_type = std::atomic<DataType>;
@@ -288,13 +288,13 @@ namespace natl {
 #pragma warning(default: 6031)
 #endif
 
-	template<class DataType>
+	template<typename DataType>
 	struct Atomic : public impl::AtomicBase<DataType> {
 	public:
 		using impl::AtomicBase<DataType>::AtomicBase;
 	};
 
-	template<class DataType>
+	template<typename DataType>
 		requires(std::is_integral_v<DataType>)
 	struct Atomic<DataType> : public impl::AtomicBase<DataType> {
 	public:
@@ -470,7 +470,7 @@ namespace natl {
 		}
 	};
 
-	template<class DataType>
+	template<typename DataType>
 		requires(std::is_floating_point_v<DataType>)
 	struct Atomic<DataType> : public impl::AtomicBase<DataType> {
 	public:
@@ -547,7 +547,7 @@ namespace natl {
 
 
 
-	template<class DataType>
+	template<typename DataType>
 	struct Atomic<DataType*> : public impl::AtomicBase<DataType> {
 	public:
 		using value_type = DataType;

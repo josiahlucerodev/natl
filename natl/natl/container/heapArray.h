@@ -9,7 +9,7 @@
 namespace natl {
 	template<typename DataType, typename Alloc = DefaultAllocator<DataType>>
 		requires(IsAllocator<Alloc>)
-	class HeapArray {
+	struct HeapArray {
 	public:
 		using allocator_type = Alloc;
 
@@ -258,31 +258,31 @@ namespace natl {
 		}
 	};
 
-	template<class DataType, class Alloc>
+	template<typename DataType, typename Alloc>
 	struct IsTriviallyCompareableV<HeapArray<DataType, Alloc>>
 		: TrueType {};
 
-	template<class DataType, class Alloc>
+	template<typename DataType, typename Alloc>
 	struct IsTriviallyRelocatableV<HeapArray<DataType, Alloc>>
 		: TrueType {};
-	template<class DataType, class Alloc>
+	template<typename DataType, typename Alloc>
 	struct IsTriviallyConstructibleV<HeapArray<DataType, Alloc>>
 		: TrueType {};
-	template<class DataType, class Alloc>
+	template<typename DataType, typename Alloc>
 	struct IsTriviallyDestructibleV<HeapArray<DataType, Alloc>>
 		: FalseType {};
 
-	template<class DataType, class Alloc>
+	template<typename DataType, typename Alloc>
 	struct IsTriviallyConstRefConstructibleV<HeapArray<DataType, Alloc>>
 		: FalseType {};
-	template<class DataType, class Alloc>
+	template<typename DataType, typename Alloc>
 	struct IsTriviallyMoveConstructibleV<HeapArray<DataType, Alloc>>
 		: FalseType {};
 
-	template<class DataType, class Alloc>
+	template<typename DataType, typename Alloc>
 	struct IsTriviallyConstRefAssignableV<HeapArray<DataType, Alloc>>
 		: FalseType {};
-	template<class DataType, class Alloc>
+	template<typename DataType, typename Alloc>
 	struct IsTriviallyMoveAssignableV<HeapArray<DataType, Alloc>>
 		: FalseType {};
 }

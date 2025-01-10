@@ -45,7 +45,7 @@ namespace natl {
 		return getHashCodeFromNameOfType(nameOfType);
 	}
 
-	class TypeInfo {
+	struct TypeInfo {
 	private:
 		ConstAsciiStringView nameOfType;
 		natl::Size hashCodeOfType;

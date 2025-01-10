@@ -7,7 +7,7 @@
 //interface 
 namespace natl {
 	template<typename DataType>
-	class UninitializedValue {
+	struct UninitializedValue {
 	public:
 		using value_type = DataType;
 	private:

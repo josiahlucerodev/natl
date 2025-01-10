@@ -12,34 +12,34 @@
 
 //interface
 namespace natl {
-	template<class DataType>
+	template<typename DataType>
 	void* castToVoidPtr(DataType* ptr) noexcept {
 		return reinterpret_cast<void*>(ptr);
 	}
-	template<class DataType>
+	template<typename DataType>
 	const void* castToConstVoidPtr(const DataType* ptr) noexcept {
 		return reinterpret_cast<const void*>(ptr);
 	}
 
-	template<class DataType>
+	template<typename DataType>
 	DataType* startLifetimeAs(void* ptr) noexcept {
 		return std::launder(static_cast<DataType*>(std::memmove(ptr, ptr, sizeof(DataType))));
 	}
-	template<class DataType>
+	template<typename DataType>
 	const DataType* startLifetimeAs(const void* ptr) noexcept {
 		return std::launder(static_cast<const DataType*>(std::memmove(const_cast<DataType*>(ptr), ptr, sizeof(DataType))));
 	}
-	template<class DataType>
+	template<typename DataType>
 	DataType* startLifetimeAsArray(void* ptr, const natl::Size number) noexcept {
 		return std::launder(static_cast<DataType*>(std::memmove(ptr, ptr, sizeof(DataType) * number)));
 	}
-	template<class DataType>
+	template<typename DataType>
 	const DataType* startLifetimeAsArray(const void* ptr, const natl::Size number) noexcept {
 		return std::launder(static_cast<const DataType*>(std::memmove(const_cast<DataType*>(ptr), ptr, sizeof(DataType) * number)));
 	}
 
 
-	enum class AlignPtrError {
+	enum struct AlignPtrError {
 		invalidAlignment,  
 		outOfSpace,  
 	};

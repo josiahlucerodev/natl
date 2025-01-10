@@ -6,7 +6,7 @@
 //interface
 namespace natl {
     //time
-    enum class StandardTimeType {
+    enum struct StandardTimeType {
         unknown,
         nanoseconds,
         microseconds,
@@ -41,7 +41,7 @@ namespace natl {
             using tag_group = impl::StandardTimeTagGroup;
         };
 
-        enum class StandardTimeUnitWeight : i64 {
+        enum struct StandardTimeUnitWeight : i64 {
             nanoseconds = 1,
             microseconds = nanoseconds * 1000,
             milliseconds = microseconds * 1000,
@@ -343,7 +343,7 @@ namespace natl {
     }
 
     //data
-    enum class StandardDataType {
+    enum struct StandardDataType {
        bit,
        byte,
        kilobyte,
@@ -365,7 +365,7 @@ namespace natl {
             using tag_group = impl::StandardDataTagGroup;
         };
 
-        enum class StandardDataUnitWeight : i64 {
+        enum struct StandardDataUnitWeight : i64 {
             bit = 1,
             byte = bit * 8,
             kilobyte = byte * 1024,

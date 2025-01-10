@@ -71,16 +71,16 @@ namespace natl {
 	template<typename Type> concept IsNotUnionC = IsNotUnion<Type>;
 
 	namespace impl {
-		template<typename Type> IntegralConstant<Bool, IsNotUnion<Type>> isClassTest(int Type::*);
-		template<typename> FalseType isClassTest(...);
+		template<typename Type> IntegralConstant<Bool, IsNotUnion<Type>> isStructTest(int Type::*);
+		template<typename> FalseType isStructTest(...);
 	}
-	template<typename Type> struct IsClassV : decltype(impl::isClassTest<Type>(0)) {};
-	template<typename Type> constexpr inline Bool IsClass = IsClassV<Type>::value;
-	template<typename Type> concept IsClassC = IsClass<Type>;
+	template<typename Type> struct IsStructV : decltype(impl::isStructTest<Type>(0)) {};
+	template<typename Type> constexpr inline Bool IsStruct = IsStructV<Type>::value;
+	template<typename Type> concept IsStructC = IsStruct<Type>;
 
-	template<typename Type> struct IsNotClassV : NegationV<IsClassV<Type>> {};
-	template<typename Type> constexpr inline Bool IsNotClass = IsNotClassV<Type>::value;
-	template<typename Type> concept IsNotClassC = IsNotClass<Type>;
+	template<typename Type> struct IsNotstructV : NegationV<IsStructV<Type>> {};
+	template<typename Type> constexpr inline Bool IsNotstruct = IsNotstructV<Type>::value;
+	template<typename Type> concept IsNotstructC = IsNotstruct<Type>;
 
 	template<typename Type> struct IsEnumV : BoolConstant<std::is_enum_v<Type>> {};
 	template<typename Type> inline constexpr Bool IsEnum = IsEnumV<Type>::value;
@@ -198,9 +198,9 @@ namespace natl {
 	template<typename Type, typename OtherType> concept IsNotSameC = IsNotSame<Type, OtherType>;
 
 	namespace impl {
-		template<class Type, class OtherType> concept SameAsImpl = IsSame<Type, OtherType>;
+		template<typename Type, typename OtherType> concept SameAsImpl = IsSame<Type, OtherType>;
 	}
-	template<class Type, class OtherType>
+	template<typename Type, typename OtherType>
 	concept SameAs = impl::SameAsImpl<Type, OtherType>&& impl::SameAsImpl<Type, OtherType>;
 
 	template<typename... Types> struct IsSameByteSizeV : BoolConstant<(sizeof(Types) == ...)> {};
@@ -279,12 +279,12 @@ namespace natl {
 	template<typename DataType>
 	using RemoveReference = typename RemoveReferenceT<DataType>::type;
 
-	template <class DataType, class = void>
+	template <typename DataType, typename = void>
 	struct UniversalAddReferenceT {
 		using lvalue = DataType;
 		using rvalue = DataType;
 	};
-	template <class DataType>
+	template <typename DataType>
 	struct UniversalAddReferenceT<DataType, MakeVoid<DataType&>> {
 		using lvalue = DataType&;
 		using rvalue = DataType&&;
@@ -335,9 +335,17 @@ namespace natl {
 	template<typename DataType> struct AddPointerT : decltype(impl::tryAddPointer<DataType>(0)) {};
 	template<typename DataType> using AddPointer = typename AddPointerT<DataType>::type;
 
+	template <typename... Type> struct AlwaysFalseV : FalseType {};
+	template <typename... Type> constexpr inline Bool AlwaysFalse = AlwaysFalseV<Type...>::value;
+	template <typename... Type> concept AlwaysFalseC = AlwaysFalseV<Type...>::value;
+
+	template <typename... Type> struct AlwaysTrueV : TrueType {};
+	template <typename... Type> constexpr inline Bool AlwaysTrue = AlwaysTrueV<Type...>::value;
+	template <typename... Type> concept AlwaysTrueC = AlwaysTrueV<Type...>::value;
+
 	//misc op
 	template<typename DataType> AddRValueReference<DataType> declval() noexcept {
-		return AddRValueReference<DataType>{};
+		static_assert(AlwaysFalse<DataType>, "Calling declval is ill-formed");
 	}
 	template <typename DataType>
 	constexpr RemoveReference<DataType>&& move(DataType&& arg) noexcept {
@@ -363,12 +371,12 @@ namespace natl {
 		return value;
 	}
 
-	template<class DataType> struct RemoveExtentT { using type = DataType; };
-	template<class DataType> struct RemoveExtentT<DataType[]> { using type = DataType; };
-	template<class DataType, Size Number> struct RemoveExtentT<DataType[Number]> { using type = DataType; };
-	template<class DataType> using RemoveExtent = RemoveExtentT<DataType>::type;
+	template<typename DataType> struct RemoveExtentT { using type = DataType; };
+	template<typename DataType> struct RemoveExtentT<DataType[]> { using type = DataType; };
+	template<typename DataType, Size Number> struct RemoveExtentT<DataType[Number]> { using type = DataType; };
+	template<typename DataType> using RemoveExtent = RemoveExtentT<DataType>::type;
 
-	template<class Type> struct DecayT {
+	template<typename Type> struct DecayT {
 	private:
 		using TypeNoReference = RemoveReference<Type>;
 	public:
@@ -383,7 +391,7 @@ namespace natl {
 		>;
 	};
 
-	template<class Type> using Decay = DecayT<Type>::type;
+	template<typename Type> using Decay = DecayT<Type>::type;
 
 	//convert
 	namespace impl {
@@ -447,14 +455,14 @@ namespace natl {
 
 	template<typename... Types> using CommonReference = CommonReferenceT<Types...>::type;
 
-	template<class Type, class OtherType>
+	template<typename Type, typename OtherType>
 	concept CommonReferenceWith =
 		SameAs<CommonReference<Type, OtherType>, CommonReference<OtherType, Type>>&&
 		ConvertibleTo<Type, CommonReference<Type, OtherType>>&&
 		ConvertibleTo<OtherType, CommonReference<Type, OtherType>>;
 
 	//assing
-	template<typename LhsDataType, class RhsDataType>
+	template<typename LhsDataType, typename RhsDataType>
 	concept AssignableFromC =
 		IsLValueReference<LhsDataType> &&
 		CommonReferenceWith<
@@ -802,7 +810,7 @@ namespace natl {
 	template<typename Functor>
 	using FunctorBaseStorage = FunctorBaseStorageT<Functor>::type;
 
-	template<class Functor, typename... ArgTypes>
+	template<typename Functor, typename... ArgTypes>
 	constexpr InvokeResultWithArgs<Functor, ArgTypes...> invokeFunction(Functor&& functor, ArgTypes&&... args) noexcept {
 		return natl::forward<Functor>(functor)(natl::forward<ArgTypes>(args)...);
 	}
@@ -816,7 +824,7 @@ namespace natl {
 		{ container.resize(newCapacity) };
 	};
 
-	template <typename ArrayViewLike, class DataType>
+	template <typename ArrayViewLike, typename DataType>
 	concept IsArrayViewLike = requires(ArrayViewLike arrayViewLike) {
 		{ arrayViewLike.data() } -> IsConvertibleC<const DataType*>;
 		{ arrayViewLike.size() } -> IsConvertibleC<Size>;
@@ -829,7 +837,7 @@ namespace natl {
 		{ arrayViewLike[declval<Size>()] };
 	};
 
-	template <typename StringView, class CharType>
+	template <typename StringView, typename CharType>
 	concept IsStringViewLike = requires(StringView stringView) {
 		{ stringView.data() } -> IsConvertibleC<const CharType*>;
 		{ stringView.size() } -> IsConvertibleC<Size>;

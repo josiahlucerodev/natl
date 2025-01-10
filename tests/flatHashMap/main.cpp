@@ -119,6 +119,7 @@ natl::Bool tests() noexcept {
 	return test;
 }
 
+
 int main() {
 	tests();
 }

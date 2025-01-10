@@ -11,7 +11,7 @@
 
 //interface
 namespace natl {
-	enum class StringNumericConvertError {
+	enum struct StringNumericConvertError {
 		unknown = 0,
 		invalid,
 		valueExceedsLimits,

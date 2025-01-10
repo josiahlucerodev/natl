@@ -119,7 +119,7 @@ namespace natl {
         constexpr static ToDataType value = UnitCategoryConversionFactor<from_tag_group, to_tag_group, FromTag, ToTag, ToDataType>::value;
     };
 
-    template<class UnitTag, SSize Magnitude>
+    template<typename UnitTag, SSize Magnitude>
     struct Unit {
         using unit_tag = UnitTag;
         constexpr static SSize magnitude = Magnitude;
@@ -655,7 +655,7 @@ namespace natl {
         using time = TimeUnit<1>;
     }
 
-    enum class FormatUnit {
+    enum struct FormatUnit {
         abbreviated,
         fullname, 
         dimension,
@@ -663,11 +663,11 @@ namespace natl {
         standard = abbreviated,
     };
 
-    class FormatUnitAbbreviated {};
-    class FormatUnitFullname {};
-    class FormatUnitDimension {};
-    class FormatUnitSystem {};
-    class FormatUnitStandard {};
+    struct FormatUnitAbbreviated {};
+    struct FormatUnitFullname {};
+    struct FormatUnitDimension {};
+    struct FormatUnitSystem {};
+    struct FormatUnitStandard {};
 
     using FormatUnitAbbr = FormatUnitAbbreviated;
 

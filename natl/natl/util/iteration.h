@@ -8,7 +8,7 @@
 
 //interface
 namespace natl {
-    class RepeatIterator {
+    struct RepeatIterator {
     public:
         using iterator_concept = std::contiguous_iterator_tag;
         using iterator_category = std::random_access_iterator_tag;
@@ -89,7 +89,7 @@ namespace natl {
         }
     };
 
-    class Repeat {
+    struct Repeat {
     public:
         using value_type = Size;
         using reference = Size&;
@@ -129,7 +129,7 @@ namespace natl {
         constexpr const_reverse_iterator crend() const noexcept { return const_reverse_iterator(begin()); }
     };
 
-    class RepeatFromTo {
+    struct RepeatFromTo {
     public:
         using value_type = Size;
         using reference = Size&;
@@ -202,10 +202,10 @@ namespace natl {
     }
 
     template<typename... Types>
-    class CombinedIterationIterator {};
+    struct CombinedIterationIterator {};
 
     template<typename... DataTypes, typename... IterationRanges>
-    class CombinedIterationIterator<TypePack<DataTypes...>, TypePack<IterationRanges...>> {
+    struct CombinedIterationIterator<TypePack<DataTypes...>, TypePack<IterationRanges...>> {
     public:
         //using value_type = Tuple<typename IterationRanges::iterator::value_type...>;
         using value_type = Tuple<DataTypes...>;
@@ -288,11 +288,11 @@ namespace natl {
     }
     
     template<typename... Types>
-    class CombinedIteration {};
+    struct CombinedIteration {};
 
     template<typename... DataTypes, typename... IterationRanges>
         requires((sizeof...(DataTypes) == sizeof...(IterationRanges)) && (IsConvertible<DataTypes, IterationRanges> && ...))
-    class CombinedIteration<TypePack<DataTypes...>, TypePack<IterationRanges...>> {
+    struct CombinedIteration<TypePack<DataTypes...>, TypePack<IterationRanges...>> {
     public:
         //using value_type = Tuple<typename IterationRanges::iterator::value_type...>;
         using value_type = Tuple<DataTypes...>;
@@ -373,7 +373,7 @@ namespace natl {
     }
 
     template<typename IterationRange> 
-    class ReverseIteration {
+    struct ReverseIteration {
     public:
         using value_type = IterationRange::value_type;
         using reference = IterationRange::reference;
@@ -418,7 +418,7 @@ namespace natl {
     }
 
     template<typename Container>
-    class BackInsertIterator {
+    struct BackInsertIterator {
     public:
         using allocator_type = Container::allocator_type;
 
@@ -476,7 +476,7 @@ namespace natl {
 
     namespace impl {
         template<typename DataType>
-        class TypeErasedBackInsertIteratorData {
+        struct TypeErasedBackInsertIteratorData {
         public:
             using reserve_function_type = void(*)(void*, const Size) noexcept;
             using push_back_function_type = void(*)(void*, const DataType&) noexcept;
@@ -509,7 +509,7 @@ namespace natl {
 
 
         template <typename DataType>
-        class TypeErasedBackInsertIteratorDataConstexprPolymorphic {
+        struct TypeErasedBackInsertIteratorDataConstexprPolymorphic {
         public:
             using reserve_function_type = void(*)(TypeErasedBackInsertIteratorDataConstexprPolymorphic*, const Size);
             using push_back_function_type = void(*)(TypeErasedBackInsertIteratorDataConstexprPolymorphic*, const DataType&);
@@ -525,7 +525,7 @@ namespace natl {
         };
 
         template<typename DataType, typename Container>
-        class TypeErasedBackInsertIteratorDataConstexpr final : public TypeErasedBackInsertIteratorDataConstexprPolymorphic<DataType> {
+        struct TypeErasedBackInsertIteratorDataConstexpr final : public TypeErasedBackInsertIteratorDataConstexprPolymorphic<DataType> {
         public:
             using allocator_type = DefaultAllocator<TypeErasedBackInsertIteratorDataConstexpr>;
             using data_constexpr_polymorphic = TypeErasedBackInsertIteratorDataConstexprPolymorphic<DataType>;
@@ -591,7 +591,7 @@ namespace natl {
 
 
     template<typename DataType>
-    class TypeErasedBackInsertIterator {
+    struct TypeErasedBackInsertIterator {
     public:
         using value_type = DataType;
         using reference = DataType&;

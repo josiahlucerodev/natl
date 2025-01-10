@@ -5,7 +5,7 @@
 
 //interface
 namespace natl {
-	template<class Promise = void>
+	template<typename Promise = void>
 	using CoroutineHandle = std::coroutine_handle<Promise>;
 
 	struct SuspendAlways {

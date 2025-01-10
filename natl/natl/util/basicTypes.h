@@ -98,7 +98,7 @@ namespace natl {
 	using NullptrType = decltype(nullptr);
 
 	template<typename DataType, typename TypeToAlignTo>
-	class alignas(TypeToAlignTo) AlignToType {
+	struct alignas(TypeToAlignTo) AlignToType {
 	private:
 		DataType internalValue;
 	public:
@@ -114,7 +114,7 @@ namespace natl {
 	};
 
 	template<typename DataType, Size Alignment>
-	class alignas(Alignment) AlignedType {
+	struct alignas(Alignment) AlignedType {
 	public:
 		using value_type = DataType;
 	private:
@@ -131,7 +131,7 @@ namespace natl {
 		constexpr const DataType& value() const noexcept { return internalValue; }
 	};
 
-	enum class Byte : ui8 {};
+	enum struct Byte : ui8 {};
 
 	template<typename DataType>
 	using ByteAlignedToType = AlignToType<Byte, DataType>;

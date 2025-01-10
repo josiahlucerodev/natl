@@ -9,8 +9,8 @@
 
 //interface 
 namespace natl {
-	template<class LhsIter, class RhsIter>
-		requires(IsIterPtr<LhsIter> && IsIterPtr<RhsIter> && IsConvertibleC<typename IteratorTraits<LhsIter>::value_type, typename IteratorTraits<RhsIter>::value_type>)
+	template<typename LhsIter, typename RhsIter>
+		requires(IsIterPtr<LhsIter>&& IsIterPtr<RhsIter>&& IsConvertibleC<typename IteratorTraits<LhsIter>::value_type, typename IteratorTraits<RhsIter>::value_type>)
 	constexpr Bool lexicographicalCompareEqual(LhsIter lhsIter, const Size lhsSize, RhsIter rhsIter, const Size rhsSize) noexcept {
 		if (lhsSize != rhsSize) { return false; }
 		for (Size i = 0; i < lhsSize; ++lhsIter, ++rhsIter) {
@@ -19,13 +19,13 @@ namespace natl {
 		return true;
 	}
 
-	template<class LhsIter, class RhsIter>
+	template<typename LhsIter, typename RhsIter>
 		requires(IsIterPtr<LhsIter>&& IsIterPtr<RhsIter>&& IsConvertibleC<typename IteratorTraits<LhsIter>::value_type, typename IteratorTraits<RhsIter>::value_type>)
 	constexpr Bool lexicographicalCompareNotEqual(LhsIter lhsIter, const Size lhsSize, RhsIter rhsIter, const Size rhsSize) noexcept {
 		return !lexicographicalCompareEqual<LhsIter, RhsIter>(lhsIter, lhsSize, rhsIter, rhsSize);
 	}
 
-	template<class LhsIter, class RhsIter>
+	template<typename LhsIter, typename RhsIter>
 		requires(IsIterPtr<LhsIter>&& IsIterPtr<RhsIter>&& IsConvertibleC<typename IteratorTraits<LhsIter>::value_type, typename IteratorTraits<RhsIter>::value_type>)
 	constexpr Bool lexicographicalCompareLessThan(LhsIter lhsIter, const Size lhsSize, RhsIter rhsIter, const Size rhsSize) noexcept {
 		const Size commonSize = min<Size>(lhsSize, rhsSize);
@@ -36,7 +36,7 @@ namespace natl {
 		return lhsSize < rhsSize;
 	}
 
-	template<class LhsIter, class RhsIter>
+	template<typename LhsIter, typename RhsIter>
 		requires(IsIterPtr<LhsIter>&& IsIterPtr<RhsIter>&& IsConvertibleC<typename IteratorTraits<LhsIter>::value_type, typename IteratorTraits<RhsIter>::value_type>)
 	constexpr Bool lexicographicalCompareLessThanEqual(LhsIter lhsIter, const Size lhsSize, RhsIter rhsIter, const Size rhsSize) noexcept {
 		const Size commonSize = min<Size>(lhsSize, rhsSize);
@@ -47,7 +47,7 @@ namespace natl {
 		return lhsSize <= rhsSize;
 	}
 
-	template<class LhsIter, class RhsIter>
+	template<typename LhsIter, typename RhsIter>
 		requires(IsIterPtr<LhsIter>&& IsIterPtr<RhsIter>&& IsConvertibleC<typename IteratorTraits<LhsIter>::value_type, typename IteratorTraits<RhsIter>::value_type>)
 	constexpr Bool lexicographicalCompareGreaterThan(LhsIter lhsIter, const Size lhsSize, RhsIter rhsIter, const Size rhsSize) noexcept {
 		const Size commonSize = min<Size>(lhsSize, rhsSize);
@@ -58,7 +58,7 @@ namespace natl {
 		return lhsSize > rhsSize;
 	}
 
-	template<class LhsIter, class RhsIter>
+	template<typename LhsIter, typename RhsIter>
 		requires(IsIterPtr<LhsIter>&& IsIterPtr<RhsIter>&& IsConvertibleC<typename IteratorTraits<LhsIter>::value_type, typename IteratorTraits<RhsIter>::value_type>)
 	constexpr Bool lexicographicalCompareGreaterThanEqual(LhsIter lhsIter, const Size lhsSize, RhsIter rhsIter, const Size rhsSize) noexcept {
 		const Size commonSize = min<Size>(lhsSize, rhsSize);
@@ -69,7 +69,7 @@ namespace natl {
 		return lhsSize >= rhsSize;
 	}
 
-	template<class LhsIter, class RhsIter>
+	template<typename LhsIter, typename RhsIter>
 		requires(IsIterPtr<LhsIter>&& IsIterPtr<RhsIter>&& IsConvertibleC<typename IteratorTraits<LhsIter>::value_type, typename IteratorTraits<RhsIter>::value_type>)
 	constexpr StrongOrdering lexicographicalCompareSpaceship(LhsIter lhsIter, const Size lhsSize, RhsIter rhsIter, const Size rhsSize) noexcept {
 		const Size commonSize = min<Size>(lhsSize, rhsSize);

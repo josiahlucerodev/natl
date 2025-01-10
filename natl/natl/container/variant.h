@@ -13,7 +13,7 @@
 //interface 
 namespace natl {
 	struct BaseNamedElement {};
-	template<TemplateStringLiteral InputName, class DataType>
+	template<TemplateStringLiteral InputName, typename DataType>
 	struct NamedElement {
 		constexpr static TemplateStringLiteral name = InputName;
 		using NameType = decltype(name);
@@ -21,8 +21,8 @@ namespace natl {
 		constexpr operator BaseNamedElement() const noexcept { return BaseNamedElement(); };
 	};
 
-	class BaseVariantAssign {};
-	template<TemplateStringLiteral InputName, class DataType>
+	struct BaseVariantAssign {};
+	template<TemplateStringLiteral InputName, typename DataType>
 	struct VariantAssign {
 		constexpr static TemplateStringLiteral name = InputName;
 		using NameType = decltype(name);
@@ -32,8 +32,8 @@ namespace natl {
 		constexpr operator BaseVariantAssign() const noexcept { return BaseVariantAssign(); };
 	};
 
-	class BaseVariantAssignMove {};
-	template<TemplateStringLiteral InputName, class DataType>
+	struct BaseVariantAssignMove {};
+	template<TemplateStringLiteral InputName, typename DataType>
 	struct VariantAssignMove {
 		constexpr static TemplateStringLiteral name = InputName;
 		using NameType = decltype(name);
@@ -43,10 +43,10 @@ namespace natl {
 		constexpr operator BaseVariantAssignMove() const noexcept { return BaseVariantAssignMove(); };
 	};
 
-	template<class... DataTypes>
-	class VariantStorage {
+	template<typename... DataTypes>
+	struct VariantStorage {
 		//this is need for the other function to parse
-		template<Size Index, class ReturnType> constexpr ReturnType& getRef() = delete;
+		template<Size Index, typename ReturnType> constexpr ReturnType& getRef() = delete;
 	};
 
 	namespace impl {
@@ -68,8 +68,8 @@ namespace natl {
 #pragma warning(disable: 4624)
 #endif //_MSC_VER
 
-	template<class FirstDataType, class... RestDataTypes>
-	class VariantStorage<FirstDataType, RestDataTypes...> {
+	template<typename FirstDataType, typename... RestDataTypes>
+	struct VariantStorage<FirstDataType, RestDataTypes...> {
 	public:
 		constexpr VariantStorage() = default;
 		constexpr ~VariantStorage() = default;
@@ -80,7 +80,7 @@ namespace natl {
 			VariantStorage<RestDataTypes...> trailingData;
 		};
 
-		template<Size Index, class ReturnType> 
+		template<Size Index, typename ReturnType> 
 		constexpr ReturnType& getRef(int x = 0) noexcept {
 			if constexpr (Index == 0) {
 				return data;
@@ -91,7 +91,7 @@ namespace natl {
 			}
 		}
 
-		template<Size Index, class ReturnType>
+		template<Size Index, typename ReturnType>
 		constexpr const ReturnType& getRef(int x = 0) const noexcept {
 			if constexpr (Index == 0) {
 				return data;
@@ -112,7 +112,7 @@ namespace natl {
 
 	template<typename... Elements>
 		requires((IsConvertibleC<Elements, BaseNamedElement> && ...))
-	class Variant {
+	struct Variant {
 	public:
 		constexpr static Size numberOfVariants = sizeof...(Elements);
 		constexpr static Size emptyVariantValue = 0;

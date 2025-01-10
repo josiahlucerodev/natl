@@ -74,6 +74,7 @@ natl/util/assert.h
 natl/util/basicTypes.h
 natl/util/bits.h
 natl/util/bytes.h
+natl/util/cast.h
 natl/util/characterTest.h
 natl/util/commonHashs.h
 natl/util/compare.h
@@ -90,6 +91,8 @@ natl/util/limits.h
 natl/util/memory.h
 natl/util/numerics.h
 natl/util/pointer.h
+natl/util/preprocessor.h
+natl/util/reflection.h
 natl/util/stringConvert.h
 natl/util/stringLiteral.h
 natl/util/stringOperations.h

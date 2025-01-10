@@ -12,7 +12,7 @@
 //interface
 namespace natl {
 	template<typename DataType>
-	class Ptr {
+	struct Ptr {
 	public:
 		using value_type = DataType;
 		using reference = DataType&;
@@ -102,7 +102,7 @@ namespace natl {
 
 	template<typename DataType, typename Alloc = DefaultAllocator<DataType>, typename Deleter = DefaultDeleter<DataType, Alloc>>
 		requires(IsAllocator<Alloc> && IsDeleter<Deleter, DataType>)
-	class UniquePtr {
+	struct UniquePtr {
 	public:
 		using value_type = DataType;
 		using reference = DataType&;
@@ -276,14 +276,14 @@ namespace natl {
 	struct IsTriviallyMoveAssignableV<UniquePtr<DataType, Alloc, Deleter>>
 		: FalseType {};
 
-	template<class CharT, class Traits, class DataType, class Alloc, class Deleter> 
+	template<typename CharT, typename Traits, typename DataType, typename Alloc, typename Deleter>
 	std::basic_ostream<CharT, Traits>& operator<<(std::basic_ostream<CharT, Traits>& os, const UniquePtr<DataType, Alloc, Deleter>& ptr) {
 		os << ptr.get();
 		return os;
 	}
 
 	template<typename PtrDataType, typename SmallDataType>
-	class PackedPtrAndSmallData {
+	struct PackedPtrAndSmallData {
 	public:
 		using pointer_type = PtrDataType*;
 		using small_data_type = SmallDataType;
@@ -538,7 +538,7 @@ namespace natl {
 
 
 	namespace impl {
-		enum class SharedPtrControlBlockState : ui16 {
+		enum struct SharedPtrControlBlockState : ui16 {
 			seperate = 0, 
 			fused, 
 			seperatePolymorphic,
@@ -558,7 +558,7 @@ namespace natl {
 			 virtual Bool incrementIfNotZero(SharedPtrControlBlockSeperatePolymorphic*) const noexcept = 0;
 		};
 
-		template<class DataType>
+		template<typename DataType>
 		struct SharedPtrControlBlockSeperate : SharedPtrControlBlockSeperatePolymorphic {
 			using control_block_polymorphic_destroy_function = typename SharedPtrControlBlockSeperatePolymorphic::control_block_polymorphic_destroy_function;
 			using control_block_deleter_function_type = Function<void(SharedPtrControlBlockSeperate*)>;
@@ -570,7 +570,7 @@ namespace natl {
 			Function<void(SharedPtrControlBlockSeperate*)> controlBlockDeleter;
 
 			
-			template<class Deleter, class ControlBlockDeleter>
+			template<typename Deleter, typename ControlBlockDeleter>
 				requires(IsDeleter<Deleter, DataType> && IsDeleter<ControlBlockDeleter, SharedPtrControlBlockSeperate>)
 			 SharedPtrControlBlockSeperate(DataType* dataPtrIn, Deleter&& deleterIn, ControlBlockDeleter&& controlBlockDeleterIn) noexcept
 				: dataPtr(dataPtrIn), useCount(1), weakCount(), deleter(deleterIn), controlBlockDeleter(controlBlockDeleterIn) {}
@@ -652,7 +652,7 @@ namespace natl {
 			 virtual Bool incrementIfNotZero(SharedPtrControlBlockFusedPolymorphic*) const noexcept = 0;
 		};
 
-		template<class DataType>
+		template<typename DataType>
 		struct SharedPtrControlBlockFused : SharedPtrControlBlockFusedPolymorphic {
 			using control_block_polymorphic_destroy_function = typename SharedPtrControlBlockFusedPolymorphic::control_block_polymorphic_destroy_function;
 			using control_block_deleter_function_type = Function<void(SharedPtrControlBlockFused*)>;
@@ -670,7 +670,7 @@ namespace natl {
 				DataType data;
 			};
 
-			template<class PreDeleteFunctor, class PostDeleteFunctor, class ControlBlockDeleter, class... ConstructArgTypes>
+			template<typename PreDeleteFunctor, typename PostDeleteFunctor, typename ControlBlockDeleter, typename... ConstructArgTypes>
 				requires(HasFunctionSignature<PreDeleteFunctor, void, DataType*> &&
 						HasFunctionSignature<PostDeleteFunctor, void> && 
 						IsDeleter<ControlBlockDeleter, SharedPtrControlBlockFused> &&
@@ -772,7 +772,7 @@ namespace natl {
 			constexpr virtual control_block_polymorphic_increment_if_not_zero_function getIncrementIfNotZeroFunction() const noexcept = 0;
 		};
 		
-		template<class DataType> 
+		template<typename DataType> 
 		struct SharedPtrControlBlockSeperateConstexpr final : SharedPtrControlBlockSeperatePolymorphicConstexpr {
 			using control_block_polymorphic_destroy_function = SharedPtrControlBlockSeperateConstexpr::control_block_polymorphic_destroy_function;
 			using control_block_polymorphic_increment_function = SharedPtrControlBlockSeperateConstexpr::control_block_polymorphic_increment_function;
@@ -885,11 +885,11 @@ namespace natl {
 	struct SharedPtrFusedConstruct {};
 
 	template<typename DataType>
-	class SharedPtr;
+	struct SharedPtr;
 
 	//weak ptr 
 	template<typename DataType>
-	class WeakPtr {
+	struct WeakPtr {
 	public:
 		using element_type = DataType;
 		using element_pointer = DataType*;
@@ -915,7 +915,7 @@ namespace natl {
 		constexpr WeakPtr(NullptrType) noexcept : dataPtrAndControlBlockState(nullptr, impl::SharedPtrControlBlockState::seperate), controlBlockSeperate() {}
 
 	private:
-		template<class OtherType>
+		template<typename OtherType>
 		constexpr void constructCopy(const OtherType& other) noexcept {
 			if (other.dataPtr == nullptr) {
 				dataPtrAndControlBlockState.setValues(nullptr, impl::SharedPtrControlBlockState::seperate);
@@ -953,7 +953,7 @@ namespace natl {
 				}
 			}
 		}
-		template<class OtherType>
+		template<typename OtherType>
 		constexpr void constructMove(OtherType&& other) noexcept {
 			if (other.dataPtrAndControlBlockState.getPtr() == nullptr) {
 				dataPtrAndControlBlockState.setValues(nullptr, impl::SharedPtrControlBlockState::seperate);
@@ -988,7 +988,7 @@ namespace natl {
 
 			other.dataPtr = nullptr;
 		}
-		template<class OtherType>
+		template<typename OtherType>
 		constexpr void constructPolymorphicCopy(const OtherType& other) noexcept {
 			if (other.dataPtrAndControlBlockState.getSmallData() == nullptr) {
 				dataPtrAndControlBlockState.setValues(nullptr, impl::SharedPtrControlBlockState::seperate);
@@ -1031,7 +1031,7 @@ namespace natl {
 				}
 			}
 		}
-		template<class OtherType>
+		template<typename OtherType>
 		constexpr void constructPolymorphicMove(const OtherType& other) noexcept {
 			if (other.dataPtrAndControlBlockState.getPtr() == nullptr) {
 				dataPtrAndControlBlockState.setValues(nullptr, impl::SharedPtrControlBlockState::seperate);
@@ -1080,12 +1080,12 @@ namespace natl {
 			constructMove<WeakPtr>(forward<WeakPtr>(other));
 		}
 
-		template<class OtherDataType>
+		template<typename OtherDataType>
 			requires(IsPolymorphicCastable<OtherDataType, DataType>)
 		constexpr WeakPtr(const WeakPtr<OtherDataType>& other) noexcept {
 			constructPolymorphicCopy<WeakPtr<OtherDataType>>(other);
 		}
-		template<class OtherDataType>
+		template<typename OtherDataType>
 			requires(IsPolymorphicCastable<OtherDataType, DataType>)
 		constexpr WeakPtr(WeakPtr<OtherDataType>&& other) noexcept {
 			constructPolymorphicMove<WeakPtr<OtherDataType>>(forward<WeakPtr<OtherDataType>>(other));
@@ -1094,7 +1094,7 @@ namespace natl {
 		constexpr WeakPtr(const SharedPtr<DataType>& other) noexcept {
 			constructCopy<SharedPtr<DataType>>(other);
 		}
-		template<class OtherDataType>
+		template<typename OtherDataType>
 			requires(IsPolymorphicCastable<OtherDataType, DataType>)
 		constexpr WeakPtr(const SharedPtr<DataType>& other) noexcept {
 			constructPolymorphicCopy<SharedPtr<OtherDataType>>(other);
@@ -1150,14 +1150,14 @@ namespace natl {
 			return self();
 		}
 
-		template<class OtherDataType>
+		template<typename OtherDataType>
 			requires(IsPolymorphicCastable<OtherDataType, DataType>)
 		constexpr WeakPtr& operator=(const WeakPtr<OtherDataType>& other) noexcept {
 			destruct();
 			constructPolymorphicCopy<WeakPtr<OtherDataType>>(other);
 			return self();
 		}
-		template<class OtherDataType>
+		template<typename OtherDataType>
 			requires(IsPolymorphicCastable<OtherDataType, DataType>)
 		constexpr WeakPtr& operator=(WeakPtr<OtherDataType>&& other) noexcept {
 			destruct();
@@ -1170,7 +1170,7 @@ namespace natl {
 			constructCopy<SharedPtr<DataType>>(other);
 			return self();
 		}
-		template<class OtherDataType>
+		template<typename OtherDataType>
 			requires(IsPolymorphicCastable<OtherDataType, DataType>)
 		constexpr WeakPtr& operator=(const SharedPtr<DataType>& other) noexcept {
 			destruct();
@@ -1303,7 +1303,7 @@ namespace natl {
 		: FalseType {};
 
 	template<typename DataType>
-	class SharedPtr {
+	struct SharedPtr {
 	public:
 		using element_type = DataType;
 		using element_pointer = DataType*;
@@ -1326,7 +1326,7 @@ namespace natl {
 	public:
 		using weak_type = WeakPtr<DataType>;
 	private:
-		template<class OtherType, Bool IncrementRefCount = true>
+		template<typename OtherType, Bool IncrementRefCount = true>
 		constexpr void constructCopy(const OtherType& other) noexcept {
 			if (other.dataPtrAndControlBlockState.getPtr() == nullptr) {
 				dataPtrAndControlBlockState.setValues(nullptr, impl::SharedPtrControlBlockState::seperate);
@@ -1374,7 +1374,7 @@ namespace natl {
 				}
 			}
 		}
-		template<class OtherType>
+		template<typename OtherType>
 		constexpr void constructMove(OtherType&& other) noexcept {
 			if (other.dataPtrAndControlBlockState.getPtr() == nullptr) {
 				dataPtrAndControlBlockState.setValues(nullptr, impl::SharedPtrControlBlockState::seperate);
@@ -1409,7 +1409,7 @@ namespace natl {
 
 			other.dataPtr = nullptr;
 		}
-		template<class OtherType, Bool IncrementRefCount = true>
+		template<typename OtherType, Bool IncrementRefCount = true>
 		constexpr void constructPolymorphicCopy(const OtherType& other) noexcept {
 			if (other.dataPtrAndControlBlockState.getPtr() == nullptr) {
 				dataPtrAndControlBlockState.setValues(nullptr, impl::SharedPtrControlBlockState::seperate);
@@ -1462,7 +1462,7 @@ namespace natl {
 				}
 			}
 		}
-		template<class OtherType>
+		template<typename OtherType>
 		constexpr void constructPolymorphicMove(const OtherType& other) noexcept {
 			if (other.dataPtrAndControlBlockState == nullptr) {
 				dataPtrAndControlBlockState.setValues(nullptr, impl::SharedPtrControlBlockState::seperate);
@@ -1515,12 +1515,12 @@ namespace natl {
 			constructCopy<SharedPtr>(forward<SharedPtr>(other));
 		}
 
-		template<class OtherDataType>
+		template<typename OtherDataType>
 			requires(IsPolymorphicCastable<OtherDataType, DataType>)
 		constexpr SharedPtr(const SharedPtr<OtherDataType>& other) noexcept {
 			constructPolymorphicCopy<SharedPtr<OtherDataType>>(other);
 		}
-		template<class OtherDataType>
+		template<typename OtherDataType>
 			requires(IsPolymorphicCastable<OtherDataType, DataType>)
 		constexpr SharedPtr(SharedPtr<OtherDataType>&& other) noexcept {
 			constructPolymorphicMove<SharedPtr<OtherDataType>>(forward<SharedPtr<OtherDataType>>(other));
@@ -1534,7 +1534,7 @@ namespace natl {
 				controlBlockSeperate = nullptr;
 			}
 		}
-		template<class OtherDataType>
+		template<typename OtherDataType>
 			requires(IsPolymorphicCastable<OtherDataType, DataType>)
 		constexpr SharedPtr(const WeakPtr<OtherDataType>& other) noexcept {
 			if (other.isNotEmpty() && incrementIfNotZero<WeakPtr<DataType>>(other)) {
@@ -1548,7 +1548,7 @@ namespace natl {
 
 
 	private:
-		template<class OtherType>
+		template<typename OtherType>
 		constexpr Bool incrementIfNotZero(const OtherType& other) noexcept {
 			switch (dataPtrAndControlBlockState.getSmallData()) {
 			case impl::SharedPtrControlBlockState::seperate:
@@ -1638,7 +1638,7 @@ namespace natl {
 			natl::construct<control_block_seperate>(controlBlockSeperate, ptr, DefaultDeleter<DataType, Alloc>(), DefaultDeleter<control_block_seperate, control_block_seperate_alloc>());
 		}
 
-		template<class Alloc, class Deleter>
+		template<typename Alloc, typename Deleter>
 			requires(IsAllocator<Alloc>&& IsDeleter<Deleter, DataType>)
 		constexpr void construct(DataType* ptr, Deleter&& deleter) noexcept {
 			if (isConstantEvaluated()) {
@@ -1654,7 +1654,7 @@ namespace natl {
 			controlBlockSeperate = control_block_seperate_alloc::allocate(1);
 			natl::construct<control_block_seperate>(controlBlockSeperate, ptr, deleter, DefaultDeleter<control_block_seperate, control_block_seperate_alloc>());
 		}
-		template<class OtherDataType, class Alloc>
+		template<typename OtherDataType, typename Alloc>
 			requires(IsAllocator<Alloc> && IsPolymorphicCastable<OtherDataType, DataType>)
 		constexpr void construct(OtherDataType* ptr) noexcept {
 			if (isConstantEvaluated()) {
@@ -1675,7 +1675,7 @@ namespace natl {
 			controlBlockSeperatePolymorphic = static_cast<control_block_seperate_polymorphic*>(otherControlBlockSeperate);
 		}
 
-		template<class OtherDataType, class Alloc, class Deleter>
+		template<typename OtherDataType, typename Alloc, typename Deleter>
 			requires(IsAllocator<Alloc>&& IsDeleter<Deleter, DataType>)
 		constexpr void construct(OtherDataType* ptr, Deleter&& deleter) noexcept {
 			if (isConstantEvaluated()) {
@@ -1695,7 +1695,7 @@ namespace natl {
 			controlBlockSeperatePolymorphic = static_cast<control_block_seperate_polymorphic*>(otherControlBlockSeperate);
 		}
 
-		template<class Deleter>
+		template<typename Deleter>
 		constexpr void construct(UniquePtr<DataType, Deleter>&& other) {
 			if (other.isEmpty()) {
 				dataPtrAndControlBlockState.setValues(nullptr, impl::SharedPtrControlBlockState::seperate);
@@ -1709,7 +1709,7 @@ namespace natl {
 				}
 			}
 		}
-		template<class OtherDataType, class Deleter>
+		template<typename OtherDataType, typename Deleter>
 			requires(IsPolymorphicCastable<OtherDataType, DataType>)
 		constexpr void construct(UniquePtr<DataType, Deleter>&& other) {
 			if (other.isEmpty()) {
@@ -1726,20 +1726,20 @@ namespace natl {
 		}
 	public:
 
-		template<class Alloc>
+		template<typename Alloc>
 			requires(IsAllocator<Alloc>)
 		explicit constexpr SharedPtr(DataType* ptr, Alloc) noexcept {
 			construct<Alloc>(ptr);
 		}
 
-		template<class Alloc, class Deleter>
-			requires(IsAllocator<Alloc> && IsDeleter<Deleter, DataType>)
+		template<typename Alloc, typename Deleter>
+			requires(IsAllocator<Alloc>&& IsDeleter<Deleter, DataType>)
 		constexpr SharedPtr(DataType* ptr, Deleter&& deleter, Alloc) noexcept {
 			construct<DataType, Deleter>(ptr, forward<Deleter>(deleter));
 		}
 
-		template<class Alloc, class... ConstructArgTypes>
-			requires(IsAllocator<Alloc> && IsConstructibleC<DataType, ConstructArgTypes...>)
+		template<typename Alloc, typename... ConstructArgTypes>
+			requires(IsAllocator<Alloc>&& IsConstructibleC<DataType, ConstructArgTypes...>)
 		constexpr SharedPtr(SharedPtrFusedConstruct, Alloc, ConstructArgTypes... constructArg) noexcept {
 			if (isConstantEvaluated()) {
 				constructContexpr<DataType, Alloc>(
@@ -1761,13 +1761,13 @@ namespace natl {
 				natl::forward<ConstructArgTypes>(constructArg)...);
 
 			dataPtrAndControlBlockState.setValues(&controlBlockFused->data, impl::SharedPtrControlBlockState::fused);
-		}	
+		}
 
-		template<class Deleter>
+		template<typename Deleter>
 		constexpr SharedPtr(UniquePtr<DataType, Deleter>&& other) {
 			construct<Deleter>(forward<UniquePtr<DataType, Deleter>>(other));
 		}
-		template<class OtherDataType, class Deleter>
+		template<typename OtherDataType, typename Deleter>
 			requires(IsPolymorphicCastable<OtherDataType, DataType>)
 		constexpr SharedPtr(UniquePtr<OtherDataType, Deleter>&& other) {
 			construct<OtherDataType, Deleter>(forward<UniquePtr<OtherDataType, Deleter>>(other));
@@ -1824,14 +1824,14 @@ namespace natl {
 			return self();
 		}
 
-		template<class OtherDataType>
+		template<typename OtherDataType>
 			requires(IsPolymorphicCastable<OtherDataType, DataType>)
 		constexpr SharedPtr& operator=(const SharedPtr<OtherDataType>& other) noexcept {
 			destruct();
 			constructPolymorphicCopy<SharedPtr<OtherDataType>>(other);
 			return self();
 		}
-		template<class OtherDataType>
+		template<typename OtherDataType>
 			requires(IsPolymorphicCastable<OtherDataType, DataType>)
 		constexpr SharedPtr& operator=(SharedPtr<OtherDataType>&& other) noexcept {
 			destruct();
@@ -1839,13 +1839,13 @@ namespace natl {
 			return self();
 		}
 
-		template<class Deleter>
+		template<typename Deleter>
 		constexpr SharedPtr& operator=(UniquePtr<DataType, Deleter>&& other) {
 			destruct();
 			construct<Deleter>(forward<UniquePtr<DataType, Deleter>>(other));
 			return self();
 		}
-		template<class OtherDataType, class Deleter>
+		template<typename OtherDataType, typename Deleter>
 			requires(IsPolymorphicCastable<OtherDataType, DataType>)
 		constexpr SharedPtr& operator=(UniquePtr<OtherDataType, Deleter>&& other) {
 			destruct();
@@ -1863,14 +1863,14 @@ namespace natl {
 			destruct();
 			construct<DefaultAllocatorByte>(ptr);
 		}
-		template<class OtherDataType>
+		template<typename OtherDataType>
 			requires(IsPolymorphicCastable<OtherDataType, DataType>)
 		constexpr void reset(OtherDataType* ptr) noexcept {
 			destruct();
 			construct<OtherDataType, DefaultAllocatorByte>(ptr);
 		}
 
-		template<class OtherDataType, class Deleter>
+		template<typename OtherDataType, typename Deleter>
 			requires(IsPolymorphicCastable<OtherDataType, DataType> && IsDeleter<Deleter, OtherDataType>)
 		constexpr void reset(OtherDataType* ptr, Deleter&& deleter) {
 			destruct();
@@ -2000,8 +2000,8 @@ namespace natl {
 	struct IsTriviallyMoveAssignableV<SharedPtr<DataType>>
 		: FalseType {};
 
-	template<class DataType>
-	class ObserverPtr {
+	template<typename DataType>
+	struct ObserverPtr {
 	public:
 		using element_type = DataType;
 	private:
@@ -2074,7 +2074,7 @@ namespace natl {
 		}
 	};
 
-	template<class DataType>
+	template<typename DataType>
 	constexpr ObserverPtr<DataType> makeObserver(DataType* ptr) noexcept {
 		return ObserverPtr<DataType>(ptr);
 	}

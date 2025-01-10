@@ -12,7 +12,7 @@
 namespace natl {
 	template<typename DataType, Size bufferSize, typename Alloc = DefaultAllocatorByte>
 		requires(IsAllocator<Alloc>)
-	class SmallDynArray {
+	struct SmallDynArray {
 	public:
 		using allocator_type = typename Alloc::template rebind_alloc<DataType>;
 
@@ -150,13 +150,13 @@ namespace natl {
 			baseConstructorInit();
 			construct(count, value);
 		}
-		template<class Iter>
+		template<typename Iter>
 			requires(IsIterPtr<Iter>&& IsSameC<typename IteratorTraits<Iter>::value_type, value_type>)
 		constexpr SmallDynArray(Iter first, Iter last) noexcept {
 			baseConstructorInit();
 			construct<Iter>(first, last);
 		}
-		template<class ArrayViewLike>
+		template<typename ArrayViewLike>
 			requires(IsArrayViewLike<ArrayViewLike, const value_type>)
 		constexpr SmallDynArray(const ArrayViewLike& arrayViewLike) noexcept {
 			baseConstructorInit();
@@ -257,7 +257,7 @@ namespace natl {
 			return self();
 		}
 
-		template<class Iter>
+		template<typename Iter>
 			requires(IsIterPtr<Iter>&& IsSameC<typename IteratorTraits<Iter>::value_type, value_type>)
 		constexpr SmallDynArray& construct(Iter first, Iter last) noexcept {
 			if constexpr (IsRandomAccessIterator<Iter>) {
@@ -300,7 +300,7 @@ namespace natl {
 		constexpr SmallDynArray& operator=(SmallDynArray&& other) noexcept {
 			return assign(forward<SmallDynArray>(other));
 		}
-		template<class ArrayViewLike>
+		template<typename ArrayViewLike>
 			requires(IsArrayViewLike<ArrayViewLike, const value_type>)
 		constexpr SmallDynArray& operator=(const ArrayViewLike& arrayViewLike) noexcept {
 			return assign<ArrayViewLike>(arrayViewLike);
@@ -403,7 +403,7 @@ namespace natl {
 			setSize(count);
 			return self();
 		}
-		template<class Iter>
+		template<typename Iter>
 			requires(IsIterPtr<Iter>&& IsSameC<typename IteratorTraits<Iter>::value_type, value_type>)
 		constexpr SmallDynArray& assign(Iter first, Iter last) noexcept {
 			if constexpr (std::contiguous_iterator<Iter>) {
@@ -418,7 +418,7 @@ namespace natl {
 			}
 			return self();
 		}
-		template<class ArrayViewLike>
+		template<typename ArrayViewLike>
 			requires(IsArrayViewLike<ArrayViewLike, const value_type>)
 		constexpr SmallDynArray& assign(const ArrayViewLike& arrayViewLike) noexcept {
 			return assign(arrayViewLike.data(), arrayViewLike.size());
@@ -835,7 +835,7 @@ namespace natl {
 			setSize(newSize);
 			return iterator(data() + index);
 		}
-		template<class Iter>
+		template<typename Iter>
 			requires(IsIterPtr<Iter>&& IsSameC<typename IteratorTraits<Iter>::value_type, value_type>)
 		constexpr iterator insert(const_iterator pos, Iter first, Iter last) {
 			if constexpr (IsRandomAccessIterator<Iter>) {
@@ -875,7 +875,7 @@ namespace natl {
 			setSize(newSize);
 			return iterator(data() + index);
 		}
-		template<class ArrayViewLike>
+		template<typename ArrayViewLike>
 			requires(IsArrayViewLike<ArrayViewLike, const value_type>)
 		constexpr iterator insert(const_iterator pos, const ArrayViewLike& arrayViewLike) noexcept {
 			return insert(pos, arrayViewLike.data(), arrayViewLike.size());
@@ -884,7 +884,7 @@ namespace natl {
 			return insert(pos, ilist.begin(), ilist.size());
 		}
 
-		template<class... Args >
+		template<typename... Args >
 		constexpr iterator emplace(const_iterator pos, Args&&... args) {
 			const size_type index = iterDistance<typename const_iterator::pointer>(&*cbegin(), &*pos);
 			const size_type newSize = size() + 1;
@@ -952,7 +952,7 @@ namespace natl {
 			return set(index, forward<value_type>(value));;
 		}
 
-		template<class... Args >
+		template<typename... Args >
 		constexpr reference emplace_back(Args&&... args) noexcept {
 			const size_type index = size();
 			const size_type newSize = index + 1;
@@ -976,12 +976,12 @@ namespace natl {
 			setSize(newSize);
 			return self();
 		}
-		template<class ArrayViewLike>
+		template<typename ArrayViewLike>
 			requires(IsArrayViewLike<ArrayViewLike, const value_type>)
 		constexpr SmallDynArray& append(const ArrayViewLike& arrayViewLike) noexcept {
 			return append(arrayViewLike.data(), arrayViewLike.size());
 		}
-		template<class ArrayViewLikeConvertible>
+		template<typename ArrayViewLikeConvertible>
 			requires(IsConvertibleC<ArrayViewLikeConvertible, ArrayView<const value_type>> && !IsArrayViewLike<ArrayViewLikeConvertible, value_type>)
 		constexpr SmallDynArray& append(const ArrayViewLikeConvertible& arrayViewLikeConvertible) noexcept {
 			return append<ArrayView<const value_type>>(static_cast<ArrayView<const value_type>>(arrayViewLikeConvertible));
@@ -1031,7 +1031,7 @@ namespace natl {
 
 			copyNoOverlap<const_pointer, pointer>(srcPtr, srcPtrLast, dstPtr);
 		}
-		template<class Iter>
+		template<typename Iter>
 		constexpr void internalCopyNoOverlap(Iter first, Iter last, pointer dstPtr) {
 			if (!isConstantEvaluated()) {
 				if constexpr (IsTriviallyDestructible<value_type>) {
@@ -1051,7 +1051,7 @@ namespace natl {
 			}
 			copy<const_pointer, pointer>(srcPtr, srcPtrLast, dstPtr);
 		}
-		template<class Iter>
+		template<typename Iter>
 		constexpr void internalCopy(Iter first, Iter last, pointer dstPtr) noexcept {
 			if (!isConstantEvaluated()) {
 				if constexpr (IsTriviallyDestructible<value_type>) {
@@ -1079,12 +1079,12 @@ namespace natl {
 		friend constexpr Bool operator==(const SmallDynArray& lhs, const value_type rhs) noexcept {
 			return lhs.toArrayView() == rhs;
 		}
-		template<class ArrayViewLike>
+		template<typename ArrayViewLike>
 			requires(IsArrayViewLike<ArrayViewLike, const value_type>)
 		friend constexpr Bool operator==(const SmallDynArray& lhs, const ArrayViewLike& rhs) noexcept {
 			return lhs.toArrayView() == rhs;
 		}
-		template<class ArrayViewLike>
+		template<typename ArrayViewLike>
 			requires(IsConvertibleC<ArrayViewLike, ArrayView<const value_type>> && !IsArrayViewLike<ArrayViewLike, const value_type>)
 		friend constexpr Bool operator==(const SmallDynArray& lhs, const ArrayViewLike& rhs) noexcept {
 			return lhs.toArrayView() == rhs;
@@ -1099,12 +1099,12 @@ namespace natl {
 		friend constexpr Bool operator!=(const SmallDynArray& lhs, const value_type rhs) noexcept {
 			return lhs.toArrayView() != rhs;
 		}
-		template<class ArrayViewLike>
+		template<typename ArrayViewLike>
 			requires(IsArrayViewLike<ArrayViewLike, const value_type>)
 		friend constexpr Bool operator!=(const SmallDynArray& lhs, const ArrayViewLike& rhs) noexcept {
 			return lhs.toArrayView() != rhs;
 		}
-		template<class ArrayViewLike>
+		template<typename ArrayViewLike>
 			requires(IsConvertibleC<ArrayViewLike, ArrayView<const value_type>> && !IsArrayViewLike<ArrayViewLike, const value_type>)
 		friend constexpr Bool operator!=(const SmallDynArray& lhs, const ArrayViewLike& rhs) noexcept {
 			return lhs.toArrayView() != rhs;
@@ -1119,12 +1119,12 @@ namespace natl {
 		friend constexpr Bool operator<(const SmallDynArray& lhs, const value_type rhs) noexcept {
 			return lhs.toArrayView() < rhs;
 		}
-		template<class ArrayViewLike>
+		template<typename ArrayViewLike>
 			requires(IsArrayViewLike<ArrayViewLike, const value_type>)
 		friend constexpr Bool operator<(const SmallDynArray& lhs, const ArrayViewLike& rhs) noexcept {
 			return lhs.toArrayView() < rhs;
 		}
-		template<class ArrayViewLike>
+		template<typename ArrayViewLike>
 			requires(IsConvertibleC<ArrayViewLike, ArrayView<const value_type>> && !IsArrayViewLike<ArrayViewLike, const value_type>)
 		friend constexpr Bool operator<(const SmallDynArray& lhs, const ArrayViewLike& rhs) noexcept {
 			return lhs.toArrayView() < rhs;
@@ -1139,12 +1139,12 @@ namespace natl {
 		friend constexpr Bool operator<=(const SmallDynArray& lhs, const value_type rhs) noexcept {
 			return lhs.toArrayView() <= rhs;
 		}
-		template<class ArrayViewLike>
+		template<typename ArrayViewLike>
 			requires(IsArrayViewLike<ArrayViewLike, const value_type>)
 		friend constexpr Bool operator<=(const SmallDynArray& lhs, const ArrayViewLike& rhs) noexcept {
 			return lhs.toArrayView() <= rhs;
 		}
-		template<class ArrayViewLike>
+		template<typename ArrayViewLike>
 			requires(IsConvertibleC<ArrayViewLike, ArrayView<const value_type>> && !IsArrayViewLike<ArrayViewLike, const value_type>)
 		friend constexpr Bool operator<=(const SmallDynArray& lhs, const ArrayViewLike& rhs) noexcept {
 			return lhs.toArrayView() <= rhs;
@@ -1159,12 +1159,12 @@ namespace natl {
 		friend constexpr Bool operator>(const SmallDynArray& lhs, const value_type rhs) noexcept {
 			return lhs.toArrayView() > rhs;
 		}
-		template<class ArrayViewLike>
+		template<typename ArrayViewLike>
 			requires(IsArrayViewLike<ArrayViewLike, const value_type>)
 		friend constexpr Bool operator>(const SmallDynArray& lhs, const ArrayViewLike& rhs) noexcept {
 			return lhs.toArrayView() > rhs;
 		}
-		template<class ArrayViewLike>
+		template<typename ArrayViewLike>
 			requires(IsConvertibleC<ArrayViewLike, ArrayView<const value_type>> && !IsArrayViewLike<ArrayViewLike, const value_type>)
 		friend constexpr Bool operator>(const SmallDynArray& lhs, const ArrayViewLike& rhs) noexcept {
 			return lhs.toArrayView() > rhs;
@@ -1179,12 +1179,12 @@ namespace natl {
 		friend constexpr Bool operator>=(const SmallDynArray& lhs, const value_type rhs) noexcept {
 			return lhs.toArrayView() >= rhs;
 		}
-		template<class ArrayViewLike>
+		template<typename ArrayViewLike>
 			requires(IsArrayViewLike<ArrayViewLike, const value_type>)
 		friend constexpr Bool operator>=(const SmallDynArray& lhs, const ArrayViewLike& rhs) noexcept {
 			return lhs.toArrayView() >= rhs;
 		}
-		template<class ArrayViewLike>
+		template<typename ArrayViewLike>
 			requires(IsConvertibleC<ArrayViewLike, ArrayView<const value_type>> && !IsArrayViewLike<ArrayViewLike, const value_type>)
 		friend constexpr Bool operator>=(const SmallDynArray& lhs, const ArrayViewLike& rhs) noexcept {
 			return lhs.toArrayView() >= rhs;
@@ -1199,12 +1199,12 @@ namespace natl {
 		friend constexpr StrongOrdering operator<=>(const SmallDynArray& lhs, const value_type rhs) noexcept {
 			return lhs.toArrayView() <=> rhs;
 		}
-		template<class ArrayViewLike>
+		template<typename ArrayViewLike>
 			requires(IsArrayViewLike<ArrayViewLike, const value_type>)
 		friend constexpr StrongOrdering operator<=>(const SmallDynArray& lhs, const ArrayViewLike& rhs) noexcept {
 			return lhs.toArrayView() <=> rhs;
 		}
-		template<class ArrayViewLike>
+		template<typename ArrayViewLike>
 			requires(IsConvertibleC<ArrayViewLike, ArrayView<const value_type>> && !IsArrayViewLike<ArrayViewLike, const value_type>)
 		friend constexpr StrongOrdering operator<=>(const SmallDynArray& lhs, const ArrayViewLike& rhs) noexcept {
 			return lhs.toArrayView() <=> rhs;
@@ -1234,7 +1234,7 @@ namespace natl {
 		}
 	};
 
-	template<class DataType, Size bufferSize, typename allocator_type>
+	template<typename DataType, Size bufferSize, typename allocator_type>
 	struct Serialize<SmallDynArray<DataType, bufferSize, allocator_type>> {
 		using as_type = SerializeArray<SerializeTypeOf<DataType>>;
 		using type = SmallDynArray<DataType, bufferSize, allocator_type>;
@@ -1318,31 +1318,31 @@ namespace natl {
 		}
 	};
 
-	template<class DataType, Size bufferSize, class Alloc>
+	template<typename DataType, Size bufferSize, typename Alloc>
 	struct IsTriviallyCompareableV<SmallDynArray<DataType, bufferSize, Alloc>>
 		: FalseType {};
 
-	template<class DataType, Size bufferSize, class Alloc>
+	template<typename DataType, Size bufferSize, typename Alloc>
 	struct IsTriviallyRelocatableV<SmallDynArray<DataType, bufferSize, Alloc>>
 		: TrueType {};
-	template<class DataType, Size bufferSize, class Alloc>
+	template<typename DataType, Size bufferSize, typename Alloc>
 	struct IsTriviallyConstructibleV<SmallDynArray<DataType, bufferSize, Alloc>>
 		: TrueType {};
-	template<class DataType, Size bufferSize, class Alloc>
+	template<typename DataType, Size bufferSize, typename Alloc>
 	struct IsTriviallyDestructibleV<SmallDynArray<DataType, bufferSize, Alloc>>
 		: FalseType {};
 
-	template<class DataType, Size bufferSize, class Alloc>
+	template<typename DataType, Size bufferSize, typename Alloc>
 	struct IsTriviallyConstRefConstructibleV<SmallDynArray<DataType, bufferSize, Alloc>>
 		: FalseType {};
-	template<class DataType, Size bufferSize, class Alloc>
+	template<typename DataType, Size bufferSize, typename Alloc>
 	struct IsTriviallyMoveConstructibleV<SmallDynArray<DataType, bufferSize, Alloc>>
 		: FalseType {};
 
-	template<class DataType, Size bufferSize, class Alloc>
+	template<typename DataType, Size bufferSize, typename Alloc>
 	struct IsTriviallyConstRefAssignableV<SmallDynArray<DataType, bufferSize, Alloc>>
 		: FalseType {};
-	template<class DataType, Size bufferSize, class Alloc>
+	template<typename DataType, Size bufferSize, typename Alloc>
 	struct IsTriviallyMoveAssignableV<SmallDynArray<DataType, bufferSize, Alloc>>
 		: FalseType {};
 

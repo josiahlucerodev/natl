@@ -112,7 +112,7 @@ static_cast(false, "natl: architecture for compiler not implemented");
 
 //interface 
 namespace natl {
-    enum class ProgramPlatformType : int {
+    enum struct ProgramPlatformType : int {
         unknownPlatform,
         unixPlatform, 
         windowsPlatform,
@@ -226,3 +226,11 @@ namespace natl {
 
 
 #define NATL_TEXT(a) #a
+
+#ifdef NATL_COMPILER_MSVC
+#define NATL_NAMESPACE_NAME_FOR_TUPLE_GET(Namespace) std
+#else
+#define NATL_NAMESPACE_NAME_FOR_TUPLE_GET(Namespace) Namespace
+#endif // NATL_COMPILER_MSVC
+
+

@@ -13,7 +13,7 @@ constexpr natl::Size constexprTest() {
 	return 3;
 }
 
-enum class TestEnum : natl::ui16 {
+enum struct TestEnum : natl::ui16 {
 	red = 9,
 	green = 1
 };

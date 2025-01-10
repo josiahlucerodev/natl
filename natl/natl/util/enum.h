@@ -73,7 +73,7 @@ namespace natl {
 #endif
 	}
 
-	enum class EnumValueFlag {
+	enum struct EnumValueFlag {
 		unknown,
 		sequential,
 		bitFlags,

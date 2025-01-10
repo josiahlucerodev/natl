@@ -69,7 +69,7 @@ namespace natl {
 	HighResolutionTimePoint highResolutionNow() noexcept;
 	Nanoseconds<i64> highResolutionTimePointToNanoseconds(const HighResolutionTimePoint timePoint) noexcept;
 
-	class Timer {
+	struct Timer {
 	private:
 		HighResolutionTimePoint startTimePoint;
 	public:
@@ -117,7 +117,7 @@ namespace natl {
 		}
 	};
 
-	class NamedTimeInfo {
+	struct NamedTimeInfo {
 	private:
 		natl::Nanoseconds<natl::i64> elapsedTime;
 		String timerName;
@@ -159,7 +159,7 @@ namespace natl {
 		}
 	};
 
-	class NamedTimer {
+	struct NamedTimer {
 	private:
 		Timer timer;
 		String timerName;

@@ -17,8 +17,8 @@
 
 //interface
 namespace natl {
-	template <class DataType>
-	class ArrayView {
+	template<typename DataType>
+	struct ArrayView {
 	public:	
 		using value_type = DataType;
 		using reference = DataType&;
@@ -393,7 +393,7 @@ namespace natl {
 		struct MDArrayViewDim {};
 
 		template<typename DataType, MDArrayViewDim... Dimensions>
-		class OffsetMDArrayViewDimensions {
+		struct OffsetMDArrayViewDimensions {
 		public:
 			using value_type = DataType;
 			using reference = DataType&;
@@ -539,7 +539,7 @@ namespace natl {
 		};
 
 		template<typename DataType, MDArrayViewDim... Dimensions>
-		class MDArrayViewDimensions {
+		struct MDArrayViewDimensions {
 		public:
 			using value_type = DataType;
 			using reference = DataType&;
@@ -695,7 +695,7 @@ namespace natl {
 		: TrueType {};
 
 	template <typename DataType, Size DimensionNumber>
-	class OffsetsMDArrayView : public impl::OffsetsMDArrayViewImpl<DataType, MakeIndexSequence<DimensionNumber>>::OffsetsMDArrayViewType {
+	struct OffsetsMDArrayView : public impl::OffsetsMDArrayViewImpl<DataType, MakeIndexSequence<DimensionNumber>>::OffsetsMDArrayViewType {
 	public:
 		using value_type = DataType;
 		using reference = DataType&;
@@ -728,7 +728,7 @@ namespace natl {
 	};
 
 	template <typename DataType, Size DimensionNumber>
-	class MDArrayView : public impl::MDArrayViewImpl<DataType, MakeIndexSequence<DimensionNumber>>::MDArrayViewType {
+	struct MDArrayView : public impl::MDArrayViewImpl<DataType, MakeIndexSequence<DimensionNumber>>::MDArrayViewType {
 	public:
 		using value_type = DataType;
 		using reference = DataType&;

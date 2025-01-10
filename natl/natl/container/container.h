@@ -12,62 +12,62 @@
 
 //interface
 namespace natl {
-	template<class Contanier>
+	template<typename Contanier>
 	concept HasBeginIterator = requires(Contanier container) {
 		{ container.begin() };
 	};
 
-	template<class Contanier>
+	template<typename Contanier>
 	concept HasEndIterator = requires(Contanier container) {
 		{ container.end() };
 	};
 
-	template<class Contanier>
+	template<typename Contanier>
 	concept HasConstBeginIterator = requires(Contanier container) {
 		{ container.cbegin() };
 	};
 
-	template<class Contanier>
+	template<typename Contanier>
 	concept HasConstEndIterator = requires(Contanier container) {
 		{ container.cend() };
 	};
 
-	template<class Iter>
+	template<typename Iter>
 	concept IteratorConvertableToPtr = requires(Iter iter) {
 		{&*iter} -> ConvertibleTo<typename Iter::value_type*>;
 	};
 
-	template<class Contanier>
+	template<typename Contanier>
 	concept HasBeginIteratorToPtr = requires(Contanier contanier) {
 		{ contanier.begin() } -> IteratorConvertableToPtr;
 	};
 
-	template<class Contanier>
+	template<typename Contanier>
 	concept HasEndIteratorToPtr = requires(Contanier container) {
 		{ container.end() } -> IteratorConvertableToPtr;
 	};
 
-	template<class Contanier>
+	template<typename Contanier>
 	concept HasConstBeginIteratorToPtr = requires(Contanier container) {
 		{ container.cbegin() } -> IteratorConvertableToPtr;
 	};
 
-	template<class Contanier>
+	template<typename Contanier>
 	concept HasConstEndIteratorToPtr = requires(Contanier container) {
 		{ container.cend() } -> IteratorConvertableToPtr;
 	};
 
-	template<class Contanier>
+	template<typename Contanier>
 	concept HasSizeMethod = requires(const Contanier container) {
 		{ container.size() } -> ConvertibleTo<Size>;
 	};
 
-	template<class Container, class DataType>
+	template<typename Container, typename DataType>
 	concept ContainerHasPushBackFunction = requires(Container container) {
 		{ container.pushBack(natl::declval<DataType>()) };
 	};
 
-	template<class Contanier>
+	template<typename Contanier>
 		requires(HasIteratorType<Contanier>)
 	struct ContainerIteratorTraits {
 	public:
@@ -90,12 +90,12 @@ namespace natl {
 		b = move(temp);
 	}
 
-	template<class ForwardIter1, class ForwardIter2>
+	template<typename ForwardIter1, typename ForwardIter2>
 	constexpr void iterSwap(ForwardIter1 a, ForwardIter2 b) noexcept {
 		swap<typename IteratorTraits<ForwardIter1>::value_type>(*a, *b);
 	}
 
-	template<class BidirectionalIter>
+	template<typename BidirectionalIter>
 	constexpr void reverse(BidirectionalIter first, BidirectionalIter last) noexcept {
 		using iterator_category = typename natl::IteratorTraits<BidirectionalIter>::iterator_category;
 		if constexpr (IsSameC<RandomAccessIteratorTag, iterator_category>) {

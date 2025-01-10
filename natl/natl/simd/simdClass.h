@@ -8,7 +8,7 @@
 namespace natl::simd {
 	template<typename DataType, typename Arch>
 		requires(IsBuiltInNumericC<DataType> && IsSimdArch<Arch>)
-	class SimdMMaskClass {
+	struct SimdMMaskstruct {
 	public:
 		using simd_arch = Arch;
 		using simd_impl = SimdOfType<DataType, Arch>;
@@ -21,19 +21,19 @@ namespace natl::simd {
 		using simd_cmask_info = simd_impl::simd_cmask_info;
 
 		template<typename NewDataType>
-		using rebind_simd_mmask = SimdMMaskClass<NewDataType, Arch>;
+		using rebind_simd_mmask = SimdMMaskstruct<NewDataType, Arch>;
 	private:
 		simd_mmask simdMmask;
 	public:
 		//constructor
-		constexpr SimdMMaskClass() noexcept = default;
-		constexpr SimdMMaskClass(const SimdMMaskClass&) noexcept = default;
-		constexpr SimdMMaskClass(SimdMMaskClass&&) noexcept = default;
-		explicit constexpr SimdMMaskClass(simd_mmask mmask) noexcept :
+		constexpr SimdMMaskstruct() noexcept = default;
+		constexpr SimdMMaskstruct(const SimdMMaskstruct&) noexcept = default;
+		constexpr SimdMMaskstruct(SimdMMaskstruct&&) noexcept = default;
+		explicit constexpr SimdMMaskstruct(simd_mmask mmask) noexcept :
 			simdMmask(mmask) {}
-		explicit constexpr SimdMMaskClass(simd_cmask cmask) noexcept : 
+		explicit constexpr SimdMMaskstruct(simd_cmask cmask) noexcept : 
 			simdMmask(simd_impl::cmask_to_mmask(cmask)) {}
-		explicit constexpr SimdMMaskClass(const Bool value) noexcept {
+		explicit constexpr SimdMMaskstruct(const Bool value) noexcept {
 			if (value) {
 				simdMmask = simd_impl::mask_set_all_active();
 			} else {
@@ -42,55 +42,55 @@ namespace natl::simd {
 		}
 
 		//destructor 
-		constexpr ~SimdMMaskClass() noexcept = default;
+		constexpr ~SimdMMaskstruct() noexcept = default;
 
 		//util 
-		constexpr SimdMMaskClass& self() noexcept { return *this; }
-		constexpr const SimdMMaskClass& self() const noexcept { return *this; }
+		constexpr SimdMMaskstruct& self() noexcept { return *this; }
+		constexpr const SimdMMaskstruct& self() const noexcept { return *this; }
 
 		//assignment 
-		constexpr SimdMMaskClass& operator=(const SimdMMaskClass&) noexcept = default;
-		constexpr SimdMMaskClass& operator=(SimdMMaskClass&&) noexcept = default;
+		constexpr SimdMMaskstruct& operator=(const SimdMMaskstruct&) noexcept = default;
+		constexpr SimdMMaskstruct& operator=(SimdMMaskstruct&&) noexcept = default;
 
 		//bitwise operations 
-		constexpr SimdMMaskClass operator<<(const Size count) const noexcept {
-			return SimdMMaskClass(simd_impl::mask_bitwise_shift_left(simdMmask, count));
+		constexpr SimdMMaskstruct operator<<(const Size count) const noexcept {
+			return SimdMMaskstruct(simd_impl::mask_bitwise_shift_left(simdMmask, count));
 		}
-		constexpr SimdMMaskClass operator>>(const Size count) const noexcept {
-			return SimdMMaskClass(simd_impl::mask_bitwise_shift_right(simdMmask, count));
+		constexpr SimdMMaskstruct operator>>(const Size count) const noexcept {
+			return SimdMMaskstruct(simd_impl::mask_bitwise_shift_right(simdMmask, count));
 		}
-		constexpr SimdMMaskClass operator&(SimdMMaskClass rhs) const noexcept {
-			return SimdMMaskClass(simd_impl::mask_bitwise_and(simdMmask, rhs.simdMmask));
+		constexpr SimdMMaskstruct operator&(SimdMMaskstruct rhs) const noexcept {
+			return SimdMMaskstruct(simd_impl::mask_bitwise_and(simdMmask, rhs.simdMmask));
 		}
-		constexpr SimdMMaskClass operator|(SimdMMaskClass rhs) const noexcept {
-			return SimdMMaskClass(simd_impl::mask_bitwise_or(simdMmask, rhs.simdMmask));
+		constexpr SimdMMaskstruct operator|(SimdMMaskstruct rhs) const noexcept {
+			return SimdMMaskstruct(simd_impl::mask_bitwise_or(simdMmask, rhs.simdMmask));
 		}
-		constexpr SimdMMaskClass operator^(SimdMMaskClass rhs) const noexcept {
-			return SimdMMaskClass(simd_impl::mask_bitwise_xor(simdMmask, rhs.simdMmask));
+		constexpr SimdMMaskstruct operator^(SimdMMaskstruct rhs) const noexcept {
+			return SimdMMaskstruct(simd_impl::mask_bitwise_xor(simdMmask, rhs.simdMmask));
 		}
 
-		constexpr SimdMMaskClass& operator<<=(const Size count) noexcept {
+		constexpr SimdMMaskstruct& operator<<=(const Size count) noexcept {
 			self() = self() << count;
 			return self();
 		}
-		constexpr SimdMMaskClass& operator>>=(const Size count) noexcept {
+		constexpr SimdMMaskstruct& operator>>=(const Size count) noexcept {
 			self() = self() >> count;
 			return self();
 		}
-		constexpr SimdMMaskClass& operator&=(SimdMMaskClass rhs) noexcept {
+		constexpr SimdMMaskstruct& operator&=(SimdMMaskstruct rhs) noexcept {
 			self() = self() & rhs;
 			return self();
 		}
-		constexpr SimdMMaskClass& operator|=(SimdMMaskClass rhs) noexcept {
+		constexpr SimdMMaskstruct& operator|=(SimdMMaskstruct rhs) noexcept {
 			self() = self() | rhs;
 			return self();
 		}
-		constexpr SimdMMaskClass& operator^=(SimdMMaskClass rhs) noexcept {
+		constexpr SimdMMaskstruct& operator^=(SimdMMaskstruct rhs) noexcept {
 			self() = self() ^ rhs;
 			return self();
 		}
 
-		constexpr SimdMMaskClass& operator!() noexcept {
+		constexpr SimdMMaskstruct& operator!() noexcept {
 			simdMmask = simd_impl::mask_bitwise_not(simdMmask);
 			return self();
 		}
@@ -116,27 +116,27 @@ namespace natl::simd {
 		}
 
 		//compare
-		constexpr Bool operator==(SimdMMaskClass rhs) const noexcept {
+		constexpr Bool operator==(SimdMMaskstruct rhs) const noexcept {
 			return simd_impl::mask_compare_equal(simdMmask, rhs.simdMmask);
 		}
-		constexpr Bool operator!=(SimdMMaskClass rhs) const noexcept {
+		constexpr Bool operator!=(SimdMMaskstruct rhs) const noexcept {
 			return simd_impl::mask_compare_not_equal(simdMmask, rhs.simdMmask);
 		}
 
 		//set 
-		constexpr SimdMMaskClass& setAllInactive() noexcept {
+		constexpr SimdMMaskstruct& setAllInactive() noexcept {
 			simdMmask = simd_impl::mask_set_all_inactive(simdMmask);
 			return self();
 		}
-		constexpr SimdMMaskClass& setAllActive() noexcept {
+		constexpr SimdMMaskstruct& setAllActive() noexcept {
 			simdMmask = simd_impl::mask_set_all_active(simdMmask);
 			return self();
 		}
-		constexpr SimdMMaskClass& setInactiveAt(const Size index) noexcept {
+		constexpr SimdMMaskstruct& setInactiveAt(const Size index) noexcept {
 			simdMmask = simd_impl::mask_set_inactive_at(simdMmask, index);
 			return self();
 		}
-		constexpr SimdMMaskClass& setActiveAt(const Size index) noexcept {
+		constexpr SimdMMaskstruct& setActiveAt(const Size index) noexcept {
 			simdMmask = simd_impl::mask_set_active_at(simdMmask, index);
 			return self();
 		}
@@ -166,39 +166,39 @@ namespace natl::simd {
 
 	template<typename SimdArchType>
 		requires(IsSimdArch<SimdArchType>)
-	using SimdMMaskClassI8 = SimdMMaskClass<i8, SimdArchType>;
+	using SimdMMaskstructI8 = SimdMMaskstruct<i8, SimdArchType>;
 	template<typename SimdArchType>
 		requires(IsSimdArch<SimdArchType>)
-	using SimdMMaskClassI16 = SimdMMaskClass<i16, SimdArchType>;
+	using SimdMMaskstructI16 = SimdMMaskstruct<i16, SimdArchType>;
 	template<typename SimdArchType>
 		requires(IsSimdArch<SimdArchType>)
-	using SimdMMaskClassI32 = SimdMMaskClass<i32, SimdArchType>;
+	using SimdMMaskstructI32 = SimdMMaskstruct<i32, SimdArchType>;
 	template<typename SimdArchType>
 		requires(IsSimdArch<SimdArchType>)
-	using SimdMMaskClassI64 = SimdMMaskClass<i64, SimdArchType>;
+	using SimdMMaskstructI64 = SimdMMaskstruct<i64, SimdArchType>;
 	template<typename SimdArchType>
 		requires(IsSimdArch<SimdArchType>)
-	using SimdMMaskClassUI8 = SimdMMaskClass<ui8, SimdArchType>;
+	using SimdMMaskstructUI8 = SimdMMaskstruct<ui8, SimdArchType>;
 	template<typename SimdArchType>
 		requires(IsSimdArch<SimdArchType>)
-	using SimdMMaskClassUI16 = SimdMMaskClass<ui16, SimdArchType>;
+	using SimdMMaskstructUI16 = SimdMMaskstruct<ui16, SimdArchType>;
 	template<typename SimdArchType>
 		requires(IsSimdArch<SimdArchType>)
-	using SimdMMaskClassUI32 = SimdMMaskClass<ui32, SimdArchType>;
+	using SimdMMaskstructUI32 = SimdMMaskstruct<ui32, SimdArchType>;
 	template<typename SimdArchType>
 		requires(IsSimdArch<SimdArchType>)
-	using SimdMMaskClassUI64 = SimdMMaskClass<ui64, SimdArchType>;
+	using SimdMMaskstructUI64 = SimdMMaskstruct<ui64, SimdArchType>;
 	template<typename SimdArchType>
 		requires(IsSimdArch<SimdArchType>)
-	using SimdMMaskClassF32 = SimdMMaskClass<f32, SimdArchType>;
+	using SimdMMaskstructF32 = SimdMMaskstruct<f32, SimdArchType>;
 	template<typename SimdArchType>
 		requires(IsSimdArch<SimdArchType>)
-	using SimdMMaskClassF64 = SimdMMaskClass<f64, SimdArchType>;
+	using SimdMMaskstructF64 = SimdMMaskstruct<f64, SimdArchType>;
 
 	struct SimdAlignedLoad {};
 	template<typename DataType, typename Arch> 
 		requires(IsBuiltInNumericC<DataType> && IsSimdArch<Arch>)
-	class SimdRegisterClass {
+	struct SimdRegisterstruct {
 	public:
 		using value_type = DataType;
 		using simd_arch = Arch;
@@ -211,34 +211,34 @@ namespace natl::simd {
 		using simd_cmask = simd_impl::simd_cmask;
 		using simd_cmask_info = simd_impl::simd_cmask_info;
 
-		using simd_mmask_class = SimdMMaskClass<DataType, Arch>;
+		using simd_mmask_struct = SimdMMaskstruct<DataType, Arch>;
 
 		template<typename NewDataType>
-		using rebind_simd_register = SimdRegisterClass<NewDataType, Arch>;
+		using rebind_simd_register = SimdRegisterstruct<NewDataType, Arch>;
 	private:
 		simd_register simdRegister;
 	public:
 		//constructor 
-		constexpr SimdRegisterClass() noexcept = default;
-		constexpr SimdRegisterClass(const SimdRegisterClass&) noexcept = default;
-		constexpr SimdRegisterClass(SimdRegisterClass&&) noexcept = default;
-		constexpr SimdRegisterClass(simd_register simdRegisterIn) noexcept : simdRegister(simdRegisterIn) {};
-		constexpr SimdRegisterClass(const value_type value) noexcept {
+		constexpr SimdRegisterstruct() noexcept = default;
+		constexpr SimdRegisterstruct(const SimdRegisterstruct&) noexcept = default;
+		constexpr SimdRegisterstruct(SimdRegisterstruct&&) noexcept = default;
+		constexpr SimdRegisterstruct(simd_register simdRegisterIn) noexcept : simdRegister(simdRegisterIn) {};
+		constexpr SimdRegisterstruct(const value_type value) noexcept {
 			simdRegister = simd_impl::set(value);
 		}
-		constexpr SimdRegisterClass(const value_type* ptr) noexcept {
+		constexpr SimdRegisterstruct(const value_type* ptr) noexcept {
 			simdRegister = simd_impl::load(ptr);
 		}
-		constexpr SimdRegisterClass(const value_type* ptr, SimdAlignedLoad) noexcept {
+		constexpr SimdRegisterstruct(const value_type* ptr, SimdAlignedLoad) noexcept {
 			simdRegister = simd_impl::load_aligned(ptr);
 		}
 
 		//destructor 
-		constexpr ~SimdRegisterClass() noexcept = default;
+		constexpr ~SimdRegisterstruct() noexcept = default;
 
 		//util 
-		constexpr SimdRegisterClass& self() noexcept { return *this; }
-		constexpr const SimdRegisterClass& self() const noexcept { return *this; }
+		constexpr SimdRegisterstruct& self() noexcept { return *this; }
+		constexpr const SimdRegisterstruct& self() const noexcept { return *this; }
 		constexpr static Size size() noexcept { return simd_register_info::size(); }
 
 		//element access
@@ -248,151 +248,151 @@ namespace natl::simd {
 		constexpr value_type get(const Size index) const noexcept {
 			return self()[index];
 		}
-		constexpr SimdRegisterClass& set(const value_type& value, const Size index) noexcept {
+		constexpr SimdRegisterstruct& set(const value_type& value, const Size index) noexcept {
 			simdRegister = simd_impl::insert(simdRegister, value, index);
 			return self();
 		}
 
 		//inc and dec 
-		constexpr SimdRegisterClass& operator++() noexcept requires(IsBuiltInIntegerC<DataType>) {
+		constexpr SimdRegisterstruct& operator++() noexcept requires(IsBuiltInIntegerC<DataType>) {
 			simd_register constant1 = simd_impl::set(1);
 			simdRegister = simd_impl::add(simdRegister, constant1);
 			return self();
 		}
-		constexpr SimdRegisterClass operator++(int) noexcept requires(IsBuiltInIntegerC<DataType>) {
-			SimdRegisterClass temp = self();
+		constexpr SimdRegisterstruct operator++(int) noexcept requires(IsBuiltInIntegerC<DataType>) {
+			SimdRegisterstruct temp = self();
 			--self();
 			return self();
 		}
-		constexpr SimdRegisterClass& operator--() noexcept requires(IsBuiltInIntegerC<DataType>) {
+		constexpr SimdRegisterstruct& operator--() noexcept requires(IsBuiltInIntegerC<DataType>) {
 			simd_register constant1 = simd_impl::set(1);
 			simdRegister = simd_impl::sub(simdRegister, constant1);
 			return self();
 		}
-		constexpr SimdRegisterClass operator--(int) noexcept requires(IsBuiltInIntegerC<DataType>) {
-			SimdRegisterClass temp = self();
+		constexpr SimdRegisterstruct operator--(int) noexcept requires(IsBuiltInIntegerC<DataType>) {
+			SimdRegisterstruct temp = self();
 			++self();
 			return temp;
 		}
 
 		//arithmetic
-		constexpr SimdRegisterClass operator+() const noexcept {
+		constexpr SimdRegisterstruct operator+() const noexcept {
 			return self();
 		}
-		constexpr SimdRegisterClass operator-() const noexcept {
-			return SimdRegisterClass(simd_impl::negate(self()));
+		constexpr SimdRegisterstruct operator-() const noexcept {
+			return SimdRegisterstruct(simd_impl::negate(self()));
 		}
 
-		constexpr SimdRegisterClass operator+(const SimdRegisterClass& rhs) const noexcept {
-			return SimdRegisterClass(simd_impl::add(simdRegister, rhs.simdRegister));
+		constexpr SimdRegisterstruct operator+(const SimdRegisterstruct& rhs) const noexcept {
+			return SimdRegisterstruct(simd_impl::add(simdRegister, rhs.simdRegister));
 		}
-		constexpr SimdRegisterClass operator-(const SimdRegisterClass& rhs) const noexcept {
-			return SimdRegisterClass(simd_impl::sub(simdRegister, rhs.simdRegister));
+		constexpr SimdRegisterstruct operator-(const SimdRegisterstruct& rhs) const noexcept {
+			return SimdRegisterstruct(simd_impl::sub(simdRegister, rhs.simdRegister));
 		}
-		constexpr SimdRegisterClass operator*(const SimdRegisterClass& rhs) const noexcept {
-			return SimdRegisterClass(simd_impl::mul(simdRegister, rhs.simdRegister));
+		constexpr SimdRegisterstruct operator*(const SimdRegisterstruct& rhs) const noexcept {
+			return SimdRegisterstruct(simd_impl::mul(simdRegister, rhs.simdRegister));
 		}
-		constexpr SimdRegisterClass operator/(const SimdRegisterClass& rhs) const noexcept {
-			return SimdRegisterClass(simd_impl::div(simdRegister, rhs.simdRegister));
+		constexpr SimdRegisterstruct operator/(const SimdRegisterstruct& rhs) const noexcept {
+			return SimdRegisterstruct(simd_impl::div(simdRegister, rhs.simdRegister));
 		}
-		constexpr SimdRegisterClass operator%(const SimdRegisterClass& rhs) const noexcept requires(IsBuiltInIntegerC<DataType>) {
-			return SimdRegisterClass(simd_impl::remainder(simdRegister, rhs.simdRegister));
+		constexpr SimdRegisterstruct operator%(const SimdRegisterstruct& rhs) const noexcept requires(IsBuiltInIntegerC<DataType>) {
+			return SimdRegisterstruct(simd_impl::remainder(simdRegister, rhs.simdRegister));
 		}
 
-		constexpr SimdRegisterClass& operator+=(const SimdRegisterClass& rhs) noexcept {
+		constexpr SimdRegisterstruct& operator+=(const SimdRegisterstruct& rhs) noexcept {
 			self() = self() + rhs;
 			return self();
 		}
-		constexpr SimdRegisterClass& operator-=(const SimdRegisterClass& rhs) noexcept {
+		constexpr SimdRegisterstruct& operator-=(const SimdRegisterstruct& rhs) noexcept {
 			self() = self() - rhs;
 			return self();
 		}
-		constexpr SimdRegisterClass& operator*=(const SimdRegisterClass& rhs) noexcept {
+		constexpr SimdRegisterstruct& operator*=(const SimdRegisterstruct& rhs) noexcept {
 			self() = self() * rhs;
 			return self();
 		}
-		constexpr SimdRegisterClass& operator/=(const SimdRegisterClass& rhs) noexcept {
+		constexpr SimdRegisterstruct& operator/=(const SimdRegisterstruct& rhs) noexcept {
 			self() = self() / rhs;
 			return self();
 		}
-		constexpr SimdRegisterClass& operator%=(const SimdRegisterClass& rhs) noexcept requires(IsBuiltInIntegerC<DataType>) {
+		constexpr SimdRegisterstruct& operator%=(const SimdRegisterstruct& rhs) noexcept requires(IsBuiltInIntegerC<DataType>) {
 			self() = self() % rhs;
 			return self();
 		}
 
 		//bitwise 
-		constexpr SimdRegisterClass operator<<(const Size count) const noexcept {
-			return SimdRegisterClass(simd_impl::bitwise_shift_left_c(self().simdRegister, count));
+		constexpr SimdRegisterstruct operator<<(const Size count) const noexcept {
+			return SimdRegisterstruct(simd_impl::bitwise_shift_left_c(self().simdRegister, count));
 		}
-		constexpr SimdRegisterClass operator>>(const Size count) const noexcept {
-			return SimdRegisterClass(simd_impl::bitwise_shift_right_c(self().simdRegister, count));
+		constexpr SimdRegisterstruct operator>>(const Size count) const noexcept {
+			return SimdRegisterstruct(simd_impl::bitwise_shift_right_c(self().simdRegister, count));
 		}
-		constexpr SimdRegisterClass operator<<(const SimdRegisterClass& rhs) const noexcept {
-			return SimdRegisterClass(simd_impl::bitwise_shift_left(self().simdRegister, rhs.simdRegister));
+		constexpr SimdRegisterstruct operator<<(const SimdRegisterstruct& rhs) const noexcept {
+			return SimdRegisterstruct(simd_impl::bitwise_shift_left(self().simdRegister, rhs.simdRegister));
 		}
-		constexpr SimdRegisterClass operator>>(const SimdRegisterClass& rhs) const noexcept {
-			return SimdRegisterClass(simd_impl::bitwise_shift_right(self().simdRegister, rhs.simdRegister));
+		constexpr SimdRegisterstruct operator>>(const SimdRegisterstruct& rhs) const noexcept {
+			return SimdRegisterstruct(simd_impl::bitwise_shift_right(self().simdRegister, rhs.simdRegister));
 		}
-		constexpr SimdRegisterClass operator&(const SimdRegisterClass& rhs) const noexcept {
-			return SimdRegisterClass(simd_impl::bitwise_and(self().simdRegister, rhs.simdRegister));
+		constexpr SimdRegisterstruct operator&(const SimdRegisterstruct& rhs) const noexcept {
+			return SimdRegisterstruct(simd_impl::bitwise_and(self().simdRegister, rhs.simdRegister));
 		}
-		constexpr SimdRegisterClass operator|(const SimdRegisterClass& rhs) const noexcept {
-			return SimdRegisterClass(simd_impl::bitwise_or(self().simdRegister, rhs.simdRegister));
+		constexpr SimdRegisterstruct operator|(const SimdRegisterstruct& rhs) const noexcept {
+			return SimdRegisterstruct(simd_impl::bitwise_or(self().simdRegister, rhs.simdRegister));
 		}
-		constexpr SimdRegisterClass operator^(const SimdRegisterClass& rhs) const noexcept {
-			return SimdRegisterClass(simd_impl::bitwise_xor(self().simdRegister, rhs.simdRegister));
+		constexpr SimdRegisterstruct operator^(const SimdRegisterstruct& rhs) const noexcept {
+			return SimdRegisterstruct(simd_impl::bitwise_xor(self().simdRegister, rhs.simdRegister));
 		}
-		constexpr SimdRegisterClass operator~() const noexcept {
-			return SimdRegisterClass(simd_impl::bitwise_not(self().simdRegister));
+		constexpr SimdRegisterstruct operator~() const noexcept {
+			return SimdRegisterstruct(simd_impl::bitwise_not(self().simdRegister));
 		}
 
-		constexpr SimdRegisterClass& operator<<=(const Size count) noexcept {
+		constexpr SimdRegisterstruct& operator<<=(const Size count) noexcept {
 			self() = self() << count;
 			return self();
 		}
-		constexpr SimdRegisterClass& operator>>=(const Size count) noexcept {
+		constexpr SimdRegisterstruct& operator>>=(const Size count) noexcept {
 			self() = self() >> count;
 			return self();
 		}
-		constexpr SimdRegisterClass& operator<<=(const SimdRegisterClass& rhs) noexcept {
+		constexpr SimdRegisterstruct& operator<<=(const SimdRegisterstruct& rhs) noexcept {
 			self() = self() << rhs;
 			return self();
 		}
-		constexpr SimdRegisterClass& operator>>=(const SimdRegisterClass& rhs) noexcept {
+		constexpr SimdRegisterstruct& operator>>=(const SimdRegisterstruct& rhs) noexcept {
 			self() = self() >> rhs;
 			return self();
 		}
-		constexpr SimdRegisterClass& operator&=(const SimdRegisterClass& rhs) noexcept {
+		constexpr SimdRegisterstruct& operator&=(const SimdRegisterstruct& rhs) noexcept {
 			self() = self() & rhs;
 			return self();
 		}
-		constexpr SimdRegisterClass& operator|=(const SimdRegisterClass& rhs) noexcept {
+		constexpr SimdRegisterstruct& operator|=(const SimdRegisterstruct& rhs) noexcept {
 			self() = self() | rhs;
 			return self();
 		}
-		constexpr SimdRegisterClass& operator^=(const SimdRegisterClass& rhs) noexcept {
+		constexpr SimdRegisterstruct& operator^=(const SimdRegisterstruct& rhs) noexcept {
 			self() = self() ^ rhs;
 			return self();
 		}
 
 		//compare
-		constexpr simd_mmask_class operator==(const SimdRegisterClass& rhs) const noexcept {
-			return simd_mmask_class(simd_impl::compare_equal(self().simdRegister, rhs.simdRegister));
+		constexpr simd_mmask_struct operator==(const SimdRegisterstruct& rhs) const noexcept {
+			return simd_mmask_struct(simd_impl::compare_equal(self().simdRegister, rhs.simdRegister));
 		}
-		constexpr simd_mmask_class operator!=(const SimdRegisterClass& rhs) const noexcept {
-			return simd_mmask_class(simd_impl::compare_equal(self().simdRegister, rhs.simdRegister));
+		constexpr simd_mmask_struct operator!=(const SimdRegisterstruct& rhs) const noexcept {
+			return simd_mmask_struct(simd_impl::compare_equal(self().simdRegister, rhs.simdRegister));
 		}
-		constexpr simd_mmask_class operator<(const SimdRegisterClass& rhs) const noexcept {
-			return simd_mmask_class(simd_impl::compare_equal(self().simdRegister, rhs.simdRegister));
+		constexpr simd_mmask_struct operator<(const SimdRegisterstruct& rhs) const noexcept {
+			return simd_mmask_struct(simd_impl::compare_equal(self().simdRegister, rhs.simdRegister));
 		}
-		constexpr simd_mmask_class operator<=(const SimdRegisterClass& rhs) const noexcept {
-			return simd_mmask_class(simd_impl::compare_equal(self().simdRegister, rhs.simdRegister));
+		constexpr simd_mmask_struct operator<=(const SimdRegisterstruct& rhs) const noexcept {
+			return simd_mmask_struct(simd_impl::compare_equal(self().simdRegister, rhs.simdRegister));
 		}
-		constexpr simd_mmask_class operator>(const SimdRegisterClass& rhs) const noexcept {
-			return simd_mmask_class(simd_impl::compare_equal(self().simdRegister, rhs.simdRegister));
+		constexpr simd_mmask_struct operator>(const SimdRegisterstruct& rhs) const noexcept {
+			return simd_mmask_struct(simd_impl::compare_equal(self().simdRegister, rhs.simdRegister));
 		}
-		constexpr simd_mmask_class operator>=(const SimdRegisterClass& rhs) const noexcept {
-			return simd_mmask_class(simd_impl::compare_equal(self().simdRegister, rhs.simdRegister));
+		constexpr simd_mmask_struct operator>=(const SimdRegisterstruct& rhs) const noexcept {
+			return simd_mmask_struct(simd_impl::compare_equal(self().simdRegister, rhs.simdRegister));
 		}
 
 		//convert 
@@ -402,46 +402,46 @@ namespace natl::simd {
 
 	template<typename SimdArchType>
 		requires(IsSimdArch<SimdArchType>)
-	using SimdRegisterClassI8 = SimdRegisterClass<i8, SimdArchType>;
+	using SimdRegisterstructI8 = SimdRegisterstruct<i8, SimdArchType>;
 	template<typename SimdArchType>
 		requires(IsSimdArch<SimdArchType>)
-	using SimdRegisterClassI16 = SimdRegisterClass<i16, SimdArchType>;
+	using SimdRegisterstructI16 = SimdRegisterstruct<i16, SimdArchType>;
 	template<typename SimdArchType>
 		requires(IsSimdArch<SimdArchType>)
-	using SimdRegisterClassI32 = SimdRegisterClass<i32, SimdArchType>;
+	using SimdRegisterstructI32 = SimdRegisterstruct<i32, SimdArchType>;
 	template<typename SimdArchType>
 		requires(IsSimdArch<SimdArchType>)
-	using SimdRegisterClassI64 = SimdRegisterClass<i64, SimdArchType>;
+	using SimdRegisterstructI64 = SimdRegisterstruct<i64, SimdArchType>;
 	template<typename SimdArchType>
 		requires(IsSimdArch<SimdArchType>)
-	using SimdRegisterClassUI8 = SimdRegisterClass<ui8, SimdArchType>;
+	using SimdRegisterstructUI8 = SimdRegisterstruct<ui8, SimdArchType>;
 	template<typename SimdArchType>
 		requires(IsSimdArch<SimdArchType>)
-	using SimdRegisterClassUI16 = SimdRegisterClass<ui16, SimdArchType>;
+	using SimdRegisterstructUI16 = SimdRegisterstruct<ui16, SimdArchType>;
 	template<typename SimdArchType>
 		requires(IsSimdArch<SimdArchType>)
-	using SimdRegisterClassUI32 = SimdRegisterClass<ui32, SimdArchType>;
+	using SimdRegisterstructUI32 = SimdRegisterstruct<ui32, SimdArchType>;
 	template<typename SimdArchType>
 		requires(IsSimdArch<SimdArchType>)
-	using SimdRegisterClassUI64 = SimdRegisterClass<ui64, SimdArchType>;
+	using SimdRegisterstructUI64 = SimdRegisterstruct<ui64, SimdArchType>;
 	template<typename SimdArchType>
 		requires(IsSimdArch<SimdArchType>)
-	using SimdRegisterClassF32 = SimdRegisterClass<f32, SimdArchType>;
+	using SimdRegisterstructF32 = SimdRegisterstruct<f32, SimdArchType>;
 	template<typename SimdArchType>
 		requires(IsSimdArch<SimdArchType>)
-	using SimdRegisterClassF64 = SimdRegisterClass<f64, SimdArchType>;
+	using SimdRegisterstructF64 = SimdRegisterstruct<f64, SimdArchType>;
 
 	template<typename Type>
-	class IsSimdMMaskClassV : FalseType {};
+	struct IsSimdMMaskstructV : FalseType {};
 	template<typename DataType, typename Arch>
-	class IsSimdMMaskClassV<SimdMMaskClass<DataType, Arch>> : FalseType {};
+	struct IsSimdMMaskstructV<SimdMMaskstruct<DataType, Arch>> : FalseType {};
 	template<typename Type>
-	constexpr inline Bool IsSimdMMaskClass = IsSimdMMaskClassV<Type>::value;
+	constexpr inline Bool IsSimdMMaskstruct = IsSimdMMaskstructV<Type>::value;
 
 	template<typename Type>
-	class IsSimdRegisterClassV : FalseType {};
+	struct IsSimdRegisterstructV : FalseType {};
 	template<typename DataType, typename Arch>
-	class IsSimdRegisterClassV<SimdRegisterClass<DataType, Arch>> : FalseType {};
+	struct IsSimdRegisterstructV<SimdRegisterstruct<DataType, Arch>> : FalseType {};
 	template<typename Type>
-	constexpr inline Bool IsSimdRegisterClass = IsSimdRegisterClassV<Type>::value;
+	constexpr inline Bool IsSimdRegisterstruct = IsSimdRegisterstructV<Type>::value;
 }

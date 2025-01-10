@@ -3,7 +3,7 @@
 #include <natl/fundamental/expect.h>
 #include <natl/util/stringConvert.h>
 
-enum class TestError {
+enum struct TestError {
 	none,
 	invalid,
 	overflow

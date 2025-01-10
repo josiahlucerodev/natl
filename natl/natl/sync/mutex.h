@@ -30,7 +30,7 @@ namespace natl {
 	Bool unlockMutex(NativeMutex& mutex) noexcept;
 
 
-	class Mutex {
+	struct Mutex {
 	public:
 		using native_type = NativeMutex;
 	private:
@@ -87,7 +87,7 @@ namespace natl {
 		constexpr native_type& native() noexcept { return mutex; };
 	};
 
-	class RecursiveMutex {
+	struct RecursiveMutex {
 	public:
 		using native_type = Mutex::native_type;
 	private:
@@ -159,8 +159,8 @@ namespace natl {
 
 	struct AdoptLockFlag {};
 
-	template<class MutexType>
-	class LockGuard {
+	template<typename MutexType>
+	struct LockGuard {
 	public:
 		using mutex_type = MutexType;
 	private:

@@ -128,21 +128,21 @@ namespace natl {
 			}
 		};
 
-		enum class FunctionStorageType {
+		enum struct FunctionStorageType {
 			functionPtr = 0,
 			smallCallable = 1,
 			heapCallable = 2,
 			constexprCallable = 3,
 		};
-		template<class Signature, Size Capacity, Bool MoveOnly, typename Alloc>
-		class FunctionBase {
+		template<typename Signature, Size Capacity, Bool MoveOnly, typename Alloc>
+		struct FunctionBase {
 		public:
 			template<typename>
 			friend struct FunctionRefBase;
 		};
 
 		template<typename ReturnType, typename... ArgTypes, Size Capacity, Bool MoveOnly, typename Alloc>
-		class FunctionBase<ReturnType(ArgTypes...), Capacity, MoveOnly, Alloc> {
+		struct FunctionBase<ReturnType(ArgTypes...), Capacity, MoveOnly, Alloc> {
 		public:
 			using result_type = ReturnType;
 			using arg_types = TypePack<ArgTypes...>;
@@ -184,7 +184,7 @@ namespace natl {
 				assign<OtherCap>(natl::forward<decltype(other)>(other));
 			}
 
-			template<class Functor>
+			template<typename Functor>
 				requires(HasFunctionSignature<Functor, ReturnType, ArgTypes...>)
 			constexpr FunctionBase(Functor&& functor) noexcept {
 				numberOfBytesUsed = 0;
@@ -233,7 +233,7 @@ namespace natl {
 				internalDeconstruct();
 				return assign<OtherCap>(natl::forward<decltype(other)>(other));
 			}
-			template<class Functor>
+			template<typename Functor>
 				requires(HasFunctionSignature<Functor, ReturnType, ArgTypes...>)
 			constexpr FunctionBase& operator=(Functor&& functor) noexcept {
 				internalDeconstruct();
@@ -328,7 +328,7 @@ namespace natl {
 				return self();
 			}
 
-			template<class Functor>
+			template<typename Functor>
 				requires(HasFunctionSignature<Functor, ReturnType, ArgTypes...>)
 			constexpr FunctionBase& assign(Functor&& functor) noexcept {
 				if constexpr (ConvertibleTo<RemoveReference<Functor>, ReturnType(*)(ArgTypes...) noexcept>) {
@@ -441,24 +441,24 @@ namespace natl {
 		: FalseType {};
 
 	//main types 
-	template<class Signature, Size Capacity = 32 - alignof(char*), typename Alloc = DefaultAllocatorByte>
-	class MoveOnlyFunction {
+	template<typename Signature, Size Capacity = 32 - alignof(char*), typename Alloc = DefaultAllocatorByte>
+	struct MoveOnlyFunction {
 		template<typename>
-		friend class FunctionRef;
+		friend struct FunctionRef;
 
 		template<typename, Size, typename>
-		friend class Function;
+		friend struct Function;
 	};
 
-	template<class Signature, Size Capacity = 32 - alignof(char*), typename Alloc = DefaultAllocatorByte>
-	class Function {
+	template<typename Signature, Size Capacity = 32 - alignof(char*), typename Alloc = DefaultAllocatorByte>
+	struct Function {
 	public:
 		template<typename>
-		friend class FunctionRef;
+		friend struct FunctionRef;
 	};
 
 	template<typename Signature>
-	class FunctionRef {};
+	struct FunctionRef {};
 
 	namespace impl {
 		template<typename Functor>
@@ -489,7 +489,7 @@ namespace natl {
 
 
 	template<typename ReturnType, typename... ArgTypes, Size Capacity, typename Alloc>
-	class MoveOnlyFunction<ReturnType(ArgTypes...), Capacity, Alloc> final {
+	struct MoveOnlyFunction<ReturnType(ArgTypes...), Capacity, Alloc> final {
 	public:
 		using function_base = impl::FunctionBase<ReturnType(ArgTypes...), Capacity, true, Alloc>;
 		using result_type = function_base::result_type;
@@ -500,10 +500,10 @@ namespace natl {
 		constexpr static Size smallBufferSize = function_base::smallBufferSize;
 
 		template<typename>
-		friend class FunctionRef;
+		friend struct FunctionRef;
 
 		template<typename, Size, typename>
-		friend class Function;
+		friend struct Function;
 	private:
 		function_base functionBase;
 	public:
@@ -523,7 +523,7 @@ namespace natl {
 		constexpr MoveOnlyFunction(MoveOnlyFunction<ReturnType(ArgTypes...) const, OtherCap, Alloc>&& other) noexcept :
 			functionBase(natl::forward<decltype(other.functionBase)>(other.functionBase)) {}
 
-		template<class Functor>
+		template<typename Functor>
 			requires(HasFunctionSignature<Functor, ReturnType, ArgTypes...>)
 		constexpr MoveOnlyFunction(Functor&& functor) noexcept :
 			functionBase(natl::move(functor)) {}
@@ -555,7 +555,7 @@ namespace natl {
 			return self();
 		}
 
-		template<class Functor>
+		template<typename Functor>
 			requires(HasFunctionSignature<Functor, ReturnType, ArgTypes...>)
 		constexpr MoveOnlyFunction& operator=(Functor&& functor) noexcept {
 			functionBase = natl::forward<decltype(functor)>(functor);
@@ -615,7 +615,7 @@ namespace natl {
 		: FalseType {};
 
 	template<typename ReturnType, typename... ArgTypes, Size Capacity, typename Alloc>
-	class MoveOnlyFunction<ReturnType(ArgTypes...) const, Capacity, Alloc> final {
+	struct MoveOnlyFunction<ReturnType(ArgTypes...) const, Capacity, Alloc> final {
 	public:
 		using function_base = impl::FunctionBase<ReturnType(ArgTypes...), Capacity, true, Alloc>;
 		using result_type = function_base::result_type;
@@ -634,7 +634,7 @@ namespace natl {
 		template<Size OtherCap>
 		constexpr MoveOnlyFunction(MoveOnlyFunction<ReturnType(ArgTypes...) const, OtherCap, Alloc>&& other) noexcept :
 			functionBase(natl::forward<decltype(other.functionBase)>(other.functionBase)) {}
-		template<class Functor>
+		template<typename Functor>
 			requires(HasFunctionSignature<Functor, ReturnType, ArgTypes...>&& IsConstCallable<Functor, ReturnType, ArgTypes...>)
 		constexpr MoveOnlyFunction(Functor&& functor) noexcept : functionBase(natl::move(functor)) {}
 
@@ -661,7 +661,7 @@ namespace natl {
 			return self();
 		}
 
-		template<class Functor>
+		template<typename Functor>
 			requires(HasFunctionSignature<Functor, ReturnType, ArgTypes...> && IsConstCallable<Functor, ReturnType, ArgTypes...>)
 		constexpr MoveOnlyFunction& operator=(Functor&& functor) noexcept {
 			functionBase = natl::forward<decltype(functor)>(functor);
@@ -720,14 +720,14 @@ namespace natl {
 	struct IsTriviallyMoveAssignableV<MoveOnlyFunction<ReturnType(ArgTypes...) const, Capacity, Alloc>>
 		: FalseType {};
 
-	template<class Signature, Size ByteSize, typename Alloc = DefaultAllocatorByte>
+	template<typename Signature, Size ByteSize, typename Alloc = DefaultAllocatorByte>
 	using MoveOnlyFunctionByteSize = MoveOnlyFunction<Signature, ByteSize - alignof(char*), Alloc>;
 
-	template<class Signature, typename Alloc = DefaultAllocatorByte>
+	template<typename Signature, typename Alloc = DefaultAllocatorByte>
 	using MoveOnlyFunctionAlloc = MoveOnlyFunctionByteSize<Signature, 32, Alloc>;
 
 	template<typename ReturnType, typename... ArgTypes, Size Capacity, typename Alloc>
-	class Function<ReturnType(ArgTypes...), Capacity, Alloc> final {
+	struct Function<ReturnType(ArgTypes...), Capacity, Alloc> final {
 	public:
 		using function_base = impl::FunctionBase<ReturnType(ArgTypes...), Capacity, false, Alloc>;
 		using result_type = function_base::result_type;
@@ -738,7 +738,7 @@ namespace natl {
 		constexpr static Size smallBufferSize = function_base::smallBufferSize;
 
 		template<typename>
-		friend class FunctionRef;
+		friend struct FunctionRef;
 	private:
 		function_base functionBase;
 	public:
@@ -765,7 +765,7 @@ namespace natl {
 		constexpr Function(MoveOnlyFunction<ReturnType(ArgTypes...) const, OtherCap, Alloc>&& other) noexcept :
 			functionBase(natl::forward<decltype(other.functionBase)>(other.functionBase)) {}
 
-		template<class Functor>
+		template<typename Functor>
 			requires(
 			HasFunctionSignature<Functor, ReturnType, ArgTypes...> 
 			&& IsCopyConstructibleC<Functor>
@@ -877,7 +877,7 @@ namespace natl {
 		: FalseType {};
 
 	template<typename ReturnType, typename... ArgTypes, Size Capacity, typename Alloc>
-	class Function<ReturnType(ArgTypes...) const, Capacity, Alloc> final {
+	struct Function<ReturnType(ArgTypes...) const, Capacity, Alloc> final {
 	public:
 		using function_base = impl::FunctionBase<ReturnType(ArgTypes...), Capacity, false, Alloc>;
 		using result_type = function_base::result_type;
@@ -910,7 +910,7 @@ namespace natl {
 		constexpr Function(MoveOnlyFunction<ReturnType(ArgTypes...) const, OtherCap, Alloc>&& other) noexcept :
 			functionBase(natl::forward<decltype(other.functionBase)>(other.functionBase)) {}
 
-		template<class Functor>
+		template<typename Functor>
 			requires(HasFunctionSignature<Functor, ReturnType, ArgTypes...> 
 				&& IsCopyConstructibleC<Functor> 
 				&& IsConstCallable<Functor, ReturnType, ArgTypes...>)
@@ -953,7 +953,7 @@ namespace natl {
 			return self();
 		}
 
-		template<class Functor>
+		template<typename Functor>
 			requires(HasFunctionSignature<Functor, ReturnType, ArgTypes...> 
 				&& IsCopyConstructibleC<Functor>
 				&& IsConstCallable<Functor, ReturnType, ArgTypes...>)
@@ -1014,10 +1014,10 @@ namespace natl {
 	struct IsTriviallyMoveAssignableV<Function<ReturnType(ArgTypes...) const, Capacity, Alloc>>
 		: FalseType {};
 
-	template<class Signature, Size ByteSize, typename Alloc = DefaultAllocatorByte>
+	template<typename Signature, Size ByteSize, typename Alloc = DefaultAllocatorByte>
 	using FunctionByteSize = Function<Signature, ByteSize - alignof(char*), Alloc>;
 
-	template<class Signature, typename Alloc = DefaultAllocatorByte>
+	template<typename Signature, typename Alloc = DefaultAllocatorByte>
 	using FunctionAlloc = FunctionByteSize<Signature, 32, Alloc>;
 
 	namespace impl {
@@ -1073,7 +1073,7 @@ namespace natl {
 			}
 		};
 
-		enum class FunctionRefStorageType {
+		enum struct FunctionRefStorageType {
 			functionPtr = 0,
 			callableRef,
 			constexprCallableRef,
@@ -1081,11 +1081,11 @@ namespace natl {
 			constexprCallable,
 		};
 
-		template<class Signature>
+		template<typename Signature>
 		struct FunctionRefBase {};
 
 		template<typename ReturnType, typename... ArgTypes>
-		class FunctionRefBase<ReturnType(ArgTypes...)> final {
+		struct FunctionRefBase<ReturnType(ArgTypes...)> final {
 		public:
 			using result_type = ReturnType;
 			using arg_types = TypePack<ArgTypes...>;
@@ -1146,7 +1146,7 @@ namespace natl {
 				return assign(natl::forward(other));
 			}
 
-			template<class Functor>
+			template<typename Functor>
 				requires(HasFunctionSignature<Functor, ReturnType, ArgTypes...>)
 			constexpr FunctionRefBase& operator=(Functor& functor) noexcept {
 				destruct();
@@ -1232,7 +1232,7 @@ namespace natl {
 				return self();
 			}
 
-			template<class Functor>
+			template<typename Functor>
 				requires(HasFunctionSignature<Functor, ReturnType, ArgTypes...>)
 			constexpr FunctionRefBase& assign(Functor& functor) noexcept {
 				if constexpr(IsConvertibleC<Functor, ReturnType(*)(ArgTypes...)>) {
@@ -1367,7 +1367,7 @@ namespace natl {
 		: FalseType {};
 
 	template<typename ReturnType, typename... ArgTypes>
-	class FunctionRef<ReturnType(ArgTypes...)> final {
+	struct FunctionRef<ReturnType(ArgTypes...)> final {
 	public:
 		using function_ref_base = impl::FunctionRefBase<ReturnType(ArgTypes...)>;
 		using result_type = function_ref_base::result_type;
@@ -1397,7 +1397,7 @@ namespace natl {
 		constexpr FunctionRef(Function<ReturnType(ArgTypes...) const, OtherCap, Alloc>& other) noexcept :
 			functionRefBase(other.functionBase) {}
 
-		template<class Functor>
+		template<typename Functor>
 			requires(HasFunctionSignature<Functor, ReturnType, ArgTypes...>)
 		constexpr FunctionRef(Functor& functor) noexcept : 
 			functionRefBase(functor) {}
@@ -1440,7 +1440,7 @@ namespace natl {
 			functionRefBase = other.functionBase;
 			return self();
 		}
-		template<class Functor>
+		template<typename Functor>
 			requires(HasFunctionSignature<Functor, ReturnType, ArgTypes...>)
 		constexpr FunctionRef& operator=(Functor& functor) noexcept {
 			functionRefBase = functor;
@@ -1498,7 +1498,7 @@ namespace natl {
 		: FalseType {};
 
 	template<typename ReturnType, typename... ArgTypes>
-	class FunctionRef<ReturnType(ArgTypes...) const> final {
+	struct FunctionRef<ReturnType(ArgTypes...) const> final {
 	public:
 		using function_ref_base = impl::FunctionRefBase<ReturnType(ArgTypes...)>;
 		using result_type = function_ref_base::result_type;
@@ -1528,7 +1528,7 @@ namespace natl {
 		constexpr FunctionRef(Function<ReturnType(ArgTypes...) const, OtherCap, Alloc>& other) noexcept :
 			functionRefBase(other.functionBase) {}
 
-		template<class Functor>
+		template<typename Functor>
 			requires(HasFunctionSignature<Functor, ReturnType, ArgTypes...> && IsConstCallable<Functor, ReturnType, ArgTypes...>)
 		constexpr FunctionRef(Functor& functor) noexcept :
 			functionRefBase(functor) {}
@@ -1566,7 +1566,7 @@ namespace natl {
 			return self();
 		}
 
-		template<class Functor>
+		template<typename Functor>
 			requires(HasFunctionSignature<Functor, ReturnType, ArgTypes...>&& IsConstCallable<Functor, ReturnType, ArgTypes...>)
 		constexpr FunctionRef& operator=(Functor& functor) noexcept {
 			functionRefBase = functor;
@@ -1628,27 +1628,27 @@ namespace natl {
 #pragma warning(pop)
 #endif // NATL_COMPILER_MSVC
 
-	template<class Type>
+	template<typename Type>
 	struct CompareLess { 
 		constexpr Bool operator()(const Type& lhs, const Type& rhs) const noexcept { return lhs < rhs; }
 	};
-	template<class Type>
+	template<typename Type>
 	struct CompareGreater {
 		constexpr Bool operator()(const Type& lhs, const Type& rhs) const noexcept { return lhs > rhs; }
 	};
-	template<class Type>
+	template<typename Type>
 	struct CompareLessEqual {
 		constexpr Bool operator()(const Type& lhs, const Type& rhs) const noexcept { return lhs <= rhs; }
 	};
-	template<class Type>
+	template<typename Type>
 	struct CompareGreaterEqual {
 		constexpr Bool operator()(const Type& lhs, const Type& rhs) const noexcept { return lhs >= rhs; }
 	};
-	template<class Type>
+	template<typename Type>
 	struct CompareEqualTo {
 		constexpr Bool operator()(const Type& lhs, const Type& rhs) const noexcept { return lhs == rhs; }
 	};
-	template<class Type>
+	template<typename Type>
 	struct CompareNotEqualTo {
 		constexpr Bool operator()(const Type& lhs, const Type& rhs) const noexcept { return lhs != rhs; }
 	};

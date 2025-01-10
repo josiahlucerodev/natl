@@ -91,7 +91,7 @@ namespace natl::simd {
 	using SimdRegisterAny = typename ArchSimdRegisters<Arch>::SimdRegisterAny;
 
 	//ArchSimdRegistersInfo//
-	class ArchSimdRegistersInfo;
+	struct ArchSimdRegistersInfo;
 
 	//SimdRegisterI8Info
 	//SimdRegisterI16Info
@@ -145,7 +145,7 @@ namespace natl::simd {
 
 	//mask
 	template<typename Arch>
-	class ArchSimdMask;
+	struct ArchSimdMask;
 
 	template<typename Arch>
 		requires(IsSimdArch<Arch> && requires() { typename ArchSimdMask<Arch>::SimdMaskI8; })
@@ -179,7 +179,7 @@ namespace natl::simd {
 	using SimdMaskF64 = typename ArchSimdMask<Arch>::SimdMaskF64;
 
 	template<typename Arch>
-	class ArchSimdMaskInfo;
+	struct ArchSimdMaskInfo;
 
 	template<typename Arch>
 		requires(IsSimdArch<Arch> && requires() { typename ArchSimdMaskInfo<Arch>::SimdMaskI8Info; })
@@ -214,7 +214,7 @@ namespace natl::simd {
 
 	namespace impl {
 		template<typename DataType, Size RegisterSize>
-		class DefaultSimdMaskBase {
+		struct DefaultSimdMaskBase {
 		private:
 			static constexpr inline Size count() { return RegisterSize / (sizeof(DataType) * 8); };
 			Size maskData;
@@ -233,7 +233,7 @@ namespace natl::simd {
 	}
 
 	template<Size RegisterSize>
-	class DefaultArchSimdMask {
+	struct DefaultArchSimdMask {
 	public:
 		using SimdMaskI8 = impl::DefaultSimdMaskBase<i8, RegisterSize>;
 		using SimdMaskI16 = impl::DefaultSimdMaskBase<i16, RegisterSize>;
@@ -249,7 +249,7 @@ namespace natl::simd {
 
 	namespace impl {
 		template<typename DataType, Size RegisterSize>
-		class DefaultSimdMaskInfoBase {
+		struct DefaultSimdMaskInfoBase {
 		public:
 			static constexpr inline Size count() { return RegisterSize / (sizeof(DataType) * 8); };
 			static constexpr inline Size bitSize() { return RegisterSize; };
@@ -258,7 +258,7 @@ namespace natl::simd {
 	}
 
 	template<ui32 RegisterSize>
-	class DefaultArchSimdMaskInfo {
+	struct DefaultArchSimdMaskInfo {
 	public:
 		using SimdMaskI8Info = impl::DefaultSimdMaskInfoBase<i8, RegisterSize>;
 		using SimdMaskI16Info = impl::DefaultSimdMaskInfoBase<i16, RegisterSize>;
@@ -644,14 +644,14 @@ namespace natl::simd {
 		constexpr inline static SimdMaskF64<Arch> mask_set_active_at_f64(SimdMaskF64<Arch> src, const ui64 index) noexcept { return maskSetActiveAt<SimdMaskF64<Arch>>(src, index); }
 	};
 
-	template<class DataType, Size RegisterSize>
+	template<typename DataType, Size RegisterSize>
 	struct SimdMmaskToInfoT<impl::DefaultSimdMaskBase<DataType, RegisterSize>> {
 		using type = impl::DefaultSimdMaskInfoBase<DataType, RegisterSize>;
 	};
 
 	namespace impl {
 		template<typename DataType, typename SimdArchType>
-		class BaseSimdCMask {
+		struct BaseSimdCMask {
 		public:
 			static constexpr inline Size count() { return SimdArchType::registerSize / (sizeof(DataType) * 8); };
 			static constexpr inline Size size() { return count(); };
@@ -777,7 +777,7 @@ namespace natl::simd {
 	}
 
 	template<typename SimdArchType>
-	class ArchSimdCMask {
+	struct ArchSimdCMask {
 	public:
 		using SimdCMaskI8 = impl::BaseSimdCMask<i8, SimdArchType>;
 		using SimdCMaskI16 = impl::BaseSimdCMask<i16, SimdArchType>;
@@ -793,7 +793,7 @@ namespace natl::simd {
 
 	namespace impl {
 		template<typename DataType, typename SimdArchType>
-		class BaseSimdCMaskInfo {
+		struct BaseSimdCMaskInfo {
 		public:
 			static constexpr inline Size count() { return SimdArchType::registerSize / (sizeof(DataType) * 8); };
 			static constexpr inline Size bitSize() { return SimdArchType::registerSize; };
@@ -802,7 +802,7 @@ namespace natl::simd {
 	}
 
 	template<typename SimdArchType>
-	class ArchSimdCMaskInfo {
+	struct ArchSimdCMaskInfo {
 	public:
 		using SimdCMaskI8Info = impl::BaseSimdCMaskInfo<i8, SimdArchType>;
 		using SimdCMaskI16Info = impl::BaseSimdCMaskInfo<i16, SimdArchType>;

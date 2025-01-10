@@ -44,7 +44,7 @@ namespace natl {
 		using iterator_category = Iter::iterator_category;
 	};
 
-	template<class Type> struct IteratorTraits<Type*> {
+	template<typename Type> struct IteratorTraits<Type*> {
 		using value_type = Type;
 		using reference = Type&;
 		using difference_type = PtrDiff;
@@ -52,7 +52,7 @@ namespace natl {
 		using iterator_category = RandomAccessIteratorTag;
 	};
 
-	template<class Type> struct IteratorTraits<const Type*> {
+	template<typename Type> struct IteratorTraits<const Type*> {
 		using value_type = const Type;
 		using reference = const Type&;
 		using difference_type = PtrDiff;
@@ -238,7 +238,7 @@ namespace natl {
 
 	template<typename Iter> 
 		requires(IsIterator<Iter>)
-	class ReverseIterator {
+	struct ReverseIterator {
 	public:
 		using iterator_type = Iter;
 		using iterator_category = Iter::iterator_category;
@@ -255,7 +255,7 @@ namespace natl {
 		//constructor 
 		constexpr ReverseIterator() noexcept = default;
 		constexpr explicit ReverseIterator(const iterator_type& iter) noexcept : iterStorage(iter) {}
-		template<class OtherIter>
+		template<typename OtherIter>
 			requires(IsIterator<Iter> && ConvertibleTo<const OtherIter&, Iter>)
 		constexpr explicit ReverseIterator(const ReverseIterator<OtherIter>& other) : 
 			iterStorage(static_cast<iterator_type>(other)) {}
@@ -268,7 +268,7 @@ namespace natl {
 		constexpr const ReverseIterator& self() const noexcept { return *this; }
 
 		//assignment 
-		template<class OtherIter>
+		template<typename OtherIter>
 			requires(IsIterator<OtherIter> && AssignableFromC<Iter&, const OtherIter&>)
 		constexpr ReverseIterator& operator=(const ReverseIterator<OtherIter>& other) noexcept {
 			iterStorage = other;
@@ -362,7 +362,7 @@ namespace natl {
 
 
 	template<typename DataType>
-	class RandomAccessIterator {
+	struct RandomAccessIterator {
 	public:
 		using iterator = RandomAccessIterator<DataType>;
 		using difference_type = PtrDiff;
@@ -420,7 +420,7 @@ namespace natl {
 	using ReverseConstRandomAccessIterator = ReverseIterator<ConstRandomAccessIterator<DataType>>;
 
 	template<typename DataType, typename Alloc>
-	class RandomAccessIteratorAlloc {
+	struct RandomAccessIteratorAlloc {
 	public:
 		using iterator = RandomAccessIteratorAlloc<DataType, Alloc>;
 		using allocator_type = Alloc;

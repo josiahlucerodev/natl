@@ -79,7 +79,7 @@ namespace natl {
 		impl::heapify<RandomIter, Compare>(first, size - 1, 0, compare);
 	}
 
-	template<class RandomIter, class Compare>
+	template<typename RandomIter, typename Compare>
 	constexpr Bool isHeap(RandomIter first, RandomIter last, Compare compare) noexcept {
 		using difference_type = typename IteratorTraits<RandomIter>::difference_type;
 		Size size = iterDistance<RandomIter>(first, last);
@@ -96,7 +96,7 @@ namespace natl {
 	
 
 	template<typename DataType, typename SequentialDynamicContainer = DynArray<DataType>, typename Compare = CompareLess<DataType>>
-	class PriorityQueue {
+	struct PriorityQueue {
 	public:
 		using container_type = SequentialDynamicContainer;
 		using value_compare = Compare;

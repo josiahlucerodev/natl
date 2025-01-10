@@ -10,7 +10,7 @@
 namespace natl {
 	Bool enablePrintExtendedColor() noexcept;
 	
-	enum class PrintColor : Size {
+	enum struct PrintColor : Size {
 		black,
 		red,
 		green,
@@ -22,7 +22,7 @@ namespace natl {
 		standard,
 	};
 
-	enum class PrintForegroundColor : Size {
+	enum struct PrintForegroundColor : Size {
 		black = static_cast<Size>(PrintColor::black),
 		red = static_cast<Size>(PrintColor::red),
 		green = static_cast<Size>(PrintColor::green),
@@ -34,7 +34,7 @@ namespace natl {
 		standard = static_cast<Size>(PrintColor::standard),
 	};
 
-	enum class PrintBackgroundColor : Size {
+	enum struct PrintBackgroundColor : Size {
 		black = static_cast<Size>(PrintColor::black),
 		red = static_cast<Size>(PrintColor::red),
 		green = static_cast<Size>(PrintColor::green),
@@ -59,11 +59,11 @@ namespace natl {
 			r(rIn), g(gIn), b(bIn) {};
 	};
 
-	class PrintExtendedForegroundColor : public PrintExtendedColor {
+	struct PrintExtendedForegroundColor : public PrintExtendedColor {
 	public:
 		using PrintExtendedColor::PrintExtendedColor;
 	};
-	class PrintExtendedBackgroundColor : public PrintExtendedColor {
+	struct PrintExtendedBackgroundColor : public PrintExtendedColor {
 	public:
 		using PrintExtendedColor::PrintExtendedColor;
 	};
@@ -83,7 +83,7 @@ namespace natl {
 		constexpr const Ascii* c_str() const noexcept { return data(); }
 	};
 
-	enum class PrintColorAttribute {
+	enum struct PrintColorAttribute {
 		foreground,
 		background,
 		standard = foreground

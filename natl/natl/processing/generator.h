@@ -9,17 +9,17 @@
 //interface
 namespace natl {
 	template<typename DataType>
-	class [[nodiscard]] Generator {
+	struct [[nodiscard]] Generator {
 	public:
 		using value_type = DataType;
 		using reference = DataType&;
 		using pointer = value_type*;
 		using yielded = reference;
 
-		class GeneratorPromise;
+		struct GeneratorPromise;
 		using handle_type = CoroutineHandle<GeneratorPromise>;
 
-		class GeneratorPromise {
+		struct GeneratorPromise {
 			pointer valuePtr;
 		public:
 			//constructor 
@@ -54,7 +54,7 @@ namespace natl {
 
 		struct GeneratorSentinel {};
 
-		class GeneratorIterator {
+		struct GeneratorIterator {
 		public:
 			using iterator_category = std::input_iterator_tag;
 			using difference_type = PtrDiff;

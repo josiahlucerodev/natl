@@ -8,8 +8,8 @@
 
 //interface
 namespace natl {
-	template<class ErrorType>
-	class Unexpected {
+	template<typename ErrorType>
+	struct Unexpected {
 	public:
 		using error_type = ErrorType;
 	private:
@@ -42,14 +42,14 @@ namespace natl {
 		}
 	};
 
-	enum class ExpectState : i8 {
+	enum struct ExpectState : i8 {
 		dummy = 0,
 		value,
 		error,
 	};
 
-	template<class DataType, class ErrorType>
-	class Expect {
+	template<typename DataType, typename ErrorType>
+	struct Expect {
 	public:
 		using ValueType = DataType;
 		using value_type = DataType;
@@ -255,7 +255,7 @@ namespace natl {
 		}
 
 		//modifiers
-		template<class... Args>
+		template<typename... Args>
 			requires(IsConstructibleC<DataType, Args...>)
 		constexpr DataType& emplace(Args&&... args) noexcept {
 			destruct();
@@ -270,11 +270,11 @@ namespace natl {
 		}
 	};
 
-	template<class ErrorType>
+	template<typename ErrorType>
 	constexpr Unexpected<Decay<ErrorType>> unexpected(const ErrorType& error) {
 		return Unexpected<Decay<ErrorType>>(error);
 	}
-	template<class ErrorType>
+	template<typename ErrorType>
 	constexpr Unexpected<Decay<ErrorType>> unexpected(ErrorType&& error) {
 		return Unexpected<Decay<ErrorType>>(move(error));
 	}
@@ -283,6 +283,6 @@ namespace natl {
 	template<typename Type> constexpr inline Bool IsExpect = IsExpectV<Type>::value;
 	template<typename Type> concept IsExpectC = IsExpect<Type>;
 
-	template<class DataType, class ErrorType>
+	template<typename DataType, typename ErrorType>
 	struct IsExpectV<Expect<DataType, ErrorType>> : TrueType {};
 }

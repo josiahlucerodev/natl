@@ -8,7 +8,7 @@
 //interface 
 namespace natl {
 	template<typename DataType, typename MutexType>
-	class SynchronizedValueBase {
+	struct SynchronizedValueBase {
 	public:
 		using value_type = DataType;
 		using mutex_type = MutexType;
@@ -41,11 +41,11 @@ namespace natl {
 		}
 
 		template<typename, typename>
-		friend class UpdateGuardBase;
+		friend struct UpdateGuardBase;
 	};
 
 	template<typename DataType, typename MutexType>
-	class UpdateGuardBase {
+	struct UpdateGuardBase {
 	public:
 		using value_type = DataType;
 		using mutex_type = MutexType;

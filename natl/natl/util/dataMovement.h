@@ -64,7 +64,7 @@ namespace natl {
         deconstructAll<DataType>(dataPtr, 1);
     }
 
-    template <class Iter, class NoThrowForwardIter>
+    template<typename Iter, typename NoThrowForwardIter>
         requires(IsIterPtr<Iter> && IsIterPtr<NoThrowForwardIter>)
     constexpr NoThrowForwardIter uninitializedCopyNoOverlap(Iter first, Iter last, NoThrowForwardIter Dst) noexcept {
         if (!isConstantEvaluated()) {
@@ -83,7 +83,7 @@ namespace natl {
 
         return Dst;
     }
-    template <class Iter, class NoThrowForwardIter>
+    template<typename Iter, typename NoThrowForwardIter>
         requires(IsIterPtr<Iter>&& IsIterPtr<NoThrowForwardIter>)
     constexpr NoThrowForwardIter uninitializedCopy(Iter first, Iter last, NoThrowForwardIter Dst) noexcept {
         for (; first != last; ++Dst, (void) ++first) {
@@ -95,7 +95,7 @@ namespace natl {
         return Dst;
     }
 
-    template <class Iter, class NoThrowForwardIter>
+    template<typename Iter, typename NoThrowForwardIter>
         requires(IsIterPtr<Iter>&& IsIterPtr<NoThrowForwardIter>)
     constexpr NoThrowForwardIter uninitializedCopyConvert(Iter first, Iter last, NoThrowForwardIter Dst) noexcept {
         for (; first != last; ++Dst, (void) ++first) {
@@ -109,7 +109,7 @@ namespace natl {
 
     
 
-    template <class Iter, class NoThrowForwardIter>
+    template<typename Iter, typename NoThrowForwardIter>
         requires(IsIterPtr<Iter>&& IsIterPtr<NoThrowForwardIter>)
     constexpr NoThrowForwardIter uninitializedCopyCountNoOverlap(Iter first, NoThrowForwardIter dst, const Size count) noexcept {
 
@@ -134,7 +134,7 @@ namespace natl {
         return dst;
     }
 
-    template <class Type, class TestType>
+    template<typename Type, typename TestType>
         requires(sizeof(Type) == sizeof(TestType))
     Bool bitCompare(const Type& value, const TestType& testType) noexcept {
         const void* aptr = reinterpret_cast<const void*>(&value);
@@ -142,14 +142,14 @@ namespace natl {
         return std::memcmp(aptr, bPtr, sizeof(TestType)) == 0;
     }
 
-    template <class Type>
+    template<typename Type>
     Bool bitTestZero(const Type& value) noexcept {
         using ZeroArrayType = std::uint8_t[sizeof(Type)];
         ZeroArrayType zeroArray = {};
         return bitCompare<Type, ZeroArrayType>(value, zeroArray);
     }
 
-    template <class Iter, class ValueType>
+    template<typename Iter, typename ValueType>
         requires(IsIterPtr<Iter>)
     constexpr void uninitializedFill(Iter first, Iter last, ValueType&& value) noexcept {
         if (!isConstantEvaluated()) {
@@ -166,7 +166,7 @@ namespace natl {
         }
     }
 
-    template <class Iter, class ValueType>
+    template<typename Iter, typename ValueType>
         requires(IsIterPtr<Iter>)
     constexpr void uninitializedFill(Iter first, Iter last, const ValueType& value) noexcept {
         using IterValueType = typename IteratorTraits<Iter>::value_type;
@@ -198,7 +198,7 @@ namespace natl {
         }
     }
 
-    template <class Iter, class ValueType>
+    template<typename Iter, typename ValueType>
         requires(IsIterPtr<Iter>)
     constexpr void uninitializedFillConvert(Iter first, Iter last, const ValueType& value) noexcept {
         using IterValueType = typename IteratorTraits<Iter>::value_type;
@@ -223,7 +223,7 @@ namespace natl {
     }
 
 
-    template <class Iter, class ValueType>
+    template<typename Iter, typename ValueType>
         requires(IsIterPtr<Iter>)
     constexpr void uninitializedFillCount(Iter first, const ValueType& value, const Size count) noexcept {
         using IterValueType = typename IteratorTraits<Iter>::value_type;
@@ -257,7 +257,7 @@ namespace natl {
     }
 
 
-    template <class Iter, class NoThrowForwardIter>
+    template<typename Iter, typename NoThrowForwardIter>
         requires(IsIterPtr<Iter>&& IsIterPtr<NoThrowForwardIter>)
     constexpr NoThrowForwardIter copyNoOverlap(Iter first, Iter last, NoThrowForwardIter Dst) noexcept {
 
@@ -274,7 +274,7 @@ namespace natl {
 
         return Dst;
     }
-    template <class Iter, class NoThrowForwardIter>
+    template<typename Iter, typename NoThrowForwardIter>
         requires(IsIterPtr<Iter>&& IsIterPtr<NoThrowForwardIter>)
     constexpr NoThrowForwardIter copyCountNoOverlap(Iter first, NoThrowForwardIter dst, const Size count) noexcept {
 
@@ -296,7 +296,7 @@ namespace natl {
         return dst;
     }
 
-    template <class Iter, class NoThrowForwardIter>
+    template<typename Iter, typename NoThrowForwardIter>
         requires(IsIterPtr<Iter>&& IsIterPtr<NoThrowForwardIter>)
     constexpr NoThrowForwardIter copy(Iter first, Iter last, NoThrowForwardIter Dst) noexcept {
 
@@ -307,7 +307,7 @@ namespace natl {
         return Dst;
     }
 
-    template <class Iter, class ValueType>
+    template<typename Iter, typename ValueType>
         requires(IsIterPtr<Iter>)
     constexpr void fill(Iter first, Iter last, const ValueType& value) noexcept {
         if (!isConstantEvaluated()) {
@@ -324,7 +324,7 @@ namespace natl {
         }
     }
 
-    template <class Iter, class ValueType>
+    template<typename Iter, typename ValueType>
         requires(IsIterPtr<Iter>)
     constexpr void fillCount(Iter first, const ValueType& value, const Size count) noexcept {
         if (!isConstantEvaluated()) {
@@ -342,7 +342,7 @@ namespace natl {
         }
     }
 
-    template <class AIter, class BIter>
+    template<typename AIter, typename BIter>
         requires(IsIterPtr<AIter> && IsIterPtr<BIter>)
     constexpr Bool compareCount(AIter aIter, BIter bIter, const Size count) noexcept {
         if (count == 0) {
@@ -369,11 +369,11 @@ namespace natl {
         return isConstantEvaluated() || !IsTriviallyDestructible<DataType>;
     }
 
-    enum class AllocationMoveAdapaterRequireCopy : Bool {
+    enum struct AllocationMoveAdapaterRequireCopy : Bool {
         False = false,
         True = true
     };
-    enum class AllocationMoveAdapaterCanDealloc : Bool {
+    enum struct AllocationMoveAdapaterCanDealloc : Bool {
         False = false,
         True = true
     };
@@ -381,7 +381,7 @@ namespace natl {
 
     template<typename DataType, typename Alloc = DefaultAllocator<DataType>>
         requires(IsAllocator<Alloc> && IsNotConst<DataType>)
-    class AllocationMoveAdapater {
+    struct AllocationMoveAdapater {
     public:
         using allocator_type = Alloc;
 

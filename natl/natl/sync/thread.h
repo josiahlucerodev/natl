@@ -13,8 +13,8 @@
 //interface
 namespace natl {
 	namespace impl {
-		class ThreadIdTag {};
-		class ThreadHandleTag {};
+		struct ThreadIdTag {};
+		struct ThreadHandleTag {};
 	}
 	using ThreadId = StrongType<ui64, impl::ThreadIdTag>;
 
@@ -65,7 +65,7 @@ namespace natl {
 
 
 
-	class Thread {
+	struct Thread {
 	public:
 		using native_handle_type = NativeThreadHandle;
 	private:
@@ -89,7 +89,7 @@ namespace natl {
 			natl::invokeFunction(natl::move(functorAndArgStorageRef.template get<Indices>())...);
 			return 0;
 		}
-		template <class FunctorAndArgStorageTuple, Size... Indices>
+		template<typename FunctorAndArgStorageTuple, Size... Indices>
 		static constexpr auto getThreadFunction(natl::IndexSequence<Indices...>) noexcept {
 			return &threadFunction<FunctorAndArgStorageTuple, Indices...>;
 		}

@@ -2470,695 +2470,695 @@ namespace natl::simd {
 		//reg f64
 	};
 
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	using SimdRegister = SimdOfType<DataType, Arch>::simd_register;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	using SimdRegisterInfo = SimdOfType<DataType, Arch>::simd_register_info;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	using SimdMask = SimdOfType<DataType, Arch>::simd_mmask;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	using SimdMaskInfo = SimdOfType<DataType, Arch>::simd_mask_info;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	using SimdCMask = SimdOfType<DataType, Arch>::simd_cmask;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	using SimdCMaskInfo = SimdOfType<DataType, Arch>::simd_cmask_info;
 
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	using SimdRegisterBit = SimdOfType<DataType, Arch>::simd_register_bit;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	using SimdRegisterBitInfo = SimdOfType<DataType, Arch>::simd_register_info_bit;
 
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdRegister<DataType, Arch>(&simd_add) (SimdRegister<DataType, Arch>, SimdRegister<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::add;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdRegister<DataType, Arch>(&simd_mmasked_add) (SimdRegister<DataType, Arch>, SimdRegister<DataType, Arch>, SimdMask<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::mmasked_add;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdRegister<DataType, Arch>(&simd_mmasked_src_add) (SimdRegister<DataType, Arch>, SimdRegister<DataType, Arch>, SimdRegister<DataType, Arch>, SimdMask<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::mmasked_src_add;
 
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdRegister<DataType, Arch>(&simd_sub) (SimdRegister<DataType, Arch>, SimdRegister<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::sub;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdRegister<DataType, Arch>(&simd_mmasked_sub) (SimdRegister<DataType, Arch>, SimdRegister<DataType, Arch>, SimdMask<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::mmasked_sub;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdRegister<DataType, Arch>(&simd_mmasked_src_sub) (SimdRegister<DataType, Arch>, SimdRegister<DataType, Arch>, SimdRegister<DataType, Arch>, SimdMask<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::mmasked_src_sub;
 
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdRegister<DataType, Arch>(&simd_mul) (SimdRegister<DataType, Arch>, SimdRegister<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::mul;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdRegister<DataType, Arch>(&simd_mmasked_mul) (SimdRegister<DataType, Arch>, SimdRegister<DataType, Arch>, SimdMask<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::mmasked_mul;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdRegister<DataType, Arch>(&simd_mmasked_src_mul) (SimdRegister<DataType, Arch>, SimdRegister<DataType, Arch>, SimdRegister<DataType, Arch>, SimdMask<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::mmasked_src_mul;
 
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdRegister<DataType, Arch>(&simd_div) (SimdRegister<DataType, Arch>, SimdRegister<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::div;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdRegister<DataType, Arch>(&simd_mmasked_div) (SimdRegister<DataType, Arch>, SimdRegister<DataType, Arch>, SimdMask<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::mmasked_div;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdRegister<DataType, Arch>(&simd_mmasked_src_div) (SimdRegister<DataType, Arch>, SimdRegister<DataType, Arch>, SimdRegister<DataType, Arch>, SimdMask<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::mmasked_src_div;
 
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdRegister<DataType, Arch>(&simd_add_sat) (SimdRegister<DataType, Arch>, SimdRegister<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::add_sat;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdRegister<DataType, Arch>(&simd_mmasked_add_sat) (SimdRegister<DataType, Arch>, SimdRegister<DataType, Arch>, SimdMask<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::mmasked_add_sat;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdRegister<DataType, Arch>(&simd_mmasked_src_add_sat) (SimdRegister<DataType, Arch>, SimdRegister<DataType, Arch>, SimdRegister<DataType, Arch>, SimdMask<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::mmasked_src_add_sat;
 
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdRegister<DataType, Arch>(&simd_sub_sat) (SimdRegister<DataType, Arch>, SimdRegister<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::sub_sat;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdRegister<DataType, Arch>(&simd_mmasked_sub_sat) (SimdRegister<DataType, Arch>, SimdRegister<DataType, Arch>, SimdMask<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::mmasked_sub_sat;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdRegister<DataType, Arch>(&simd_mmasked_src_sub_sat) (SimdRegister<DataType, Arch>, SimdRegister<DataType, Arch>, SimdRegister<DataType, Arch>, SimdMask<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::mmasked_src_sub_sat;
 
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdRegister<DataType, Arch>(&simd_mul_sat) (SimdRegister<DataType, Arch>, SimdRegister<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::mul_sat;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdRegister<DataType, Arch>(&simd_mmasked_mul_sat) (SimdRegister<DataType, Arch>, SimdRegister<DataType, Arch>, SimdMask<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::mmasked_mul_sat;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdRegister<DataType, Arch>(&simd_mmasked_src_mul_sat) (SimdRegister<DataType, Arch>, SimdRegister<DataType, Arch>, SimdRegister<DataType, Arch>, SimdMask<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::mmasked_src_mul_sat;
 
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdRegister<DataType, Arch>(&simd_div_sat) (SimdRegister<DataType, Arch>, SimdRegister<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::div_sat;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdRegister<DataType, Arch>(&simd_mmasked_div_sat) (SimdRegister<DataType, Arch>, SimdRegister<DataType, Arch>, SimdMask<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::mmasked_div_sat;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdRegister<DataType, Arch>(&simd_mmasked_src_div_sat) (SimdRegister<DataType, Arch>, SimdRegister<DataType, Arch>, SimdRegister<DataType, Arch>, SimdMask<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::mmasked_src_div_sat;
 
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline SimdRegister<DataType, Arch>(&simd_remainder) (SimdRegister<DataType, Arch>, SimdRegister<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::remainder;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline SimdRegister<DataType, Arch>(&simd_mmasked_remainder) (SimdRegister<DataType, Arch>, SimdRegister<DataType, Arch>, SimdMask<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::mmasked_remainder;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline SimdRegister<DataType, Arch>(&simd_mmasked_src_remainder) (SimdRegister<DataType, Arch>, SimdRegister<DataType, Arch>, SimdRegister<DataType, Arch>, SimdMask<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::mmasked_src_remainder;
 
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdRegister<DataType, Arch>(&simd_fused_mul_add) (SimdRegister<DataType, Arch>, SimdRegister<DataType, Arch>, SimdRegister<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::fused_mul_add;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdRegister<DataType, Arch>(&simd_mmasked_fused_mul_add) (SimdRegister<DataType, Arch>, SimdRegister<DataType, Arch>, SimdRegister<DataType, Arch>, SimdMask<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::mmasked_fused_mul_add;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdRegister<DataType, Arch>(&simd_mmasked_src_fused_mul_add) (SimdRegister<DataType, Arch>, SimdRegister<DataType, Arch>, SimdRegister<DataType, Arch>, SimdRegister<DataType, Arch>, SimdMask<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::mmasked_src_fused_mul_add;
 
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdRegister<DataType, Arch>(&simd_fused_mul_sub) (SimdRegister<DataType, Arch>, SimdRegister<DataType, Arch>, SimdRegister<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::fused_mul_sub;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdRegister<DataType, Arch>(&simd_mmasked_fused_mul_sub) (SimdRegister<DataType, Arch>, SimdRegister<DataType, Arch>, SimdRegister<DataType, Arch>, SimdMask<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::mmasked_fused_mul_sub;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdRegister<DataType, Arch>(&simd_mmasked_src_fused_mul_sub) (SimdRegister<DataType, Arch>, SimdRegister<DataType, Arch>, SimdRegister<DataType, Arch>, SimdRegister<DataType, Arch>, SimdMask<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::mmasked_src_fused_mul_sub;
 
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdRegister<DataType, Arch>(&simd_square_root) (SimdRegister<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::square_root;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdRegister<DataType, Arch>(&simd_mmasked_square_root) (SimdRegister<DataType, Arch>, SimdMask<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::mmasked_square_root;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdRegister<DataType, Arch>(&simd_mmasked_src_square_root) (SimdRegister<DataType, Arch>, SimdRegister<DataType, Arch>, SimdMask<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::mmasked_src_square_root;
 
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdRegister<DataType, Arch>(&simd_reciprocal) (SimdRegister<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::reciprocal;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdRegister<DataType, Arch>(&simd_mmasked_reciprocal) (SimdRegister<DataType, Arch>, SimdMask<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::mmasked_reciprocal;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdRegister<DataType, Arch>(&simd_mmasked_src_reciprocal) (SimdRegister<DataType, Arch>, SimdRegister<DataType, Arch>, SimdMask<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::mmasked_src_reciprocal;
 
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdRegister<DataType, Arch>(&simd_reciprocal_square_root) (SimdRegister<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::reciprocal_square_root;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdRegister<DataType, Arch>(&simd_mmasked_reciprocal_square_root) (SimdRegister<DataType, Arch>, SimdMask<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::mmasked_reciprocal_square_root;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdRegister<DataType, Arch>(&simd_mmasked_src_reciprocal_square_root) (SimdRegister<DataType, Arch>, SimdRegister<DataType, Arch>, SimdMask<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::mmasked_src_reciprocal_square_root;
 
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdRegister<DataType, Arch>(&simd_max) (SimdRegister<DataType, Arch>, SimdRegister<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::max;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdRegister<DataType, Arch>(&simd_mmasked_max) (SimdRegister<DataType, Arch>, SimdRegister<DataType, Arch>, SimdMask<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::mmasked_max;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdRegister<DataType, Arch>(&simd_mmasked_src_max) (SimdRegister<DataType, Arch>, SimdRegister<DataType, Arch>, SimdRegister<DataType, Arch>, SimdMask<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::mmasked_src_max;
 
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdRegister<DataType, Arch>(&simd_min) (SimdRegister<DataType, Arch>, SimdRegister<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::min;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdRegister<DataType, Arch>(&simd_mmasked_min) (SimdRegister<DataType, Arch>, SimdRegister<DataType, Arch>, SimdMask<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::mmasked_min;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdRegister<DataType, Arch>(&simd_mmasked_src_min) (SimdRegister<DataType, Arch>, SimdRegister<DataType, Arch>, SimdRegister<DataType, Arch>, SimdMask<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::mmasked_src_min;
 
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdRegister<DataType, Arch>(&simd_abs) (SimdRegister<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::abs;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdRegister<DataType, Arch>(&simd_mmasked_abs) (SimdRegister<DataType, Arch>, SimdMask<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::mmasked_abs;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdRegister<DataType, Arch>(&simd_mmasked_src_abs) (SimdRegister<DataType, Arch>, SimdRegister<DataType, Arch>, SimdMask<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::mmasked_src_abs;
 
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdRegister<DataType, Arch>(&simd_negate) (SimdRegister<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::negate;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdRegister<DataType, Arch>(&simd_mmasked_negate) (SimdRegister<DataType, Arch>, SimdMask<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::mmasked_negate;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdRegister<DataType, Arch>(&simd_mmasked_src_negate) (SimdRegister<DataType, Arch>, SimdRegister<DataType, Arch>, SimdMask<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::mmasked_src_negate;
 
 	//round//
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdRegister<DataType, Arch>(&simd_ceil) (SimdRegister<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::ceil;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdRegister<DataType, Arch>(&simd_mmasked_ceil) (SimdRegister<DataType, Arch>, SimdMask<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::mmasked_ceil;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdRegister<DataType, Arch>(&simd_mmasked_src_ceil) (SimdRegister<DataType, Arch>, SimdRegister<DataType, Arch>, SimdMask<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::mmasked_src_ceil;
 
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdRegister<DataType, Arch>(&simd_floor) (SimdRegister<DataType, Arch>, SimdRegister<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::floor;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdRegister<DataType, Arch>(&simd_mmasked_floor) (SimdRegister<DataType, Arch>, SimdMask<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::mmasked_floor;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdRegister<DataType, Arch>(&simd_mmasked_src_floor) (SimdRegister<DataType, Arch>, SimdRegister<DataType, Arch>, SimdMask<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::mmasked_src_floor;
 
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdRegister<DataType, Arch>(&simd_trunc) (SimdRegister<DataType, Arch>, SimdRegister<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::trunc;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdRegister<DataType, Arch>(&simd_mmasked_trunc) (SimdRegister<DataType, Arch>, SimdMask<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::mmasked_trunc;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdRegister<DataType, Arch>(&simd_mmasked_src_trunc) (SimdRegister<DataType, Arch>, SimdRegister<DataType, Arch>, SimdMask<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::mmasked_src_trunc;
 	
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdRegister<DataType, Arch>(&simd_round) (SimdRegister<DataType, Arch>, SimdRegister<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::round;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdRegister<DataType, Arch>(&simd_mmasked_round) (SimdRegister<DataType, Arch>, SimdMask<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::mmasked_round;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdRegister<DataType, Arch>(&simd_mmasked_src_round) (SimdRegister<DataType, Arch>, SimdRegister<DataType, Arch>, SimdMask<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::mmasked_src_round;
 
 	//trig//
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdRegister<DataType, Arch>(&simd_basic_sin) (SimdRegister<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::basic_sin;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdRegister<DataType, Arch>(&simd_mmasked_basic_sin) (SimdRegister<DataType, Arch>, SimdMask<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::mmasked_basic_sin;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdRegister<DataType, Arch>(&simd_mmasked_src_basic_sin) (SimdRegister<DataType, Arch>, SimdRegister<DataType, Arch>, SimdMask<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::mmasked_src_basic_sin;
 
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdRegister<DataType, Arch>(&simd_sin) (SimdRegister<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::sin;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdRegister<DataType, Arch>(&simd_mmasked_sin) (SimdRegister<DataType, Arch>, SimdMask<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::mmasked_sin;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdRegister<DataType, Arch>(&simd_mmasked_src_sin) (SimdRegister<DataType, Arch>, SimdRegister<DataType, Arch>, SimdMask<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::mmasked_src_sin;
 
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdRegister<DataType, Arch>(&simd_basic_cos) (SimdRegister<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::basic_cos;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdRegister<DataType, Arch>(&simd_mmasked_basic_cos) (SimdRegister<DataType, Arch>, SimdMask<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::mmasked_basic_cos;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdRegister<DataType, Arch>(&simd_mmasked_src_basic_cos) (SimdRegister<DataType, Arch>, SimdRegister<DataType, Arch>, SimdMask<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::mmasked_src_basic_cos;
 
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdRegister<DataType, Arch>(&simd_cos) (SimdRegister<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::cos;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdRegister<DataType, Arch>(&simd_mmasked_cos) (SimdRegister<DataType, Arch>, SimdMask<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::mmasked_cos;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdRegister<DataType, Arch>(&simd_mmasked_src_cos) (SimdRegister<DataType, Arch>, SimdRegister<DataType, Arch>, SimdMask<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::mmasked_src_cos;
 
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdRegister<DataType, Arch>(&simd_basic_tan) (SimdRegister<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::basic_tan;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdRegister<DataType, Arch>(&simd_mmasked_basic_tan) (SimdRegister<DataType, Arch>, SimdMask<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::mmasked_basic_tan;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdRegister<DataType, Arch>(&simd_mmasked_src_basic_tan) (SimdRegister<DataType, Arch>, SimdRegister<DataType, Arch>, SimdMask<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::mmasked_src_basic_tan;
 
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdRegister<DataType, Arch>(&simd_tan) (SimdRegister<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::tan;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdRegister<DataType, Arch>(&simd_mmasked_tan) (SimdRegister<DataType, Arch>, SimdMask<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::mmasked_tan;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdRegister<DataType, Arch>(&simd_mmasked_src_tan) (SimdRegister<DataType, Arch>, SimdRegister<DataType, Arch>, SimdMask<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::mmasked_src_tan;
 
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdRegister<DataType, Arch>(&simd_basic_asin) (SimdRegister<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::basic_asin;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdRegister<DataType, Arch>(&simd_mmasked_basic_asin) (SimdRegister<DataType, Arch>, SimdMask<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::mmasked_basic_asin;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdRegister<DataType, Arch>(&simd_mmasked_src_basic_asin) (SimdRegister<DataType, Arch>, SimdRegister<DataType, Arch>, SimdMask<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::mmasked_src_basic_asin;
 
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdRegister<DataType, Arch>(&simd_asin) (SimdRegister<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::asin;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdRegister<DataType, Arch>(&simd_mmasked_asin) (SimdRegister<DataType, Arch>, SimdMask<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::mmasked_asin;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdRegister<DataType, Arch>(&simd_mmasked_src_asin) (SimdRegister<DataType, Arch>, SimdRegister<DataType, Arch>, SimdMask<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::mmasked_src_asin;
 
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdRegister<DataType, Arch>(&simd_basic_acos) (SimdRegister<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::basic_acos;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdRegister<DataType, Arch>(&simd_mmasked_basic_acos) (SimdRegister<DataType, Arch>, SimdMask<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::mmasked_basic_acos;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdRegister<DataType, Arch>(&simd_mmasked_src_basic_acos) (SimdRegister<DataType, Arch>, SimdRegister<DataType, Arch>, SimdMask<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::mmasked_src_basic_acos;
 
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdRegister<DataType, Arch>(&simd_acos) (SimdRegister<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::acos;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdRegister<DataType, Arch>(&simd_mmasked_acos) (SimdRegister<DataType, Arch>, SimdMask<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::mmasked_acos;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdRegister<DataType, Arch>(&simd_mmasked_src_acos) (SimdRegister<DataType, Arch>, SimdRegister<DataType, Arch>, SimdMask<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::mmasked_src_acos;
 
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdRegister<DataType, Arch>(&simd_basic_atan) (SimdRegister<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::basic_atan;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdRegister<DataType, Arch>(&simd_mmasked_basic_atan) (SimdRegister<DataType, Arch>, SimdMask<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::mmasked_basic_atan;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdRegister<DataType, Arch>(&simd_mmasked_src_basic_atan) (SimdRegister<DataType, Arch>, SimdRegister<DataType, Arch>, SimdMask<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::mmasked_src_basic_atan;
 
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdRegister<DataType, Arch>(&simd_atan) (SimdRegister<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::atan;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdRegister<DataType, Arch>(&simd_mmasked_atan) (SimdRegister<DataType, Arch>, SimdMask<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::mmasked_atan;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdRegister<DataType, Arch>(&simd_mmasked_src_atan) (SimdRegister<DataType, Arch>, SimdRegister<DataType, Arch>, SimdMask<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::mmasked_src_atan;
 
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdRegister<DataType, Arch>(&simd_basic_sinh) (SimdRegister<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::basic_sinh;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdRegister<DataType, Arch>(&simd_mmasked_basic_sinh) (SimdRegister<DataType, Arch>, SimdMask<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::mmasked_basic_sinh;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdRegister<DataType, Arch>(&simd_mmasked_src_basic_sinh) (SimdRegister<DataType, Arch>, SimdRegister<DataType, Arch>, SimdMask<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::mmasked_src_basic_sinh;
 
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdRegister<DataType, Arch>(&simd_sinh) (SimdRegister<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::sinh;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdRegister<DataType, Arch>(&simd_mmasked_sinh) (SimdRegister<DataType, Arch>, SimdMask<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::mmasked_sinh;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdRegister<DataType, Arch>(&simd_mmasked_src_sinh) (SimdRegister<DataType, Arch>, SimdRegister<DataType, Arch>, SimdMask<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::mmasked_src_sinh;
 
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdRegister<DataType, Arch>(&simd_basic_cosh) (SimdRegister<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::basic_cosh;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdRegister<DataType, Arch>(&simd_mmasked_basic_cosh) (SimdRegister<DataType, Arch>, SimdMask<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::mmasked_basic_cosh;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdRegister<DataType, Arch>(&simd_mmasked_src_basic_cosh) (SimdRegister<DataType, Arch>, SimdRegister<DataType, Arch>, SimdMask<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::mmasked_src_basic_cosh;
 
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdRegister<DataType, Arch>(&simd_cosh) (SimdRegister<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::cosh;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdRegister<DataType, Arch>(&simd_mmasked_cosh) (SimdRegister<DataType, Arch>, SimdMask<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::mmasked_cosh;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdRegister<DataType, Arch>(&simd_mmasked_src_cosh) (SimdRegister<DataType, Arch>, SimdRegister<DataType, Arch>, SimdMask<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::mmasked_src_cosh;
 
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdRegister<DataType, Arch>(&simd_basic_tanh) (SimdRegister<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::basic_tanh;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdRegister<DataType, Arch>(&simd_mmasked_basic_tanh) (SimdRegister<DataType, Arch>, SimdMask<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::mmasked_basic_tanh;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdRegister<DataType, Arch>(&simd_mmasked_src_basic_tanh) (SimdRegister<DataType, Arch>, SimdRegister<DataType, Arch>, SimdMask<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::mmasked_src_basic_tanh;
 
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdRegister<DataType, Arch>(&simd_tanh) (SimdRegister<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::tanh;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdRegister<DataType, Arch>(&simd_mmasked_tanh) (SimdRegister<DataType, Arch>, SimdMask<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::mmasked_tanh;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdRegister<DataType, Arch>(&simd_mmasked_src_tanh) (SimdRegister<DataType, Arch>, SimdRegister<DataType, Arch>, SimdMask<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::mmasked_src_tanh;
 
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdRegister<DataType, Arch>(&simd_basic_asinh) (SimdRegister<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::basic_asinh;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdRegister<DataType, Arch>(&simd_mmasked_basic_asinh) (SimdRegister<DataType, Arch>, SimdMask<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::mmasked_basic_asinh;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdRegister<DataType, Arch>(&simd_mmasked_src_basic_asinh) (SimdRegister<DataType, Arch>, SimdRegister<DataType, Arch>, SimdMask<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::mmasked_src_basic_asinh;
 
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdRegister<DataType, Arch>(&simd_asinh) (SimdRegister<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::asinh;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdRegister<DataType, Arch>(&simd_mmasked_asinh) (SimdRegister<DataType, Arch>, SimdMask<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::mmasked_asinh;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdRegister<DataType, Arch>(&simd_mmasked_src_asinh) (SimdRegister<DataType, Arch>, SimdRegister<DataType, Arch>, SimdMask<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::mmasked_src_asinh;
 
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdRegister<DataType, Arch>(&simd_basic_acosh) (SimdRegister<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::basic_acosh;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdRegister<DataType, Arch>(&simd_mmasked_basic_acosh) (SimdRegister<DataType, Arch>, SimdMask<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::mmasked_basic_acosh;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdRegister<DataType, Arch>(&simd_mmasked_src_basic_acosh) (SimdRegister<DataType, Arch>, SimdRegister<DataType, Arch>, SimdMask<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::mmasked_src_basic_acosh;
 
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdRegister<DataType, Arch>(&simd_acosh) (SimdRegister<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::acosh;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdRegister<DataType, Arch>(&simd_mmasked_acosh) (SimdRegister<DataType, Arch>, SimdMask<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::mmasked_acosh;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdRegister<DataType, Arch>(&simd_mmasked_src_acosh) (SimdRegister<DataType, Arch>, SimdRegister<DataType, Arch>, SimdMask<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::mmasked_src_acosh;
 
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdRegister<DataType, Arch>(&simd_basic_atanh) (SimdRegister<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::basic_atanh;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdRegister<DataType, Arch>(&simd_mmasked_basic_atanh) (SimdRegister<DataType, Arch>, SimdMask<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::mmasked_basic_atanh;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdRegister<DataType, Arch>(&simd_mmasked_src_basic_atanh) (SimdRegister<DataType, Arch>, SimdRegister<DataType, Arch>, SimdMask<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::mmasked_src_basic_atanh;
 
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdRegister<DataType, Arch>(&simd_atanh) (SimdRegister<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::atanh;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdRegister<DataType, Arch>(&simd_mmasked_atanh) (SimdRegister<DataType, Arch>, SimdMask<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::mmasked_atanh;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdRegister<DataType, Arch>(&simd_mmasked_src_atanh) (SimdRegister<DataType, Arch>, SimdRegister<DataType, Arch>, SimdMask<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::mmasked_src_atanh;
 
 	//bitwise//
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdRegister<DataType, Arch>(&simd_bitwise_shift_left_c) (SimdRegister<DataType, Arch>, const Size) noexcept = SimdOfType<DataType, Arch>::bitwise_shift_left_c;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdRegister<DataType, Arch>(&simd_mmasked_bitwise_shift_left_c) (SimdRegister<DataType, Arch>, const Size, SimdMask<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::mmasked_bitwise_shift_left_c;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdRegister<DataType, Arch>(&simd_mmasked_src_bitwise_shift_left_c) (SimdRegister<DataType, Arch>, const Size, SimdRegister<DataType, Arch>, SimdMask<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::mmasked_src_bitwise_shift_left_c;
 
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdRegister<DataType, Arch>(&simd_bitwise_shift_right_c) (SimdRegister<DataType, Arch>, const Size) noexcept = SimdOfType<DataType, Arch>::bitwise_shift_right_c;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdRegister<DataType, Arch>(&simd_mmasked_bitwise_shift_right_c) (SimdRegister<DataType, Arch>, const Size, SimdMask<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::mmasked_bitwise_shift_right_c;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdRegister<DataType, Arch>(&simd_mmasked_src_bitwise_shift_right_c) (SimdRegister<DataType, Arch>, const Size, SimdRegister<DataType, Arch>, SimdMask<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::mmasked_src_bitwise_shift_right_c;
 
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdRegister<DataType, Arch>(&simd_bitwise_shift_left) (SimdRegister<DataType, Arch>, SimdRegister<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::bitwise_shift_left;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdRegister<DataType, Arch>(&simd_mmasked_bitwise_shift_left) (SimdRegister<DataType, Arch>, SimdRegister<DataType, Arch>, SimdMask<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::mmasked_bitwise_shift_left;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdRegister<DataType, Arch>(&simd_mmasked_src_bitwise_shift_left) (SimdRegister<DataType, Arch>, SimdRegister<DataType, Arch>, SimdRegister<DataType, Arch>, SimdMask<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::mmasked_src_bitwise_shift_left;
 
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdRegister<DataType, Arch>(&simd_bitwise_shift_right) (SimdRegister<DataType, Arch>, SimdRegister<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::bitwise_shift_right;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdRegister<DataType, Arch>(&simd_mmasked_bitwise_shift_right) (SimdRegister<DataType, Arch>, SimdRegister<DataType, Arch>, SimdMask<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::mmasked_bitwise_shift_right;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdRegister<DataType, Arch>(&simd_mmasked_src_bitwise_shift_right) (SimdRegister<DataType, Arch>, SimdRegister<DataType, Arch>, SimdRegister<DataType, Arch>, SimdMask<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::mmasked_src_bitwise_shift_right;
 
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdRegister<DataType, Arch>(&simd_bitwise_and) (SimdRegister<DataType, Arch>, SimdRegister<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::bitwise_and;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdRegister<DataType, Arch>(&simd_mmasked_bitwise_and) (SimdRegister<DataType, Arch>, SimdRegister<DataType, Arch>, SimdMask<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::mmasked_bitwise_and;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdRegister<DataType, Arch>(&simd_mmasked_src_bitwise_and) (SimdRegister<DataType, Arch>, SimdRegister<DataType, Arch>, SimdRegister<DataType, Arch>, SimdMask<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::mmasked_src_bitwise_and;
 
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdRegister<DataType, Arch>(&simd_bitwise_or) (SimdRegister<DataType, Arch>, SimdRegister<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::bitwise_or;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdRegister<DataType, Arch>(&simd_mmasked_bitwise_or) (SimdRegister<DataType, Arch>, SimdRegister<DataType, Arch>, SimdMask<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::mmasked_bitwise_or;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdRegister<DataType, Arch>(&simd_mmasked_src_bitwise_or) (SimdRegister<DataType, Arch>, SimdRegister<DataType, Arch>, SimdRegister<DataType, Arch>, SimdMask<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::mmasked_src_bitwise_or;
 
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdRegister<DataType, Arch>(&simd_bitwise_xor) (SimdRegister<DataType, Arch>, SimdRegister<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::bitwise_xor;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdRegister<DataType, Arch>(&simd_mmasked_bitwise_xor) (SimdRegister<DataType, Arch>, SimdRegister<DataType, Arch>, SimdMask<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::mmasked_bitwise_xor;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdRegister<DataType, Arch>(&simd_mmasked_src_bitwise_xor) (SimdRegister<DataType, Arch>, SimdRegister<DataType, Arch>, SimdRegister<DataType, Arch>, SimdMask<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::mmasked_src_bitwise_xor;
 
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdRegister<DataType, Arch>(&simd_bitwise_not) (SimdRegister<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::bitwise_not;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdRegister<DataType, Arch>(&simd_mmasked_bitwise_not) (SimdRegister<DataType, Arch>, SimdMask<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::mmasked_bitwise_not;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdRegister<DataType, Arch>(&simd_mmasked_src_bitwise_not) (SimdRegister<DataType, Arch>, SimdRegister<DataType, Arch>, SimdMask<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::mmasked_src_bitwise_not;
 
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdRegisterBit<DataType, Arch>(&simd_popcount) (SimdRegister<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::popcount;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdRegisterBit<DataType, Arch>(&simd_mmasked_popcount) (SimdRegister<DataType, Arch>, SimdMask<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::mmasked_popcount;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdRegisterBit<DataType, Arch>(&simd_mmasked_src_popcount) (SimdRegister<DataType, Arch>, SimdRegisterBit<DataType, Arch>, SimdMask<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::mmasked_src_popcount;
 
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdMask<DataType, Arch>(&simd_bitscan_forward) (SimdRegister<DataType, Arch>, SimdRegisterBit<DataType, Arch>&) noexcept = SimdOfType<DataType, Arch>::bitscan_forward;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdMask<DataType, Arch>(&simd_mmasked_bitscan_forward) (SimdRegister<DataType, Arch>, SimdRegisterBit<DataType, Arch>&, SimdMask<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::mmasked_bitscan_forward;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdMask<DataType, Arch>(&simd_mmasked_src_bitscan_forward) (SimdRegister<DataType, Arch>, SimdRegisterBit<DataType, Arch>&, SimdRegisterBit<DataType, Arch>, SimdMask<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::mmasked_src_bitscan_forward;
 
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdMask<DataType, Arch>(&simd_bitscan_backward) (SimdRegister<DataType, Arch>, SimdRegisterBit<DataType, Arch>&) noexcept = SimdOfType<DataType, Arch>::bitscan_backward;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdMask<DataType, Arch>(&simd_mmasked_bitscan_backward) (SimdRegister<DataType, Arch>, SimdRegisterBit<DataType, Arch>&, SimdMask<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::mmasked_bitscan_backward;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdMask<DataType, Arch>(&simd_mmasked_src_bitscan_backward) (SimdRegister<DataType, Arch>, SimdRegisterBit<DataType, Arch>&, SimdRegisterBit<DataType, Arch>, SimdMask<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::mmasked_src_bitscan_backward;
 
 	//reduce//
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static DataType(&simd_reduce_min) (SimdRegister<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::reduce_min;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static DataType(&simd_mmasked_reduce_min) (SimdRegister<DataType, Arch>, SimdMask<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::mmasked_reduce_min;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static DataType(&simd_mmasked_src_reduce_min) (SimdRegister<DataType, Arch>, SimdRegister<DataType, Arch>, SimdMask<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::mmasked_src_reduce_min;
 
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static DataType(&simd_reduce_max) (SimdRegister<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::reduce_max;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static DataType(&simd_mmasked_reduce_max) (SimdRegister<DataType, Arch>, SimdMask<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::mmasked_reduce_max;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static DataType(&simd_mmasked_src_reduce_max) (SimdRegister<DataType, Arch>, SimdRegister<DataType, Arch>, SimdMask<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::mmasked_src_reduce_max;
 
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static DataType(&simd_reduce_add) (SimdRegister<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::reduce_add;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static DataType(&simd_mmasked_reduce_add) (SimdRegister<DataType, Arch>, SimdMask<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::mmasked_reduce_add;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static DataType(&simd_mmasked_src_reduce_add) (SimdRegister<DataType, Arch>, SimdRegister<DataType, Arch>, SimdMask<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::mmasked_src_reduce_add;
 
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static DataType(&simd_reduce_mul) (SimdRegister<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::reduce_mul;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static DataType(&simd_mmasked_reduce_mul) (SimdRegister<DataType, Arch>, SimdMask<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::mmasked_reduce_mul;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static DataType(&simd_mmasked_src_reduce_mul) (SimdRegister<DataType, Arch>, SimdRegister<DataType, Arch>, SimdMask<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::mmasked_src_reduce_mul;
 
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static DataType(&simd_reduce_and) (SimdRegister<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::reduce_and;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static DataType(&simd_mmasked_reduce_and) (SimdRegister<DataType, Arch>, SimdMask<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::mmasked_reduce_and;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static DataType(&simd_mmasked_src_reduce_and) (SimdRegister<DataType, Arch>, SimdRegister<DataType, Arch>, SimdMask<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::mmasked_src_reduce_and;
 
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static DataType(&simd_reduce_or) (SimdRegister<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::reduce_or;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static DataType(&simd_mmasked_reduce_or) (SimdRegister<DataType, Arch>, SimdMask<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::mmasked_reduce_or;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static DataType(&simd_mmasked_src_reduce_or) (SimdRegister<DataType, Arch>, SimdRegister<DataType, Arch>, SimdMask<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::mmasked_src_reduce_or;
 
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static DataType(&simd_reduce_xor) (SimdRegister<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::reduce_xor;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static DataType(&simd_mmasked_reduce_xor) (SimdRegister<DataType, Arch>, SimdMask<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::mmasked_reduce_xor;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static DataType(&simd_mmasked_src_reduce_xor) (SimdRegister<DataType, Arch>, SimdRegister<DataType, Arch>, SimdMask<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::mmasked_src_reduce_xor;
 
 	//compare//
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdMask<DataType, Arch>(&simd_compare_equal) (SimdRegister<DataType, Arch>, SimdRegister<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::compare_equal;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdMask<DataType, Arch>(&simd_mmasked_compare_equal) (SimdRegister<DataType, Arch>, SimdRegister<DataType, Arch>, SimdMask<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::mmasked_compare_equal;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdMask<DataType, Arch>(&simd_mmasked_src_compare_equal) (SimdRegister<DataType, Arch>, SimdRegister<DataType, Arch>, SimdMask<DataType, Arch>, SimdMask<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::mmasked_src_compare_equal;
 
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdMask<DataType, Arch>(&simd_compare_not_equal) (SimdRegister<DataType, Arch>, SimdRegister<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::compare_not_equal;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdMask<DataType, Arch>(&simd_mmasked_compare_not_equal) (SimdRegister<DataType, Arch>, SimdRegister<DataType, Arch>, SimdMask<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::mmasked_compare_not_equal;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdMask<DataType, Arch>(&simd_mmasked_src_compare_not_equal) (SimdRegister<DataType, Arch>, SimdRegister<DataType, Arch>, SimdMask<DataType, Arch>, SimdMask<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::mmasked_src_compare_not_equal;
 
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdMask<DataType, Arch>(&simd_compare_less_than) (SimdRegister<DataType, Arch>, SimdRegister<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::compare_less_than;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdMask<DataType, Arch>(&simd_mmasked_compare_less_than) (SimdRegister<DataType, Arch>, SimdRegister<DataType, Arch>, SimdMask<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::mmasked_compare_less_than;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdMask<DataType, Arch>(&simd_mmasked_src_compare_less_than) (SimdRegister<DataType, Arch>, SimdRegister<DataType, Arch>, SimdMask<DataType, Arch>, SimdMask<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::mmasked_src_compare_less_than;
 
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdMask<DataType, Arch>(&simd_compare_greater_than) (SimdRegister<DataType, Arch>, SimdRegister<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::compare_greater_than;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdMask<DataType, Arch>(&simd_mmasked_compare_greater_than) (SimdRegister<DataType, Arch>, SimdRegister<DataType, Arch>, SimdMask<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::mmasked_compare_greater_than;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdMask<DataType, Arch>(&simd_mmasked_src_compare_greater_than) (SimdRegister<DataType, Arch>, SimdRegister<DataType, Arch>, SimdMask<DataType, Arch>, SimdMask<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::mmasked_src_compare_greater_than;
 
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdMask<DataType, Arch>(&simd_compare_less_than_or_equal) (SimdRegister<DataType, Arch>, SimdRegister<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::compare_less_than_or_equal;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdMask<DataType, Arch>(&simd_mmasked_compare_less_than_or_equal) (SimdRegister<DataType, Arch>, SimdRegister<DataType, Arch>, SimdMask<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::mmasked_compare_less_than_or_equal;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdMask<DataType, Arch>(&simd_mmasked_src_compare_less_than_or_equal) (SimdRegister<DataType, Arch>, SimdRegister<DataType, Arch>, SimdMask<DataType, Arch>, SimdMask<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::mmasked_src_compare_less_than_or_equal;
 
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdMask<DataType, Arch>(&simd_compare_greater_than_or_equal) (SimdRegister<DataType, Arch>, SimdRegister<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::compare_greater_than_or_equal;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdMask<DataType, Arch>(&simd_mmasked_compare_greater_than_or_equal) (SimdRegister<DataType, Arch>, SimdRegister<DataType, Arch>, SimdMask<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::mmasked_compare_greater_than_or_equal;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdMask<DataType, Arch>(&simd_mmasked_src_compare_greater_than_or_equal) (SimdRegister<DataType, Arch>, SimdRegister<DataType, Arch>, SimdMask<DataType, Arch>, SimdMask<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::mmasked_src_compare_greater_than_or_equal;
 
 	//load//
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdRegister<DataType, Arch>(&simd_load) (const DataType*) noexcept = SimdOfType<DataType, Arch>::load;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdRegister<DataType, Arch>(&simd_mmasked_load) (const DataType*, SimdMask<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::mmasked_load;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdRegister<DataType, Arch>(&simd_rmasked_load) (const DataType*, SimdRegister<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::rmasked_load;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdRegister<DataType, Arch>(&simd_load_aligned) (const DataType*) noexcept = SimdOfType<DataType, Arch>::load_aligned;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdRegister<DataType, Arch>(&simd_mmasked_load_aligned) (const DataType*, SimdMask<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::mmasked_load_aligned;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdRegister<DataType, Arch>(&simd_rmasked_load_aligned) (const DataType*, SimdRegister<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::rmasked_load_aligned;
 
 	//store//
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static void(&simd_store) (DataType*, SimdRegister<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::store;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static void(&simd_mmasked_store) (DataType*, SimdMask<DataType, Arch>, SimdRegister<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::mmasked_store;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static void(&simd_rmasked_store) (DataType*, SimdRegister<DataType, Arch>, SimdRegister<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::rmasked_store;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static void(&simd_store_aligned) (DataType*, SimdRegister<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::store_aligned;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static void(&simd_mmasked_store_aligned) (DataType*, SimdMask<DataType, Arch>, SimdRegister<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::mmasked_store_aligned;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static void(&simd_rmasked_store_aligned) (DataType*, SimdRegister<DataType, Arch>, SimdRegister<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::rmasked_store_aligned;
 
 	//set//
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdRegister<DataType, Arch>(&simd_set) (const DataType) noexcept = SimdOfType<DataType, Arch>::set;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdRegister<DataType, Arch>(&simd_mmasked_set) (const DataType, SimdMask<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::mmasked_set;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdRegister<DataType, Arch>(&simd_src_mmasked_set) (const DataType, SimdRegister<DataType, Arch>, SimdMask<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::mmasked_src_set;
 
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdRegister<DataType, Arch>(&simd_set_zero) (void) noexcept = SimdOfType<DataType, Arch>::set_zero;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdRegister<DataType, Arch>(&mmasked_src_simd_set_zero) (SimdRegister<DataType, Arch>, SimdMask<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::mmasked_src_set_zero;
 
 	//test//
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static Bool(&simd_test_all_zero) (SimdRegister<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::test_all_zero;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static Bool(&simd_test_all_one) (SimdRegister<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::test_all_one;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static Bool(&simd_mmasked_test_all_zero) (SimdRegister<DataType, Arch>, SimdMask<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::mmasked_test_all_zero;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static Bool(&simd_rmasked_test_all_zero) (SimdRegister<DataType, Arch>, SimdRegister<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::rmasked_test_all_zero;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static Bool(&simd_mmasked_test_all_one) (SimdRegister<DataType, Arch>, SimdMask<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::mmasked_test_all_one;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static Bool(&simd_rmasked_test_all_one) (SimdRegister<DataType, Arch>, SimdRegister<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::rmasked_test_all_one;
 
 	//convert//
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdRegisterAny<Arch>(&simd_convert_to_any) (SimdRegister<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::convert_to_any;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdRegister<DataType, Arch>(&simd_convert_any_to) (SimdRegisterAny<Arch>) noexcept = SimdOfType<DataType, Arch>::convert_any_to;
 
-	template<typename DataType, class Arch> 
+	template<typename DataType, typename Arch> 
 		requires(IsBuiltInUnsignedIntegerC<DataType> || IsBuiltInFloatingPointC<DataType>)
 	constexpr inline static SimdRegister<IntOfByteSize<sizeof(DataType)>, Arch>(&simd_convert_to_int) (SimdRegister<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::convert_to_int;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 		requires(IsBuiltInUnsignedIntegerC<DataType> || IsBuiltInFloatingPointC<DataType>)
 	constexpr inline static SimdRegister<IntOfByteSize<sizeof(DataType)>, Arch>(&simd_mmasked_convert_to_int) (SimdRegister<DataType, Arch>, SimdMask<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::mmasked_convert_to_int;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 		requires(IsBuiltInUnsignedIntegerC<DataType> || IsBuiltInFloatingPointC<DataType>)
 	constexpr inline static SimdRegister<IntOfByteSize<sizeof(DataType)>, Arch>(&simd_mmasked_src_convert_to_int) (SimdRegister<DataType, Arch>, SimdRegister<IntOfByteSize<sizeof(DataType)>, Arch>, SimdMask<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::mmasked_src_convert_to_int;
 
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 		requires(IsBuiltInSignedIntegerC<DataType> || IsBuiltInFloatingPointC<DataType>)
 	constexpr inline static SimdRegister<UIntOfByteSize<sizeof(DataType)>, Arch>(&simd_convert_to_uint) (SimdRegister<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::convert_to_uint;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 		requires(IsBuiltInSignedIntegerC<DataType> || IsBuiltInFloatingPointC<DataType>)
 	constexpr inline static SimdRegister<UIntOfByteSize<sizeof(DataType)>, Arch>(&simd_mmasked_convert_to_uint) (SimdRegister<DataType, Arch>, SimdMask<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::mmasked_convert_to_uint;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 		requires(IsBuiltInSignedIntegerC<DataType> || IsBuiltInFloatingPointC<DataType>)
 	constexpr inline static SimdRegister<UIntOfByteSize<sizeof(DataType)>, Arch>(&simd_mmasked_src_convert_to_uint) (SimdRegister<DataType, Arch>, SimdRegister<UIntOfByteSize<sizeof(DataType)>, Arch>, SimdMask<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::mmasked_src_convert_to_uint;
 
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 		requires(IsBuiltInIntegerC<DataType> && sizeof(DataType) >= sizeof(f32))
 	constexpr inline static SimdRegister<FloatOfByteSize<sizeof(DataType)>, Arch>(&simd_convert_to_float) (SimdRegister<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::convert_to_float;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 		requires(IsBuiltInIntegerC<DataType> && sizeof(DataType) >= sizeof(f32))
 	constexpr inline static SimdRegister<FloatOfByteSize<sizeof(DataType)>, Arch>(&simd_mmasked_convert_to_float) (SimdRegister<DataType, Arch>, SimdMask<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::mmasked_convert_to_float;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 		requires(IsBuiltInIntegerC<DataType> && sizeof(DataType) >= sizeof(f32))
 	constexpr inline static SimdRegister<FloatOfByteSize<sizeof(DataType)>, Arch>(&simd_mmasked_src_convert_to_float) (SimdRegister<DataType, Arch>, SimdRegister<FloatOfByteSize<sizeof(DataType)>, Arch>, SimdMask<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::mmasked_src_convert_to_float;
 
 	//swizzle
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdRegister<DataType, Arch>(&simd_insert) (SimdRegister<DataType, Arch>, const DataType, const Size) noexcept = SimdOfType<DataType, Arch>::insert;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static DataType(&simd_extract) (SimdRegister<DataType, Arch>, const Size) noexcept = SimdOfType<DataType, Arch>::extract;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdRegister<DataType, Arch>(&simd_blend_mmask) (SimdRegister<DataType, Arch>, SimdRegister<DataType, Arch>, SimdMask<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::blend_mmask;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdRegister<DataType, Arch>(&simd_blend_rmask) (SimdRegister<DataType, Arch>, SimdRegister<DataType, Arch>, SimdRegister<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::blend_rmask;
 
 	//advanced mem//
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdRegister<DataType, Arch>(&simd_broadcast) (const DataType*) noexcept = SimdOfType<DataType, Arch>::broadcast;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdRegister<DataType, Arch>(&simd_mmasked_broadcast) (const DataType*, SimdMask<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::mmasked_broadcast;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdRegister<DataType, Arch>(&simd_mmasked_src_broadcast) (const DataType*, SimdRegister<DataType, Arch>, SimdMask<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::mmasked_src_broadcast;
 
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdRegister<DataType, Arch>(&simd_gather) (const DataType*, SimdRegisterI32<Arch>) noexcept = SimdOfType<DataType, Arch>::gather;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdRegister<DataType, Arch>(&simd_gather_scaled) (const DataType*, SimdRegisterI32<Arch>, const Size) noexcept = SimdOfType<DataType, Arch>::gather_scaled;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdRegister<DataType, Arch>(&simd_mmasked_gather) (const DataType*, SimdRegisterI32<Arch>, SimdRegister<DataType, Arch>, SimdMask<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::mmasked_gather;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdRegister<DataType, Arch>(&simd_mmasked_gather_scaled) (const DataType*, SimdRegisterI32<Arch>, SimdRegister<DataType, Arch>, SimdMask<DataType, Arch>, const Size) noexcept = SimdOfType<DataType, Arch>::mmasked_gather_scaled;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static void(&simd_scatter) (DataType*, SimdRegisterI32<Arch>, SimdRegister<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::scatter;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static void(&simd_scatter_scaled) (DataType*, SimdRegisterI32<Arch>, SimdRegister<DataType, Arch>, const Size) noexcept = SimdOfType<DataType, Arch>::scatter_scaled;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static void(&simd_mmasked_scatter) (DataType*, SimdRegisterI32<Arch>, SimdRegister<DataType, Arch>, SimdMask<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::mmasked_scatter;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static void(&simd_mmasked_scatter_scaled) (DataType*, SimdRegisterI32<Arch>, SimdRegister<DataType, Arch>, SimdMask<DataType, Arch>, const Size) noexcept = SimdOfType<DataType, Arch>::mmasked_scatter_scaled;
 
 	//mask//
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdMask<DataType, Arch>(&simd_rmask_to_mmask) (SimdRegister<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::rmask_to_mmask;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdRegister<DataType, Arch>(&simd_mmask_to_rmask) (SimdMask<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::mmask_to_rmask;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdMask<DataType, Arch>(&simd_cmask_to_mmask) (SimdCMask<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::cmask_to_mmask;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdRegister<DataType, Arch>(&simd_cmask_to_rmask) (SimdCMask<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::cmask_to_rmask;
 
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static Bool(&simd_mask_compare_equal) (SimdMask<DataType, Arch>, SimdMask<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::mask_compare_equal;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static Bool(&simd_mask_compare_not_equal) (SimdMask<DataType, Arch>, SimdMask<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::mask_compare_not_equal;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdMask<DataType, Arch>(&simd_mask_bitwise_shift_left) (SimdMask<DataType, Arch>, const Size) noexcept = SimdOfType<DataType, Arch>::mask_bitwise_shift_left;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdMask<DataType, Arch>(&simd_mask_bitwise_shift_right) (SimdMask<DataType, Arch>, const Size) noexcept = SimdOfType<DataType, Arch>::mask_bitwise_shift_right;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdMask<DataType, Arch>(&simd_mask_bitwise_and) (SimdMask<DataType, Arch>, SimdMask<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::mask_bitwise_and;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdMask<DataType, Arch>(&simd_mask_bitwise_or) (SimdMask<DataType, Arch>, SimdMask<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::mask_bitwise_or;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdMask<DataType, Arch>(&simd_mask_bitwise_xor) (SimdMask<DataType, Arch>, SimdMask<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::mask_bitwise_xor;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdMask<DataType, Arch>(&simd_mask_bitwise_not) (SimdMask<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::mask_bitwise_not;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static Size(&simd_mask_popcount) (SimdMask<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::mask_popcount;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static Bool(&simd_mask_bitscan_forward) (SimdMask<DataType, Arch>, Bool&) noexcept = SimdOfType<DataType, Arch>::mask_bitscan_forward;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static Bool(&simd_mask_bitscan_backward) (SimdMask<DataType, Arch>, Bool&) noexcept = SimdOfType<DataType, Arch>::mask_bitscan_backward;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static ui64(&simd_mask_get) (SimdMask<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::mask_get;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdMask<DataType, Arch>(&simd_mask_set) (const ui64) noexcept = SimdOfType<DataType, Arch>::mask_set;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static Bool(&simd_mask_test_all_inactive) (SimdMask<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::mask_test_all_inactive;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static Bool(&simd_mask_test_all_active) (SimdMask<DataType, Arch>) noexcept = SimdOfType<DataType, Arch>::mask_test_all_active;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static Bool(&simd_mask_test_inactive_at) (SimdMask<DataType, Arch>, const ui64) noexcept = SimdOfType<DataType, Arch>::mask_test_inactive_at;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static Bool(&simd_mask_test_active_at) (SimdMask<DataType, Arch>, const ui64) noexcept = SimdOfType<DataType, Arch>::mask_test_active_at;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdMask<DataType, Arch>(&simd_mask_set_all_inactive) (void) noexcept = SimdOfType<DataType, Arch>::mask_set_all_inactive;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdMask<DataType, Arch>(&simd_mask_set_all_active) (void) noexcept = SimdOfType<DataType, Arch>::mask_set_all_active;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdMask<DataType, Arch>(&simd_mask_set_inactive_at) (SimdMask<DataType, Arch>, const ui64) noexcept = SimdOfType<DataType, Arch>::mask_set_inactive_at;
-	template<typename DataType, class Arch>
+	template<typename DataType, typename Arch>
 	constexpr inline static SimdMask<DataType, Arch>(&simd_mask_set_active_at) (SimdMask<DataType, Arch>, const ui64) noexcept = SimdOfType<DataType, Arch>::mask_set_active_at;
 }

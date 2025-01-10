@@ -9,10 +9,10 @@
 //interface 
 namespace natl {
 	template<typename FunctionSignature, Size FunctionByteCapacity = 32 - alignof(char*), typename Alloc = DefaultAllocatorByte>
-	class FunctionCache {};
+	struct FunctionCache {};
 
 	template<typename ReturnType, typename... ArgTypes, Size FunctionByteCapacity, typename Alloc>
-	class FunctionCache<ReturnType(ArgTypes...), FunctionByteCapacity, Alloc> final {
+	struct FunctionCache<ReturnType(ArgTypes...), FunctionByteCapacity, Alloc> final {
 	public:
 		using result_type = ReturnType;
 		using arg_types = TypePack<ArgTypes...>;
@@ -125,11 +125,11 @@ namespace natl {
 		} else {
 			ArgsStorageType argumentStorage(arguments...);
 			ResultCacheType& resultCache = getThreadLocalResultCacheOfCallFunctionCached<ResultCacheType>();
-			typename ResultCacheType::optional_pointer value = resultCache.find(argumentStorage);
+			typename ResultCacheType::option_key_value_const_ref value = resultCache.find(argumentStorage);
 			if (value.hasValue()) {
-				return value.value()->value;
+				return value.value().value();
 			} else {
-				return resultCache.insert(argumentStorage, natl::forward<Functor>(functor)(natl::forward<ArgTypes>(arguments)...))->value;
+				return resultCache.insert(argumentStorage, natl::forward<Functor>(functor)(natl::forward<ArgTypes>(arguments)...))->value();
 			}
 
 		}

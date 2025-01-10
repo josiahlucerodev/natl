@@ -7,7 +7,7 @@
 //interface 
 namespace natl {
     template<typename DataType, typename TypeTag>
-    class StrongType {
+    struct StrongType {
     public:
         using value_type = DataType;
         value_type internalValueStorage;

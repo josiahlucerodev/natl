@@ -10,7 +10,7 @@ namespace natl {
 	struct OptionEmpty {};
 
 	template<typename DataType>
-	class Option {
+	struct Option {
 	public:
 		using value_type = DataType;
 	private:
@@ -21,7 +21,7 @@ namespace natl {
 		};
 	public:
 		template<typename OtherDataType>
-		friend class Option;
+		friend struct Option;
 
 		//constructor
 		constexpr Option() noexcept : isValid(false) {
@@ -323,7 +323,7 @@ namespace natl {
 	};
 
 	template<typename DataType>
-	class OptionPtr {
+	struct OptionPtr {
 	public:
 		using value_type = DataType;
 	private:

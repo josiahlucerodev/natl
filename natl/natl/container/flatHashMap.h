@@ -17,12 +17,22 @@ namespace natl {
 		using key_type = KeyType;
 		using mapped_type = ValueType;
 
-		key_type& key;
-		mapped_type& value;
+		key_type* keyPtr;
+		mapped_type* valuePtr;
+
+		constexpr operator KeyValueRef<const KeyType, const ValueType>() noexcept
+			requires(!IsConstC<KeyType> && !IsConstC<ValueType>) {
+			return KeyValueRef<const KeyType, const ValueType>(keyPtr, valuePtr);
+		}
+
+		constexpr key_type& key() noexcept { return *keyPtr; }
+		constexpr const key_type& key() const noexcept { return *keyPtr; }
+		constexpr mapped_type& value() noexcept { return *valuePtr; }
+		constexpr const mapped_type& value() const noexcept { return *valuePtr; }
 	};
 
 	template<typename DataType>
-	class FlatMapHashCompare {
+	struct FlatMapHashCompare {
 	public:
 		constexpr static Bool compare(const DataType& lhs, const DataType& rhs) noexcept {
 			return lhs == rhs;
@@ -136,10 +146,10 @@ namespace natl {
 			constexpr const mapped_type& value() const noexcept { return value_detachedLifetime.value; }
 
 			constexpr key_value_ref ref() noexcept {
-				return key_value_ref{ key_detachedLifetime.key, value_detachedLifetime.value };
+				return key_value_ref{ &key_detachedLifetime.key, &value_detachedLifetime.value };
 			}
 			constexpr key_value_const_ref ref() const noexcept {
-				return key_value_const_ref{ key_detachedLifetime.key, value_detachedLifetime.value };
+				return key_value_const_ref{ &key_detachedLifetime.key, &value_detachedLifetime.value };
 			}
 
 			constexpr void deconstruct() noexcept {
@@ -197,7 +207,7 @@ namespace natl {
 
 	namespace impl {
 		template<typename unit_type, typename Alloc>
-		class BaseFlatHashMapIterator {
+		struct BaseFlatHashMapIterator {
 		public:
 			using iterator_traits = DefaultIteratorTraits<unit_type>;
 			using iterator_category = BidirectionalIteratorTag;
@@ -215,7 +225,7 @@ namespace natl {
 
 			//friends
 			template<template<typename> typename, typename, typename, typename, typename>
-			friend class BaseFlatHashMap;
+			friend struct BaseFlatHashMap;
 		private:
 			pointer dataPtr;
 			pointer beginPtr;
@@ -279,7 +289,7 @@ namespace natl {
 			typename KeyType, typename ValueType,
 			typename Hash = Hash<KeyType>,
 			typename Compare = FlatMapHashCompare<KeyType>>
-		class BaseFlatHashMap {
+		struct BaseFlatHashMap {
 		public:
 			using size_type = Size;
 			using key_type = KeyType;
@@ -886,37 +896,73 @@ namespace natl {
 	};
 }
 
+namespace NATL_NAMESPACE_NAME_FOR_TUPLE_GET(natl) {
+	template <std::size_t Index, typename KeyType, typename ValueType>
+	constexpr decltype(auto) get(const natl::KeyValueRef<KeyType, ValueType>& obj) {
+		if constexpr (Index == 0) {
+			return obj.key();
+		} else if constexpr (Index == 1) {
+			return obj.value();
+		} else {
+			static_assert(Index < 2, "natl: index out of bounds");
+		}
+	}
+	template <std::size_t Index, typename KeyType, typename ValueType>
+	constexpr decltype(auto) get(natl::KeyValueRef<KeyType, ValueType>& obj) {
+		if constexpr (Index == 0) {
+			return obj.key();
+		} else if constexpr (Index == 1) {
+			return obj.value();
+		} else {
+			static_assert(Index < 2, "natl: index out of bounds");
+		}
+	}
+}
+
+namespace NATL_NAMESPACE_NAME_FOR_TUPLE_GET(natl::impl) {
+	template <std::size_t Index, typename KeyType, typename ValueType>
+	constexpr decltype(auto) get(const natl::impl::FlatMapHashKeyValueUnit<KeyType, ValueType>& obj) {
+		if constexpr (Index == 0) {
+			return obj.key();
+		} else if constexpr (Index == 1) {
+			return obj.value();
+		} else {
+			static_assert(Index < 2, "natl: index out of bounds");
+		}
+	}
+
+	template <std::size_t Index, typename KeyType, typename ValueType>
+	constexpr decltype(auto) get(natl::impl::FlatMapHashKeyValueUnit<KeyType, ValueType>& obj) {
+		if constexpr (Index == 0) {
+			return obj.key();
+		} else if constexpr (Index == 1) {
+			return obj.value();
+		} else {
+			static_assert(Index < 2, "natl: index out of bounds");
+		}
+	}
+}
+
 namespace std {
 	template<typename KeyType, typename ValueType>
-	struct tuple_size<natl::impl::FlatMapHashKeyValueUnit<KeyType, ValueType>> { 
+	struct tuple_size<natl::KeyValueRef<KeyType, ValueType>> {
 		constexpr static inline natl::StdSize value = 2;
 	};
 
 	template<natl::Size Index, typename KeyType, typename ValueType>
-	struct tuple_element<Index, natl::impl::FlatMapHashKeyValueUnit<KeyType, ValueType>> {
+	struct tuple_element<Index, natl::KeyValueRef<KeyType, ValueType>> {
 		using type = natl::Conditional<Index == 0, KeyType, ValueType>;
 	};
 
-	template <std::size_t Index, typename KeyType, typename ValueType>
-	decltype(auto) get(const natl::impl::FlatMapHashKeyValueUnit<KeyType, ValueType>& obj) {
-		if constexpr (Index == 0) {
-			return obj.key();
-		} else if constexpr (Index == 1) {
-			return obj.value();
-		} else {
-			static_assert(Index < 2, "natl: index out of bounds");
-		}
-	}
-	template <std::size_t Index, typename KeyType, typename ValueType>
-	decltype(auto) get(natl::impl::FlatMapHashKeyValueUnit<KeyType, ValueType>& obj) {
-		if constexpr (Index == 0) {
-			return obj.key();
-		} else if constexpr (Index == 1) {
-			return obj.value();
-		} else {
-			static_assert(Index < 2, "natl: index out of bounds");
-		}
-	}
+	
+	template<typename KeyType, typename ValueType>
+	struct tuple_size<natl::impl::FlatMapHashKeyValueUnit<KeyType, ValueType>> {
+		constexpr static inline natl::StdSize value = 2;
+	};
+	template<natl::Size Index, typename KeyType, typename ValueType>
+	struct tuple_element<Index, natl::impl::FlatMapHashKeyValueUnit<KeyType, ValueType>> {
+		using type = natl::Conditional<Index == 0, KeyType, ValueType>;
+	};
 }
 
 

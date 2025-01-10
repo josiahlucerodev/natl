@@ -6,8 +6,8 @@
 
 constexpr inline natl::ConstAsciiStringView natlTestFrom = "NatlStringTest";
 
-template<class StringType>
-class StringTest {
+template<typename StringType>
+struct StringTest {
 	natl::ConstAsciiStringView stringTypeName;
 public:
 	StringTest(natl::ConstAsciiStringView stringTypeNameIn) : stringTypeName(stringTypeNameIn) {}

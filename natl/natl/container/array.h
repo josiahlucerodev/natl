@@ -16,8 +16,8 @@
 
 //interface
 namespace natl {
-	template<class DataType, Size Number>
-	class Array {
+	template<typename DataType, Size Number>
+	struct Array {
 	public:
 		using value_type = DataType;
 		using reference = DataType&;
@@ -131,36 +131,36 @@ namespace natl {
 		}
 	};
 
-	template<class DataType, Size Number>
+	template<typename DataType, Size Number>
 	struct IsTriviallyCompareableV<Array<DataType, Number>>
 		: IsTriviallyCompareableV<DataType> {};
 
-	template<class DataType, Size Number>
+	template<typename DataType, Size Number>
 	struct IsTriviallyRelocatableV<Array<DataType, Number>>
 		: IsTriviallyRelocatableV<DataType> {};
-	template<class DataType, Size Number>
+	template<typename DataType, Size Number>
 	struct IsTriviallyConstructibleV<Array<DataType, Number>>
 		: IsTriviallyConstructibleV<DataType> {};
-	template<class DataType, Size Number>
+	template<typename DataType, Size Number>
 	struct IsTriviallyDestructibleV<Array<DataType, Number>>
 		: IsTriviallyDestructibleV<DataType> {};
 
-	template<class DataType, Size Number>
+	template<typename DataType, Size Number>
 	struct IsTriviallyConstRefConstructibleV<Array<DataType, Number>>
 		: IsTriviallyConstRefConstructibleV<DataType> {};
-	template<class DataType, Size Number>
+	template<typename DataType, Size Number>
 	struct IsTriviallyMoveConstructibleV<Array<DataType, Number>>
 		: IsTriviallyMoveConstructibleV<DataType> {};
 
-	template<class DataType, Size Number>
+	template<typename DataType, Size Number>
 	struct IsTriviallyConstRefAssignableV<Array<DataType, Number>>
 		: IsTriviallyConstRefAssignableV<DataType> {};
-	template<class DataType, Size Number>
+	template<typename DataType, Size Number>
 	struct IsTriviallyMoveAssignableV<Array<DataType, Number>>
 		: IsTriviallyMoveAssignableV<DataType> {};
 
-	template<class DataType, Size... Dimensions>
-	class MDArray {
+	template<typename DataType, Size... Dimensions>
+	struct MDArray {
 		using value_type = DataType;
 		using reference = DataType&;
 		using const_reference = const DataType&;
@@ -260,31 +260,31 @@ namespace natl {
 		}
 	};
 
-	template<class DataType, Size... Dimensions>
+	template<typename DataType, Size... Dimensions>
 	struct IsTriviallyCompareableV<MDArray<DataType, Dimensions...>>
 		: IsTriviallyCompareableV<DataType> {};
 
-	template<class DataType, Size... Dimensions>
+	template<typename DataType, Size... Dimensions>
 	struct IsTriviallyRelocatableV<MDArray<DataType, Dimensions...>>
 		: IsTriviallyRelocatableV<DataType> {};
-	template<class DataType, Size... Dimensions>
+	template<typename DataType, Size... Dimensions>
 	struct IsTriviallyConstructibleV<MDArray<DataType, Dimensions...>>
 		: IsTriviallyConstructibleV<DataType> {};
-	template<class DataType, Size... Dimensions>
+	template<typename DataType, Size... Dimensions>
 	struct IsTriviallyDestructibleV<MDArray<DataType, Dimensions...>>
 		: IsTriviallyDestructibleV<DataType> {};
 
-	template<class DataType, Size... Dimensions>
+	template<typename DataType, Size... Dimensions>
 	struct IsTriviallyConstRefConstructibleV<MDArray<DataType, Dimensions...>>
 		: IsTriviallyConstRefConstructibleV<DataType> {};
-	template<class DataType, Size... Dimensions>
+	template<typename DataType, Size... Dimensions>
 	struct IsTriviallyMoveConstructibleV<MDArray<DataType, Dimensions...>>
 		: IsTriviallyMoveConstructibleV<DataType> {};
 
-	template<class DataType, Size... Dimensions>
+	template<typename DataType, Size... Dimensions>
 	struct IsTriviallyConstRefAssignableV<MDArray<DataType, Dimensions...>>
 		: IsTriviallyConstRefAssignableV<DataType> {};
-	template<class DataType, Size... Dimensions>
+	template<typename DataType, Size... Dimensions>
 	struct IsTriviallyMoveAssignableV<MDArray<DataType, Dimensions...>>
 		: IsTriviallyMoveAssignableV<DataType> {};
 }

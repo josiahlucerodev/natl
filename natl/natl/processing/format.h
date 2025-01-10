@@ -21,7 +21,7 @@ namespace natl {
 	using MakeFormatter = Formatter<RemoveConctVolatile<RemoveReference<Type>>, Ascii>;
 
 	template<typename OutputIter>
-	class FormatOutputIter {
+	struct FormatOutputIter {
 	public:
 		using value_type = OutputIter::value_type;
 		using reference = OutputIter::reference;
@@ -88,7 +88,7 @@ namespace natl {
 		typename TemplateFlagsTypePack, 
 		typename ArgFlagTypesTypePack = TypePack<>,
 		typename ArgFlagsStorageTuple = Tuple<>>
-	class FormatArgFlags {
+	struct FormatArgFlags {
 	public:
 		using template_flags = TemplateFlagsTypePack;
 		using arg_flags = ArgFlagTypesTypePack;
@@ -422,7 +422,7 @@ namespace natl {
 		}
 	};
 
-	enum class BoolFormat {
+	enum struct BoolFormat {
 		fullLowercase,
 		fullFirstUppercase,
 		fullAllUppercase,
@@ -565,7 +565,7 @@ namespace natl {
 		}
 	};
 
-	enum class IntFormat {
+	enum struct IntFormat {
 		decimal,
 		hexadecimal,
 		binary,
@@ -695,7 +695,7 @@ namespace natl {
 	template<typename CharType>
 	struct Formatter<ui64, CharType> : impl::IntegerFormatter<ui64, CharType> {};
 
-	enum class FloatFormat {
+	enum struct FloatFormat {
 		standard,
 	};
 

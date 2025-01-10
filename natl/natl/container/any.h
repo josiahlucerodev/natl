@@ -12,7 +12,7 @@
 namespace natl {
 
 	namespace impl {
-		class AnyStorageConstexprPolymorphic {
+		struct AnyStorageConstexprPolymorphic {
 		public:
 			using any_storage_constexpr_polymorphic = AnyStorageConstexprPolymorphic;
 			using copy_function_type = any_storage_constexpr_polymorphic * (*)(const any_storage_constexpr_polymorphic*);
@@ -25,7 +25,7 @@ namespace natl {
 		};
 
 		template<typename DataType>
-		class AnyStorageConstexpr final : public AnyStorageConstexprPolymorphic {
+		struct AnyStorageConstexpr final : public AnyStorageConstexprPolymorphic {
 		public:
 			using value_type = DataType;
 			using allocator_type = DefaultAllocator<AnyStorageConstexpr>;
@@ -78,7 +78,7 @@ namespace natl {
 		};
 
 
-		class AnyStoragePolymorphic {
+		struct AnyStoragePolymorphic {
 		public:
 			using any_storage_polymorphic = AnyStoragePolymorphic;
 			using destory_function_type = void(*)(any_storage_polymorphic*, const Bool);
@@ -90,7 +90,7 @@ namespace natl {
 
 		template<typename DataType, typename Alloc>
 			requires(IsAllocator<Alloc>)
-		class AnyStorage final : public AnyStoragePolymorphic {
+		struct AnyStorage final : public AnyStoragePolymorphic {
 		public:
 			using value_type = DataType;
 			using allocator_type = Alloc::template rebind_alloc<AnyStorage>;
@@ -177,7 +177,7 @@ namespace natl {
 
 
 	template<Size BufferSize = 32>
-	class BaseAny {
+	struct BaseAny {
 	public:
 		constexpr static Size bufferSize = BufferSize;
 	private:
@@ -197,7 +197,7 @@ namespace natl {
 		};
 
 		template<Size AnyBufferSize>
-		friend class BaseAny;
+		friend struct BaseAny;
 	public:
 
 		//constructor 
@@ -455,11 +455,11 @@ namespace natl {
 		requires(ByteSize >= 16)
 	using AnyByteSize = BaseAny<ByteSize - impl::BaseAnyBaseMemberByteSize>;
 
-	template<class DataType, class... ArgTypes>
+	template<typename DataType, typename... ArgTypes>
 	constexpr Any makeAny(ArgTypes&&... args) noexcept {
 		return Any(TypeArg<DataType>{}, AllocatorArg<DefaultAllocator<DataType>>{}, natl::forward<ArgTypes>(args)...);
 	}
-	template<Size ByteSize, class DataType, class... ArgTypes>
+	template<Size ByteSize, typename DataType, typename... ArgTypes>
 	constexpr AnyByteSize<ByteSize> makeAnyByteSize(ArgTypes&&... args) noexcept {
 		return AnyByteSize<ByteSize>(TypeArg<DataType>{}, AllocatorArg<DefaultAllocator<DataType>>{}, natl::forward<ArgTypes>(args)...);
 	}

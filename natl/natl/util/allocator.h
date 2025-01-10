@@ -59,8 +59,8 @@ namespace natl {
 #pragma warning(disable : 4180)
 #endif // NATL_COMPILER_MSVC
 
-	template<class DataType>
-	class TrackerAllocator {
+	template<typename DataType>
+	struct TrackerAllocator {
 	public:
 		using value_type = DataType;
 		using reference = DataType&;
@@ -70,7 +70,7 @@ namespace natl {
 		using difference_type = PtrDiff;
 		using size_type = Size;
 
-		template <class Other>
+		template <typename Other>
 		using rebind_alloc = TrackerAllocator<Other>;
 	public:
 		TrackerAllocator() = default;
@@ -109,7 +109,7 @@ namespace natl {
 			{ Alloc::deallocate(natl::declval<typename Alloc::pointer>(), natl::declval<typename Alloc::size_type>()) };
 	};
 
-	template<class Alloc>
+	template<typename Alloc>
 	struct AllocatorTraits {
 		using allocator_type = Alloc;
 
@@ -124,16 +124,16 @@ namespace natl {
 		using void_pointer = typename Alloc::void_pointer;
 		using const_void_pointer = typename Alloc::const_void_pointer;
 
-		template <class Other>
+		template <typename Other>
 		using rebind_alloc = typename Alloc:: template rebind_alloc<Other>;
 
-		template <class Other>
+		template <typename Other>
 		using rebind_traits = AllocatorTraits<rebind_alloc<Other>>;
 	};
 
 
-	template<class DataType>
-	class Allocator {
+	template<typename DataType>
+	struct Allocator {
 	public:
 		using value_type = DataType;
 		using reference = DataType&;
@@ -143,7 +143,7 @@ namespace natl {
 		using difference_type = PtrDiff;
 		using size_type = Size;
 
-		template <class Other>
+		template <typename Other>
 		using rebind_alloc = Allocator<Other>;
 	public:
 		constexpr Allocator() = default;
@@ -171,13 +171,13 @@ namespace natl {
 		}
 	};
 
-	template<class DataType>
+	template<typename DataType>
 	using DefaultAllocator = Allocator<DataType>;
 	using DefaultAllocatorByte = DefaultAllocator<natl::Byte>;
 
 	template<typename Alloc>
 		requires(IsAllocator<Alloc>)
-	class AllocatorArg {};
+	struct AllocatorArg {};
 
 	using DefaultAllocatorArgByte = AllocatorArg<DefaultAllocatorByte>;
 

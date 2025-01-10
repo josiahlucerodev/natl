@@ -21,7 +21,7 @@ namespace natl {
         template<> struct CommonCompareCatBaseType<6> { using type = PartialOrdering; };
     } 
 
-    template<class... DataTypes>
+    template<typename... DataTypes>
     struct CommonComparisonCategoryType : impl::CommonCompareCatBaseType<
         (0u | ... |
             (   
@@ -66,12 +66,12 @@ namespace natl {
         }
     };
 
-    template<class LhsDataType, class RhsDataType = LhsDataType>
+    template<typename LhsDataType, typename RhsDataType = LhsDataType>
     using CompareThreeWayResult = decltype(declval<const RemoveReference<LhsDataType>&>() <=> declval<const RemoveReference<RhsDataType>&>());
 
-    template<class LhsDataType, class RhsDataType = LhsDataType>
+    template<typename LhsDataType, typename RhsDataType = LhsDataType>
     struct CompareThreeWayResultType {};
-    template<class LhsDataType, class RhsDataType> 
+    template<typename LhsDataType, typename RhsDataType>
         requires(requires { typename CompareThreeWayResult<LhsDataType, RhsDataType>; })
     struct CompareThreeWayResultType<LhsDataType, RhsDataType> {
         using type = CompareThreeWayResult<LhsDataType, RhsDataType>;

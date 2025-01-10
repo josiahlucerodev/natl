@@ -8,7 +8,7 @@
 
 //interface 
 namespace natl {
-	enum class SerializeFlag {
+	enum struct SerializeFlag {
 		pretty,
 		compress,
 	};
@@ -598,7 +598,7 @@ namespace natl {
 		}
 	};
 
-	template<class ElementType>
+	template<typename ElementType>
 		requires(IsSerializableC<Decay<ElementType>>)
 	struct Serialize<ArrayView<ElementType>> {
 		using as_type = SerializeArray<Decay<ElementType>>;
@@ -856,14 +856,14 @@ namespace natl {
 	};
 
 	//deserialize 
-	enum class ErrorHandlingFlag {
+	enum struct ErrorHandlingFlag {
 		shorten,
 		full,
 	};
 
 	struct DeserializeGlobalScope {};
 
-	enum class DeserializeErrorFlag {
+	enum struct DeserializeErrorFlag {
 		none = 0,
 		endOfSource,
 		wrongType,
@@ -891,7 +891,7 @@ namespace natl {
 		}
 	}
 
-	enum class DeserializeErrorLocation {
+	enum struct DeserializeErrorLocation {
 		none = 0,
 		beginReadNamed,
 		endReadNamed,

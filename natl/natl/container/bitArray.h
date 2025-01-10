@@ -7,7 +7,7 @@
 //interface
 namespace natl {
 
-	class BitIndex {
+	struct BitIndex {
 	public:
 		Size index;
 		constexpr BitIndex() = default;
@@ -15,15 +15,15 @@ namespace natl {
 		constexpr BitIndex(const Size indexIn) : index(indexIn) {}
 	};
 
-	template<class BitStorageType, Size bitCountT>
-	class BitArrayBitStorageType {
+	template<typename BitStorageType, Size bitCountT>
+	struct BitArrayBitStorageType {
 		constexpr static const Size bitCount = bitCountT;
 		constexpr static const Size wordCount = bitCount == 0 ? 0 : (sizeof(BitStorageType) * 8) % bitCount;
 		constexpr static const Size byteCount = sizeof(BitStorageType) * 8 * wordCount;
 		constexpr static const Size bitsPerWordCount = sizeof(BitStorageType) * 8;
 		BitStorageType bitsArray[wordCount];
 	public:
-		class reference {
+		struct reference {
 			BitArrayBitStorageType* bitArrayPtr;
 			Size index;
 		public:

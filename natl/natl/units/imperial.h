@@ -6,7 +6,7 @@
 //interface
 namespace natl {
     //length
-    enum class ImperialLengthType {
+    enum struct ImperialLengthType {
         inch,
         hand,
         foot,
@@ -28,7 +28,7 @@ namespace natl {
             using tag_group = impl::ImperialLengthTagGroup;
         };
 
-        enum class ImperialLengthUnitWeights : i64 {
+        enum struct ImperialLengthUnitWeights : i64 {
             inch = 1,
             hand = inch * 4,
             foot = inch * 12,
@@ -172,7 +172,7 @@ namespace natl {
     }
 
     //mass
-    enum class ImperialMassType {
+    enum struct ImperialMassType {
         drachm,
         ounce,
         pound,
@@ -193,7 +193,7 @@ namespace natl {
             using tag_group = impl::ImperialMassTagGroup;
         };
 
-        enum class ImperialMassUnitWeights : i64 {
+        enum struct ImperialMassUnitWeights : i64 {
             drachm = 1,
             ounce = drachm * 16,
             pound = ounce * 16,

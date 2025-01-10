@@ -8,10 +8,10 @@
 namespace natl {
 	namespace impl {
 		template<typename Type, typename BatchDynArray, Size BatchSize>
-		class BatchPoolBase {
+		struct BatchPoolBase {
 		private:
 			BatchDynArray batchs;
-			DynArray<Type>* activeBatch;
+			typename BatchDynArray::value_type* activeBatch;
 		public:
 			constexpr BatchPoolBase() noexcept : batchs(), activeBatch(nullptr) {}
 			constexpr ~BatchPoolBase() noexcept = default;
@@ -41,8 +41,8 @@ namespace natl {
 			}
 		};
 
-		template<class DataType, typename BatchDynArray, Size BatchSize = 100>
-		class BatchHeapBase {
+		template<typename DataType, typename BatchDynArray, Size BatchSize = 100>
+		struct BatchHeapBase {
 		private:
 			BatchPoolBase<DataType, BatchDynArray, BatchSize> pool;
 			DynArray<DataType*> freeSlots;

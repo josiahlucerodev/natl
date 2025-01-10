@@ -12,11 +12,11 @@
 
 //interface 
 namespace natl {
-	template<class DataType>
+	template<typename DataType>
 	concept HasStaticHashFunction = requires(const DataType& value) {
 		{ DataType::staticHash(value) } -> SameAs<Size>;
 	};
-	template<class DataType>
+	template<typename DataType>
 	concept HasHashFunction = requires(const DataType& value) {
 		{ value.hash() } -> SameAs<Size>;
 	};
@@ -29,7 +29,7 @@ namespace natl {
 	template<typename DataType>
 	concept Hashable = HasStaticHashFunction<DataType> || HasHashFunction<DataType> || IsPointerC<DataType> || StdHashable<DataType>;
 
-	template<class DataType>
+	template<typename DataType>
 	struct Hash {
 	public:
 		constexpr static Size hash(const DataType& value) requires(Hashable<DataType>) {

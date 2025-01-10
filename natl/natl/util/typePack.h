@@ -27,24 +27,24 @@ namespace natl {
         return first * multiplySizes(rest...);
     }
 
-    template <Size, class T> using AlwaysType = T;
-    template <class NumberType, NumberType, class Type> using CustomAlwaysType = Type;
+    template <Size, typename Type> using AlwaysType = Type;
+    template<typename NumberType, NumberType, typename Type> using CustomAlwaysType = Type;
 
-    template <class... Ts>
+    template<typename... Ts>
     struct TemplatePackMaxSizeOfTypes;
 
-    template <class T>
+    template<typename T>
     struct TemplatePackMaxSizeOfTypes<T> {
         constexpr static Size value = sizeof(T);
     };
 
-    template <class T, class... Ts>
+    template<typename T, typename... Ts>
     struct TemplatePackMaxSizeOfTypes<T, Ts...> {
         constexpr static Size value = sizeof(T) > TemplatePackMaxSizeOfTypes<Ts...>::value ? sizeof(T) : TemplatePackMaxSizeOfTypes<Ts...>::value;
     };
 
 
-    template <Size Index, class... Types>
+    template <Size Index, typename... Types>
         requires(Index < sizeof...(Types))
     struct TemplatePackNthElement {};
 
@@ -53,27 +53,27 @@ namespace natl {
         // static_assert(false, "natl: TemplatePackNthElement could not find element because the index is out of range");
     };
 
-    template <class NthType, class... Types>
+    template<typename NthType, typename... Types>
     struct TemplatePackNthElement<0, NthType, Types...> {
         using type = NthType;
     };
 
-    template <Size Index, class NotType, class... Types>
+    template <Size Index, typename NotType, typename... Types>
     struct TemplatePackNthElement<Index, NotType, Types...> {
         using type = TemplatePackNthElement<Index - 1, Types...>::type;
     };
 
-    template <Size Index, class FindType, class... Types>
+    template <Size Index, typename FindType, typename... Types>
     struct TemplatePackFindIndexOfTypeImpl {
         constexpr static Size value = Limits<Size>::max();
     };
 
-    template <Size Index, class FindType, class TestType, class... Types>
+    template <Size Index, typename FindType, typename TestType, typename... Types>
     struct TemplatePackFindIndexOfTypeImpl<Index, FindType, TestType, Types...> {
         constexpr static Size value = IsSameC<FindType, TestType> ? Index : TemplatePackFindIndexOfTypeImpl<Index + 1, FindType, Types...>::value;
     };
 
-    template <class FindType, class... Types>
+    template<typename FindType, typename... Types>
     struct TemplatePackFindIndexOfType {
         constexpr static Size value = TemplatePackFindIndexOfTypeImpl<0, FindType, Types...>::value;
     };
@@ -81,16 +81,16 @@ namespace natl {
         constexpr static Size value = Limits<Size>::max();
     };
 
-    template <template<typename, typename> typename TypeCompare, Size Index, class FindType, class... Types>
+    template <template<typename, typename> typename TypeCompare, Size Index, typename FindType, typename... Types>
     struct  TemplatePackFindIndexOfTypeCompareImpl {
         constexpr static Size value = IndexNotFound::value;
     };
-    template <template<typename, typename> typename TypeCompare, Size Index, class FindType, class TestType, class... Types>
+    template <template<typename, typename> typename TypeCompare, Size Index, typename FindType, typename TestType, typename... Types>
     struct  TemplatePackFindIndexOfTypeCompareImpl<TypeCompare, Index, FindType, TestType, Types...> {
         constexpr static Size value = TypeCompare<FindType, TestType>::value ? Index : TemplatePackFindIndexOfTypeCompareImpl<TypeCompare, Index + 1, FindType, Types...>::value;
     };
 
-    template <template<typename, typename> typename TypeCompare, class FindType, class... Types>
+    template <template<typename, typename> typename TypeCompare, typename FindType, typename... Types>
     struct  TemplatePackFindIndexOfTypeCompare {
         constexpr static Size value = TemplatePackFindIndexOfTypeCompareImpl<TypeCompare, 0, FindType, Types...>::value;
     };
@@ -218,7 +218,7 @@ namespace natl {
     constexpr natl::Bool TemplatePackHasElement = TemplatePackHasElementV<TypeCompare, TestElement, Elements...>::value;
     template<template<typename, typename> typename TypeCompare, typename TestElement, typename... Elements>
     concept TemplatePackHasElementC = TemplatePackHasElement<TypeCompare, TestElement, Elements...>;
-    
+
 
     template<typename... Elements>
     struct TypePack {
@@ -356,7 +356,7 @@ namespace natl {
     template<typename LhsTypePack, typename RhsTypePack>
         requires(IsTypePackC<LhsTypePack>&& IsTypePackC<RhsTypePack>)
     using TypePackMergeTwo = typename impl::TypePackMergeTwoImpl<LhsTypePack, RhsTypePack>::type;
-    
+
     namespace impl {
         template<template<typename, typename> typename TypeCompare, typename TestElement, typename... TypePackElements>
         struct TypePackHasElementImpl {};
@@ -397,7 +397,7 @@ namespace natl {
     using TypePackAddUnique = typename impl::TypePackAddUniqueImpl<TypeCompare, ExistingTypePack, TestElements...>::type;
 
     namespace impl {
-        template<template<typename TansformType> typename TransformPredicate, typename... Types> 
+        template<template<typename TansformType> typename TransformPredicate, typename... Types>
         struct TemplatePackTransformT {
             using type = TypePack<typename TransformPredicate<Types>::type...>;
         };
@@ -430,7 +430,7 @@ namespace natl {
     }
 
     template<template<typename Args, typename ChangeType> typename TransformType, typename TypePackTransformArgs, typename TransformTypePack>
-        requires(IsTypePackC<TypePackTransformArgs> && IsTypePackC<TransformTypePack>)
+        requires(IsTypePackC<TypePackTransformArgs>&& IsTypePackC<TransformTypePack>)
     using TypePackTransformWithTypePackArgs = typename impl::TypePackTransformWithTypePackArgsImpl<TransformType, TypePackTransformArgs, TransformTypePack>::type;
 
     namespace impl {
@@ -448,10 +448,10 @@ namespace natl {
     constexpr static Size TypePackFindIndexOfTypeCompareValue = impl::TypePackFindIndexOfTypeCompareImpl<TypeCompare, FindType, TypePackArg>::value;
 
     namespace impl {
-        template<Size Index, class... TypePackElements>
+        template<Size Index, typename... TypePackElements>
         struct TypePackNthElementImpl {};
 
-        template<Size Index, class... TypePackElements>
+        template<Size Index, typename... TypePackElements>
         struct TypePackNthElementImpl<Index, TypePack<TypePackElements...>> {
             using type = TemplatePackNthElement<Index, TypePackElements...>::type;
         };
@@ -653,7 +653,7 @@ namespace natl {
     using MakeIntegerSequence = typename impl::MakeIntegerSequenceType<DataType, Number>::type;
     template<Size Number>
     using MakeIndexSequence = MakeIntegerSequence<Size, Number>;
-    template<class... DataTypeTypes>
+    template<typename... DataTypeTypes>
     using MakeIndexSequenceFor = MakeIndexSequence<sizeof...(DataTypeTypes)>;
     template<Size... Ints>
     using IndexSequence = IntegerSequence<Size, Ints...>;

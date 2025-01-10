@@ -33,7 +33,7 @@ namespace natl {
 
 	namespace impl {
 		template<typename CharType> 
-		class BasePathView {
+		struct BasePathView {
 		public:
 
 			using path_view_type = BasePathView<Ascii>;
@@ -85,7 +85,7 @@ namespace natl {
 			constexpr const_string_view_type toStringView() const noexcept { return pathStringView; }
 			constexpr array_view_type toArrayView() noexcept requires(IsNotConst<CharType>) { return array_view_type(pathStringView.data(), size()); }
 			constexpr const_array_view_type toArrayView() const noexcept { return const_array_view_type(pathStringView.data(), size()); }
-			template<class StringLike>
+			template<typename StringLike>
 				requires(IsConstructibleC<StringLike, const CharType*, Size>)
 			constexpr StringLike convertTo() { 
 				return StringLike(pathStringView.data(), pathStringView.size()); 
@@ -138,8 +138,8 @@ namespace natl {
 			constexpr Bool isEmpty() const noexcept { return pathStringView.isEmpty(); }
 			constexpr Bool isNotEmpty() const noexcept { return pathStringView.isNotEmpty(); }
 
-			friend class BasePathView<Ascii>;
-			friend class BasePathView<const Ascii>;
+			friend struct BasePathView<Ascii>;
+			friend struct BasePathView<const Ascii>;
 
 			//compare
 			constexpr Bool operator==(const path_view_type& rhs) const noexcept {
@@ -517,15 +517,15 @@ namespace natl {
 	template<typename CharType>
 	struct IsCopyableStorageDstT<impl::BasePathView<CharType>> : TrueType {};
 
-	enum class PathFormat {
+	enum struct PathFormat {
 		nativeFormat,
 		genericFormat,
 		standard = genericFormat,
 	};
 
-	template<Size BufferSize = (128 - sizeof(BaseStringBaseMembersRef<Ascii>)), class Alloc = DefaultAllocator<Ascii>>
+	template<Size BufferSize = (128 - sizeof(BaseStringBaseMembersRef<Ascii>)), typename Alloc = DefaultAllocator<Ascii>>
 		requires(IsAllocator<Alloc>)
-	class BasePath {
+	struct BasePath {
 	public:
 		using allocator_type = Alloc;
 		using string_type = BaseString<Ascii, BufferSize, Alloc>;
@@ -574,7 +574,7 @@ namespace natl {
 			formatPath(format);
 		}
 
-		template<class StringViewLike>
+		template<typename StringViewLike>
 			requires(IsStringViewLike<StringViewLike, const Ascii>)
 		constexpr BasePath(const StringViewLike& source, const PathFormat format = autoFormat) noexcept 
 			: pathStorage(source.data(), source.size()) {
@@ -640,7 +640,7 @@ namespace natl {
 			formatPath();
 			return self();
 		}
-		template<class StringViewLike>
+		template<typename StringViewLike>
 			requires(IsStringViewLike<StringViewLike, const Ascii>)
 		constexpr BasePath& operator=(const StringViewLike& source) noexcept {
 			pathStorage = source;
@@ -661,7 +661,7 @@ namespace natl {
 			return self() = source;
 		}
 
-		template<class StringViewLike>
+		template<typename StringViewLike>
 			requires(IsStringViewLike<StringViewLike, const Ascii>)
 		constexpr BasePath& assign(const StringViewLike& source) noexcept {
 			return self() = source;
@@ -713,7 +713,7 @@ namespace natl {
 		constexpr BasePath& operator/=(const BasePath<OtherBufferSize>& other) noexcept {
 			return self() /= other.toPathView();
 		}
-		template<class StringViewLike>
+		template<typename StringViewLike>
 			requires(IsStringViewLike<StringViewLike, const Ascii>)
 		constexpr BasePath& operator/=(const StringViewLike& source) noexcept {
 			return self() /= BasePath(source);
@@ -729,7 +729,7 @@ namespace natl {
 		constexpr BasePath& append(const BasePath<OtherBufferSize>& other) noexcept {
 			return self() /= other;
 		}
-		template<class StringViewLike>
+		template<typename StringViewLike>
 			requires(IsStringViewLike<StringViewLike, const Ascii>)
 		constexpr BasePath& append(const StringViewLike& source) noexcept {
 			return self() /= source;
@@ -836,7 +836,7 @@ namespace natl {
 			removeFilename();
 			return self() /= replacement;
 		}
-		template<class StringViewLike>
+		template<typename StringViewLike>
 			requires(IsStringViewLike<StringViewLike, const Ascii>)
 		constexpr BasePath& replaceFilename(const StringViewLike& replacement) noexcept {
 			removeFilename();
@@ -855,7 +855,7 @@ namespace natl {
 		constexpr BasePath& replaceExtension(const BasePath<OtherBufferSize>& replacement) noexcept {
 			return replaceExtension(replacement.toPathView());
 		}
-		template<class StringViewLike>
+		template<typename StringViewLike>
 			requires(IsStringViewLike<StringViewLike, const Ascii>)
 		constexpr BasePath& replaceExtension(const StringViewLike& replacement) noexcept {
 			return replaceFilename(BasePath(replacement));
@@ -981,7 +981,7 @@ namespace natl {
 	struct IsTriviallyMoveAssignableV<BasePath<BufferSize, Alloc>>
 		: IsTriviallyMoveAssignableV<typename BasePath<BufferSize, Alloc>::string_type> {};
 
-	enum class FileOpenMode {
+	enum struct FileOpenMode {
 		readStart, //file must exist
 		writeDestroy, //destory existing file content
 		readWriteStart,
@@ -1006,7 +1006,7 @@ namespace natl {
 		}
 	}
 
-	enum class FileType {
+	enum struct FileType {
 		none,
 		notFound,
 		regular,
@@ -1054,7 +1054,7 @@ namespace natl {
 #define NATL_NATIVE_INVALID_FILE_HANDEL_VALUE GenericInt(-1);
 #endif // NATL_UNIX_PLATFORM || NATL_WEB_PLATFORM
 
-	class FileHandle {
+	struct FileHandle {
 	public:
 		using native_handle_type = NativeFileHandle;
 	private:
@@ -1122,7 +1122,7 @@ namespace natl {
 		return path;
 	}
 
-	class File {
+	struct File {
 	public:
 		using native_handle_type = NativeFileHandle;
 	private:
@@ -1194,7 +1194,7 @@ namespace natl {
 		}
 	};
 
-	enum class LoadAllFileContentError {
+	enum struct LoadAllFileContentError {
 		fileNotOpen,
 		getFileSizeFailed,
 		fileReadFailed,

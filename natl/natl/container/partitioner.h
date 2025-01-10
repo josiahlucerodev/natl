@@ -11,7 +11,7 @@
 namespace natl {
 	template<typename DataType, typename Alloc>
 		requires(IsAllocator<Alloc>)
-	class DynPartitioner {
+	struct DynPartitioner {
 	public:
 		using allocator_type = Alloc;
 
@@ -112,7 +112,7 @@ namespace natl {
 
 	template<typename Alloc>
 		requires(IsAllocator<Alloc>)
-	class DynBytePartitioner : public DynPartitioner<ui8, Alloc> {
+	struct DynBytePartitioner : public DynPartitioner<ui8, Alloc> {
 		using allocator_type = Alloc;
 
 		using value_type = typename Alloc::value_type;
@@ -135,7 +135,7 @@ namespace natl {
 	public:
 		DynBytePartitioner() : DynPartitioner<ui8, Alloc>() {}
 	public:
-		template<class value_type>
+		template<typename value_type>
 		ArrayView<value_type> newPartition(const size_type partiationSize) noexcept {
 			const size_type offset = alignmentOffset(this->data.data(), alignof(value_type));
 			const size_type partiationByteSize = partiationSize * sizeof(value_type) + offset;
@@ -179,7 +179,7 @@ namespace natl {
 		: FalseType {};
 
 	template<typename DataType>
-	class SubPartitioner {
+	struct SubPartitioner {
 		using value_type = DataType;
 		using size_type = Size;
 	private:
