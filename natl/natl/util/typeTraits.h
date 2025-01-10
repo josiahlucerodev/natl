@@ -887,4 +887,8 @@ namespace natl {
 
 	template<typename DataType> constexpr inline Size TypeByteSize = sizeof(DataType);
 	template<typename DataType> consteval Size getTypeByteSize() noexcept { return sizeof(DataType); }
+
+	template<typename... Types> constexpr inline Bool AlwaysFalse = false;
+	template<typename... Types> struct AlwaysFalseV : FalseType {};
+	template<typename... Types> concept AlwaysFalseC = true;
 }

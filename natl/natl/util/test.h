@@ -97,6 +97,8 @@ namespace natl {
 		Size failureCount;
 		TestType testType;
 		Bool leafPrintedNewLine;
+
+		constexpr Test() noexcept = default;
 		constexpr Test(const ConstStringView fromIn, const String& nameIn, const TestType testTypeIn) noexcept
 			: from(), name(), successCount(), failureCount() {
 			successCount = 0;

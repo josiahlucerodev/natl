@@ -29,14 +29,14 @@ namespace natl {
 		}
 		constexpr Option(const Option& other) noexcept : isValid(false) {
 			if (other.isValid == true) {
-				construct(other.data);
+				unsafeConstruct(other.data);
 			} else {
 				constructAsDummy();
 			}
 		}
 		constexpr Option(Option&& other) noexcept : isValid(false) {
 			if (other.isValid == true) {
-				construct(natl::forward<DataType>(other.data));
+				unsafeConstruct(natl::forward<DataType>(other.data));
 			} else {
 				constructAsDummy();
 			}
@@ -46,7 +46,7 @@ namespace natl {
 			requires(IsConstructibleC<DataType, OtherDataType>)
 		constexpr Option(const Option<OtherDataType>& other) noexcept : isValid(false) {
 			if (other.isValid == true) {
-				construct(other.data);
+				unsafeConstruct(other.data);
 			} else {
 				constructAsDummy();
 			}
@@ -55,28 +55,28 @@ namespace natl {
 			requires(IsConstructibleC<DataType, OtherDataType>)
 		constexpr Option(Option<OtherDataType>&& other) noexcept : isValid(false) {
 			if (other.isValid == true) {
-				construct(natl::forward<OtherDataType>(other.data));
+				unsafeConstruct(natl::forward<OtherDataType>(other.data));
 			} else {
 				constructAsDummy();
 			}
 		}
 
 		constexpr Option(const DataType& valueIn) noexcept : isValid(false) {
-			construct(valueIn);
+			unsafeConstruct(valueIn);
 		}
 		constexpr Option(DataType&& valueIn) noexcept : isValid(false) {
-			construct(natl::forward<DataType>(valueIn));
+			unsafeConstruct(natl::forward<DataType>(valueIn));
 		}
 
 		template<typename OtherDataType>
 			requires(IsNotSameC<Decay<OtherDataType>, OptionEmpty> && IsConstructibleC<DataType, OtherDataType>)
 		constexpr Option(const OtherDataType& valueIn) noexcept : isValid(false) {
-			construct(valueIn);
+			unsafeConstruct(valueIn);
 		}
 		template<typename OtherDataType>
 			requires(IsNotSameC<Decay<OtherDataType>, OptionEmpty> && IsConstructibleC<DataType, OtherDataType>)
 		constexpr Option(OtherDataType&& valueIn) noexcept : isValid(false) {
-			construct(natl::forward<OtherDataType>(valueIn));
+			unsafeConstruct(natl::forward<OtherDataType>(valueIn));
 		}
 
 		constexpr Option(OptionEmpty) noexcept : isValid(false) { 

@@ -697,28 +697,33 @@ namespace natl {
 		template<typename Serializer>
 		using VariantSerializeFunction = void(*)(Serializer&, const type&);
 
-		template<typename Serializer, typename Element, Size Index>
+		template<typename Serializer, SerializeWriteFlag Flags,
+			CustomSerializeWriteFlag<Serializer> CustomFlags, typename SerializeComponentType,
+			typename Element, Size Index>
 		constexpr static VariantSerializeFunction<Serializer> getSerializeFunction() noexcept {
 			return [](Serializer& serializer, const type& value) -> void {
-				serializer.template beginWriteVariant<as_type, Index>(Element::name);
-				Serialize<Decay<typename Element::value_type>>::template write<Serializer>(serializer, 
+				using variant_member = SerializeVaraintComponent<type, Index>;
+				serializer.template beginWriteVariant<Flags, CustomFlags, SerializeComponentType, as_type, Index>(Element::name);
+				Serialize<Decay<typename Element::value_type>>::template write<Serializer, Flags, CustomFlags, variant_member>(serializer,
 					value.template get<Index>()
 				);
-				serializer.endWriteVariant();
+				serializer.template endWriteVariant<Flags, CustomFlags, SerializeComponentType, as_type>();
 			};
 		}
 
-		template<typename Serializer>
+		template<typename Serializer, SerializeWriteFlag Flags,
+			CustomSerializeWriteFlag<Serializer> CustomFlags, typename SerializeComponentType>
+			requires(natl::CanSerializeVariantC<Serializer> && IsSerializeComponentC<SerializeComponentType>)
 		constexpr static void write(Serializer& serializer, const type& value) noexcept {
 			[&]<Size... Indices>(natl::IndexSequence<Indices...>) -> void {
 				VariantSerializeFunction<Serializer> serializeFunctions[sizeof...(Elements)] = {
-					getSerializeFunction<Serializer, Elements, Indices>()... 
+					getSerializeFunction<Serializer, Flags, CustomFlags, SerializeComponentType, Elements, Indices>()...
 				};
 
 				if(value.hasValue()) {
 					serializeFunctions[value.getIndex() - 1](serializer, value);
 				} else {
-					serializer.template writeEmptyVariant<as_type>();
+					serializer.template writeEmptyVariant<Flags, CustomFlags, SerializeComponentType>();
 				}
 			}(natl::MakeIndexSequence<sizeof...(Elements)>{});
 		}
@@ -736,7 +741,8 @@ namespace natl {
 		using VariantDeserializeFunction = Option<typename Deserializer::deserialize_error_handler>(*)
 			(Deserializer&, typename Deserializer::template deserialize_info<as_type>&, type&);
 
-		template<typename Deserializer, typename Element, Size Index>
+		template<typename Deserializer, DeserializeReadFlag Flags, CustomDeserializeReadFlag<Deserializer> CustomFlags, 
+			typename SerializeComponentType, typename Element, Size Index>
 		constexpr static VariantDeserializeFunction<Deserializer> getDeserializeFunction() noexcept {
 			return [](Deserializer& deserializer,
 					typename Deserializer::template deserialize_info<as_type>& varaintInfo,
@@ -744,13 +750,16 @@ namespace natl {
 				using element_type = typename Element::value_type;
 				using element_serialize_type = SerializeTypeOf<element_type>;
 
-				auto varaintElementExpect = deserializer.template beginReadVaraintOfType<element_type>(varaintInfo);
+				auto varaintElementExpect = deserializer.template beginReadVaraintOfType<
+					Flags, CustomFlags, SerializeComponentType, element_type>(varaintInfo);
 				if (varaintElementExpect.hasError()) {
 					return varaintElementExpect.error();
 				}
 				auto varaintElementInfo = varaintElementExpect.value();
 
-				auto expectValue = deserializeReadMatch<element_serialize_type, Deserializer, element_type>(
+				using variant_component = SerializeVaraintComponent<type, Index>;
+				auto expectValue = deserializeReadMatch<element_serialize_type, Deserializer, 
+					Flags, CustomFlags, variant_component, element_type>(
 					deserializer, varaintElementInfo);
 				if (expectValue.hasError()) {
 					return expectValue.error();
@@ -758,16 +767,19 @@ namespace natl {
 
 				dst.template assign<Index>(move(expectValue.value()));
 
-				return deserializer.endReadVariant(varaintElementInfo);
+				return deserializer.template endReadVariant<
+					Flags, CustomFlags, SerializeComponentType>(varaintElementInfo);
 			};
 		}
 
-		template<typename Deserializer>
+		template<typename Deserializer, DeserializeReadFlag Flags, 
+			CustomDeserializeReadFlag<Deserializer> CustomFlags, typename SerializeComponentType>
+			requires(natl::IsSerializeComponentC<SerializeComponentType>)
 		constexpr static Option<error_type<Deserializer>>
 			read(Deserializer& deserializer,
 				typename Deserializer::template deserialize_info<as_type>& varaintInfo,
 				type& dst) noexcept {
-			auto isEmptyExpect = deserializer.readIsEmptyVariant(varaintInfo);
+			auto isEmptyExpect = deserializer.template readIsEmptyVariant<Flags, CustomFlags, SerializeComponentType>(varaintInfo);
 			if(isEmptyExpect.hasError()) {
 				return isEmptyExpect.error().addSource(sourceName, "");
 			}
@@ -778,7 +790,7 @@ namespace natl {
 				return {}; 
 			}
 
-			auto variantIndexExpect = deserializer.beginReadVaraintGetIndex(
+			auto variantIndexExpect = deserializer.template beginReadVaraintGetIndex<Flags, CustomFlags, SerializeComponentType>(
 				varaintInfo, 
 				isEmpty, 
 				type::stringToIndexNotShiftedStatic);
@@ -796,7 +808,7 @@ namespace natl {
 
 			auto valueError = [&]<Size... Indices>(natl::IndexSequence<Indices...>) -> Option<error_type<Deserializer>> {
 				VariantDeserializeFunction<Deserializer> deserializeFunctions[sizeof...(Elements)] = {
-					getDeserializeFunction<Deserializer, Elements, Indices>()...
+					getDeserializeFunction<Deserializer, Flags, CustomFlags, SerializeComponentType, Elements, Indices>()...
 				};
 				
 				auto variantOfTypeError = deserializeFunctions[variantIndex](deserializer, varaintInfo, dst);
