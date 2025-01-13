@@ -1273,7 +1273,7 @@ namespace natl {
 
 		template<typename Deserializer, DeserializeReadFlag Flags, CustomDeserializeReadFlag<Deserializer> CustomFlags,
 			typename SerializeComponentType, typename... DeserializerArgs>
-			requires(IsSerializeComponentC<SerializeMemberType>)
+			requires(IsSerializeComponentC<SerializeComponentType>)
 		constexpr static Option<error_type<Deserializer>>
 			read(Deserializer& deserializer,
 				typename Deserializer::template deserialize_info<as_type>& info,

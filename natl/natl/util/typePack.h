@@ -231,6 +231,7 @@ namespace natl {
         using at = TemplatePackNthElement<Index, Elements...>::type;
     };
 
+
     namespace impl {
         template<typename...>
         struct IsTypePackV : FalseType {};
@@ -253,6 +254,14 @@ namespace natl {
         using value_type = decltype(Value);
         constexpr static value_type value = Value;
     };
+
+    //type pack back front 
+    template<typename TypePack>
+        requires(IsTypePackC<TypePack> && TypePack::size > 0)
+    using TypePackFront = TypePack::template at<0>;
+    template<typename TypePack>
+        requires(IsTypePackC<TypePack>&& TypePack::size > 0)
+    using TypePackBack = TypePack::template at<TypePack::size - 1>;
 
     namespace impl {
         template<template<typename... Elements> typename CreateType, typename... Types>

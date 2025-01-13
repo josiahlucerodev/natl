@@ -1,5 +1,12 @@
 #pragma once 
 
+//own
+#include "compilerDependent.h"
+
+#define NATL_IMPL_CONCAT_IMPL(x, y) x##y
+#define NATL_CONCAT(x, y) NATL_IMPL_CONCAT_IMPL(x, y)
+#define NATL_PLACE_HOLDER_NAME NATL_CONCAT(NatlPlaceHolder, NATL_COUNTER)
+
 //repeat
 //R = repeat
 /*

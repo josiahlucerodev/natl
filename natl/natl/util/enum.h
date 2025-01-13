@@ -602,3 +602,5 @@ constexpr inline EnumName operator&(const EnumName lhs, const EnumName rhs) noex
 	using underlying_type = natl::UnderlyingType<EnumName>; \
 	return static_cast<EnumName>(static_cast<underlying_type>(lhs) & static_cast<underlying_type>(rhs)); \
 } 
+
+

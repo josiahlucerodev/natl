@@ -181,9 +181,16 @@ namespace natl {
 
 	template<Size ByteSize> using FloatOfByteSize = typename FloatOfByteSizeT<ByteSize>::type;
 
-
-
 	using SSize = IntOfByteSize<sizeof(Size)>;
+
+	struct UC { //UniversallyCastable
+		template<typename Type>
+		constexpr operator Type && () const noexcept;
+	};
+	struct UniversallyCastable {
+		template<typename Type>
+		constexpr operator Type && () const noexcept;
+	};
 }
 
 namespace natl::literals {

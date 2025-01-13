@@ -234,3 +234,15 @@ namespace natl {
 #endif // NATL_COMPILER_MSVC
 
 
+//counter 
+#if defined(NATL_COMPILER_EMSCRIPTEN) 
+#define NATL_COUNTER __COUNTER__
+#elif defined(NATL_COMPILER_CLANG)
+#define NATL_COUNTER __COUNTER__
+#elif defined(NATL_COMPILER_GCC)
+#define NATL_COUNTER __COUNTER__
+#elif defined(NATL_COMPILER_MSVC)
+#define NATL_COUNTER __COUNTER__
+#else
+static_cast(false, "natl: counter for compiler not implemented");
+#endif

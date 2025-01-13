@@ -10,11 +10,6 @@ namespace natl {
 	constexpr static inline Size MaxStructMemberNumberEvaluated = 20;
 
 	namespace impl {
-		struct UC { //UniversallyCastable
-			template<typename Type>
-			constexpr operator Type && () const noexcept;
-		};
-
 		template<typename Type>
 		struct StructMemberCountV;
 

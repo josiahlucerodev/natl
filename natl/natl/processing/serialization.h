@@ -1041,6 +1041,19 @@ namespace natl {
 	template<typename Serializer> constexpr inline Bool CanSerializeStruct = CanSerializeStructC<Serializer>;
 	template<typename Serializer> struct CanSerializeStructV : BoolConstant<CanSerializeStructC<Serializer>> {};
 
+	template<> struct Serialize<ui8> {
+		using as_type = SerializeUI8;
+		using type = ui8;
+		template<typename Serializer> using error_type = void;
+
+		template<typename Serializer, SerializeWriteFlag Flags,
+			CustomSerializeWriteFlag<Serializer> CustomFlags, typename SerializeComponentType>
+			requires(natl::CanSerializeUI8C<Serializer>&& IsSerializeComponentC<SerializeComponentType>)
+		constexpr static void write(Serializer& serializer, const ui8 value) noexcept {
+			serializer.template writeUI8<Flags, CustomFlags, SerializeComponentType>(value);
+		}
+	};
+
 	template<typename Serializer>
 	concept CanSerializeVariantC = IsSerializerC<Serializer>
 		&& requires(Serializer & serializer) {
@@ -1199,19 +1212,6 @@ namespace natl {
 			requires(natl::CanSerializeI64C<Serializer> && IsSerializeComponentC<SerializeComponentType>)
 		constexpr static void write(Serializer& serializer, const i64 value) noexcept {
 			serializer.template writeI64<Flags, CustomFlags, SerializeComponentType>(value);
-		}
-	};
-
-	template<> struct Serialize<ui8> {
-		using as_type = SerializeUI8;
-		using type = ui8;
-		template<typename Serializer> using error_type = void;
-
-		template<typename Serializer, SerializeWriteFlag Flags,
-			CustomSerializeWriteFlag<Serializer> CustomFlags, typename SerializeComponentType>
-			requires(natl::CanSerializeUI8C<Serializer>&& IsSerializeComponentC<SerializeComponentType>)
-		constexpr static void write(Serializer& serializer, const ui8 value) noexcept {
-			serializer.template writeUI8<Flags, CustomFlags, SerializeComponentType>(value);
 		}
 	};
 	template<> struct Serialize<ui16> {
@@ -1869,7 +1869,7 @@ namespace natl {
 		Deserializer& deserializer, 
 		typename Deserializer::template deserialize_info<ParentSerializeType>& parent,
 		const ConstAsciiStringView& name) noexcept {
-		using type_deserialize = Deserialize<Decay<Type>>;
+		//using type_deserialize = Deserialize<Decay<Type>>;
 		constexpr ConstAsciiStringView sourceName = "natl::deserializeSkip";
 		
 		auto skipError = deserializer.template skip<Flags, CustomFlags, SerializeComponentType, Type, ParentSerializeType>(parent, name);

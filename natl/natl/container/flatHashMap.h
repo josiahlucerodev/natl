@@ -1043,6 +1043,16 @@ namespace NATL_NAMESPACE_NAME_FOR_TUPLE_GET(natl) {
 		}
 	}
 	template <std::size_t Index, typename KeyType, typename ValueType>
+	constexpr decltype(auto) get(natl::KeyValueRef<KeyType, ValueType>& obj) {
+		if constexpr (Index == 0) {
+			return obj.key();
+		} else if constexpr (Index == 1) {
+			return obj.value();
+		} else {
+			static_assert(Index < 2, "natl: index out of bounds");
+		}
+	}
+	template <std::size_t Index, typename KeyType, typename ValueType>
 	constexpr decltype(auto) get(natl::KeyValueRef<KeyType, ValueType>&& obj) {
 		if constexpr (Index == 0) {
 			return obj.key();
@@ -1065,7 +1075,16 @@ namespace NATL_NAMESPACE_NAME_FOR_TUPLE_GET(natl::impl) {
 			static_assert(Index < 2, "natl: index out of bounds");
 		}
 	}
-
+	template <std::size_t Index, typename KeyType, typename ValueType>
+	constexpr decltype(auto) get(natl::impl::FlatMapHashKeyValueUnit<KeyType, ValueType>& obj) {
+		if constexpr (Index == 0) {
+			return obj.key();
+		} else if constexpr (Index == 1) {
+			return obj.value();
+		} else {
+			static_assert(Index < 2, "natl: index out of bounds");
+		}
+	}
 	template <std::size_t Index, typename KeyType, typename ValueType>
 	constexpr decltype(auto) get(natl::impl::FlatMapHashKeyValueUnit<KeyType, ValueType>&& obj) {
 		if constexpr (Index == 0) {

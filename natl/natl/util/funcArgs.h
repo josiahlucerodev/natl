@@ -46,7 +46,7 @@ namespace natl {
 
 	template<typename... ArgTypes>
 	constexpr FuncArgs<ArgTypes...> passFuncArgs(ArgTypes&&... args) noexcept {
-		return FuncArgs<ArgTypes...>(natl::forward<ArgTypes>(args));
+		return FuncArgs<ArgTypes...>(natl::forward<ArgTypes>(args)...);
 	}
 }
 
