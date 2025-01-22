@@ -272,6 +272,11 @@ namespace natl {
 	template<typename Test, template<typename...> typename SpecializationType>
 	concept IsSpecializationC = IsSpecialization<Test, SpecializationType>;
 
+	//struct layout 
+	template<typename Type> struct IsAggregateV : BoolConstant<std::is_aggregate_v<Type>> {};
+	template<typename Type> inline constexpr Bool IsAggregate = IsAggregateV<Type>::value;
+	template<typename Type> concept IsAggregateC = IsAggregateV<Type>::value;
+
 	//reference 
 	template<typename DataType> struct RemoveReferenceT { using type = DataType; };
 	template<typename DataType> struct RemoveReferenceT<DataType&> { using type = DataType; };
@@ -887,4 +892,17 @@ namespace natl {
 
 	template<typename DataType> constexpr inline Size TypeByteSize = sizeof(DataType);
 	template<typename DataType> consteval Size getTypeByteSize() noexcept { return sizeof(DataType); }
+
+
+	struct UniversallyCastable {
+		template<typename Type>
+		constexpr operator Type && () const noexcept;
+	};
+
+	template<typename... RestrictedTypes>
+	struct RestrictedUniversallyCastable {
+		template<typename Type>
+			requires(!natl::SameAs<Type, RestrictedTypes> && ...)
+		constexpr operator Type && () const noexcept;
+	};
 }

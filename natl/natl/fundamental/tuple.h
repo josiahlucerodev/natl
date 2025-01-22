@@ -252,23 +252,84 @@ namespace natl {
 		return std::tuple<Types&&...>(natl::forward<Types>(args)...);
 	}
 
-	namespace impl {
-		template<typename TupleType> struct TupleSizeTypeImpl : IntegralConstant<Size, 0> {};
-		template<typename... Types> struct TupleSizeTypeImpl<Tuple<Types...>> : IntegralConstant<Size, sizeof...(Types)> {};
+	//tuple size 
+	template<typename Type> concept HasStdTupleSizeC = requires() {
+		{ std::tuple_size<Type>::value } -> ConvertibleTo<Size>;
+	};
+	template<typename Type> struct HasStdTupleSizeV : BoolConstant<HasStdTupleSizeC<Type>> {};
+	template<typename Type> constexpr inline Bool HasStdTupleSize = HasStdTupleSizeC<Type>;
 
-		template<Size Index, typename TupleType> struct TupleElementTypeImpl;
+	template<typename Type> struct TupleSizeV {};
+	template<typename Type> constexpr inline Size TupleSize = TupleSizeV<Decay<Type>>::value;
 
-		template<Size Index, typename... DataTypes>
-		struct TupleElementTypeImpl<Index, Tuple<DataTypes...>> {
-			using type = TypePackNthElement<Index, typename Tuple<DataTypes...>::value_types>;
-		};
 
-	}
+	template<typename Type> concept HasTupleSizeC = requires() {
+		{ TupleSizeV<Type>::value } -> ConvertibleTo<Size>;
+	};
+	template<typename Type> struct HasTupleSizeV : BoolConstant<HasTupleSizeC<Type>> {};
+	template<typename Type> constexpr inline Bool HasTupleSize = HasTupleSizeC<Type>;
 
-	template<typename TupleType> using TupleSizeTypeImpl = impl::TupleSizeTypeImpl<Decay<TupleType>>;
-	template<typename TupleType> constexpr inline Size TupleSize = impl::TupleSizeTypeImpl<Decay<TupleType>>::value;
-	template<Size Index, typename TupleType> using TupleElementType = impl::TupleElementTypeImpl<Index, Decay<TupleType>>;
-	template<Size Index, typename TupleType> using TupleElement = impl::TupleElementTypeImpl<Index, Decay<TupleType>>::type;
+	template<typename Type>
+		requires(HasStdTupleSizeC<Type>)
+	struct TupleSizeV<Type> : IntegralConstant<Size, std::tuple_size<Type>::value> {};
+
+
+	//tuple element 
+	template<typename Type> concept HasStdTupleElementC = requires() {
+		typename std::tuple_element<0, Type>::type;
+	};
+	template<typename Type> struct HasStdTupleElementV : BoolConstant<HasStdTupleElementC<Type>> {};
+	template<typename Type> constexpr inline Bool HasStdTupleElement = HasStdTupleElementC<Type>;
+
+	template<Size Index, typename Type> struct TupleElementT;
+	template<Size Index, typename TupleType> using TupleElement = TupleElementT<Index, Decay<TupleType>>::type;
+
+	template<typename Type> concept HasTupleElementC = requires() {
+		typename TupleElementT<0, Type>::type;
+	};
+	template<typename Type> struct HasTupleElementV : BoolConstant<HasTupleElementC<Type>> {};
+	template<typename Type> constexpr inline Bool HasTupleElement = HasTupleElementC<Type>;
+
+	template<Size Index, typename Type> concept HasTupleElementAtC = requires() {
+		typename TupleElementT<Index, Type>::type;
+	};
+	template<Size Index, typename Type> struct HasTupleElementAtV : BoolConstant<HasTupleElementAtC<Index, Type>> {};
+	template<Size Index, typename Type> constexpr inline Bool HasTupleElementAt = HasTupleElementAtC<Index, Type>;
+
+	template<Size Index, typename Type>
+		requires(HasStdTupleSizeC<Type>)
+	struct TupleElementT<Index, Type> : std::tuple_element<0, Type> {};
+
+	//get tuple element 
+	template<typename Type> 
+	struct GetTupleElement;
+
+	template<typename Type> concept HasGetTupleElementC = requires() {
+		GetTupleElement<Type>::get;
+	};
+	template<typename Type> struct HasGetTupleElementV : BoolConstant<HasGetTupleElementC<Type>> {};
+	template<typename Type> constexpr inline Bool HasGetTupleElement = HasGetTupleElementC<Type>;
+
+	template<typename... Types> 
+	struct TupleSizeV<Tuple<Types...>> : IntegralConstant<Size, sizeof...(Types)> {};
+	template<Size Index, typename... DataTypes>
+	struct TupleElementT<Index, Tuple<DataTypes...>> {
+		using type = TypePackNthElement<Index, typename Tuple<DataTypes...>::value_types>;
+	};
+
+	template<typename... Types> 
+	struct GetTupleElement<Tuple<Types...>> {
+		template<Size Index>
+			requires(Index < sizeof...(Types))
+		constexpr static const auto& get(const Tuple<Types...>& value) noexcept {
+			return value.template get<Index>();
+		}
+		template<Size Index>
+			requires(Index < sizeof...(Types))
+		constexpr static auto&& get(Tuple<Types...>&& value) noexcept {
+			return value.template get<Index>();
+		}
+	};
 
 	namespace impl {
 		template<typename Functor, typename Tuple, Size... Indices>

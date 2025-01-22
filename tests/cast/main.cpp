@@ -10,7 +10,7 @@ class TestStruct{
 };
 NATL_PUBLIC_CAST_HELPER(impl, TestStruct, obj, member)
 
-constexpr natl::Bool privateCastTest() noexcept {
+natl::Bool privateCastTest() noexcept {
 	natl::Test test(natlTestFrom, "private cast", natl::TestType::leaf);
 
 	TestStruct obj;
@@ -25,8 +25,6 @@ natl::Bool tests() noexcept {
 	natl::subTestAssert(test, privateCastTest());
 	return test;
 }
-
-
 
 int main() {
 	tests();

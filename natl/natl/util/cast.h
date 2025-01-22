@@ -17,38 +17,26 @@ namespace natl {
 	[[nodiscard]] NATL_FORCE_INLINE constexpr To punCast(const From& from) noexcept {
 		return bitCast<To, From>(from);
 	}
-	
-	namespace impl {
+
+	template <typename Type>
+	[[nodiscard]] NATL_FORCE_INLINE constexpr Type& constCast(const Type& value) noexcept {
+    	return const_cast<Type&>(value);
 	}
-
+	
 NATL_DEFINE_STATEFUL_TYPEPACK(PublicCastTypePack)
-	template<typename M, typename Secret>
-	struct PublicCast {
-		static inline M value{};
-	};
-	template<typename Secret, auto M>
-	struct PrivateAccess {
-		static const inline auto value
-			= PublicCast<decltype(M), Secret>::value = M;
-		constexpr static auto t = PublicCastTypePackAppendInClass<decltype(M)>();
-	};
-
 }
 
 #define NATL_PUBLIC_CAST_HELPER(NamespaceName, ObjectType, Object, Member) \
 	namespace NamespaceName { \
 		NATL_DEFINE_STATEFUL_TYPEPACK(Object##Member##PublicCastTypePack) \
-		template<typename M, typename Secret> struct Object##Member##PublicCast { static inline M value{}; }; \
-		template<typename Secret, auto M> struct Object##Member##PrivateAccess { \
-			static const inline auto value = Object##Member##PublicCast<decltype(M), Secret>::value = M; \
-			constexpr static auto t = Object##Member##PublicCastTypePackAppendInClass<decltype(M)>(); \
+		template<typename Type, typename Secret> struct Object##Member##PublicCast { static inline Type value{}; }; \
+		template<typename Secret, auto Type> struct Object##Member##PrivateAccess { \
+			static inline auto value = Object##Member##PublicCast<decltype(Type), Secret>::value = Type; \
+			constexpr static auto u1 = Object##Member##PublicCastTypePackAppendInClass<decltype(Type)>(); \
+			constexpr static auto u2 = natl::PublicCastTypePackAppendInClass<decltype(Type)>(); \
 		}; \
 		template struct Object##Member##PrivateAccess<class Object##Member##PrivateSecret, &ObjectType::Member>; \
 	}
 
 #define NATL_PUBLIC_CAST(NamespaceName, Object, Member) \
     Object.*NamespaceName::Object##Member##PublicCast<natl::TypePackBack<NamespaceName::Object##Member##PublicCastTypePack<>>, NamespaceName::Object##Member##PrivateSecret>::value
-
-
-#define NATL_TURN_OFF_PRIVATE #define private public 
-#define NATL_TURN_ON_PRIVATE #undef private 

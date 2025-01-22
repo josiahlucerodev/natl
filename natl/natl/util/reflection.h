@@ -9,14 +9,17 @@
 namespace natl {
 	constexpr static inline Size MaxStructMemberNumberEvaluated = 20;
 
+
 	namespace impl {
 		template<typename Type>
-		struct StructMemberCountV;
+		struct StructMemberCountAggregate;
 
 #define NATL_IMPL_STRUCT_MEMBER_COUNT_BASE(N, N2) \
 		template<typename Type> \
-			requires(requires() { { Type{ NATL_REPEAT_WITH_COMMAS(N, UC{}) } }; } && !requires() { { Type{ NATL_REPEAT_WITH_COMMAS(N2, UC{}) } }; }) \
-		struct StructMemberCountV<Type> { \
+			requires( \
+				requires() { { Type{ NATL_REPEAT_WITH_COMMAS(N, natl::RestrictedUniversallyCastable<Type>{}) } }; } \
+				&& !requires() { { Type{ NATL_REPEAT_WITH_COMMAS(N2, natl::RestrictedUniversallyCastable<Type>{}) } }; } ) \
+		struct StructMemberCountAggregate<Type> { \
 			constexpr static Size value = N; \
 		}
 
@@ -41,27 +44,56 @@ namespace natl {
 		NATL_IMPL_STRUCT_MEMBER_COUNT_BASE(19, 20);
 		NATL_IMPL_STRUCT_MEMBER_COUNT_BASE(20, 21);
 
-#undef NATL_IMPL_STRUCT_MEMBER_COUNT_IMPL_2D
-#undef NATL_IMPL_STRUCT_MEMBER_COUNT_IMPL_1D
+	#undef NATL_IMPL_STRUCT_MEMBER_COUNT_IMPL_2D
+	#undef NATL_IMPL_STRUCT_MEMBER_COUNT_IMPL_1D
 	}
 
+	template<typename Type> struct StructMemberCountV;
+	template<typename Type> constexpr Size StructMemberCount = StructMemberCountV<Type>::value;
+
+	template<typename Type> 
+	concept HasStructMemberCountC = requires() {
+		{ natl::StructMemberCountV<Type>::value } -> ConvertibleTo<Size>;
+	};
+	template<typename Type> struct HasStructMemberCountV : BoolConstant<HasStructMemberCountC<Type>> {};
+	template<typename Type> inline constexpr Bool HasStructMemberCount = HasStructMemberCountC<Type>;
 
 	template<typename Type>
-	constexpr Size StructMemberCount = impl::StructMemberCountV<Type>::value;
+		requires(IsAggregateC<Type> && !HasTupleSizeC<Type>)
+	struct StructMemberCountV<Type> : impl::StructMemberCountAggregate<Type> {};
+	template<typename Type>
+		requires(HasTupleSizeC<Type>)
+	struct StructMemberCountV<Type> : TupleSizeV<Type> {};
 
+
+	//struct member 
 	namespace impl {
-		template<Size Index, Size MemberCount>
-		struct GetStructMemberImpl;
+		template<Size MemberCount, typename Type>
+		struct GetStructMemberAggregate;
 
 		/*
 			for i in range(20 + 1):
 				print("#undef NATL_IMPL_GET_STRUCT_MEMBER_" + str(i))
 			for i in range(20 + 2):
 				print("#define NATL_IMPL_GET_STRUCT_MEMBER_" + str(i) + " NATL_IMPL_GET_STRUCT_MEMBER_" + str(i - 1) + " NATL_IMPL_GET_STRUCT_MEMBER_BASE(" + str(i - 1) + ")")
+			
 			for i in range(20 + 1):
-				print("template<Size Index> struct ", end="")
-				print("GetStructMemberImpl<Index, " + str(i) + "> {")
-				print("\tconstexpr static auto&& get(auto&& value) noexcept {")
+				print("template<typename Type> struct ", end="")
+				print("GetStructMemberAggregate<" + str(i) + ", Type> {")
+
+				print("\ttemplate<Size Index>")
+				print("\tconstexpr static const auto& get(const Type& value) noexcept {")
+				print("\t\tconst auto& [",  end="")
+				for j in range(i):
+					print("m" + str(j), end="")
+					if j != i - 1:
+						print(", ", end ="")
+				print("] = value;")
+				print("\t\tNATL_IMPL_GET_STRUCT_MEMBER_" + str(i))
+				print("\t}")
+
+				print("\ttemplate<Size Index>")
+				print("\tconstexpr static auto&& get(Type&& value) noexcept {")
 				print("\t\tauto&& [",  end="")
 				for j in range(i):
 					print("m" + str(j), end="")
@@ -70,6 +102,7 @@ namespace natl {
 				print("] = value;")
 				print("\t\tNATL_IMPL_GET_STRUCT_MEMBER_" + str(i))
 				print("\t}")
+
 				print("};")
 		*/
 
@@ -96,126 +129,248 @@ namespace natl {
 #define NATL_IMPL_GET_STRUCT_MEMBER_20 NATL_IMPL_GET_STRUCT_MEMBER_19 NATL_IMPL_GET_STRUCT_MEMBER_BASE(19)
 #define NATL_IMPL_GET_STRUCT_MEMBER_21 NATL_IMPL_GET_STRUCT_MEMBER_20 NATL_IMPL_GET_STRUCT_MEMBER_BASE(20)
 
-		template<Size Index> struct GetStructMemberImpl<Index, 1> {
-			constexpr static auto&& get(auto&& value) noexcept {
+
+		template<typename Type> struct GetStructMemberAggregate<1, Type> {
+			template<Size Index>
+			constexpr static const auto& get(const Type& value) noexcept {
+				const auto& [m0] = value;
+				NATL_IMPL_GET_STRUCT_MEMBER_1
+			}
+			template<Size Index>
+			constexpr static auto&& get(Type&& value) noexcept {
 				auto&& [m0] = value;
 				NATL_IMPL_GET_STRUCT_MEMBER_1
 			}
 		};
-		template<Size Index> struct GetStructMemberImpl<Index, 2> {
-			constexpr static auto&& get(auto&& value) noexcept {
+		template<typename Type> struct GetStructMemberAggregate<2, Type> {
+			template<Size Index>
+			constexpr static const auto& get(const Type& value) noexcept {
+				const auto& [m0, m1] = value;
+				NATL_IMPL_GET_STRUCT_MEMBER_2
+			}
+			template<Size Index>
+			constexpr static auto&& get(Type&& value) noexcept {
 				auto&& [m0, m1] = value;
 				NATL_IMPL_GET_STRUCT_MEMBER_2
 			}
 		};
-		template<Size Index> struct GetStructMemberImpl<Index, 3> {
-			constexpr static auto&& get(auto&& value) noexcept {
+		template<typename Type> struct GetStructMemberAggregate<3, Type> {
+			template<Size Index>
+			constexpr static const auto& get(const Type& value) noexcept {
+				const auto& [m0, m1, m2] = value;
+				NATL_IMPL_GET_STRUCT_MEMBER_3
+			}
+			template<Size Index>
+			constexpr static auto&& get(Type&& value) noexcept {
 				auto&& [m0, m1, m2] = value;
 				NATL_IMPL_GET_STRUCT_MEMBER_3
 			}
 		};
-		template<Size Index> struct GetStructMemberImpl<Index, 4> {
-			constexpr static auto&& get(auto&& value) noexcept {
+		template<typename Type> struct GetStructMemberAggregate<4, Type> {
+			template<Size Index>
+			constexpr static const auto& get(const Type& value) noexcept {
+				const auto& [m0, m1, m2, m3] = value;
+				NATL_IMPL_GET_STRUCT_MEMBER_4
+			}
+			template<Size Index>
+			constexpr static auto&& get(Type&& value) noexcept {
 				auto&& [m0, m1, m2, m3] = value;
 				NATL_IMPL_GET_STRUCT_MEMBER_4
 			}
 		};
-		template<Size Index> struct GetStructMemberImpl<Index, 5> {
-			constexpr static auto&& get(auto&& value) noexcept {
+		template<typename Type> struct GetStructMemberAggregate<5, Type> {
+			template<Size Index>
+			constexpr static const auto& get(const Type& value) noexcept {
+				const auto& [m0, m1, m2, m3, m4] = value;
+				NATL_IMPL_GET_STRUCT_MEMBER_5
+			}
+			template<Size Index>
+			constexpr static auto&& get(Type&& value) noexcept {
 				auto&& [m0, m1, m2, m3, m4] = value;
 				NATL_IMPL_GET_STRUCT_MEMBER_5
 			}
 		};
-		template<Size Index> struct GetStructMemberImpl<Index, 6> {
-			constexpr static auto&& get(auto&& value) noexcept {
+		template<typename Type> struct GetStructMemberAggregate<6, Type> {
+			template<Size Index>
+			constexpr static const auto& get(const Type& value) noexcept {
+				const auto& [m0, m1, m2, m3, m4, m5] = value;
+				NATL_IMPL_GET_STRUCT_MEMBER_6
+			}
+			template<Size Index>
+			constexpr static auto&& get(Type&& value) noexcept {
 				auto&& [m0, m1, m2, m3, m4, m5] = value;
 				NATL_IMPL_GET_STRUCT_MEMBER_6
 			}
 		};
-		template<Size Index> struct GetStructMemberImpl<Index, 7> {
-			constexpr static auto&& get(auto&& value) noexcept {
+		template<typename Type> struct GetStructMemberAggregate<7, Type> {
+			template<Size Index>
+			constexpr static const auto& get(const Type& value) noexcept {
+				const auto& [m0, m1, m2, m3, m4, m5, m6] = value;
+				NATL_IMPL_GET_STRUCT_MEMBER_7
+			}
+			template<Size Index>
+			constexpr static auto&& get(Type&& value) noexcept {
 				auto&& [m0, m1, m2, m3, m4, m5, m6] = value;
 				NATL_IMPL_GET_STRUCT_MEMBER_7
 			}
 		};
-		template<Size Index> struct GetStructMemberImpl<Index, 8> {
-			constexpr static auto&& get(auto&& value) noexcept {
+		template<typename Type> struct GetStructMemberAggregate<8, Type> {
+			template<Size Index>
+			constexpr static const auto& get(const Type& value) noexcept {
+				const auto& [m0, m1, m2, m3, m4, m5, m6, m7] = value;
+				NATL_IMPL_GET_STRUCT_MEMBER_8
+			}
+			template<Size Index>
+			constexpr static auto&& get(Type&& value) noexcept {
 				auto&& [m0, m1, m2, m3, m4, m5, m6, m7] = value;
 				NATL_IMPL_GET_STRUCT_MEMBER_8
 			}
 		};
-		template<Size Index> struct GetStructMemberImpl<Index, 9> {
-			constexpr static auto&& get(auto&& value) noexcept {
+		template<typename Type> struct GetStructMemberAggregate<9, Type> {
+			template<Size Index>
+			constexpr static const auto& get(const Type& value) noexcept {
+				const auto& [m0, m1, m2, m3, m4, m5, m6, m7, m8] = value;
+				NATL_IMPL_GET_STRUCT_MEMBER_9
+			}
+			template<Size Index>
+			constexpr static auto&& get(Type&& value) noexcept {
 				auto&& [m0, m1, m2, m3, m4, m5, m6, m7, m8] = value;
 				NATL_IMPL_GET_STRUCT_MEMBER_9
 			}
 		};
-		template<Size Index> struct GetStructMemberImpl<Index, 10> {
-			constexpr static auto&& get(auto&& value) noexcept {
+		template<typename Type> struct GetStructMemberAggregate<10, Type> {
+			template<Size Index>
+			constexpr static const auto& get(const Type& value) noexcept {
+				const auto& [m0, m1, m2, m3, m4, m5, m6, m7, m8, m9] = value;
+				NATL_IMPL_GET_STRUCT_MEMBER_10
+			}
+			template<Size Index>
+			constexpr static auto&& get(Type&& value) noexcept {
 				auto&& [m0, m1, m2, m3, m4, m5, m6, m7, m8, m9] = value;
 				NATL_IMPL_GET_STRUCT_MEMBER_10
 			}
 		};
-		template<Size Index> struct GetStructMemberImpl<Index, 11> {
-			constexpr static auto&& get(auto&& value) noexcept {
+		template<typename Type> struct GetStructMemberAggregate<11, Type> {
+			template<Size Index>
+			constexpr static const auto& get(const Type& value) noexcept {
+				const auto& [m0, m1, m2, m3, m4, m5, m6, m7, m8, m9, m10] = value;
+				NATL_IMPL_GET_STRUCT_MEMBER_11
+			}
+			template<Size Index>
+			constexpr static auto&& get(Type&& value) noexcept {
 				auto&& [m0, m1, m2, m3, m4, m5, m6, m7, m8, m9, m10] = value;
 				NATL_IMPL_GET_STRUCT_MEMBER_11
 			}
 		};
-		template<Size Index> struct GetStructMemberImpl<Index, 12> {
-			constexpr static auto&& get(auto&& value) noexcept {
+		template<typename Type> struct GetStructMemberAggregate<12, Type> {
+			template<Size Index>
+			constexpr static const auto& get(const Type& value) noexcept {
+				const auto& [m0, m1, m2, m3, m4, m5, m6, m7, m8, m9, m10, m11] = value;
+				NATL_IMPL_GET_STRUCT_MEMBER_12
+			}
+			template<Size Index>
+			constexpr static auto&& get(Type&& value) noexcept {
 				auto&& [m0, m1, m2, m3, m4, m5, m6, m7, m8, m9, m10, m11] = value;
 				NATL_IMPL_GET_STRUCT_MEMBER_12
 			}
 		};
-		template<Size Index> struct GetStructMemberImpl<Index, 13> {
-			constexpr static auto&& get(auto&& value) noexcept {
+		template<typename Type> struct GetStructMemberAggregate<13, Type> {
+			template<Size Index>
+			constexpr static const auto& get(const Type& value) noexcept {
+				const auto& [m0, m1, m2, m3, m4, m5, m6, m7, m8, m9, m10, m11, m12] = value;
+				NATL_IMPL_GET_STRUCT_MEMBER_13
+			}
+			template<Size Index>
+			constexpr static auto&& get(Type&& value) noexcept {
 				auto&& [m0, m1, m2, m3, m4, m5, m6, m7, m8, m9, m10, m11, m12] = value;
 				NATL_IMPL_GET_STRUCT_MEMBER_13
 			}
 		};
-		template<Size Index> struct GetStructMemberImpl<Index, 14> {
-			constexpr static auto&& get(auto&& value) noexcept {
+		template<typename Type> struct GetStructMemberAggregate<14, Type> {
+			template<Size Index>
+			constexpr static const auto& get(const Type& value) noexcept {
+				const auto& [m0, m1, m2, m3, m4, m5, m6, m7, m8, m9, m10, m11, m12, m13] = value;
+				NATL_IMPL_GET_STRUCT_MEMBER_14
+			}
+			template<Size Index>
+			constexpr static auto&& get(Type&& value) noexcept {
 				auto&& [m0, m1, m2, m3, m4, m5, m6, m7, m8, m9, m10, m11, m12, m13] = value;
 				NATL_IMPL_GET_STRUCT_MEMBER_14
 			}
 		};
-		template<Size Index> struct GetStructMemberImpl<Index, 15> {
-			constexpr static auto&& get(auto&& value) noexcept {
+		template<typename Type> struct GetStructMemberAggregate<15, Type> {
+			template<Size Index>
+			constexpr static const auto& get(const Type& value) noexcept {
+				const auto& [m0, m1, m2, m3, m4, m5, m6, m7, m8, m9, m10, m11, m12, m13, m14] = value;
+				NATL_IMPL_GET_STRUCT_MEMBER_15
+			}
+			template<Size Index>
+			constexpr static auto&& get(Type&& value) noexcept {
 				auto&& [m0, m1, m2, m3, m4, m5, m6, m7, m8, m9, m10, m11, m12, m13, m14] = value;
 				NATL_IMPL_GET_STRUCT_MEMBER_15
 			}
 		};
-		template<Size Index> struct GetStructMemberImpl<Index, 16> {
-			constexpr static auto&& get(auto&& value) noexcept {
+		template<typename Type> struct GetStructMemberAggregate<16, Type> {
+			template<Size Index>
+			constexpr static const auto& get(const Type& value) noexcept {
+				const auto& [m0, m1, m2, m3, m4, m5, m6, m7, m8, m9, m10, m11, m12, m13, m14, m15] = value;
+				NATL_IMPL_GET_STRUCT_MEMBER_16
+			}
+			template<Size Index>
+			constexpr static auto&& get(Type&& value) noexcept {
 				auto&& [m0, m1, m2, m3, m4, m5, m6, m7, m8, m9, m10, m11, m12, m13, m14, m15] = value;
 				NATL_IMPL_GET_STRUCT_MEMBER_16
 			}
 		};
-		template<Size Index> struct GetStructMemberImpl<Index, 17> {
-			constexpr static auto&& get(auto&& value) noexcept {
+		template<typename Type> struct GetStructMemberAggregate<17, Type> {
+			template<Size Index>
+			constexpr static const auto& get(const Type& value) noexcept {
+				const auto& [m0, m1, m2, m3, m4, m5, m6, m7, m8, m9, m10, m11, m12, m13, m14, m15, m16] = value;
+				NATL_IMPL_GET_STRUCT_MEMBER_17
+			}
+			template<Size Index>
+			constexpr static auto&& get(Type&& value) noexcept {
 				auto&& [m0, m1, m2, m3, m4, m5, m6, m7, m8, m9, m10, m11, m12, m13, m14, m15, m16] = value;
 				NATL_IMPL_GET_STRUCT_MEMBER_17
 			}
 		};
-		template<Size Index> struct GetStructMemberImpl<Index, 18> {
-			constexpr static auto&& get(auto&& value) noexcept {
+		template<typename Type> struct GetStructMemberAggregate<18, Type> {
+			template<Size Index>
+			constexpr static const auto& get(const Type& value) noexcept {
+				const auto& [m0, m1, m2, m3, m4, m5, m6, m7, m8, m9, m10, m11, m12, m13, m14, m15, m16, m17] = value;
+				NATL_IMPL_GET_STRUCT_MEMBER_18
+			}
+			template<Size Index>
+			constexpr static auto&& get(Type&& value) noexcept {
 				auto&& [m0, m1, m2, m3, m4, m5, m6, m7, m8, m9, m10, m11, m12, m13, m14, m15, m16, m17] = value;
 				NATL_IMPL_GET_STRUCT_MEMBER_18
 			}
 		};
-		template<Size Index> struct GetStructMemberImpl<Index, 19> {
-			constexpr static auto&& get(auto&& value) noexcept {
+		template<typename Type> struct GetStructMemberAggregate<19, Type> {
+			template<Size Index>
+			constexpr static const auto& get(const Type& value) noexcept {
+				const auto& [m0, m1, m2, m3, m4, m5, m6, m7, m8, m9, m10, m11, m12, m13, m14, m15, m16, m17, m18] = value;
+				NATL_IMPL_GET_STRUCT_MEMBER_19
+			}
+			template<Size Index>
+			constexpr static auto&& get(Type&& value) noexcept {
 				auto&& [m0, m1, m2, m3, m4, m5, m6, m7, m8, m9, m10, m11, m12, m13, m14, m15, m16, m17, m18] = value;
 				NATL_IMPL_GET_STRUCT_MEMBER_19
 			}
 		};
-		template<Size Index> struct GetStructMemberImpl<Index, 20> {
-			constexpr static auto&& get(auto&& value) noexcept {
+		template<typename Type> struct GetStructMemberAggregate<20, Type> {
+			template<Size Index>
+			constexpr static const auto& get(const Type& value) noexcept {
+				const auto& [m0, m1, m2, m3, m4, m5, m6, m7, m8, m9, m10, m11, m12, m13, m14, m15, m16, m17, m18, m19] = value;
+				NATL_IMPL_GET_STRUCT_MEMBER_20
+			}
+			template<Size Index>
+			constexpr static auto&& get(Type&& value) noexcept {
 				auto&& [m0, m1, m2, m3, m4, m5, m6, m7, m8, m9, m10, m11, m12, m13, m14, m15, m16, m17, m18, m19] = value;
 				NATL_IMPL_GET_STRUCT_MEMBER_20
 			}
 		};
+
 
 #undef NATL_IMPL_GET_STRUCT_MEMBER_0
 #undef NATL_IMPL_GET_STRUCT_MEMBER_1
@@ -240,171 +395,61 @@ namespace natl {
 #undef NATL_IMPL_GET_STRUCT_MEMBER_20
 	}
 
+	template<typename Type> 
+	struct GetStructMember {};
+	template<typename Type> concept HasGetStructMemberC = requires() {
+		{ GetStructMember<Type>::template get<0>(declval<Type>()) };
+	};
+	template<typename Type> struct HasGetStructMemberV : BoolConstant<HasGetStructMemberC<Type>> {};
+	template<typename Type> constexpr inline Bool HasGetStructMember = HasGetStructMemberC<Type>;
+
+	template<typename Type>
+		requires(IsAggregateC<Type> && !HasTupleSizeC<Type> && HasStructMemberCountC<Type>)
+	struct GetStructMember<Type> : impl::GetStructMemberAggregate<StructMemberCount<Decay<Type>>, Type> {};
+	template<typename Type>
+		requires(HasTupleSizeC<Type> && HasGetTupleElementC<Type>)
+	struct GetStructMember<Type> : GetTupleElement<Type> {};
+
 	template<Size Index, typename Type>
-		requires(IsStructC<Decay<Type>> && StructMemberCount<Type> <= MaxStructMemberNumberEvaluated && Index < StructMemberCount<Type>)
+	using StructMemberType = Decay<decltype(GetStructMember<Type>::template get<Index>(declval<Type>()))>;
+
+	template<Size Index, typename Type>
+		requires(HasGetStructMemberC<Decay<Type>> && Index < StructMemberCount<Decay<Type>>)
 	constexpr auto&& getStructMember(Type&& value) noexcept {
-		return impl::GetStructMemberImpl<Index, StructMemberCount<Type>>::get(value);
+		return GetStructMember<Decay<Type>>::template get<Index>(value);
 	}
 
-	template<typename Type, Size Index>
-		requires(IsStructC<Decay<Type>> && StructMemberCount<Type> <= MaxStructMemberNumberEvaluated && Index < StructMemberCount<Type>)
-	using StructMemberType = Decay<decltype(impl::GetStructMemberImpl<Index, StructMemberCount<Type>>::get(declval<Type>()))>;
 
-	namespace impl {
-		template<Size Index>
-		struct GetStructMembersImpl;
 
-		/*autofor i in range(1, 21):
-				print("template<> struct GetStructMembersImpl<" + str(i) + ">
-				print("\tconstexpr static decltype(auto) get(auto&& value) noexcept {")
-				for j in range(i):
-					print("m" + str(j), end="")
-					if j != i - 1:
-						print(", ", end ="")
-				print("] = value;")
-				print("\t\treturn tie(", end="")
-				for j in range(i):
-					print("m" + str(j), end="")
-					if j != i - 1:
-						print(", ", end ="")
-				print(");")
-				print("\t}")
-				print("};")
-		*/
+	//get struct member
+	template<typename Type>
+		requires(HasGetStructMemberC<Type>)
+	struct GetStructMembers {
+		constexpr static decltype(auto) get(Type&& value) noexcept {
+			return [&] <Size... Indices> (IndexSequence<Indices...>) {
+				return tie(getStructMember<Indices, Type>(forward<Type>(value))...);
+			}(MakeIndexSequence<StructMemberCount<Decay<Type>>>{});
+		}
+	};
 
-		template<> struct GetStructMembersImpl<1> {
-			constexpr static decltype(auto) get(auto&& value) noexcept {
-				auto&& [m0] = value;
-				return tie(m0);
-			}
-		};
-		template<> struct GetStructMembersImpl<2> {
-			constexpr static decltype(auto) get(auto&& value) noexcept {
-				auto&& [m0, m1] = value;
-				return tie(m0, m1);
-			}
-		};
-		template<> struct GetStructMembersImpl<3> {
-			constexpr static decltype(auto) get(auto&& value) noexcept {
-				auto&& [m0, m1, m2] = value;
-				return tie(m0, m1, m2);
-			}
-		};
-		template<> struct GetStructMembersImpl<4> {
-			constexpr static decltype(auto) get(auto&& value) noexcept {
-				auto&& [m0, m1, m2, m3] = value;
-				return tie(m0, m1, m2, m3);
-			}
-		};
-		template<> struct GetStructMembersImpl<5> {
-			constexpr static decltype(auto) get(auto&& value) noexcept {
-				auto&& [m0, m1, m2, m3, m4] = value;
-				return tie(m0, m1, m2, m3, m4);
-			}
-		};
-		template<> struct GetStructMembersImpl<6> {
-			constexpr static decltype(auto) get(auto&& value) noexcept {
-				auto&& [m0, m1, m2, m3, m4, m5] = value;
-				return tie(m0, m1, m2, m3, m4, m5);
-			}
-		};
-		template<> struct GetStructMembersImpl<7> {
-			constexpr static decltype(auto) get(auto&& value) noexcept {
-				auto&& [m0, m1, m2, m3, m4, m5, m6] = value;
-				return tie(m0, m1, m2, m3, m4, m5, m6);
-			}
-		};
-		template<> struct GetStructMembersImpl<8> {
-			constexpr static decltype(auto) get(auto&& value) noexcept {
-				auto&& [m0, m1, m2, m3, m4, m5, m6, m7] = value;
-				return tie(m0, m1, m2, m3, m4, m5, m6, m7);
-			}
-		};
-		template<> struct GetStructMembersImpl<9> {
-			constexpr static decltype(auto) get(auto&& value) noexcept {
-				auto&& [m0, m1, m2, m3, m4, m5, m6, m7, m8] = value;
-				return tie(m0, m1, m2, m3, m4, m5, m6, m7, m8);
-			}
-		};
-		template<> struct GetStructMembersImpl<10> {
-			constexpr static decltype(auto) get(auto&& value) noexcept {
-				auto&& [m0, m1, m2, m3, m4, m5, m6, m7, m8, m9] = value;
-				return tie(m0, m1, m2, m3, m4, m5, m6, m7, m8, m9);
-			}
-		};
-		template<> struct GetStructMembersImpl<11> {
-			constexpr static decltype(auto) get(auto&& value) noexcept {
-				auto&& [m0, m1, m2, m3, m4, m5, m6, m7, m8, m9, m10] = value;
-				return tie(m0, m1, m2, m3, m4, m5, m6, m7, m8, m9, m10);
-			}
-		};
-		template<> struct GetStructMembersImpl<12> {
-			constexpr static decltype(auto) get(auto&& value) noexcept {
-				auto&& [m0, m1, m2, m3, m4, m5, m6, m7, m8, m9, m10, m11] = value;
-				return tie(m0, m1, m2, m3, m4, m5, m6, m7, m8, m9, m10, m11);
-			}
-		};
-		template<> struct GetStructMembersImpl<13> {
-			constexpr static decltype(auto) get(auto&& value) noexcept {
-				auto&& [m0, m1, m2, m3, m4, m5, m6, m7, m8, m9, m10, m11, m12] = value;
-				return tie(m0, m1, m2, m3, m4, m5, m6, m7, m8, m9, m10, m11, m12);
-			}
-		};
-		template<> struct GetStructMembersImpl<14> {
-			constexpr static decltype(auto) get(auto&& value) noexcept {
-				auto&& [m0, m1, m2, m3, m4, m5, m6, m7, m8, m9, m10, m11, m12, m13] = value;
-				return tie(m0, m1, m2, m3, m4, m5, m6, m7, m8, m9, m10, m11, m12, m13);
-			}
-		};
-		template<> struct GetStructMembersImpl<15> {
-			constexpr static decltype(auto) get(auto&& value) noexcept {
-				auto&& [m0, m1, m2, m3, m4, m5, m6, m7, m8, m9, m10, m11, m12, m13, m14] = value;
-				return tie(m0, m1, m2, m3, m4, m5, m6, m7, m8, m9, m10, m11, m12, m13, m14);
-			}
-		};
-		template<> struct GetStructMembersImpl<16> {
-			constexpr static decltype(auto) get(auto&& value) noexcept {
-				auto&& [m0, m1, m2, m3, m4, m5, m6, m7, m8, m9, m10, m11, m12, m13, m14, m15] = value;
-				return tie(m0, m1, m2, m3, m4, m5, m6, m7, m8, m9, m10, m11, m12, m13, m14, m15);
-			}
-		};
-		template<> struct GetStructMembersImpl<17> {
-			constexpr static decltype(auto) get(auto&& value) noexcept {
-				auto&& [m0, m1, m2, m3, m4, m5, m6, m7, m8, m9, m10, m11, m12, m13, m14, m15, m16] = value;
-				return tie(m0, m1, m2, m3, m4, m5, m6, m7, m8, m9, m10, m11, m12, m13, m14, m15, m16);
-			}
-		};
-		template<> struct GetStructMembersImpl<18> {
-			constexpr static decltype(auto) get(auto&& value) noexcept {
-				auto&& [m0, m1, m2, m3, m4, m5, m6, m7, m8, m9, m10, m11, m12, m13, m14, m15, m16, m17] = value;
-				return tie(m0, m1, m2, m3, m4, m5, m6, m7, m8, m9, m10, m11, m12, m13, m14, m15, m16, m17);
-			}
-		};
-		template<> struct GetStructMembersImpl<19> {
-			constexpr static decltype(auto) get(auto&& value) noexcept {
-				auto&& [m0, m1, m2, m3, m4, m5, m6, m7, m8, m9, m10, m11, m12, m13, m14, m15, m16, m17, m18] = value;
-				return tie(m0, m1, m2, m3, m4, m5, m6, m7, m8, m9, m10, m11, m12, m13, m14, m15, m16, m17, m18);
-			}
-		};
-		template<> struct GetStructMembersImpl<20> {
-			constexpr static decltype(auto) get(auto&& value) noexcept {
-				auto&& [m0, m1, m2, m3, m4, m5, m6, m7, m8, m9, m10, m11, m12, m13, m14, m15, m16, m17, m18, m19] = value;
-				return tie(m0, m1, m2, m3, m4, m5, m6, m7, m8, m9, m10, m11, m12, m13, m14, m15, m16, m17, m18, m19);
-			}
-		};
-	}
+	template<typename Type> concept HasGetStructMembersC = requires() {
+		{ GetStructMembers<Type>::get(declval<Type>()) };
+	};
+	template<typename Type> struct HasGetStructMembersV : BoolConstant<HasGetStructMembersC<Type>> {};
+	template<typename Type> constexpr inline Bool HasGetStructMembers = HasGetStructMembersC<Type>;
 
 	template<typename Type>
-		requires(IsStructC<Decay<Type>> && StructMemberCount<Type> <= MaxStructMemberNumberEvaluated)
+		requires(IsStructC<Decay<Type>> && HasStructMemberCountC<Decay<Type>>)
 	constexpr decltype(auto) getStructMembers(Type&& value) noexcept {
-		return impl::GetStructMembersImpl<StructMemberCount<Type>>::get(value);
+		return GetStructMembers<Type>::get(value);
 	}
+
 	template<typename Type>
-		requires(StructMemberCount<Type> <= MaxStructMemberNumberEvaluated)
+		requires(HasGetStructMembersC<Type>)
 	using StructMemberTypes =
 		TypePackTransform<
 			RemoveReferenceT,
-			typename decltype(impl::GetStructMembersImpl<StructMemberCount<Type>>::get(declval<Type>()))::value_types>;
+			typename decltype(GetStructMembers<Type>::get(declval<Type>()))::value_types>;
 
 	template<typename Type>
 	[[maybe_unused]] extern const Type external;
@@ -457,7 +502,7 @@ namespace natl {
 #endif
 
 	template<typename Type, Size Index>
-		requires(IsStructC<Decay<Type>>&& StructMemberCount<Type> <= MaxStructMemberNumberEvaluated && Index < StructMemberCount<Type>)
+		requires(HasGetStructMemberC<Type>)
 	consteval natl::ConstAsciiStringView getStructMemberName() noexcept {
 		return impl::getStructMemberNameImpl<Type, &getStructMember<Index>(external<Type>)>();
 	}
@@ -476,3 +521,11 @@ namespace natl {
 		}(MakeIndexSequence<StructMemberCount<Type>>{});
 	}	
 }
+
+#define NATL_ENABLE_PRIVATE_STRUCT_REFLECTION \
+	template<natl::Size, natl::Size> \
+	friend struct natl::impl::GetStructMemberAggregate; \
+	template<natl::Size> \
+	friend struct natl::impl::GetStructMembers; \
+	template<typename> \
+	friend struct natl::StructMemberCountV;
