@@ -15,7 +15,6 @@
 #include "stringView.h"
 #include "arrayView.h"
 #include "limits.h"
-#include "../processing/serialization.h"
 
 //interface 
 namespace natl {
@@ -2041,47 +2040,4 @@ namespace natl {
 	template<typename CharType, Size bufferSize, typename Alloc, Bool EnableDynAllocation, Bool EnableIncreasedSmallBufferSize>
 	struct IsTriviallyMoveAssignableV<BaseString<CharType, bufferSize, Alloc, EnableDynAllocation, EnableIncreasedSmallBufferSize>>
 		: FalseType {};
-
-	template<typename CharType, Size bufferSize, typename Alloc,
-		Bool EnableDynAllocation, Bool EnableIncreasedSmallBufferSize>
-		requires(IsAllocator<Alloc>)
-	struct Serialize<BaseString<CharType, bufferSize, Alloc, EnableDynAllocation, EnableIncreasedSmallBufferSize>> {
-		using as_type = SerializeStr;
-		using type = BaseString<CharType, bufferSize, Alloc, EnableDynAllocation, EnableIncreasedSmallBufferSize>;
-		template<typename Serializer> using error_type = void;
-
-		template<typename Serializer, SerializeWriteFlag Flags,
-			CustomSerializeWriteFlag<Serializer> CustomFlags, typename SerializeComponentType>
-			requires(natl::CanSerializeStrC<Serializer> && IsSerializeComponentC<SerializeComponentType>)
-		constexpr static void write(Serializer& serializer, const type& str) noexcept {
-			serializer.template writeStr<Flags, CustomFlags, SerializeComponentType>(str.toStringView());
-		}
-	};
-
-
-	template<typename CharType, Size bufferSize, typename Alloc,
-		Bool EnableDynAllocation, Bool EnableIncreasedSmallBufferSize>
-		requires(IsAllocator<Alloc>)
-	struct Deserialize<BaseString<CharType, bufferSize, Alloc, EnableDynAllocation, EnableIncreasedSmallBufferSize>> {
-		using as_type = SerializeStr;
-		using type = BaseString<CharType, bufferSize, Alloc, EnableDynAllocation, EnableIncreasedSmallBufferSize>;
-		constexpr static natl::ConstAsciiStringView sourceName = "natl::Deserialize<BaseString<...>>::read";
-		template<typename Deserializer> using error_type = StandardDeserializeError<Deserializer>;
-
-		template<typename Deserializer, DeserializeReadFlag Flags, 
-			CustomDeserializeReadFlag<Deserializer> CustomFlags, typename SerializeComponentType>
-			requires(IsSerializeComponentC<SerializeComponentType>)
-		constexpr static natl::Option<error_type<Deserializer>>
-			read(Deserializer& deserializer,
-				typename Deserializer::template deserialize_info<as_type>& info,
-				type& dst) noexcept {
-			auto readError = deserializer.template readStr<Flags, CustomFlags, SerializeComponentType, type>(info, dst);
-			if (readError.hasValue()) {
-				return readError.value().addSource(sourceName, "");
-			}
-			return {};
-		}
-	};
-
-
 }

@@ -37,10 +37,15 @@ natl/math.h
 natl/natl.h
 natl/processing/format.h
 natl/processing/generator.h
-natl/processing/serialization.h
-natl/processing/serializationJump.h
-natl/processing/serializationUtils.h
 natl/processing.h
+natl/serialization/base.h
+natl/serialization/basicCompatibility.h
+natl/serialization/basicSerializations.h
+natl/serialization/compatibility.h
+natl/serialization/jump.h
+natl/serialization/serializations.h
+natl/serialization/utils.h
+natl/serialization.h
 natl/simd/cmaskOperations.h
 natl/simd/math/basicFloatOperations.h
 natl/simd/math.h
@@ -95,6 +100,7 @@ natl/util/numerics.h
 natl/util/pointer.h
 natl/util/preprocessor.h
 natl/util/reflection.h
+natl/util/stateful.h
 natl/util/stringConvert.h
 natl/util/stringLiteral.h
 natl/util/stringOperations.h

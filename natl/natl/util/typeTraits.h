@@ -350,8 +350,12 @@ namespace natl {
 
 	//misc op
 	template<typename DataType> AddRValueReference<DataType> declval() noexcept {
-		static_assert(AlwaysFalse<DataType>, "Calling declval is ill-formed");
+		static_assert(AlwaysFalse<DataType>, "natl: calling declval is ill-formed");
 	}
+	template<typename DataType> AddLValueReference<DataType> declref() noexcept {
+		static_assert(AlwaysFalse<DataType>, "natl: calling declref is ill-formed");
+	}
+
 	template <typename DataType>
 	constexpr RemoveReference<DataType>&& move(DataType&& arg) noexcept {
 		return static_cast<RemoveReference<DataType>&&>(arg);

@@ -1,7 +1,8 @@
 #pragma once 
 
-#include "serialization.h"
-#include "serializationJump.h"
+//own
+#include "base.h"
+#include "jump.h"
 #include "../container/smallDynArray.h"
 
 //interface 

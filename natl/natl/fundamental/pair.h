@@ -48,31 +48,31 @@ namespace natl {
 	};
 
 	//compare 
-	template<typename T1, struct T2, struct U1, struct U2>
+	template<typename T1, typename T2, typename U1, typename U2>
 	constexpr Bool operator==(const Pair<T1, T2>& lhs, const Pair<U1, U2>& rhs) noexcept {
 		return (lhs.first == rhs.first) && (lhs.second == rhs.second);
 	}
-	template<typename T1, struct T2, struct U1, struct U2>
+	template<typename T1, typename T2, typename U1, typename U2>
 	constexpr Bool operator!=(const Pair<T1, T2>& lhs, const Pair<U1, U2>& rhs) noexcept {
 		return (lhs.first != rhs.first) && (lhs.second != rhs.second);
 	}
-	template<typename T1, struct T2, struct U1, struct U2>
+	template<typename T1, typename T2, typename U1, typename U2>
 	constexpr Bool operator<(const Pair<T1, T2>& lhs, const Pair<U1, U2>& rhs) noexcept {
 		return !(rhs < lhs);
 	}
-	template<typename T1, struct T2, struct U1, struct U2>
+	template<typename T1, typename T2, typename U1, typename U2>
 	constexpr Bool operator<=(const Pair<T1, T2>& lhs, const Pair<U1, U2>& rhs) noexcept {
 		return !(rhs < lhs);
 	}
-	template<typename T1, struct T2, struct U1, struct U2>
+	template<typename T1, typename T2, typename U1, typename U2>
 	constexpr Bool operator>(const Pair<T1, T2>& lhs, const Pair<U1, U2>& rhs) noexcept {
 		return rhs < lhs;
 	}
-	template<typename T1, struct T2, struct U1, struct U2>
+	template<typename T1, typename T2, typename U1, typename U2>
 	constexpr Bool operator>=(const Pair<T1, T2>& lhs, const Pair<U1, U2>& rhs) noexcept {
 		return !(lhs < rhs);
 	}
-	template<typename T1, struct T2, struct U1, struct U2 >
+	template<typename T1, typename T2, typename U1, typename U2 >
 	constexpr CommonComparisonCategory<CompareThreeWayResultType<T1, U1>, CompareThreeWayResultType<T2, U2>>
 		operator<=>(const Pair<T1, T2>& lhs, const Pair<U1, U2>& rhs) noexcept {
 		if (auto result = CompareThreeWay{}(lhs.first, rhs.first); result != 0) {
@@ -110,12 +110,12 @@ namespace natl {
 	struct IsTriviallyMoveAssignableV<Pair<DataTypeFirst, DataTypeSecond>>
 		: BoolConstant<IsTriviallyMoveAssignable<DataTypeFirst>&& IsTriviallyMoveAssignable<DataTypeSecond>> {};
 
-	template<typename DataTypeFirst, struct DataTypeSecond>
+	template<typename DataTypeFirst, typename DataTypeSecond>
 	constexpr Pair<typename Decay<DataTypeFirst>::type, typename Decay<DataTypeSecond>::type> makePair(DataTypeFirst&& first, DataTypeSecond&& second) {
 		return Pair<typename Decay<DataTypeFirst>::type, typename Decay<DataTypeSecond>::type>(first, second);
 	}
 
-	template<typename DataTypeFirst, struct DataTypeSecond>
+	template<typename DataTypeFirst, typename DataTypeSecond>
 	struct CompressedPair {
 	public:
 		using first_type = DataTypeFirst;
@@ -156,31 +156,31 @@ namespace natl {
 	};
 
 	//compare 
-	template<typename T1, struct T2, struct U1, struct U2>
+	template<typename T1, typename T2, typename U1, typename U2>
 	constexpr Bool operator==(const CompressedPair<T1, T2>& lhs, const CompressedPair<U1, U2>& rhs) noexcept {
 		return (lhs.first == rhs.first) && (lhs.second == rhs.second);
 	}
-	template<typename T1, struct T2, struct U1, struct U2>
+	template<typename T1, typename T2, typename U1, typename U2>
 	constexpr Bool operator!=(const CompressedPair<T1, T2>& lhs, const CompressedPair<U1, U2>& rhs) noexcept {
 		return (lhs.first != rhs.first) && (lhs.second != rhs.second);
 	}
-	template<typename T1, struct T2, struct U1, struct U2>
+	template<typename T1, typename T2, typename U1, typename U2>
 	constexpr Bool operator<(const CompressedPair<T1, T2>& lhs, const CompressedPair<U1, U2>& rhs) noexcept {
 		return !(rhs < lhs);
 	}
-	template<typename T1, struct T2, struct U1, struct U2>
+	template<typename T1, typename T2, typename U1, typename U2>
 	constexpr Bool operator<=(const CompressedPair<T1, T2>& lhs, const CompressedPair<U1, U2>& rhs) noexcept {
 		return !(rhs < lhs);
 	}
-	template<typename T1, struct T2, struct U1, struct U2>
+	template<typename T1, typename T2, typename U1, typename U2>
 	constexpr Bool operator>(const CompressedPair<T1, T2>& lhs, const CompressedPair<U1, U2>& rhs) noexcept {
 		return rhs < lhs;
 	}
-	template<typename T1, struct T2, struct U1, struct U2>
+	template<typename T1, typename T2, typename U1, typename U2>
 	constexpr Bool operator>=(const CompressedPair<T1, T2>& lhs, const CompressedPair<U1, U2>& rhs) noexcept {
 		return !(lhs < rhs);
 	}
-	template<typename T1, struct T2, struct U1, struct U2 >
+	template<typename T1, typename T2, typename U1, typename U2 >
 	constexpr CommonComparisonCategory<CompareThreeWayResult<T1, U1>, CompareThreeWayResult<T2, U2>>
 		operator<=>(const CompressedPair<T1, T2>& lhs, const CompressedPair<U1, U2>& rhs) noexcept {
 		if (auto result = CompareThreeWay{}(lhs.first, rhs.first); result != 0) {
@@ -218,7 +218,7 @@ namespace natl {
 	struct IsTriviallyMoveAssignableV<CompressedPair<DataTypeFirst, DataTypeSecond>>
 		: BoolConstant<IsTriviallyMoveAssignable<DataTypeFirst>&& IsTriviallyMoveAssignable<DataTypeSecond>> {};
 
-	template<typename DataTypeFirst, struct DataTypeSecond>
+	template<typename DataTypeFirst, typename DataTypeSecond>
 	constexpr CompressedPair<typename Decay<DataTypeFirst>::type, typename Decay<DataTypeSecond>::type> makePair(DataTypeFirst&& first, DataTypeSecond&& second) {
 		return CompressedPair<typename Decay<DataTypeFirst>::type, typename Decay<DataTypeSecond>::type>(first, second);
 	}

@@ -1,7 +1,7 @@
 #pragma once 
 
 //own
-#include "serialization.h"
+#include "base.h"
 #include "../container/string.h"
 
 //interface 

@@ -27,7 +27,7 @@ namespace natl {
 			{ container.begin() } -> ConvertibleTo<typename Container::iterator>;
 	};
 
-	template<typename Container, struct Iter = Container::iterator>
+	template<typename Container, typename Iter = Container::iterator>
 		requires(ViewConstructable<Container>)
 	constexpr View<Iter> createView(Container& container) noexcept {
 		return View<Iter>(container.begin(), container.end());

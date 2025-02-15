@@ -1,7 +1,6 @@
 #pragma once 
 
 //own
-#include "../processing/serialization.h"
 #include "../util/allocator.h"
 #include "../util/iterators.h"
 #include "../util/hash.h"
@@ -1231,98 +1230,6 @@ namespace natl {
 		}
 		constexpr static size_type staticHash(const SmallDynArray& dynArray) noexcept requires(Hashable<value_type>) {
 			return dynArray.hash();
-		}
-	};
-
-	template<typename DataType, Size bufferSize, typename allocator_type>
-	struct Serialize<SmallDynArray<DataType, bufferSize, allocator_type>> {
-		using as_type = SerializeArray<SerializeTypeOf<DataType>>;
-		using type = SmallDynArray<DataType, bufferSize, allocator_type>;
-		template<typename Serializer> using error_type = void;
-
-		template<typename Serializer, SerializeWriteFlag Flags,
-			CustomSerializeWriteFlag<Serializer> CustomFlags, typename SerializeComponentType,
-			typename... ElementSerializeArgs>
-			requires(natl::CanSerializeArrayC<Serializer> && IsSerializeComponentC<SerializeComponentType>)
-		constexpr static void write(Serializer& serializer, const type& array, ElementSerializeArgs&&... elementSerializeArgs) noexcept {
-			if (array.isEmpty()) {
-				serializer.template writeEmptyArray<Flags, CustomFlags, SerializeComponentType>();
-			} else {
-				serializer.template beginWriteArray<Flags, CustomFlags, SerializeComponentType>(array.size());
-				for (Size i = 0; i < array.size(); i++) {
-					using array_member = SerializeArrayComponent<type>;
-
-					serializer.template beginWriteArrayElement<Flags, CustomFlags, array_member>();
-					serializeWrite<Serializer, Flags, CustomFlags, array_member>(
-						serializer, array[i], natl::forward<ElementSerializeArgs>(elementSerializeArgs)...);
-					serializer.template endWriteArrayElement<Flags, CustomFlags, array_member>();
-				}
-				serializer.template endWriteArray<Flags, CustomFlags, SerializeComponentType>();
-			}
-		}
-	};
-
-	template<typename DataType, Size bufferSize, typename allocator_type>
-		requires(IsSerializableC<Decay<DataType>>)
-	struct Deserialize<SmallDynArray<DataType, bufferSize, allocator_type>> {
-		using element_as_type = SerializeTypeOf<Decay<DataType>>;
-		using as_type = natl::SerializeArray<element_as_type>;
-		using type = SmallDynArray<DataType, bufferSize, allocator_type>;
-		constexpr static natl::ConstAsciiStringView sourceName = "natl::Deserialize<SmallDynArray<...>>::read";
-		template<typename Deserializer> using error_type = StandardDeserializeError<Deserializer>;
-
-		template<typename Deserializer, DeserializeReadFlag Flags, CustomDeserializeReadFlag<Deserializer> CustomFlags,
-			typename SerializeComponentType, typename... DeserializerArgs>
-			requires(IsSerializeComponentC<SerializeComponentType>)
-		constexpr static Option<error_type<Deserializer>>
-			read(Deserializer& deserializer,
-				typename Deserializer::template deserialize_info<as_type>& info,
-				type& dst,
-				DeserializerArgs&&... deserializerArgs) noexcept {
-
-			auto arraySizeExpect = deserializer.template beginReadArray<Flags, CustomFlags, SerializeComponentType>(info);
-			if (arraySizeExpect.hasError()) {
-				return arraySizeExpect.error().addSource(sourceName, "");
-			}
-			natl::Size arraySize = arraySizeExpect.value();
-
-			if (arraySize == 0) {
-				auto endArrayError = deserializer.template endReadEmptyArray<Flags, CustomFlags, SerializeComponentType>(info);
-				if (endArrayError.hasValue()) {
-					return endArrayError.value().addSource(sourceName, "");
-				}
-				return {};
-			}
-
-			dst.resize(arraySize);
-			for (natl::Size index = 0; index < arraySize; index++) {
-				auto arrayElementExpect = deserializer.template beginReadArrayElement<Flags, CustomFlags, SerializeComponentType>(info);
-				if (arrayElementExpect.hasError()) {
-					return arrayElementExpect.error().addSource(sourceName, "");
-				}
-				auto arrayElement = arrayElementExpect.value();
-
-				using array_component = natl::SerializeArrayComponent<type>;
-				auto expectValue = deserializeRead<Deserializer, Flags, CustomFlags, array_component, DataType>(
-					deserializer, arrayElement, natl::forward<DeserializerArgs>(deserializerArgs)...);
-				if (expectValue.hasError()) {
-					dst.resize(index);
-					return expectValue.error().addSource(sourceName, "");
-				}
-				dst[index] = expectValue.value();
-
-				auto arrayElementEndError = deserializer.template endReadArrayElement<Flags, CustomFlags, SerializeComponentType>(arrayElement);
-				if (arrayElementEndError.hasValue()) {
-					return arrayElementEndError.value().addSource(sourceName, "");
-				}
-			}
-
-			auto endArrayError = deserializer.template endReadArray<Flags, CustomFlags, SerializeComponentType>(info);
-			if (endArrayError.hasValue()) {
-				return endArrayError.value().addSource(sourceName, "");
-			}
-
-			return {};
 		}
 	};
 

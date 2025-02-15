@@ -1,7 +1,6 @@
 #pragma once 
 
 //own
-#include "../processing/serialization.h"
 #include "../util/basicTypes.h"
 #include "../util/dataMovement.h"
 #include "../util/typePack.h"
@@ -278,14 +277,14 @@ namespace natl {
 		template<TemplateStringLiteral FindName> 
 		constexpr static Size getIndexOf() noexcept {
 			constexpr Size index = impl::FindIndexofStringLiteral<StringLiteral<FindName>, StringLiteral<Elements::name>...>::value;
-			static_assert(index != IndexNotFound::value, "natl: variant error - getIndex() - could not find varaint element with name");
+			static_assert(index != IndexNotFound::value, "natl: variant error - getIndex() - could not find variant element with name");
 			return index + 1;
 		}
 
 		template<TemplateStringLiteral FindName>
 		constexpr Size getIndexOf_NotStatic() const noexcept {
 			constexpr Size index = impl::FindIndexofStringLiteral<StringLiteral<FindName>, StringLiteral<Elements::name>...>::value;
-			static_assert(index != IndexNotFound::value, "natl: variant error - getIndex() - could not find varaint element with name");
+			static_assert(index != IndexNotFound::value, "natl: variant error - getIndex() - could not find variant element with name");
 			return index + 1;
 		}
 
@@ -468,7 +467,7 @@ namespace natl {
 					return self();
 				}
 			} else {
-				static_assert(index != IndexNotFound::value, "natl: variant error - assign() - could not find varaint element with name");
+				static_assert(index != IndexNotFound::value, "natl: variant error - assign() - could not find variant element with name");
 				[[maybe_unused]] DataType assignTypeTemp{};
 				[[maybe_unused]] DidNotFindVariantType variantData = assignTypeTemp;
 				return self();
@@ -510,7 +509,7 @@ namespace natl {
 					return self();
 				}
 			} else {
-				static_assert(index != IndexNotFound::value, "natl: variant error - assign() - could not find varaint element with name");
+				static_assert(index != IndexNotFound::value, "natl: variant error - assign() - could not find variant element with name");
 				[[maybe_unused]] DataType assignTypeTemp{};
 				[[maybe_unused]] DidNotFindVariantType variantData = assignTypeTemp;
 				return self();
@@ -555,7 +554,7 @@ namespace natl {
 		template<TemplateStringLiteral name>
 		constexpr auto& get() noexcept {
 			constexpr Size index = impl::FindIndexofStringLiteral<StringLiteral<name>, StringLiteral<Elements::name>...>::value;
-			static_assert(index != IndexNotFound::value, "natl: variant error - get() - could not find varaint element with name");
+			static_assert(index != IndexNotFound::value, "natl: variant error - get() - could not find variant element with name");
 
 			if constexpr (index != IndexNotFound::value) {
 				testValidIndex<index>();
@@ -572,7 +571,7 @@ namespace natl {
 		template<TemplateStringLiteral name>
 		constexpr const auto& get() const noexcept {
 			constexpr Size index = impl::FindIndexofStringLiteral<StringLiteral<name>, StringLiteral<Elements::name>...>::value;
-			static_assert(index != IndexNotFound::value, "natl: variant error - get() - could not find varaint element with name");
+			static_assert(index != IndexNotFound::value, "natl: variant error - get() - could not find variant element with name");
 
 			if constexpr (index != IndexNotFound::value) {
 				testValidIndex<index>();
@@ -588,7 +587,7 @@ namespace natl {
 		template<TemplateStringLiteral name>
 		constexpr static Size getIndexFunction() noexcept {
 			constexpr Size index = impl::FindIndexofStringLiteral<StringLiteral<name>, StringLiteral<Elements::name>...>::value;
-			static_assert(index != IndexNotFound::value, "natl: variant error - get() - could not find varaint element with name");
+			static_assert(index != IndexNotFound::value, "natl: variant error - get() - could not find variant element with name");
 			return index;
 		}
 
@@ -686,144 +685,4 @@ namespace natl {
 	struct IsTriviallyMoveAssignableV<Variant<Elements...>>
 		: BoolConstant<(IsTriviallyMoveAssignableC<typename Elements::value_type> && ...)
 		&& IsTriviallyDestructibleC<Variant<Elements...>>> {};
-
-	template<typename... Elements>
-		requires(IsSerializableC<Decay<typename Elements::value_type>> && ...) 
-	struct Serialize<Variant<Elements...>> {
-		using as_type = SerializeVariant<natl::ui64, Decay<typename Elements::value_type>...>;
-		using type = Variant<Elements...>;
-		template<typename Serializer> using error_type = void;
-
-		template<typename Serializer>
-		using VariantSerializeFunction = void(*)(Serializer&, const type&);
-
-		template<typename Serializer, SerializeWriteFlag Flags,
-			CustomSerializeWriteFlag<Serializer> CustomFlags, typename SerializeComponentType,
-			typename Element, Size Index>
-		constexpr static VariantSerializeFunction<Serializer> getSerializeFunction() noexcept {
-			return [](Serializer& serializer, const type& value) -> void {
-				using variant_member = SerializeVaraintComponent<type, Index>;
-				serializer.template beginWriteVariant<Flags, CustomFlags, SerializeComponentType, as_type, Index>(Element::name);
-				Serialize<Decay<typename Element::value_type>>::template write<Serializer, Flags, CustomFlags, variant_member>(serializer,
-					value.template get<Index>()
-				);
-				serializer.template endWriteVariant<Flags, CustomFlags, SerializeComponentType, as_type>();
-			};
-		}
-
-		template<typename Serializer, SerializeWriteFlag Flags,
-			CustomSerializeWriteFlag<Serializer> CustomFlags, typename SerializeComponentType>
-			requires(natl::CanSerializeVariantC<Serializer> && IsSerializeComponentC<SerializeComponentType>)
-		constexpr static void write(Serializer& serializer, const type& value) noexcept {
-			[&]<Size... Indices>(natl::IndexSequence<Indices...>) -> void {
-				VariantSerializeFunction<Serializer> serializeFunctions[sizeof...(Elements)] = {
-					getSerializeFunction<Serializer, Flags, CustomFlags, SerializeComponentType, Elements, Indices>()...
-				};
-
-				if(value.hasValue()) {
-					serializeFunctions[value.getIndex() - 1](serializer, value);
-				} else {
-					serializer.template writeEmptyVariant<Flags, CustomFlags, SerializeComponentType>();
-				}
-			}(natl::MakeIndexSequence<sizeof...(Elements)>{});
-		}
-	};
-
-	template<typename... Elements>
-		requires(IsDeserilizableC<Decay<typename Elements::value_type>> && ...)
-	struct Deserialize<Variant<Elements...>> {
-		using as_type = SerializeTypeOf<Variant<Elements...>>;
-		using type = Variant<Elements...>;
-		constexpr static ConstAsciiStringView sourceName = "Deserialize<Variant<Elements...>>::read";
-		template<typename Deserializer> using error_type = StandardDeserializeError<Deserializer>;
-
-		template<typename Deserializer>
-		using VariantDeserializeFunction = Option<typename Deserializer::deserialize_error_handler>(*)
-			(Deserializer&, typename Deserializer::template deserialize_info<as_type>&, type&);
-
-		template<typename Deserializer, DeserializeReadFlag Flags, CustomDeserializeReadFlag<Deserializer> CustomFlags, 
-			typename SerializeComponentType, typename Element, Size Index>
-		constexpr static VariantDeserializeFunction<Deserializer> getDeserializeFunction() noexcept {
-			return [](Deserializer& deserializer,
-					typename Deserializer::template deserialize_info<as_type>& varaintInfo,
-					type& dst) -> Option<error_type<Deserializer>> {
-				using element_type = typename Element::value_type;
-				using element_serialize_type = SerializeTypeOf<element_type>;
-
-				auto varaintElementExpect = deserializer.template beginReadVaraintOfType<
-					Flags, CustomFlags, SerializeComponentType, element_type>(varaintInfo);
-				if (varaintElementExpect.hasError()) {
-					return varaintElementExpect.error();
-				}
-				auto varaintElementInfo = varaintElementExpect.value();
-
-				using variant_component = SerializeVaraintComponent<type, Index>;
-				auto expectValue = deserializeReadMatch<element_serialize_type, Deserializer, 
-					Flags, CustomFlags, variant_component, element_type>(
-					deserializer, varaintElementInfo);
-				if (expectValue.hasError()) {
-					return expectValue.error();
-				}
-
-				dst.template assign<Index>(move(expectValue.value()));
-
-				return deserializer.template endReadVariant<
-					Flags, CustomFlags, SerializeComponentType>(varaintElementInfo);
-			};
-		}
-
-		template<typename Deserializer, DeserializeReadFlag Flags, 
-			CustomDeserializeReadFlag<Deserializer> CustomFlags, typename SerializeComponentType>
-			requires(natl::IsSerializeComponentC<SerializeComponentType>)
-		constexpr static Option<error_type<Deserializer>>
-			read(Deserializer& deserializer,
-				typename Deserializer::template deserialize_info<as_type>& varaintInfo,
-				type& dst) noexcept {
-			auto isEmptyExpect = deserializer.template readIsEmptyVariant<Flags, CustomFlags, SerializeComponentType>(varaintInfo);
-			if(isEmptyExpect.hasError()) {
-				return isEmptyExpect.error().addSource(sourceName, "");
-			}
-
-			const Bool isEmpty = isEmptyExpect.value();
-			if(isEmpty == true) {
-				dst = type{};
-				return {}; 
-			}
-
-			auto variantIndexExpect = deserializer.template beginReadVaraintGetIndex<Flags, CustomFlags, SerializeComponentType>(
-				varaintInfo, 
-				isEmpty, 
-				type::stringToIndexNotShiftedStatic);
-			if(variantIndexExpect.hasError()) {
-				return variantIndexExpect.error().addSource(sourceName, "");
-			}
-
-			const natl::Size variantIndex = static_cast<natl::Size>(variantIndexExpect.value());
-			if(variantIndex > sizeof...(Elements)) {
-				natl::String256 errorLocationDetails = "";
-				deserializer.getLocationDetail(errorLocationDetails);
-				return error_type<Deserializer>("variant index out of range", errorLocationDetails, DeserializeErrorLocation::none, DeserializeErrorFlag::none)
-					.addSource(sourceName, "");
-			}
-
-			auto valueError = [&]<Size... Indices>(natl::IndexSequence<Indices...>) -> Option<error_type<Deserializer>> {
-				VariantDeserializeFunction<Deserializer> deserializeFunctions[sizeof...(Elements)] = {
-					getDeserializeFunction<Deserializer, Flags, CustomFlags, SerializeComponentType, Elements, Indices>()...
-				};
-				
-				auto variantOfTypeError = deserializeFunctions[variantIndex](deserializer, varaintInfo, dst);
-				if(variantOfTypeError.hasValue()) {
-					return variantOfTypeError.value().addSource(sourceName, "");
-				}
-
-				return {};
-			}(natl::MakeIndexSequence<sizeof...(Elements)>{});
-
-			if(valueError.hasValue()) {
-				return valueError.value();
-			}
-
-			return {};
-		}
-	};
 }
