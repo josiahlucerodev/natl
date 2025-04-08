@@ -49,13 +49,13 @@ namespace natl {
 			return 0;
 		}
 		if (string.c_str()[0] == '-') {
-			if constexpr (IsBuiltInUnsignedInteger<Integer>) {
+			if constexpr (IsBuiltInUnsignedIntegerC<Integer>) {
 				convertError = StringNumericConvertError::invalid;
 				return 0;
 			}
 		}
 
-		const i64 endIndex = IsBuiltInSignedInteger<Integer> && string.c_str()[0] == '-' ? 0 : static_cast<i64>(-1);
+		const i64 endIndex = IsBuiltInSignedIntegerC<Integer> && string.c_str()[0] == '-' ? 0 : static_cast<i64>(-1);
 		const Size length = string.length();
 		Conditional<IsBuiltInSignedInteger<Integer>, i64, ui64> value = 0;
 		ui64 mul = 1; ui32 pos = 0;
@@ -96,7 +96,7 @@ namespace natl {
 			}
 		}
 
-		if constexpr (IsBuiltInSignedInteger<Integer>) {
+		if constexpr (IsBuiltInSignedIntegerC<Integer>) {
 			if (string.c_str()[0] == '-') {
 				value *= -1;
 			}
@@ -125,6 +125,18 @@ namespace natl {
 		}
 	}
 
+	template<typename Integer>
+		requires(IsBuiltInIntegerC<Integer>)
+	constexpr Option<Integer> stringDecimalToIntOption(const ConstStringView& string) noexcept {
+		StringNumericConvertError convertError = StringNumericConvertError::unknown;
+		Integer value = stringDecimalToInt<Integer>(string, convertError);
+		if (convertError != StringNumericConvertError::none) {
+			return OptionEmpty{};
+		} else {
+			return value;
+		}
+	}
+
 	constexpr ui64 convertHexCharacterToNumber(const char& character) noexcept {
 		switch (character) {
 		case '0': return 0; case '1': return 1;
@@ -143,7 +155,7 @@ namespace natl {
 	}
 
 	template<typename Integer>
-		requires(IsBuiltInUnsignedInteger<Integer>)
+		requires(IsBuiltInUnsignedIntegerC<Integer>)
 	constexpr Integer stringHexadecimalToInt(const ConstStringView& string, StringNumericConvertError& convertError) noexcept {
 		if (string.size() == 0) {
 			convertError = StringNumericConvertError::invalid;
@@ -211,6 +223,18 @@ namespace natl {
 		}
 	}
 
+	template<typename Integer>
+		requires(IsBuiltInIntegerC<Integer>)
+	constexpr Option<Integer> stringHexadecimalToIntOption(const ConstStringView& string) noexcept {
+		StringNumericConvertError convertError = StringNumericConvertError::unknown;
+		Integer value = stringHexadecimalToInt<Integer>(string, convertError);
+		if (convertError != StringNumericConvertError::none) {
+			return OptionEmpty{};
+		} else {
+			return value;
+		}
+	}
+
 	constexpr ui64 convertBinaryCharacterToNumber(const char& character) noexcept {
 		switch (character) {
 		case '0': return 0; case '1': return 1;
@@ -219,7 +243,7 @@ namespace natl {
 	}
 
 	template<typename Integer>
-		requires(IsBuiltInUnsignedInteger<Integer>)
+		requires(IsBuiltInUnsignedIntegerC<Integer>)
 	constexpr Integer stringBinaryToInt(const ConstStringView& string, StringNumericConvertError& convertError) noexcept {
 		if (string.size() == 0) {
 			convertError = StringNumericConvertError::invalid;
@@ -278,6 +302,18 @@ namespace natl {
 		Integer value = stringBinaryToInt<Integer>(string, convertError);
 		if (convertError != StringNumericConvertError::none) {
 			return unexpected<StringNumericConvertError>(convertError);
+		} else {
+			return value;
+		}
+	}
+
+	template<typename Integer>
+		requires(IsBuiltInIntegerC<Integer>)
+	constexpr Option<Integer> stringBinaryToIntOption(const ConstStringView& string) noexcept {
+		StringNumericConvertError convertError = StringNumericConvertError::unknown;
+		Integer value = stringBinaryToInt<Integer>(string, convertError);
+		if (convertError != StringNumericConvertError::none) {
+			return OptionEmpty{};
 		} else {
 			return value;
 		}
@@ -367,6 +403,18 @@ namespace natl {
 		}
 	}
 
+	template<typename Float>
+		requires(IsBuiltInFloatingPointC<Float>)
+	constexpr Option<Float> stringToFloatOption(const ConstStringView& string) noexcept {
+		StringNumericConvertError convertError = StringNumericConvertError::unknown;
+		Float value = stringDecimalToFloat<Float>(string, convertError);
+		if (convertError != StringNumericConvertError::none) {
+			return OptionEmpty{};
+		} else {
+			return value;
+		}
+	}
+
 	template<typename DynStringContainer>
 	concept IsConvertDynStringContainer =
 		ContainerHasPushBackFunction<DynStringContainer, char>
@@ -388,7 +436,7 @@ namespace natl {
 
 		Bool isNegative = false;
 
-		if constexpr (IsBuiltInSignedInteger<Integer>) {
+		if constexpr (IsBuiltInSignedIntegerC<Integer>) {
 			if (number < 0) {
 				isNegative = true;
 				number = -number; 
@@ -403,7 +451,7 @@ namespace natl {
 			count += 1;
 		}
 
-		if constexpr (IsBuiltInSignedInteger<Integer>) {
+		if constexpr (IsBuiltInSignedIntegerC<Integer>) {
 			if (isNegative) {
 				output.pushBack('-');
 				count += 1;

@@ -21,7 +21,7 @@ namespace natl {
 	};
 
 	template<typename Container>
-	concept ViewConstructable = HasIteratorType<Container> && IsRandomAccessIterator<typename Container::iterator> && 
+	concept ViewConstructable = HasIteratorType<Container> && IsRandomAccessIteratorC<typename Container::iterator> && 
 		requires(Container container) {
 			{ container.end() } -> ConvertibleTo<typename Container::iterator>;
 			{ container.begin() } -> ConvertibleTo<typename Container::iterator>;

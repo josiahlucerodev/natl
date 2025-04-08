@@ -8,6 +8,7 @@
 #include "../util/basicTypes.h"
 #include "../util/utility.h"
 #include "../util/dataMovement.h"
+#include "../util/typeTraits.h"
 
 //interface 
 namespace natl {
@@ -48,12 +49,11 @@ namespace natl {
 
 		template<typename DataType>
 			requires(
-				std::is_trivially_copyable_v<DataType> &&  
-				std::is_copy_constructible_v<DataType> && 
-				std::is_move_constructible_v<DataType> &&
-				std::is_copy_assignable_v<DataType> &&
-				std::is_move_assignable_v<DataType>
-			)
+				natl::IsBuiltInTriviallyConstructibleC<DataType> 
+				&& natl::IsCopyConstructibleC<DataType> 
+				&& natl::IsMoveConstructibleC<DataType> 
+				&& natl::IsCopyAssignableC<DataType> 
+				&& natl::IsMoveAssignableC<DataType>)
 		struct AtomicBase {
 		public:
 			using value_type = DataType;

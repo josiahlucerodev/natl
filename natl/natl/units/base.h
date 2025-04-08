@@ -263,7 +263,6 @@ namespace natl {
         }
 
 
-
         //operator 
         NATL_FORCE_INLINE constexpr BaseUnitValue operator+(const BaseUnitValue& other) const noexcept { return BaseUnitValue(internalData + other.internalData); }
         NATL_FORCE_INLINE constexpr BaseUnitValue operator-(const BaseUnitValue& other) const noexcept { return BaseUnitValue(internalData - other.internalData); }

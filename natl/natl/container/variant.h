@@ -5,6 +5,7 @@
 #include "../util/dataMovement.h"
 #include "../util/typePack.h"
 #include "../util/stringLiteral.h"
+#include "../util/error.h"
 #include "stringView.h"
 #include "array.h"
 #include "string.h"

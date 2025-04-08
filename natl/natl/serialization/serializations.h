@@ -13,7 +13,7 @@
 namespace natl {
 	template<typename CharType, Size bufferSize, typename Alloc,
 		Bool EnableDynAllocation, Bool EnableIncreasedSmallBufferSize>
-		requires(IsAllocator<Alloc>)
+		requires(IsAllocatorC<Alloc>)
 	struct Serialize<BaseString<CharType, bufferSize, Alloc, EnableDynAllocation, EnableIncreasedSmallBufferSize>> {
 		using as_type = SerializeStr;
 		using type = BaseString<CharType, bufferSize, Alloc, EnableDynAllocation, EnableIncreasedSmallBufferSize>;
@@ -30,7 +30,7 @@ namespace natl {
 
 	template<typename CharType, Size bufferSize, typename Alloc,
 		Bool EnableDynAllocation, Bool EnableIncreasedSmallBufferSize>
-		requires(IsAllocator<Alloc>)
+		requires(IsAllocatorC<Alloc>)
 	struct Deserialize<BaseString<CharType, bufferSize, Alloc, EnableDynAllocation, EnableIncreasedSmallBufferSize>> {
 		using as_type = SerializeStr;
 		using type = BaseString<CharType, bufferSize, Alloc, EnableDynAllocation, EnableIncreasedSmallBufferSize>;

@@ -64,69 +64,69 @@ namespace natl {
         deconstructAll<DataType>(dataPtr, 1);
     }
 
-    template<typename Iter, typename NoThrowForwardIter>
-        requires(IsIterPtr<Iter> && IsIterPtr<NoThrowForwardIter>)
-    constexpr NoThrowForwardIter uninitializedCopyNoOverlap(Iter first, Iter last, NoThrowForwardIter Dst) noexcept {
+    template<typename Iter, typename ForwardIter>
+        requires(IsIterPtr<Iter> && IsIterPtr<ForwardIter>)
+    constexpr ForwardIter uninitializedCopyNoOverlap(Iter first, Iter last, ForwardIter Dst) noexcept {
         if (!isConstantEvaluated()) {
-            if constexpr (MemcopyConstructibleIter<Iter, NoThrowForwardIter>) {
-                iterMemcopy<Iter, NoThrowForwardIter>(first, last, Dst);
+            if constexpr (MemcopyConstructibleIter<Iter, ForwardIter>) {
+                iterMemcopy<Iter, ForwardIter>(first, last, Dst);
                 return Dst;
             }
         } 
 
         for (; first != last; ++Dst, (void) ++first) {
             natl::construct<
-                typename IteratorTraits<NoThrowForwardIter>::value_type,
+                typename IteratorTraits<ForwardIter>::value_type,
                 typename IteratorTraits<decltype(first)>::value_type
             >(&*Dst, natl::forward<typename IteratorTraits<decltype(first)>::value_type>(*first));
         }
 
         return Dst;
     }
-    template<typename Iter, typename NoThrowForwardIter>
-        requires(IsIterPtr<Iter>&& IsIterPtr<NoThrowForwardIter>)
-    constexpr NoThrowForwardIter uninitializedCopy(Iter first, Iter last, NoThrowForwardIter Dst) noexcept {
+    template<typename Iter, typename ForwardIter>
+        requires(IsIterPtr<Iter>&& IsIterPtr<ForwardIter>)
+    constexpr ForwardIter uninitializedCopy(Iter first, Iter last, ForwardIter Dst) noexcept {
         for (; first != last; ++Dst, (void) ++first) {
             natl::construct<
-                typename IteratorTraits<NoThrowForwardIter>::value_type,
+                typename IteratorTraits<ForwardIter>::value_type,
                 typename IteratorTraits<decltype(first)>::value_type
             >(&*Dst, natl::forward<typename IteratorTraits<decltype(first)>::value_type>(*first));
         }
         return Dst;
     }
 
-    template<typename Iter, typename NoThrowForwardIter>
-        requires(IsIterPtr<Iter>&& IsIterPtr<NoThrowForwardIter>)
-    constexpr NoThrowForwardIter uninitializedCopyConvert(Iter first, Iter last, NoThrowForwardIter Dst) noexcept {
+    template<typename Iter, typename ForwardIter>
+        requires(IsIterPtr<Iter>&& IsIterPtr<ForwardIter>)
+    constexpr ForwardIter uninitializedCopyConvert(Iter first, Iter last, ForwardIter Dst) noexcept {
         for (; first != last; ++Dst, (void) ++first) {
             natl::construct<
-                typename IteratorTraits<NoThrowForwardIter>::value_type,
-                typename IteratorTraits<NoThrowForwardIter>::value_type
-            >(&*Dst, natl::forward<typename IteratorTraits<NoThrowForwardIter>::value_type>(static_cast<typename IteratorTraits<NoThrowForwardIter>::value_type>(*first)));
+                typename IteratorTraits<ForwardIter>::value_type,
+                typename IteratorTraits<ForwardIter>::value_type
+            >(&*Dst, natl::forward<typename IteratorTraits<ForwardIter>::value_type>(static_cast<typename IteratorTraits<ForwardIter>::value_type>(*first)));
         }
         return Dst;
     }
 
     
 
-    template<typename Iter, typename NoThrowForwardIter>
-        requires(IsIterPtr<Iter>&& IsIterPtr<NoThrowForwardIter>)
-    constexpr NoThrowForwardIter uninitializedCopyCountNoOverlap(Iter first, NoThrowForwardIter dst, const Size count) noexcept {
+    template<typename Iter, typename ForwardIter>
+        requires(IsIterPtr<Iter>&& IsIterPtr<ForwardIter>)
+    constexpr ForwardIter uninitializedCopyCountNoOverlap(Iter first, ForwardIter dst, const Size count) noexcept {
 
         if (count == 0) {
             return dst;
         }
 
         if (!isConstantEvaluated()) {
-            if constexpr (MemcopyConstructibleIter<Iter, NoThrowForwardIter>) {
-                iterMemcopyCount<Iter, NoThrowForwardIter, Size>(first, dst, count);
+            if constexpr (MemcopyConstructibleIter<Iter, ForwardIter>) {
+                iterMemcopyCount<Iter, ForwardIter, Size>(first, dst, count);
                 return dst;
             }
         }
 
         for (Size index = 0; index < count; (void) ++first, index++) {
             natl::construct<
-                typename IteratorTraits<NoThrowForwardIter>::value_type,
+                typename IteratorTraits<ForwardIter>::value_type,
                 typename IteratorTraits<decltype(first)>::value_type
             >(((& *dst) + index), natl::forward<typename IteratorTraits<decltype(first)>::value_type>(*first));
         }
@@ -257,13 +257,13 @@ namespace natl {
     }
 
 
-    template<typename Iter, typename NoThrowForwardIter>
-        requires(IsIterPtr<Iter>&& IsIterPtr<NoThrowForwardIter>)
-    constexpr NoThrowForwardIter copyNoOverlap(Iter first, Iter last, NoThrowForwardIter Dst) noexcept {
+    template<typename Iter, typename ForwardIter>
+        requires(IsIterPtr<Iter>&& IsIterPtr<ForwardIter>)
+    constexpr ForwardIter copyNoOverlap(Iter first, Iter last, ForwardIter Dst) noexcept {
 
         if (!isConstantEvaluated()) {
-            if constexpr (MemcopyConstructibleIter<Iter, NoThrowForwardIter>) {
-                iterMemcopy<Iter, NoThrowForwardIter>(first, last, Dst);
+            if constexpr (MemcopyConstructibleIter<Iter, ForwardIter>) {
+                iterMemcopy<Iter, ForwardIter>(first, last, Dst);
                 return Dst;
             }
         }
@@ -274,17 +274,17 @@ namespace natl {
 
         return Dst;
     }
-    template<typename Iter, typename NoThrowForwardIter>
-        requires(IsIterPtr<Iter>&& IsIterPtr<NoThrowForwardIter>)
-    constexpr NoThrowForwardIter copyCountNoOverlap(Iter first, NoThrowForwardIter dst, const Size count) noexcept {
+    template<typename Iter, typename ForwardIter>
+        requires(IsIterPtr<Iter>&& IsIterPtr<ForwardIter>)
+    constexpr ForwardIter copyCountNoOverlap(Iter first, ForwardIter dst, const Size count) noexcept {
 
         if (count == 0) {
             return dst;
         }
 
         if (!isConstantEvaluated()) {
-            if constexpr (MemcopyConstructibleIter<Iter, NoThrowForwardIter>) {
-                iterMemcopyCount<Iter, NoThrowForwardIter, Size>(first, dst, count);
+            if constexpr (MemcopyConstructibleIter<Iter, ForwardIter>) {
+                iterMemcopyCount<Iter, ForwardIter, Size>(first, dst, count);
                 return dst;
             }
         }
@@ -296,9 +296,9 @@ namespace natl {
         return dst;
     }
 
-    template<typename Iter, typename NoThrowForwardIter>
-        requires(IsIterPtr<Iter>&& IsIterPtr<NoThrowForwardIter>)
-    constexpr NoThrowForwardIter copy(Iter first, Iter last, NoThrowForwardIter Dst) noexcept {
+    template<typename Iter, typename ForwardIter>
+        requires(IsIterPtr<Iter>&& IsIterPtr<ForwardIter>)
+    constexpr ForwardIter copy(Iter first, Iter last, ForwardIter Dst) noexcept {
 
         for (; first != last; ++Dst, (void) ++first) {
             *(&*Dst) = *first;
@@ -379,11 +379,12 @@ namespace natl {
     };
 
 
-    template<typename DataType, typename Alloc = DefaultAllocator<DataType>>
-        requires(IsAllocator<Alloc> && IsNotConst<DataType>)
+    template<typename DataType, typename Alloc = DefaultAllocator>
+        requires(IsAllocatorC<Alloc> && IsNotConstC<DataType>)
     struct AllocationMoveAdapater {
     public:
         using allocator_type = Alloc;
+        using typed_allocator_type = allocator_type::template rebind<DataType>;
 
         using value_type = DataType;
         using reference = DataType&;
@@ -399,7 +400,7 @@ namespace natl {
         using const_reverse_iterator = ReverseRandomAccessIterator<const DataType>;
 
         template<typename OtherDataType>
-        using rebind_allocation_move_adapater = AllocationMoveAdapater<OtherDataType, typename Alloc::template rebind_alloc<OtherDataType>>;
+        using rebindation_move_adapater = AllocationMoveAdapater<OtherDataType, typename Alloc::template rebind<OtherDataType>>;
 
     private:
         DataType* arrayDataPtr;
@@ -488,7 +489,7 @@ namespace natl {
         constexpr void deallocate() noexcept {
             if (canDealloc() && arrayDataPtr) {
                 destructAll();
-                Alloc::deallocate(arrayDataPtr, capacity());
+                typed_allocator_type::deallocate(arrayDataPtr, capacity());
                 release();
             }
         }
@@ -545,10 +546,10 @@ namespace natl {
         requires(
             IsSpecializationC<FromAllocationMoveAdapaterType, AllocationMoveAdapater> &&
             IsSameByteSize<ToDataType, typename FromAllocationMoveAdapaterType::value_type>)
-        constexpr typename FromAllocationMoveAdapaterType::template rebind_allocation_move_adapater<ToDataType>
+        constexpr typename FromAllocationMoveAdapaterType::template rebindation_move_adapater<ToDataType>
         equivalentCastAllocationMoveAdapter(FromAllocationMoveAdapaterType&& allocationMoveAdapter) noexcept {
 
-        using ToAllocationMoveAdapterType = typename FromAllocationMoveAdapaterType::template rebind_allocation_move_adapater<ToDataType>;
+        using ToAllocationMoveAdapterType = typename FromAllocationMoveAdapaterType::template rebindation_move_adapater<ToDataType>;
         using ToAlloc = ToAllocationMoveAdapterType::allocator_type;
         //using FromAlloc = FromAllocationMoveAdapaterType::allocator_type;
         using FromDataType = FromAllocationMoveAdapaterType::value_type;

@@ -74,17 +74,24 @@ namespace natl {
 	template<typename Deleter, typename DataType>
 	concept IsDeleter = HasFunctionSignature<Deleter, void, DataType*>;
 
-	template<typename DataType, typename Alloc = DefaultAllocator<DataType>>
+	template<typename DataType, typename Alloc = DefaultAllocator>
 	struct DefaultDeleter {
 	public:
+		using allocator_type = Alloc;
+		using typed_allocator_type = allocator_type::template rebind<DataType>;
 
-		//constructor
-		constexpr DefaultDeleter() noexcept = default;
-
+		using value_type = typename typed_allocator_type::value_type;
+		using reference = typename typed_allocator_type::reference;
+		using const_reference = typename typed_allocator_type::const_reference;
+		using pointer = typename typed_allocator_type::pointer;
+		using const_pointer = typename typed_allocator_type::const_pointer;
+		using difference_type = typename typed_allocator_type::difference_type;
+		using size_type = typename typed_allocator_type::size_type;
+	public:
 		//delete operations
-		constexpr void operator()(typename Alloc::pointer ptr) const {
+		constexpr void operator()(pointer ptr) const {
 			natl::deconstruct<DataType>(ptr);
-			Alloc::deallocate(ptr, 1); 
+			typed_allocator_type::deallocate(ptr, 1);
 		}
 	};
 
@@ -100,8 +107,8 @@ namespace natl {
 		}
 	};
 
-	template<typename DataType, typename Alloc = DefaultAllocator<DataType>, typename Deleter = DefaultDeleter<DataType, Alloc>>
-		requires(IsAllocator<Alloc> && IsDeleter<Deleter, DataType>)
+	template<typename DataType, typename Alloc = DefaultAllocator, typename Deleter = DefaultDeleter<DataType, Alloc>>
+		requires(IsAllocatorC<Alloc> && IsDeleter<Deleter, DataType>)
 	struct UniquePtr {
 	public:
 		using value_type = DataType;
@@ -1572,7 +1579,7 @@ namespace natl {
 		}
 
 		template<typename LocalDataType, typename Alloc>
-			requires(IsAllocator<Alloc>)
+			requires(IsAllocatorC<Alloc>)
 		constexpr void constructContexpr(
 			DataType* ptr, 
 			typename impl::SharedPtrControlBlockSeperateConstexpr<LocalDataType>::pre_delete_function_type&& preDeleteFunction,
@@ -1581,7 +1588,7 @@ namespace natl {
 			using SharedPtrControlBlockSeperateConstexprType = impl::SharedPtrControlBlockSeperateConstexpr<LocalDataType>;
 			dataPtrAndControlBlockState.setValues(ptr, impl::SharedPtrControlBlockState::seperatePolymorphicConstexpr);
 			
-			using control_block_seperate_data_constexpr_alloc = Alloc::template rebind_alloc<SharedPtrControlBlockSeperateConstexprType>;
+			using control_block_seperate_data_constexpr_alloc = Alloc::template rebind<SharedPtrControlBlockSeperateConstexprType>;
 			typename SharedPtrControlBlockSeperateConstexprType::control_block_deleter_function_type controlBlockDeleter =
 				[](SharedPtrControlBlockSeperateConstexprType* controlBlockPtr) {
 				natl::deconstruct(controlBlockPtr);
@@ -1609,12 +1616,12 @@ namespace natl {
 			return typename impl::SharedPtrControlBlockSeperateConstexpr<LocalDataType>::post_delete_function_type();
 		}
 		template<typename LocalDataType, typename Alloc>
-			requires(IsAllocator<Alloc>)
+			requires(IsAllocatorC<Alloc>)
 		constexpr typename impl::SharedPtrControlBlockSeperateConstexpr<LocalDataType>::deleter_function_type constructConstexprStandardDeleter() noexcept {
 			return 
 				typename impl::SharedPtrControlBlockSeperateConstexpr<LocalDataType>::deleter_function_type(
 					[](LocalDataType* ptr) {
-						using LocalDataTypeAlloc = typename Alloc::template rebind_alloc<LocalDataType>;
+						using LocalDataTypeAlloc = typename Alloc::template rebind<LocalDataType>;
 						LocalDataTypeAlloc::deallocate(ptr, 1);
 					}
 				);
@@ -1622,7 +1629,7 @@ namespace natl {
 
 
 		template<typename Alloc>
-			requires(IsAllocator<Alloc>)
+			requires(IsAllocatorC<Alloc>)
 		constexpr void construct(DataType* ptr) noexcept {
 			if (isConstantEvaluated()) {
 				constructContexpr<DataType, Alloc>(ptr,
@@ -1633,13 +1640,13 @@ namespace natl {
 			}
 
 			dataPtrAndControlBlockState.setValues(ptr, impl::SharedPtrControlBlockState::seperate);
-			using control_block_seperate_alloc = Alloc::template rebind_alloc<control_block_seperate>;
+			using control_block_seperate_alloc = Alloc::template rebind<control_block_seperate>;
 			controlBlockSeperate = control_block_seperate_alloc::allocate(1);
 			natl::construct<control_block_seperate>(controlBlockSeperate, ptr, DefaultDeleter<DataType, Alloc>(), DefaultDeleter<control_block_seperate, control_block_seperate_alloc>());
 		}
 
 		template<typename Alloc, typename Deleter>
-			requires(IsAllocator<Alloc>&& IsDeleter<Deleter, DataType>)
+			requires(IsAllocatorC<Alloc>&& IsDeleter<Deleter, DataType>)
 		constexpr void construct(DataType* ptr, Deleter&& deleter) noexcept {
 			if (isConstantEvaluated()) {
 				constructContexpr<DataType, Alloc>(ptr,
@@ -1650,12 +1657,12 @@ namespace natl {
 			}
 
 			dataPtrAndControlBlockState.setValues(ptr, impl::SharedPtrControlBlockState::seperate);
-			using control_block_seperate_alloc = Alloc::template rebind_alloc<control_block_seperate>;
+			using control_block_seperate_alloc = Alloc::template rebind<control_block_seperate>;
 			controlBlockSeperate = control_block_seperate_alloc::allocate(1);
 			natl::construct<control_block_seperate>(controlBlockSeperate, ptr, deleter, DefaultDeleter<control_block_seperate, control_block_seperate_alloc>());
 		}
 		template<typename OtherDataType, typename Alloc>
-			requires(IsAllocator<Alloc> && IsPolymorphicCastable<OtherDataType, DataType>)
+			requires(IsAllocatorC<Alloc> && IsPolymorphicCastable<OtherDataType, DataType>)
 		constexpr void construct(OtherDataType* ptr) noexcept {
 			if (isConstantEvaluated()) {
 				constructContexpr<OtherDataType, Alloc>(ptr,
@@ -1669,14 +1676,14 @@ namespace natl {
 			OtherDataType* dataPtr = static_cast<OtherDataType*>(ptr);
 			dataPtrAndControlBlockState.setValues(dataPtr, impl::SharedPtrControlBlockState::seperatePolymorphic);
 			using other_control_block_type = impl::SharedPtrControlBlockSeperate<OtherDataType>;
-			using other_control_block_type_alloc = Alloc::template rebind_alloc<other_control_block_type>;
+			using other_control_block_type_alloc = Alloc::template rebind<other_control_block_type>;
 			other_control_block_type* otherControlBlockSeperate = other_control_block_type_alloc::allocate(1);
 			natl::construct<other_control_block_type>(otherControlBlockSeperate, dataPtr, DefaultDeleter<DataType, Alloc>(), DefaultDeleter<other_control_block_type, other_control_block_type_alloc>());
 			controlBlockSeperatePolymorphic = static_cast<control_block_seperate_polymorphic*>(otherControlBlockSeperate);
 		}
 
 		template<typename OtherDataType, typename Alloc, typename Deleter>
-			requires(IsAllocator<Alloc>&& IsDeleter<Deleter, DataType>)
+			requires(IsAllocatorC<Alloc>&& IsDeleter<Deleter, DataType>)
 		constexpr void construct(OtherDataType* ptr, Deleter&& deleter) noexcept {
 			if (isConstantEvaluated()) {
 				constructContexpr<OtherDataType, Alloc>(ptr,
@@ -1689,7 +1696,7 @@ namespace natl {
 			OtherDataType* dataPtr = static_cast<OtherDataType*>(ptr);
 			dataPtrAndControlBlockState.setValues(dataPtr, impl::SharedPtrControlBlockState::seperatePolymorphic);
 			using other_control_block_type = impl::SharedPtrControlBlockSeperate<OtherDataType>;
-			using other_control_block_type_alloc = Alloc::template rebind_alloc<other_control_block_type>;
+			using other_control_block_type_alloc = Alloc::template rebind<other_control_block_type>;
 			other_control_block_type* otherControlBlockSeperate = other_control_block_type_alloc::allocate(1);
 			natl::construct<other_control_block_type>(otherControlBlockSeperate, dataPtr, deleter, DefaultDeleter<other_control_block_type, other_control_block_type_alloc>());
 			controlBlockSeperatePolymorphic = static_cast<control_block_seperate_polymorphic*>(otherControlBlockSeperate);
@@ -1703,9 +1710,9 @@ namespace natl {
 			} else {
 				if (IsEmpty<Deleter>) {
 					Deleter deleter = Deleter();
-					construct<DefaultAllocatorByte, Deleter>(other, move<Deleter>(deleter));
+					construct<DefaultAllocator, Deleter>(other, move<Deleter>(deleter));
 				} else {
-					construct<DefaultAllocatorByte, Deleter>(other, move<Deleter>(other.get_deleter()));
+					construct<DefaultAllocator, Deleter>(other, move<Deleter>(other.get_deleter()));
 				}
 			}
 		}
@@ -1718,32 +1725,32 @@ namespace natl {
 			} else {
 				if (IsEmpty<Deleter>) {
 					Deleter deleter = Deleter();
-					construct<OtherDataType, DefaultAllocatorByte, Deleter>(other, move<Deleter>(deleter));
+					construct<OtherDataType, DefaultAllocator, Deleter>(other, move<Deleter>(deleter));
 				} else {
-					construct<OtherDataType, DefaultAllocatorByte, Deleter>(other, move<Deleter>(other.get_deleter()));
+					construct<OtherDataType, DefaultAllocator, Deleter>(other, move<Deleter>(other.get_deleter()));
 				}
 			}
 		}
 	public:
 
 		template<typename Alloc>
-			requires(IsAllocator<Alloc>)
+			requires(IsAllocatorC<Alloc>)
 		explicit constexpr SharedPtr(DataType* ptr, Alloc) noexcept {
 			construct<Alloc>(ptr);
 		}
 
 		template<typename Alloc, typename Deleter>
-			requires(IsAllocator<Alloc>&& IsDeleter<Deleter, DataType>)
+			requires(IsAllocatorC<Alloc>&& IsDeleter<Deleter, DataType>)
 		constexpr SharedPtr(DataType* ptr, Deleter&& deleter, Alloc) noexcept {
 			construct<DataType, Deleter>(ptr, forward<Deleter>(deleter));
 		}
 
 		template<typename Alloc, typename... ConstructArgTypes>
-			requires(IsAllocator<Alloc>&& IsConstructibleC<DataType, ConstructArgTypes...>)
+			requires(IsAllocatorC<Alloc>&& IsConstructibleC<DataType, ConstructArgTypes...>)
 		constexpr SharedPtr(SharedPtrFusedConstruct, Alloc, ConstructArgTypes... constructArg) noexcept {
 			if (isConstantEvaluated()) {
 				constructContexpr<DataType, Alloc>(
-					Alloc::template rebind_alloc<DataType>::allocate(1),
+					Alloc::template rebind<DataType>::allocate(1),
 					constructConstexprNullPreDelete<DataType>(),
 					constructConstexprNullPostDelete<DataType>(),
 					constructConstexprStandardDeleter<DataType, Alloc>());
@@ -1751,7 +1758,7 @@ namespace natl {
 			}
 
 
-			using control_block_fused_alloc = Alloc::template rebind_alloc<control_block_fused>;
+			using control_block_fused_alloc = Alloc::template rebind<control_block_fused>;
 			controlBlockFused = control_block_fused_alloc::allocate(1);
 
 			natl::construct<control_block_fused>(controlBlockFused,
@@ -1861,20 +1868,20 @@ namespace natl {
 		}
 		constexpr void reset(DataType* ptr) noexcept {
 			destruct();
-			construct<DefaultAllocatorByte>(ptr);
+			construct<DefaultAllocator>(ptr);
 		}
 		template<typename OtherDataType>
 			requires(IsPolymorphicCastable<OtherDataType, DataType>)
 		constexpr void reset(OtherDataType* ptr) noexcept {
 			destruct();
-			construct<OtherDataType, DefaultAllocatorByte>(ptr);
+			construct<OtherDataType, DefaultAllocator>(ptr);
 		}
 
 		template<typename OtherDataType, typename Deleter>
 			requires(IsPolymorphicCastable<OtherDataType, DataType> && IsDeleter<Deleter, OtherDataType>)
 		constexpr void reset(OtherDataType* ptr, Deleter&& deleter) {
 			destruct();
-			construct<OtherDataType, Deleter, DefaultAllocatorByte>(ptr, forward<Deleter>(deleter));
+			construct<OtherDataType, Deleter, DefaultAllocator>(ptr, forward<Deleter>(deleter));
 		}
 
 		constexpr void swap(SharedPtr& other) noexcept {
@@ -1999,83 +2006,4 @@ namespace natl {
 	template<typename DataType>
 	struct IsTriviallyMoveAssignableV<SharedPtr<DataType>>
 		: FalseType {};
-
-	template<typename DataType>
-	struct ObserverPtr {
-	public:
-		using element_type = DataType;
-	private:
-		element_type* dataPtr;
-	public:
-		//construtor
-		constexpr ObserverPtr() noexcept = default;
-		constexpr ObserverPtr(const ObserverPtr&) noexcept = default;
-		constexpr ObserverPtr(ObserverPtr&&) noexcept = default;
-		constexpr explicit ObserverPtr(element_type* ptr) noexcept : dataPtr(ptr) {}
-
-		//destructor
-		constexpr ~ObserverPtr() noexcept = default;
-
-		//util 
-		constexpr ObserverPtr& self() noexcept { return *this; }
-		constexpr const ObserverPtr& self() const noexcept { return *this; }
-
-		//assignment 
-		constexpr ObserverPtr& operator=(const ObserverPtr&) noexcept = default;
-		constexpr ObserverPtr& operator=(ObserverPtr&&) noexcept = default;
-
-		//modifiers
-		[[nodiscard]] constexpr element_type* release() noexcept {
-			element_type* tempDataPtr = dataPtr;
-			dataPtr = nullptr;
-			return dataPtr;
-		}
-		constexpr void reset(element_type* p = nullptr) noexcept {
-			dataPtr = p;
-		}
-		constexpr void swap(ObserverPtr& other) noexcept {
-			element_type* tempDataPtr = other.dataPtr;
-			other.dataPtr = dataPtr;
-			dataPtr = tempDataPtr;
-		}
-
-		//observers
-		constexpr element_type* get() const noexcept { return dataPtr; }
-		constexpr explicit operator Bool() const noexcept { return dataPtr; }
-		constexpr element_type& operator*() const { return dataPtr; }
-		constexpr element_type* operator->() const noexcept { return dataPtr; }
-		constexpr Bool isNull() noexcept { return dataPtr == nullptr; }
-		constexpr Bool isNotNull() noexcept { return dataPtr != nullptr; }
-
-		//conversions
-		constexpr explicit operator element_type* () const noexcept { return dataPtr; }
-
-		//compare 
-		constexpr Bool operator==(const ObserverPtr<DataType>& other) noexcept {
-			return dataPtr == other.dataPtr;
-		}
-		constexpr Bool operator!=(const ObserverPtr<DataType>& other) noexcept {
-			return dataPtr != other.dataPtr;
-		}
-		constexpr Bool operator<(const ObserverPtr<DataType>& other) noexcept {
-			return dataPtr < other.dataPtr;
-		}
-		constexpr Bool operator>(const ObserverPtr<DataType>& other) noexcept {
-			return dataPtr > other.dataPtr;
-		}
-		constexpr Bool operator<=(const ObserverPtr<DataType>& other) noexcept {
-			return dataPtr <= other.dataPtr;
-		}
-		constexpr Bool operator>=(const ObserverPtr<DataType>& other) noexcept {
-			return dataPtr >= other.dataPtr;
-		}
-		constexpr auto operator<=>(const ObserverPtr<DataType>& other) noexcept {
-			return dataPtr <=> other.dataPtr;
-		}
-	};
-
-	template<typename DataType>
-	constexpr ObserverPtr<DataType> makeObserver(DataType* ptr) noexcept {
-		return ObserverPtr<DataType>(ptr);
-	}
 }

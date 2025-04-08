@@ -1264,4 +1264,128 @@ namespace natl {
 			return outputIter;
 		}
 	};
+
+	template<typename... TemplateFlags>
+	struct FormatKey {
+		using template_flags = TypePack<TemplateFlags...>;
+	};
+	template<typename... TemplateFlags>
+	struct FormatValue {
+		using template_flags = TypePack<TemplateFlags...>;
+	};
+
+	namespace impl {
+		template<typename Type> struct IsFormatKeyV : FalseType {};
+		template<typename... TemplateFlags> struct IsFormatKeyV<FormatKey<TemplateFlags...>> : TrueType {};
+		template<typename Type> constexpr inline Bool IsFormatKey = IsFormatKeyV<Type>::value;
+		template<typename Type> concept IsFormatKeyC = IsFormatKeyV<Type>::value;
+
+		template<typename Type> struct IsFormatValueV : FalseType {};
+		template<typename... TemplateFlags> struct IsFormatValueV<FormatValue<TemplateFlags...>> : TrueType {};
+		template<typename Type> constexpr inline Bool IsFormatValue = IsFormatValueV<Type>::value;
+		template<typename Type> concept IsFormatValueC = IsFormatValueV<Type>::value;
+
+
+		template<typename Type> concept IsFormatKeyOrValueC = IsFormatKeyC<Type> || IsFormatValueC<Type>;
+		template<typename Type> struct IsFormatKeyOrValueV : BoolConstant<IsFormatKeyOrValueC<Type>> {};
+		template<typename Type> constexpr inline Bool IsFormatKeyOrValue = IsFormatKeyOrValueC<Type>;
+
+
+		template<typename... ArgTypes>
+		struct FormatKeyArg {
+		public:
+			using arg_types = TypePack<ArgTypes...>;
+			using storage_tuple_type = Tuple<ArgTypes&&...>;
+		public:
+			storage_tuple_type argStorage;
+			constexpr FormatKeyArg(ArgTypes&&... formatArgs) noexcept
+				: argStorage(natl::forward<ArgTypes>(formatArgs)...) {
+			}
+		};
+
+		template<typename... ArgTypes>
+		struct FormatValueArg {
+		public:
+			using arg_types = TypePack<ArgTypes...>;
+			using storage_tuple_type = Tuple<ArgTypes&&...>;
+		public:
+			storage_tuple_type argStorage;
+			constexpr FormatValueArg(ArgTypes&&... formatArgs) noexcept
+				: argStorage(natl::forward<ArgTypes>(formatArgs)...) {
+			}
+		};
+	}
+
+	template<typename... ArgTypes>
+	constexpr impl::FormatKeyArg<ArgTypes...> formatKey(ArgTypes&&... formatArgs) noexcept {
+		return impl::FormatKeyArg<ArgTypes...>(natl::forward<ArgTypes>(formatArgs)...);
+	}
+	template<typename... ArgTypes>
+	constexpr impl::FormatValueArg<ArgTypes...> formatValue(ArgTypes&&... formatArgs) noexcept {
+		return impl::FormatValueArg<ArgTypes...>(natl::forward<ArgTypes>(formatArgs)...);
+	}
+
+	template<typename TemplateFlag>
+	struct IsKeyFormatTemplateFlagV {
+		consteval static Bool getValue() noexcept {
+			if constexpr (IsStringLiteralC<TemplateFlag>) {
+				constexpr ConstAsciiStringView tflagName = TemplateFlag::toStringView();
+				return tflagName.starts_with("k: ");
+			} else {
+				return impl::IsFormatKeyC<TemplateFlag>;
+			}
+		}
+		constexpr static Bool value = getValue();
+	};
+	template<typename Type> constexpr static Bool IsKeyFormatTemplateFlag = IsKeyFormatTemplateFlagV<Type>::value;
+	template<typename Type> concept IsKeyFormatTemplateFlagC = IsKeyFormatTemplateFlagV<Type>::value;
+
+
+	template<typename TemplateFlag>
+	struct IsValueFormatTemplateFlagV {
+		consteval static Bool getValue() noexcept {
+			if constexpr (IsStringLiteralC<TemplateFlag>) {
+				constexpr ConstAsciiStringView tflagName = TemplateFlag::toStringView();
+				return tflagName.starts_with("v: ");
+			} else {
+				return impl::IsFormatValueC<TemplateFlag>;
+			}
+		}
+		constexpr static Bool value = getValue();
+	};
+	template<typename Type> constexpr static Bool IsValueFormatTemplateFlag = IsValueFormatTemplateFlagV<Type>::value;
+	template<typename Type> concept IsValueFormatTemplateFlagC = IsValueFormatTemplateFlagV<Type>::value;
+
+	template<typename Type> concept IsKeyOrValueFormatTemplateFlagC = IsKeyFormatTemplateFlagC<Type> || IsValueFormatTemplateFlagC<Type>;
+	template<typename Type> constexpr static Bool IsKeyOrValueFormatTemplateFlag = IsKeyOrValueFormatTemplateFlagC<Type>;
+	template<typename Type> struct IsKeyOrValueFormatTemplateFlagV : BoolConstant<IsKeyOrValueFormatTemplateFlagC<Type>> {};
+
+	template<typename TemplateFlag>
+	struct ReduceToTemplateFlagsT {
+		using type = TypePack<TemplateFlag>;
+	};
+	template<typename KeyTemplateFlag>
+		requires(IsKeyFormatTemplateFlagC<KeyTemplateFlag>)
+	struct ReduceToTemplateFlagsT<KeyTemplateFlag> {
+		consteval static auto getType() noexcept {
+			if constexpr (IsStringLiteralC<KeyTemplateFlag>) {
+				return typename KeyTemplateFlag::template Substr<3>{};
+			} else {
+				return typename KeyTemplateFlag::arg_types{};
+			}
+		}
+		using type = decltype(getType());
+	};
+	template<typename ValueTemplateFlag>
+		requires(IsValueFormatTemplateFlagC<ValueTemplateFlag>)
+	struct ReduceToTemplateFlagsT<ValueTemplateFlag> {
+		consteval static auto getType() noexcept {
+			if constexpr (IsStringLiteralC<ValueTemplateFlag>) {
+				return typename ValueTemplateFlag::template Substr<3>{};
+			} else {
+				return typename ValueTemplateFlag::arg_types{};
+			}
+		}
+		using type = decltype(getType());
+	};
 }

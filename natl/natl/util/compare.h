@@ -86,4 +86,87 @@ namespace natl {
         { lhs <=> rhs };
         { rhs <=> lhs };
     };
+
+    template<typename DataType>
+    struct CompareEqual {
+    public:
+        constexpr static Bool compare(const DataType& lhs, const DataType& rhs) noexcept {
+            return lhs == rhs;
+        }
+        constexpr Bool operator()(const DataType& lhs, const DataType& rhs) const noexcept {
+            return lhs == rhs;
+        }
+    };
+    template<typename Type>
+    struct CompareNotEqual {
+    public:
+        constexpr static Bool compare(const Type& lhs, const Type& rhs) noexcept {
+            return lhs != rhs;
+        }
+        constexpr Bool operator()(const Type& lhs, const Type& rhs) const noexcept {
+            return lhs != rhs;
+        }
+    };
+
+    template<typename Type>
+    struct CompareLess {
+    public:
+        constexpr static Bool compare(const Type& lhs, const Type& rhs) noexcept {
+            return lhs < rhs;
+        }
+        constexpr Bool operator()(const Type& lhs, const Type& rhs) const noexcept { 
+            return lhs < rhs; 
+        }
+    };
+    template<typename Type>
+    struct CompareGreater {
+    public:
+        constexpr static Bool compare(const Type& lhs, const Type& rhs) noexcept {
+            return lhs > rhs;
+        }
+        constexpr Bool operator()(const Type& lhs, const Type& rhs) const noexcept { 
+            return lhs > rhs; 
+        }
+    };
+    template<typename Type>
+    struct CompareLessEqual {
+    public:
+        constexpr static Bool compare(const Type& lhs, const Type& rhs) noexcept {
+            return lhs <= rhs;
+        }
+        constexpr Bool operator()(const Type& lhs, const Type& rhs) const noexcept { 
+            return lhs <= rhs; 
+        }
+    };
+    template<typename Type>
+    struct CompareGreaterEqual {
+    public:
+        constexpr static Bool compare(const Type& lhs, const Type& rhs) noexcept {
+            return lhs >= rhs;
+        }
+        constexpr Bool operator()(const Type& lhs, const Type& rhs) const noexcept { 
+            return lhs >= rhs; 
+        }
+    };
+    template<typename Type>
+    struct CompareEqualTo {
+    public:
+        constexpr static Bool compare(const Type& lhs, const Type& rhs) noexcept {
+            return lhs == rhs;
+        }
+        constexpr Bool operator()(const Type& lhs, const Type& rhs) const noexcept {
+            return lhs == rhs;
+        }
+    };
+    template<typename Type>
+    struct CompareNotEqualTo {
+    public:
+        constexpr static Bool compare(const Type& lhs, const Type& rhs) noexcept {
+            return lhs != rhs;
+        }
+        constexpr Bool operator()(const Type& lhs, const Type& rhs) const noexcept {
+            return lhs != rhs;
+        }
+    };
+
 }

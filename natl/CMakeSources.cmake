@@ -8,10 +8,13 @@ natl/container/colony.h
 natl/container/container.h
 natl/container/dynArray.h
 natl/container/flatHashMap.h
+natl/container/flatHashSet.h
 natl/container/functional.h
 natl/container/functionCache.h
 natl/container/heapArray.h
 natl/container/partitioner.h
+natl/container/persistentHashMap.h
+natl/container/persistentHashSet.h
 natl/container/priorityQueue.h
 natl/container/smallDynArray.h
 natl/container/string.h
@@ -20,7 +23,10 @@ natl/container/variant.h
 natl/container/view.h
 natl/container.h
 natl/fundamental/expect.h
+natl/fundamental/observerPtr.h
 natl/fundamental/option.h
+natl/fundamental/optionPtr.h
+natl/fundamental/owningPtr.h
 natl/fundamental/pair.h
 natl/fundamental/strongType.h
 natl/fundamental/tuple.h
@@ -42,6 +48,7 @@ natl/serialization/base.h
 natl/serialization/basicCompatibility.h
 natl/serialization/basicSerializations.h
 natl/serialization/compatibility.h
+natl/serialization/error.h
 natl/serialization/jump.h
 natl/serialization/serializations.h
 natl/serialization/utils.h
@@ -57,11 +64,13 @@ natl/simd/standardArch.h
 natl/simd.h
 natl/sync/atomic.h
 natl/sync/mutex.h
+natl/sync/once.h
 natl/sync/smartThread.h
 natl/sync/synchronizedValue.h
 natl/sync/thread.h
 natl/sync.h
 natl/system/filesystem.h
+natl/system/nullptr.h
 natl/system/print.h
 natl/system/printColor.h
 natl/system/printFormatted.h
@@ -82,13 +91,13 @@ natl/util/bits.h
 natl/util/bytes.h
 natl/util/cast.h
 natl/util/characterTest.h
-natl/util/commonHashs.h
 natl/util/compare.h
 natl/util/compilerDependent.h
 natl/util/coroutines.h
 natl/util/dataMovement.h
 natl/util/enum.h
 natl/util/error.h
+natl/util/executionSession.h
 natl/util/funcArgs.h
 natl/util/hash.h
 natl/util/iteration.h
@@ -99,7 +108,9 @@ natl/util/memory.h
 natl/util/numerics.h
 natl/util/pointer.h
 natl/util/preprocessor.h
+natl/util/rawTypeInfo.h
 natl/util/reflection.h
+natl/util/smallestType.h
 natl/util/stateful.h
 natl/util/stringConvert.h
 natl/util/stringLiteral.h
@@ -117,18 +128,19 @@ set(SOURCE_FILES
 natl/sync/mutex.cpp
 natl/sync/thread.cpp
 natl/system/filesystem.cpp
+natl/system/nullptr.cpp
 natl/system/print.cpp
 natl/system/printColor.cpp
 natl/system/timer.cpp
 natl/util/allocater.cpp
+natl/util/executionSession.cpp
 )
 
 foreach(target_header IN LISTS HEADER_FILES)
 	target_sources(natl 
 		PRIVATE
 			$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/${target_header}>
-			$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/natl/${target_header}>
-	)
+			$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/natl/${target_header}>)
 endforeach()
 
 foreach(target_source IN LISTS SOURCE_FILES)

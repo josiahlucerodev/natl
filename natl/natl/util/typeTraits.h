@@ -561,9 +561,21 @@ namespace natl {
 	template<typename Type, typename OtherType>
 	struct IsAssignableV : BoolConstant<IsAssignable<Type, OtherType>> {};
 
-	template <typename Type> concept IsCopyConstructibleC = std::is_copy_constructible_v<Decay<Type>>;
-	template <typename Type> concept IsCopyAssignableC = std::is_copy_assignable_v<Decay<Type>>;
-	template <typename Type> concept IsMoveConstructibleC = std::is_move_constructible_v<Decay<Type>>;
+	template<typename Type> concept IsCopyConstructibleC = std::is_copy_constructible_v<Decay<Type>>;
+	template<typename Type> constexpr inline Bool IsCopyConstructible = IsCopyConstructibleC<Type>;
+	template<typename Type> struct IsCopyConstructibleV : BoolConstant<IsCopyConstructibleC<Type>> {};
+
+	template<typename Type> concept IsCopyAssignableC = std::is_copy_assignable_v<Decay<Type>>;
+	template<typename Type> constexpr inline Bool IsCopyAssignable = IsCopyAssignableC<Type>;
+	template<typename Type> struct IsCopyAssignableV : BoolConstant<IsCopyAssignableC<Type>> {};
+
+	template<typename Type> concept IsMoveConstructibleC = std::is_move_constructible_v<Decay<Type>>;
+	template<typename Type> constexpr inline Bool IsMoveConstructible = IsMoveConstructibleC<Type>;
+	template<typename Type> struct IsMoveConstructibleV : BoolConstant<IsMoveConstructibleC<Type>> {};
+
+	template<typename Type> concept IsMoveAssignableC = std::is_move_assignable_v<Decay<Type>>;
+	template<typename Type> constexpr inline Bool IsMoveAssignable = IsMoveAssignableC<Type>;
+	template<typename Type> struct IsMoveAssignableV : BoolConstant<IsMoveAssignableC<Type>> {};
 
 	//comparable
 	template<typename Type> constexpr inline Bool IsBuiltInTriviallyCompareable = IsBuiltInType<Type>;
@@ -732,20 +744,45 @@ namespace natl {
 	};
 
 	//function 
-	template <typename Functor, typename ReturnType, typename... ArgTypes>
-	concept HasFunctionSignature = requires(Functor functor, ArgTypes... args) {
-		{ functor(natl::forward<ArgTypes>(args)...) } -> std::same_as<ReturnType>;
-	};
+	namespace impl {
+		template <typename Functor, typename ReturnType, typename... ArgTypes>
+		constexpr auto testHasFunctionSignature() noexcept {
+			static_assert(natl::SameAs<decltype(natl::forward<Functor>(declref<Functor>())(natl::forward<ArgTypes>(declref<ArgTypes>())...)), ReturnType>);
+		}
+		template <typename Functor, typename ReturnType, typename... ArgTypes>
+		constexpr auto testIsConstCallable(const Functor functor, ArgTypes&&... args) noexcept {
+			static_assert(natl::SameAs<decltype(declref<const Functor>()(natl::forward<ArgTypes>(declref<ArgTypes>())...)), ReturnType>);
+		}
+	}
 
-	template<typename Functor, typename ReturnType, typename... ArgTypes>
-	concept IsConstCallable = HasFunctionSignature<Functor, ReturnType, ArgTypes...>&&
-		requires(const Functor functor, ArgTypes... args) {
-			{ functor(natl::forward<ArgTypes>(args)...) } -> std::same_as<ReturnType>;
+#if defined(NATL_COMPILER_GCC)
+	template <typename Functor, typename ReturnType, typename... ArgTypes>
+	concept HasFunctionSignature = requires() {
+		{ impl::testHasFunctionSignature<Functor, ReturnType, ArgTypes...>() };
 	};
+#else
+	template <typename Functor, typename ReturnType, typename... ArgTypes>
+	concept HasFunctionSignature = requires(Functor&& functor, ArgTypes&&... args) {
+		{ functor(natl::forward<ArgTypes>(args)...) } -> natl::SameAs<ReturnType>;
+	};
+#endif
+
+#if defined(NATL_COMPILER_GCC)
+	template<typename Functor, typename ReturnType, typename... ArgTypes>
+	concept IsConstCallable = HasFunctionSignature<Functor, ReturnType, ArgTypes...> && requires() {
+			impl::testIsConstCallable<Functor, ReturnType, ArgTypes...>();
+	};
+#else
+	template<typename Functor, typename ReturnType, typename... ArgTypes>
+	concept IsConstCallable = HasFunctionSignature<Functor, ReturnType, ArgTypes...> 
+		&& requires(const Functor& functor, ArgTypes&&... args) {
+		{ functor(natl::forward<ArgTypes>(args)...) } -> natl::SameAs<ReturnType>;
+	};
+#endif
 
 	namespace impl {
 		template<typename Functor, typename... ArgTypes>
-		auto tryInvoke(Functor&& functor, ArgTypes&&... args) -> decltype(natl::forward<Functor>(functor)(natl::forward<ArgTypes>(args)...)) {}
+		auto tryInvoke(Functor&& functor, ArgTypes&&... args) -> decltype(natl::forward<Functor>(functor)(natl::forward<ArgTypes>(args)...));
 	}
 
 	template<typename...> struct InvokeResultTypeT {

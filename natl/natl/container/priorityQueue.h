@@ -2,6 +2,7 @@
 
 //own
 #include "../util/iterators.h"
+#include "../util/algorithm.h"
 #include "container.h"
 #include "dynArray.h"
 #include "smallDynArray.h"
@@ -10,91 +11,6 @@
 
 //interface
 namespace natl {
-	namespace impl {
-		constexpr Size heapParentIndex(const Size index) noexcept {
-			return (index - 1) / 2;
-		}
-
-		constexpr Size heapLeftChildIndex(const Size index) noexcept {
-			return (2 * index + 1);
-		}
-
-		constexpr Size heapRightChildIndex(const Size index) noexcept {
-			return (2 * index + 2);
-		}
-
-		template <typename RandomIter, typename Compare>
-		constexpr void heapify(RandomIter first, const Size size, const Size index, Compare compare = Compare()) noexcept {
-			if (size <= 1) { return; }
-			const Size leftIndex = heapLeftChildIndex(index);
-			const Size rightIndex = heapRightChildIndex(index);
-			Size smallest = index;
-			using difference_type = typename IteratorTraits<RandomIter>::difference_type;
-			if (leftIndex < size && compare(iterValue<RandomIter>(first + static_cast<difference_type>(leftIndex)), iterValue<RandomIter>(first + static_cast<difference_type>(index)))) {
-				smallest = leftIndex;
-			}
-			if (rightIndex < size && compare(iterValue<RandomIter>(first + static_cast<difference_type>(rightIndex)), iterValue<RandomIter>(first + static_cast<difference_type>(smallest)))) {
-				smallest = rightIndex;
-			}
-			if (smallest != index) {
-				iterSwap<RandomIter>(first + static_cast<difference_type>(index), first + static_cast<difference_type>(smallest));
-				heapify<RandomIter, Compare>(first, size, smallest, compare);
-			}
-		}
-	}
-
-
-	template<typename RandomIter, typename Compare>
-	constexpr void makeHeap(RandomIter first, RandomIter last, Compare compare = Compare()) noexcept{
-		const Size size = iterDistance<RandomIter>(first, last);
-		const Size startIndex = (size / 2) - 1;
-		for (SSize index = static_cast<SSize>(startIndex); index >= SSize(0); index--) {
-			impl::heapify<RandomIter, Compare>(first, size, static_cast<Size>(index), compare);
-		}
-	}
-
-	template<typename RandomIter, typename Compare>
-	constexpr void pushHeap(RandomIter first, RandomIter last, Compare compare) noexcept {
-		using difference_type = typename IteratorTraits<RandomIter>::difference_type;
-		const Size size = iterDistance<RandomIter>(first, last);
-		if (size <= 1) { return; }
-		Size current = size - 1;
-		while (current > 0) {
-			const Size parent = impl::heapParentIndex(current);
-			if (compare(iterValue<RandomIter>(first + static_cast<difference_type>(current)), iterValue<RandomIter>(first + static_cast<difference_type>(parent)))) {
-				iterSwap<RandomIter>(first + static_cast<difference_type>(parent), first + static_cast<difference_type>(current));
-				current = parent;
-			} else {
-				break;
-			}
-		}
-	}
-
-	template<typename RandomIter, typename Compare>
-	constexpr void popHeap(RandomIter first, RandomIter last, Compare compare) noexcept {
-		const Size size = iterDistance<RandomIter>(first, last);
-		if (size <= 1) { return; }
-		--last;
-		iterSwap<RandomIter>(first, last);
-		impl::heapify<RandomIter, Compare>(first, size - 1, 0, compare);
-	}
-
-	template<typename RandomIter, typename Compare>
-	constexpr Bool isHeap(RandomIter first, RandomIter last, Compare compare) noexcept {
-		using difference_type = typename IteratorTraits<RandomIter>::difference_type;
-		Size size = iterDistance<RandomIter>(first, last);
-		for (Size index = 1; index < size; index++) {
-			if (compare(
-				iterValue<RandomIter>(first + static_cast<difference_type>(index)), 
-				iterValue<RandomIter>(first + static_cast<difference_type>((index - 1) / 2))
-				)) {
-				return false;
-			}
-		}
-		return true;
-	}
-	
-
 	template<typename DataType, typename SequentialDynamicContainer = DynArray<DataType>, typename Compare = CompareLess<DataType>>
 	struct PriorityQueue {
 	public:
@@ -196,7 +112,7 @@ namespace natl {
 
 		template<typename... Args>
 		constexpr void emplace(Args&&... args) noexcept {
-			sequentialContainer.emplace_back(natl::forward<Args>(args)...);
+			sequentialContainer.emplaceBack(natl::forward<Args>(args)...);
 			pushHeapInternalContainer();
 		}
 
@@ -215,7 +131,7 @@ namespace natl {
 
 		constexpr void pop() noexcept {
 			popHeapInternalContainer();
-			sequentialContainer.pop_back();
+			sequentialContainer.popBack();
 		}
 		constexpr void pop(const Size number) noexcept {
 			const Size limitedNumber = natl::min<Size>(number, size());
@@ -244,21 +160,21 @@ namespace natl {
 		}
 	};
 
-	template<typename DataType, typename Alloc = DefaultAllocator<DataType>, typename Compare = CompareLess<DataType>>
-		requires(IsAllocator<Alloc>)
+	template<typename DataType, typename Alloc = DefaultAllocator, typename Compare = CompareLess<DataType>>
+		requires(IsAllocatorC<Alloc>)
 	using MinHeap = PriorityQueue<DataType, DynArray<DataType, Alloc>, Compare>;
 
-	template<typename DataType, Size smallBufferSize, typename Alloc = DefaultAllocator<DataType>, typename Compare = CompareLess<DataType>>
-		requires(IsAllocator<Alloc>)
+	template<typename DataType, Size smallBufferSize, typename Alloc = DefaultAllocator, typename Compare = CompareLess<DataType>>
+		requires(IsAllocatorC<Alloc>)
 	using SmallMinHeap = PriorityQueue<DataType, SmallDynArray<DataType, smallBufferSize, Alloc>, Compare>;
 
 
-	template<typename DataType, typename Alloc = DefaultAllocator<DataType>, typename Compare = CompareGreater<DataType>>
-		requires(IsAllocator<Alloc>)
+	template<typename DataType, typename Alloc = DefaultAllocator, typename Compare = CompareGreater<DataType>>
+		requires(IsAllocatorC<Alloc>)
 	using MaxHeap = PriorityQueue<DataType, DynArray<DataType, Alloc>, Compare>;
 
-	template<typename DataType, Size smallBufferSize, typename Alloc = DefaultAllocator<DataType>, typename Compare = CompareGreater<DataType>>
-		requires(IsAllocator<Alloc>)
+	template<typename DataType, Size smallBufferSize, typename Alloc = DefaultAllocator, typename Compare = CompareGreater<DataType>>
+		requires(IsAllocatorC<Alloc>)
 	using SmallMaxHeap = PriorityQueue<DataType, SmallDynArray<DataType, smallBufferSize, Alloc>, Compare>;
 
 }

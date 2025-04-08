@@ -28,7 +28,7 @@ namespace natl {
 
 
 		template <typename Alloc, typename Functor, typename ReturnType, typename... ArgTypes>
-			requires(IsAllocator<Alloc>)
+			requires(IsAllocatorC<Alloc>)
 		struct Callable : public CallableBase<ReturnType, ArgTypes...> {
 			using callable_base = CallableBase<ReturnType, ArgTypes...>;
 			using destory_function = void(*)(callable_base*) noexcept;
@@ -36,16 +36,16 @@ namespace natl {
 			mutable Functor functor;
 		public:
 			constexpr Callable(const Functor& functorIn) noexcept requires(IsCopyConstructibleC<Functor>) : functor(functorIn) {}
-			constexpr Callable(Functor&& functorIn) noexcept : functor(natl::move(functorIn)) {}
+			constexpr Callable(Functor&& functorIn) noexcept : functor(move(functorIn)) {}
 
 			constexpr callable_base* copyCallable(callable_base* location) const noexcept override {
 				if constexpr (IsCopyConstructibleC<Functor>) {
 					if (location) {
-						natl::construct<Callable>(static_cast<Callable*>(location), functor);
+						construct<Callable>(static_cast<Callable*>(location), functor);
 						return nullptr;
 					} else {
-						Callable* newCallable = Alloc::template rebind_alloc<Callable>::allocate(1);
-						natl::construct<Callable>(newCallable, functor);
+						Callable* newCallable = Alloc::template rebind<Callable>::allocate(1);
+						construct<Callable>(newCallable, functor);
 						return static_cast<callable_base*>(newCallable);
 					}
 				} else {
@@ -54,19 +54,19 @@ namespace natl {
 			}
 			constexpr callable_base* moveCallable(callable_base* location) noexcept override {
 				if (location) {
-					natl::construct<Callable>(static_cast<Callable*>(location), natl::move(functor));
+					construct<Callable>(static_cast<Callable*>(location), move(functor));
 					return nullptr;
 				} else {
-					Callable* newCallable = Alloc::template rebind_alloc<Callable>::allocate(1);
-					natl::construct<Callable>(newCallable, natl::move(functor));
+					Callable* newCallable = Alloc::template rebind<Callable>::allocate(1);
+					construct<Callable>(newCallable, move(functor));
 					return static_cast<callable_base*>(newCallable);
 				}
 			}
 			constexpr destory_function getDestoryFunction() const noexcept override {
 				return [](callable_base* location) noexcept -> void {
 					Callable* destoryCallable = static_cast<Callable*>(location);
-					natl::deconstruct<Callable>(destoryCallable);
-					Alloc::template rebind_alloc<Callable>::deallocate(destoryCallable, 1);
+					deconstruct<Callable>(destoryCallable);
+					Alloc::template rebind<Callable>::deallocate(destoryCallable, 1);
 				};
 			}
 			constexpr ReturnType invoke(ArgTypes... args) const noexcept override {
@@ -95,7 +95,7 @@ namespace natl {
 
 			Functor functor;
 			constexpr ConstexprCallable(const Functor& functorIn) noexcept requires(IsCopyConstructibleC<Functor>) : functor(functorIn) {}
-			constexpr ConstexprCallable(Functor&& functorIn) noexcept : functor(natl::move(functorIn)) {}
+			constexpr ConstexprCallable(Functor&& functorIn) noexcept : functor(move(functorIn)) {}
 
 			constexpr ~ConstexprCallable() noexcept = default;
 
@@ -108,9 +108,9 @@ namespace natl {
 			constexpr copy_functor_storage_function_type getCopyFunctorStorageFunction() const noexcept override {
 				return [](const constexpr_callable_base* callableBase) noexcept -> constexpr_callable_base* {
 					if constexpr (IsCopyConstructibleC<Functor>) {
-						using constexpr_callable_alloc = DefaultAllocator<ConstexprCallable>;
+						using constexpr_callable_alloc = DefaultAllocator::template rebind<ConstexprCallable>;
 						ConstexprCallable* newCallable = constexpr_callable_alloc::allocate(1);
-						natl::construct<ConstexprCallable>(newCallable, static_cast<const ConstexprCallable*>(callableBase)->functor);
+						construct<ConstexprCallable>(newCallable, static_cast<const ConstexprCallable*>(callableBase)->functor);
 
 						return static_cast<constexpr_callable_base*>(newCallable);
 					} else {
@@ -122,8 +122,8 @@ namespace natl {
 			constexpr destory_callable_function_type getDestoryFunction() const noexcept override {
 				return [](constexpr_callable_base* callableBase) noexcept -> void {
 					ConstexprCallable* constexprCallable = static_cast<ConstexprCallable*>(callableBase);
-					natl::deconstruct(constexprCallable);
-					natl::DefaultAllocator<ConstexprCallable>::deallocate(constexprCallable, 1);
+					deconstruct(constexprCallable);
+					DefaultAllocator::template rebind<ConstexprCallable>::deallocate(constexprCallable, 1);
 				};
 			}
 		};
@@ -159,7 +159,7 @@ namespace natl {
 			friend struct FunctionRefBase;
 		private:
 			impl::FunctionStorageType functionStorageType;
-			natl::ui32 numberOfBytesUsed;
+			ui32 numberOfBytesUsed;
 			union {
 				callable_base* heapCallable;
 				function_ptr_type functionPtr;
@@ -181,21 +181,21 @@ namespace natl {
 			template<Size OtherCap>
 			constexpr FunctionBase(FunctionBase<ReturnType(ArgTypes...), OtherCap, MoveOnly, Alloc>&& other) noexcept {
 				numberOfBytesUsed = 0;
-				assign<OtherCap>(natl::forward<decltype(other)>(other));
+				assign<OtherCap>(forward<decltype(other)>(other));
 			}
 
 			template<typename Functor>
 				requires(HasFunctionSignature<Functor, ReturnType, ArgTypes...>)
 			constexpr FunctionBase(Functor&& functor) noexcept {
 				numberOfBytesUsed = 0;
-				assign<Functor>(natl::move(functor));
+				assign<Functor>(move(functor));
 			}
 
 			//destructors
 			constexpr void internalDeconstruct() noexcept {
 				switch (functionStorageType) {
 				case impl::FunctionStorageType::smallCallable:
-					natl::deconstruct<callable_base>(reinterpret_cast<callable_base*>(smallCallableStorage));
+					deconstruct<callable_base>(reinterpret_cast<callable_base*>(smallCallableStorage));
 					break;
 				case impl::FunctionStorageType::heapCallable: {
 					callable_destory_function destoryFunction = heapCallable->getDestoryFunction();
@@ -231,13 +231,13 @@ namespace natl {
 			template<Size OtherCap>
 			constexpr FunctionBase& operator=(FunctionBase<ReturnType(ArgTypes...), OtherCap, MoveOnly, Alloc>&& other) noexcept {
 				internalDeconstruct();
-				return assign<OtherCap>(natl::forward<decltype(other)>(other));
+				return assign<OtherCap>(forward<decltype(other)>(other));
 			}
 			template<typename Functor>
 				requires(HasFunctionSignature<Functor, ReturnType, ArgTypes...>)
 			constexpr FunctionBase& operator=(Functor&& functor) noexcept {
 				internalDeconstruct();
-				return assign(natl::move(functor));
+				return assign(move(functor));
 			}
 
 			template<Size OtherCap>
@@ -271,7 +271,7 @@ namespace natl {
 						break;
 					case impl::FunctionStorageType::constexprCallable:
 						if (isConstantEvaluated()) {
-							natl::construct<constexpr_callable_base>(
+							construct<constexpr_callable_base>(
 								&constexprCallable,
 								other.constexprCallable->getCopyFunctorStorageFunction()(other.constexprCallable));
 						} else {
@@ -314,7 +314,7 @@ namespace natl {
 						break;
 					case impl::FunctionStorageType::constexprCallable:
 						if (isConstantEvaluated()) {
-							natl::construct<constexpr_callable_base*>(
+							construct<constexpr_callable_base*>(
 								&constexprCallable,
 								other.constexprCallable);
 						} else {
@@ -339,24 +339,24 @@ namespace natl {
 					using FunctorCallableType = impl::Callable<Alloc, Functor, ReturnType, ArgTypes...>;
 					if (isConstantEvaluated()) {
 						using constexpr_callable_type = impl::ConstexprCallable<Functor, ReturnType, ArgTypes...>;
-						using constexpr_callable_type_alloc = DefaultAllocator<constexpr_callable_type>;
+						using constexpr_callable_type_alloc = DefaultAllocator::template rebind<constexpr_callable_type>;
 						constexpr_callable_type* newConstexprCallable = constexpr_callable_type_alloc::allocate(1);
-						natl::construct<constexpr_callable_type>(newConstexprCallable, natl::move(functor));
+						construct<constexpr_callable_type>(newConstexprCallable, move(functor));
 
 						functionStorageType = impl::FunctionStorageType::constexprCallable;
-						natl::construct<constexpr_callable_base*>(
+						construct<constexpr_callable_base*>(
 							&constexprCallable,
 							static_cast<constexpr_callable_base*>(newConstexprCallable));
 					} else {
 						if constexpr (sizeof(FunctorCallableType) <= smallBufferSize) {
 							numberOfBytesUsed = TypeByteSize<FunctorCallableType>;
 							functionStorageType = impl::FunctionStorageType::smallCallable;
-							natl::construct<FunctorCallableType, Functor>(reinterpret_cast<FunctorCallableType*>(smallCallableStorage), forward<Functor>(functor));
+							construct<FunctorCallableType, Functor>(reinterpret_cast<FunctorCallableType*>(smallCallableStorage), forward<Functor>(functor));
 						} else {
 							numberOfBytesUsed = TypeByteSize<FunctorCallableType>;
 							functionStorageType = impl::FunctionStorageType::heapCallable;
-							FunctorCallableType* functorCallable = Alloc::template rebind_alloc<FunctorCallableType>::allocate(1);
-							natl::construct<FunctorCallableType>(functorCallable, natl::move(functor));
+							FunctorCallableType* functorCallable = Alloc::template rebind<FunctorCallableType>::allocate(1);
+							construct<FunctorCallableType>(functorCallable, move(functor));
 							heapCallable = static_cast<callable_base*>(functorCallable);
 						}
 					}
@@ -404,9 +404,9 @@ namespace natl {
 
 			//modifiers
 			constexpr void swap(FunctionBase& other) noexcept {
-				FunctionBase temp = natl::move(other);
-				other = natl::move(self());
-				self() = natl::move(temp);
+				FunctionBase temp = move(other);
+				other = move(self());
+				self() = move(temp);
 			}
 		};
 
@@ -441,7 +441,7 @@ namespace natl {
 		: FalseType {};
 
 	//main types 
-	template<typename Signature, Size Capacity = 32 - alignof(char*), typename Alloc = DefaultAllocatorByte>
+	template<typename Signature, Size Capacity = 32 - alignof(char*), typename Alloc = DefaultAllocator>
 	struct MoveOnlyFunction {
 		template<typename>
 		friend struct FunctionRef;
@@ -450,7 +450,7 @@ namespace natl {
 		friend struct Function;
 	};
 
-	template<typename Signature, Size Capacity = 32 - alignof(char*), typename Alloc = DefaultAllocatorByte>
+	template<typename Signature, Size Capacity = 32 - alignof(char*), typename Alloc = DefaultAllocator>
 	struct Function {
 	public:
 		template<typename>
@@ -515,18 +515,18 @@ namespace natl {
 		constexpr MoveOnlyFunction(const MoveOnlyFunction<ReturnType(ArgTypes...), OtherCap, Alloc>& other) noexcept = delete;
 		template<Size OtherCap>
 		constexpr MoveOnlyFunction(MoveOnlyFunction<ReturnType(ArgTypes...), OtherCap, Alloc>&& other) noexcept :
-			functionBase(natl::forward<decltype(other.functionBase)>(other.functionBase)) {}
+			functionBase(forward<decltype(other.functionBase)>(other.functionBase)) {}
 		template<Size OtherCap>
 
 		constexpr MoveOnlyFunction(const MoveOnlyFunction<ReturnType(ArgTypes...) const, OtherCap, Alloc>&& other) noexcept = delete;
 		template<Size OtherCap>
 		constexpr MoveOnlyFunction(MoveOnlyFunction<ReturnType(ArgTypes...) const, OtherCap, Alloc>&& other) noexcept :
-			functionBase(natl::forward<decltype(other.functionBase)>(other.functionBase)) {}
+			functionBase(forward<decltype(other.functionBase)>(other.functionBase)) {}
 
 		template<typename Functor>
 			requires(HasFunctionSignature<Functor, ReturnType, ArgTypes...>)
 		constexpr MoveOnlyFunction(Functor&& functor) noexcept :
-			functionBase(natl::move(functor)) {}
+			functionBase(move(functor)) {}
 
 		//destructor
 		constexpr ~MoveOnlyFunction() noexcept = default;
@@ -543,7 +543,7 @@ namespace natl {
 		constexpr MoveOnlyFunction& operator=(const MoveOnlyFunction<ReturnType(ArgTypes...), OtherCap, Alloc>& other) noexcept = delete;
 		template<Size OtherCap>
 		constexpr MoveOnlyFunction& operator=(MoveOnlyFunction<ReturnType(ArgTypes...), OtherCap, Alloc>&& other) noexcept {
-			functionBase = natl::forward<decltype(other)>(other);
+			functionBase = forward<decltype(other)>(other);
 			return self();
 		}
 
@@ -551,14 +551,14 @@ namespace natl {
 		constexpr MoveOnlyFunction& operator=(const MoveOnlyFunction<ReturnType(ArgTypes...) const, OtherCap, Alloc>& other) noexcept = delete;
 		template<Size OtherCap>
 		constexpr MoveOnlyFunction& operator=(MoveOnlyFunction<ReturnType(ArgTypes...) const, OtherCap, Alloc>&& other) noexcept {
-			functionBase = natl::forward<decltype(other)>(other);
+			functionBase = forward<decltype(other)>(other);
 			return self();
 		}
 
 		template<typename Functor>
 			requires(HasFunctionSignature<Functor, ReturnType, ArgTypes...>)
 		constexpr MoveOnlyFunction& operator=(Functor&& functor) noexcept {
-			functionBase = natl::forward<decltype(functor)>(functor);
+			functionBase = forward<decltype(functor)>(functor);
 			return self();
 		}
 
@@ -580,9 +580,9 @@ namespace natl {
 
 		//modifiers 
 		constexpr void swap(MoveOnlyFunction& other) noexcept {
-			MoveOnlyFunction temp = natl::move(other);
-			other = natl::move(self());
-			self() = natl::move(temp);
+			MoveOnlyFunction temp = move(other);
+			other = move(self());
+			self() = move(temp);
 		}
 	};
 
@@ -633,10 +633,10 @@ namespace natl {
 
 		template<Size OtherCap>
 		constexpr MoveOnlyFunction(MoveOnlyFunction<ReturnType(ArgTypes...) const, OtherCap, Alloc>&& other) noexcept :
-			functionBase(natl::forward<decltype(other.functionBase)>(other.functionBase)) {}
+			functionBase(forward<decltype(other.functionBase)>(other.functionBase)) {}
 		template<typename Functor>
 			requires(HasFunctionSignature<Functor, ReturnType, ArgTypes...>&& IsConstCallable<Functor, ReturnType, ArgTypes...>)
-		constexpr MoveOnlyFunction(Functor&& functor) noexcept : functionBase(natl::move(functor)) {}
+		constexpr MoveOnlyFunction(Functor&& functor) noexcept : functionBase(move(functor)) {}
 
 		//destructor
 		constexpr ~MoveOnlyFunction() noexcept = default;
@@ -657,14 +657,14 @@ namespace natl {
 		constexpr MoveOnlyFunction& operator=(const MoveOnlyFunction<ReturnType(ArgTypes...) const, OtherCap, Alloc>& other) noexcept = delete;
 		template<Size OtherCap>
 		constexpr MoveOnlyFunction& operator=(MoveOnlyFunction<ReturnType(ArgTypes...) const, OtherCap, Alloc>&& other) noexcept {
-			functionBase = natl::forward<decltype(other)>(other);
+			functionBase = forward<decltype(other)>(other);
 			return self();
 		}
 
 		template<typename Functor>
 			requires(HasFunctionSignature<Functor, ReturnType, ArgTypes...> && IsConstCallable<Functor, ReturnType, ArgTypes...>)
 		constexpr MoveOnlyFunction& operator=(Functor&& functor) noexcept {
-			functionBase = natl::forward<decltype(functor)>(functor);
+			functionBase = forward<decltype(functor)>(functor);
 			return self();
 		}
 
@@ -686,9 +686,9 @@ namespace natl {
 
 		//modifiers 
 		constexpr void swap(MoveOnlyFunction& other) noexcept {
-			MoveOnlyFunction temp = natl::move(other);
-			other = natl::move(self());
-			self() = natl::move(temp);
+			MoveOnlyFunction temp = move(other);
+			other = move(self());
+			self() = move(temp);
 		}
 	};
 
@@ -720,10 +720,10 @@ namespace natl {
 	struct IsTriviallyMoveAssignableV<MoveOnlyFunction<ReturnType(ArgTypes...) const, Capacity, Alloc>>
 		: FalseType {};
 
-	template<typename Signature, Size ByteSize, typename Alloc = DefaultAllocatorByte>
+	template<typename Signature, Size ByteSize, typename Alloc = DefaultAllocator>
 	using MoveOnlyFunctionByteSize = MoveOnlyFunction<Signature, ByteSize - alignof(char*), Alloc>;
 
-	template<typename Signature, typename Alloc = DefaultAllocatorByte>
+	template<typename Signature, typename Alloc = DefaultAllocator>
 	using MoveOnlyFunctionAlloc = MoveOnlyFunctionByteSize<Signature, 32, Alloc>;
 
 	template<typename ReturnType, typename... ArgTypes, Size Capacity, typename Alloc>
@@ -750,27 +750,27 @@ namespace natl {
 			functionBase(other.functionBase) {}
 		template<Size OtherCap>
 		constexpr Function(Function<ReturnType(ArgTypes...), OtherCap, Alloc>&& other) noexcept :
-			functionBase(natl::forward<decltype(other.functionBase)>(other.functionBase)) {}
+			functionBase(forward<decltype(other.functionBase)>(other.functionBase)) {}
 		template<Size OtherCap>
 		constexpr Function(const Function<ReturnType(ArgTypes...) const, OtherCap, Alloc>& other) noexcept :
 			functionBase(other.functionBase) {}
 		template<Size OtherCap>
 		constexpr Function(Function<ReturnType(ArgTypes...) const, OtherCap, Alloc>&& other) noexcept :
-			functionBase(natl::forward<decltype(other.functionBase)>(other.functionBase)) {}
+			functionBase(forward<decltype(other.functionBase)>(other.functionBase)) {}
 
 		template<Size OtherCap>
 		constexpr Function(MoveOnlyFunction<ReturnType(ArgTypes...), OtherCap, Alloc>&& other) noexcept :
-			functionBase(natl::forward<decltype(other.functionBase)>(other.functionBase)) {}
+			functionBase(forward<decltype(other.functionBase)>(other.functionBase)) {}
 		template<Size OtherCap>
 		constexpr Function(MoveOnlyFunction<ReturnType(ArgTypes...) const, OtherCap, Alloc>&& other) noexcept :
-			functionBase(natl::forward<decltype(other.functionBase)>(other.functionBase)) {}
+			functionBase(forward<decltype(other.functionBase)>(other.functionBase)) {}
 
 		template<typename Functor>
 			requires(
 			HasFunctionSignature<Functor, ReturnType, ArgTypes...> 
 			&& IsCopyConstructibleC<Functor>
 			&& impl::IsNotNatlFunctionV<Decay<Functor>>)
-		constexpr Function(Functor&& functor) noexcept : functionBase(natl::move(functor)) {}
+		constexpr Function(Functor&& functor) noexcept : functionBase(move(functor)) {}
 
 		//destructor
 		constexpr ~Function() noexcept = default;
@@ -787,7 +787,7 @@ namespace natl {
 		}
 		template<Size OtherCap>
 		constexpr Function& operator=(Function<ReturnType(ArgTypes...), OtherCap, Alloc>&& other) noexcept {
-			functionBase = natl::move(other.functionBase);
+			functionBase = move(other.functionBase);
 			return self();
 		}
 		template<Size OtherCap>
@@ -797,7 +797,7 @@ namespace natl {
 		}
 		template<Size OtherCap>
 		constexpr Function& operator=(Function<ReturnType(ArgTypes...) const, OtherCap, Alloc>&& other) noexcept {
-			functionBase = natl::move(other.functionBase);
+			functionBase = move(other.functionBase);
 			return self();
 		}
 
@@ -805,7 +805,7 @@ namespace natl {
 		constexpr Function& operator=(const MoveOnlyFunction<ReturnType(ArgTypes...), OtherCap, Alloc>& other) noexcept = delete;
 		template<Size OtherCap>
 		constexpr Function& operator=(MoveOnlyFunction<ReturnType(ArgTypes...), OtherCap, Alloc>&& other) noexcept {
-			functionBase = natl::move(other.functionBase);
+			functionBase = move(other.functionBase);
 			return self();
 		}
 
@@ -813,14 +813,14 @@ namespace natl {
 		constexpr Function& operator=(const MoveOnlyFunction<ReturnType(ArgTypes...) const, OtherCap, Alloc>& other) noexcept = delete;
 		template<Size OtherCap>
 		constexpr Function& operator=(MoveOnlyFunction<ReturnType(ArgTypes...) const, OtherCap, Alloc>&& other) noexcept {
-			functionBase = natl::move(other.functionBase);
+			functionBase = move(other.functionBase);
 			return self();
 		}
 
 		template<typename Functor>
 			requires(HasFunctionSignature<Functor, ReturnType, ArgTypes...> && IsCopyConstructibleC<Functor>)
 		constexpr Function& operator=(Functor&& functor) noexcept {
-			functionBase = natl::forward<Functor>(functor);
+			functionBase = forward<Functor>(functor);
 			return self();
 		}
 
@@ -842,9 +842,9 @@ namespace natl {
 
 		//modifiers 
 		constexpr void swap(Function& other) noexcept {
-			Function temp = natl::move(other);
-			other = natl::move(self());
-			self() = natl::move(temp);
+			Function temp = move(other);
+			other = move(self());
+			self() = move(temp);
 		}
 	};
 
@@ -902,19 +902,19 @@ namespace natl {
 			functionBase(other.functionBase) {}
 		template<Size OtherCap>
 		constexpr Function(Function<ReturnType(ArgTypes...) const, OtherCap, Alloc>&& other) noexcept :
-			functionBase(natl::forward<decltype(other.functionBase)>(other.functionBase)) {}
+			functionBase(forward<decltype(other.functionBase)>(other.functionBase)) {}
 
 		template<Size OtherCap>
 		constexpr Function(MoveOnlyFunction<ReturnType(ArgTypes...), OtherCap, Alloc>&& other) = delete;
 		template<Size OtherCap>
 		constexpr Function(MoveOnlyFunction<ReturnType(ArgTypes...) const, OtherCap, Alloc>&& other) noexcept :
-			functionBase(natl::forward<decltype(other.functionBase)>(other.functionBase)) {}
+			functionBase(forward<decltype(other.functionBase)>(other.functionBase)) {}
 
 		template<typename Functor>
 			requires(HasFunctionSignature<Functor, ReturnType, ArgTypes...> 
 				&& IsCopyConstructibleC<Functor> 
 				&& IsConstCallable<Functor, ReturnType, ArgTypes...>)
-		constexpr Function(Functor&& functor) noexcept : functionBase(natl::move(functor)) {}
+		constexpr Function(Functor&& functor) noexcept : functionBase(move(functor)) {}
 
 		//destructor
 		constexpr ~Function() noexcept = default;
@@ -936,7 +936,7 @@ namespace natl {
 		}
 		template<Size OtherCap>
 		constexpr Function& operator=(Function<ReturnType(ArgTypes...) const, OtherCap, Alloc>&& other) noexcept {
-			functionBase = natl::forward<decltype(other)>(other);
+			functionBase = forward<decltype(other)>(other);
 			return self();
 		}
 
@@ -949,7 +949,7 @@ namespace natl {
 		constexpr Function& operator=(const MoveOnlyFunction<ReturnType(ArgTypes...) const, OtherCap, Alloc>& other) noexcept = delete;
 		template<Size OtherCap>
 		constexpr Function& operator=(MoveOnlyFunction<ReturnType(ArgTypes...) const, OtherCap, Alloc>&& other) noexcept {
-			functionBase = natl::move(other.functionBase);
+			functionBase = move(other.functionBase);
 			return self();
 		}
 
@@ -958,7 +958,7 @@ namespace natl {
 				&& IsCopyConstructibleC<Functor>
 				&& IsConstCallable<Functor, ReturnType, ArgTypes...>)
 		constexpr Function& operator=(Functor&& functor) noexcept {
-			functionBase = natl::forward<decltype(functor)>(functor);
+			functionBase = forward<decltype(functor)>(functor);
 			return self();
 		}
 
@@ -980,9 +980,9 @@ namespace natl {
 
 		//modifiers 
 		constexpr void swap(Function& other) noexcept {
-			Function temp = natl::move(other);
-			other = natl::move(self());
-			self() = natl::move(temp);
+			Function temp = move(other);
+			other = move(self());
+			self() = move(temp);
 		}
 	};
 
@@ -1014,10 +1014,10 @@ namespace natl {
 	struct IsTriviallyMoveAssignableV<Function<ReturnType(ArgTypes...) const, Capacity, Alloc>>
 		: FalseType {};
 
-	template<typename Signature, Size ByteSize, typename Alloc = DefaultAllocatorByte>
+	template<typename Signature, Size ByteSize, typename Alloc = DefaultAllocator>
 	using FunctionByteSize = Function<Signature, ByteSize - alignof(char*), Alloc>;
 
-	template<typename Signature, typename Alloc = DefaultAllocatorByte>
+	template<typename Signature, typename Alloc = DefaultAllocator>
 	using FunctionAlloc = FunctionByteSize<Signature, 32, Alloc>;
 
 	namespace impl {
@@ -1067,8 +1067,8 @@ namespace natl {
 			constexpr virtual destory_function_type getDestroyFunction() const noexcept override {
 				return [](constexpr_callable_ref_base* callableRefBase) noexcept -> ReturnType {
 					ConstexprCallableRef* callableRef = static_cast<ConstexprCallableRef*>(callableRefBase);
-					natl::deconstruct(callableRef);
-					natl::DefaultAllocator<ConstexprCallableRef>::deallocate(callableRef, 1);
+					deconstruct(callableRef);
+					DefaultAllocator::template rebind<ConstexprCallableRef>::deallocate(callableRef, 1);
 				};
 			}
 		};
@@ -1112,7 +1112,7 @@ namespace natl {
 				assign(other);
 			}
 			constexpr FunctionRefBase(FunctionRefBase&& other) noexcept {
-				assign(natl::forward(other));
+				assign(forward(other));
 			}
 			template<Size OtherCap, Bool MoveOnly, typename Alloc>
 			constexpr FunctionRefBase(FunctionBase<ReturnType(ArgTypes...), OtherCap, MoveOnly, Alloc>& other) noexcept {
@@ -1143,7 +1143,7 @@ namespace natl {
 			}
 			constexpr FunctionRefBase& operator=(FunctionRefBase&& other) noexcept {
 				destruct();
-				return assign(natl::forward(other));
+				return assign(forward(other));
 			}
 
 			template<typename Functor>
@@ -1243,16 +1243,16 @@ namespace natl {
 
 				if (isConstantEvaluated()) {
 					using constexpr_callable_ref_type = ConstexprCallableRef<Functor, ReturnType, ArgTypes...>;
-					using constexpr_callable_ref_type_alloc = DefaultAllocator<constexpr_callable_ref_type>;
+					using constexpr_callable_ref_type_alloc = DefaultAllocator::template rebind<constexpr_callable_ref_type>;
 					constexpr_callable_ref_type* constexprCallableRefType = constexpr_callable_ref_type_alloc::allocate(1);
-					natl::construct<constexpr_callable_ref_type>(constexprCallableRefType, functor);
+					construct<constexpr_callable_ref_type>(constexprCallableRefType, functor);
 
 					functionRefStorageType = FunctionRefStorageType::constexprCallableRef;
-					natl::construct<constexpr_callable_ref_base>(&constexprCallableRef, static_cast<constexpr_callable_ref_base*>(constexprCallableRefType));
+					construct<constexpr_callable_ref_base>(&constexprCallableRef, static_cast<constexpr_callable_ref_base*>(constexprCallableRefType));
 				} else {
 					using FunctorCallableRefType = CallableRef<Functor, ReturnType, ArgTypes...>;
 					functionRefStorageType = FunctionRefStorageType::callableRef;
-					natl::construct<FunctorCallableRefType, Functor&>(reinterpret_cast<FunctorCallableRefType*>(callableRefStorage), functor);
+					construct<FunctorCallableRefType, Functor&>(reinterpret_cast<FunctorCallableRefType*>(callableRefStorage), functor);
 				}
 				return self();
 			}
@@ -1331,9 +1331,9 @@ namespace natl {
 
 			//modifiers
 			constexpr void swap(FunctionRefBase& other) noexcept {
-				FunctionRefBase temp = natl::move(other);
-				other = natl::move(self());
-				self() = natl::move(temp);
+				FunctionRefBase temp = move(other);
+				other = move(self());
+				self() = move(temp);
 			}
 		};
 	}
@@ -1381,7 +1381,7 @@ namespace natl {
 		constexpr FunctionRef(const FunctionRef& other) noexcept : 
 			functionRefBase(other.functionRefBase) {}
 		constexpr FunctionRef(FunctionRef&& other) noexcept :
-			functionRefBase(natl::forward(other.functionRefBase)) {}
+			functionRefBase(forward(other.functionRefBase)) {}
 
 		template<Size OtherCap, typename Alloc>
 		constexpr FunctionRef(MoveOnlyFunction<ReturnType(ArgTypes...), OtherCap, Alloc>& other) noexcept : 
@@ -1415,7 +1415,7 @@ namespace natl {
 			return self();
 		}
 		constexpr FunctionRef& operator=(FunctionRef&& other) noexcept {
-			functionRefBase = natl::forward(other.functionRefBase);
+			functionRefBase = forward(other.functionRefBase);
 			return self();
 		}
 
@@ -1463,9 +1463,9 @@ namespace natl {
 
 		//modifiers 
 		constexpr void swap(FunctionRef& other) noexcept {
-			FunctionRef temp = natl::move(other);
-			other = natl::move(self());
-			self() = natl::move(temp);
+			FunctionRef temp = move(other);
+			other = move(self());
+			self() = move(temp);
 		}
 	};
 
@@ -1512,7 +1512,7 @@ namespace natl {
 		constexpr FunctionRef(const FunctionRef& other) noexcept :
 			functionRefBase(other.functionRefBase) {}
 		constexpr FunctionRef(FunctionRef&& other) noexcept :
-			functionRefBase(natl::forward(other.functionRefBase)) {}
+			functionRefBase(forward(other.functionRefBase)) {}
 
 		template<Size OtherCap, typename Alloc>
 		constexpr FunctionRef(MoveOnlyFunction<ReturnType(ArgTypes...), OtherCap, Alloc>& other) noexcept :
@@ -1546,7 +1546,7 @@ namespace natl {
 			return self();
 		}
 		constexpr FunctionRef& operator=(FunctionRef&& other) noexcept {
-			functionRefBase = natl::forward(other.functionRefBase);
+			functionRefBase = forward(other.functionRefBase);
 			return self();
 		}
 
@@ -1590,9 +1590,9 @@ namespace natl {
 
 		//modifiers 
 		constexpr void swap(FunctionRef& other) noexcept {
-			FunctionRef temp = natl::move(other);
-			other = natl::move(self());
-			self() = natl::move(temp);
+			FunctionRef temp = move(other);
+			other = move(self());
+			self() = move(temp);
 		}
 	};
 
@@ -1628,29 +1628,6 @@ namespace natl {
 #pragma warning(pop)
 #endif // NATL_COMPILER_MSVC
 
-	template<typename Type>
-	struct CompareLess { 
-		constexpr Bool operator()(const Type& lhs, const Type& rhs) const noexcept { return lhs < rhs; }
-	};
-	template<typename Type>
-	struct CompareGreater {
-		constexpr Bool operator()(const Type& lhs, const Type& rhs) const noexcept { return lhs > rhs; }
-	};
-	template<typename Type>
-	struct CompareLessEqual {
-		constexpr Bool operator()(const Type& lhs, const Type& rhs) const noexcept { return lhs <= rhs; }
-	};
-	template<typename Type>
-	struct CompareGreaterEqual {
-		constexpr Bool operator()(const Type& lhs, const Type& rhs) const noexcept { return lhs >= rhs; }
-	};
-	template<typename Type>
-	struct CompareEqualTo {
-		constexpr Bool operator()(const Type& lhs, const Type& rhs) const noexcept { return lhs == rhs; }
-	};
-	template<typename Type>
-	struct CompareNotEqualTo {
-		constexpr Bool operator()(const Type& lhs, const Type& rhs) const noexcept { return lhs != rhs; }
-	};
-
+	template<typename... ArgTypes>
+	void emptyFunction(ArgTypes&&... args) {};
 }

@@ -7,7 +7,6 @@
 #include "util/basicTypes.h"
 #include "util/bits.h"
 #include "util/characterTest.h"
-#include "util/commonHashs.h"
 #include "util/compare.h"
 #include "util/compilerDependent.h"
 #include "util/coroutines.h"

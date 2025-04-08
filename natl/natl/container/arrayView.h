@@ -364,7 +364,7 @@ namespace natl {
 		HasIteratorType<Container> &&
 		HasBeginIteratorToPtr<Container> &&
 		HasSizeMethod<Container> &&
-		IsRandomAccessIterator<typename Container::iterator>;
+		IsRandomAccessIteratorC<typename Container::iterator>;
 
 	template<typename Container>
 		requires(IsArrayViewLike<Container, typename Container::value_type>)

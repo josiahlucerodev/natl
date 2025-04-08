@@ -96,13 +96,10 @@ namespace natl {
 		constexpr static TemplateStringLiteral Concat = ConcatV<StringLiteralsRhs...>::value;
 	};
 
-	template<typename Type>
-	struct IsStringLiteralV : FalseType {};
-	template<TemplateStringLiteral TStringL>
-	struct IsStringLiteralV<StringLiteral<TStringL>> : TrueType {};
-
-	template<typename Type>
-	constexpr inline Bool IsStringLiteral = IsStringLiteralV<Type>::value;
+	template<typename Type> struct IsStringLiteralV : FalseType {};
+	template<TemplateStringLiteral TStringL> struct IsStringLiteralV<StringLiteral<TStringL>> : TrueType {};
+	template<typename Type> constexpr inline Bool IsStringLiteral = IsStringLiteralV<Type>::value;
+	template<typename Type> concept IsStringLiteralC = IsStringLiteralV<Type>::value;
 
 	template<auto> struct AsStringLiteralT {};
 	template<auto Value> using AsStringLiteral = AsStringLiteralT<Value>::type;

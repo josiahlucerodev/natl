@@ -10,7 +10,7 @@
 //interface 
 namespace natl {
 	template<typename DataType, typename Alloc>
-		requires(IsAllocator<Alloc>)
+		requires(IsAllocatorC<Alloc>)
 	struct DynPartitioner {
 	public:
 		using allocator_type = Alloc;
@@ -111,7 +111,7 @@ namespace natl {
 	}
 
 	template<typename Alloc>
-		requires(IsAllocator<Alloc>)
+		requires(IsAllocatorC<Alloc>)
 	struct DynBytePartitioner : public DynPartitioner<ui8, Alloc> {
 		using allocator_type = Alloc;
 

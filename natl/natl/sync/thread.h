@@ -107,10 +107,11 @@ namespace natl {
 	public:
 
 		template<typename Functor, typename... ArgTypes>
+			requires(IsNotSameC<Decay<Functor>, Thread>)
 		explicit Thread(Functor&& functor, ArgTypes&&... args) noexcept {
 
 			using StorageTuple = Tuple<Functor, ArgTypes...>;
-			using StorageTupleAlloc = DefaultAllocator<StorageTuple>;
+			using StorageTupleAlloc = DefaultAllocator::template rebind<StorageTuple>;
 			StorageTuple* storageTuple = StorageTupleAlloc::allocate(1);
 
 			construct(storageTuple, natl::forward<Functor>(functor), natl::forward<ArgTypes>(args)...);

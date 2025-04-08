@@ -54,17 +54,19 @@ namespace natl {
 		using iterator_category = BidirectionalIteratorTag;
 
 		using allocator_type = Alloc;
+		using typed_allocator_type = allocator_type::template rebind<DataType>;
 
-		using value_type = typename Alloc::value_type;
-		using reference = typename Alloc::reference;
-		using const_reference = typename Alloc::const_reference;
-		using pointer = typename Alloc::pointer;
-		using const_pointer = typename Alloc::const_pointer;
-		using difference_type = typename Alloc::difference_type;
-		using size_type = typename Alloc::size_type;
+		using value_type = typename typed_allocator_type::value_type;
+		using reference = typename typed_allocator_type::reference;
+		using const_reference = typename typed_allocator_type::const_reference;
+		using pointer = typename typed_allocator_type::pointer;
+		using const_pointer = typename typed_allocator_type::const_pointer;
+		using difference_type = typename typed_allocator_type::difference_type;
+		using size_type = typename typed_allocator_type::size_type;
 
 		using colony_block = ColonyBlock<RemoveConctVolatile<DataType>>;
 		using SkipFieldType = ColonySkipFieldType;
+		using const_iterator = ColonyIterator<const DataType, Alloc>;
 	public:
 		mutable colony_block* colonyBlock;
 		natl::i64 skipFieldIndex;
@@ -83,7 +85,6 @@ namespace natl {
 		constexpr iterator& self() noexcept { return *this; }
 		constexpr const iterator& self() const noexcept { return *this; }
 	public:
-		using const_iterator = ColonyIterator<const DataType, Alloc>;
 		constexpr operator const_iterator() const noexcept requires(IsNotConst<DataType>) {
 			return const_iterator(colonyBlock, skipFieldIndex, skipFieldPos);
 		}
@@ -170,24 +171,25 @@ namespace natl {
 	public:
 	};
 
-	template<typename DataType, typename Alloc = DefaultAllocator<DataType>>
-		requires(IsAllocator<Alloc>)
+	template<typename DataType, typename Alloc = DefaultAllocator>
+		requires(IsAllocatorC<Alloc>)
 	struct Colony {
 	public:
 		using allocator_type = Alloc;
+		using typed_allocator_type = allocator_type::template rebind<DataType>;
 
-		using value_type = typename Alloc::value_type;
-		using reference = typename Alloc::reference;
-		using const_reference = typename Alloc::const_reference;
-		using pointer = typename Alloc::pointer;
-		using const_pointer = typename Alloc::const_pointer;
-		using difference_type = typename Alloc::difference_type;
-		using size_type = typename Alloc::size_type;
+		using value_type = typename typed_allocator_type::value_type;
+		using reference = typename typed_allocator_type::reference;
+		using const_reference = typename typed_allocator_type::const_reference;
+		using pointer = typename typed_allocator_type::pointer;
+		using const_pointer = typename typed_allocator_type::const_pointer;
+		using difference_type = typename typed_allocator_type::difference_type;
+		using size_type = typename typed_allocator_type::size_type;
 
-		using iterator = ColonyIterator<DataType, Alloc>;
-		using const_iterator = ColonyIterator<const DataType, Alloc>;
-		using reverse_iterator = ReverseIterator<ColonyIterator<DataType, Alloc>>;
-		using const_reverse_iterator = ReverseIterator<ColonyIterator<const DataType, Alloc>>;
+		using iterator = ColonyIterator<DataType, allocator_type>;
+		using const_iterator = ColonyIterator<const DataType, allocator_type>;
+		using reverse_iterator = ReverseIterator<ColonyIterator<DataType, allocator_type>>;
+		using const_reverse_iterator = ReverseIterator<ColonyIterator<const DataType, allocator_type>>;
 
 		using SkipFieldType = ColonySkipFieldType;
 		using colony_block = ColonyBlock<RemoveConctVolatile<DataType>>;
@@ -292,14 +294,14 @@ namespace natl {
 	private:
 		constexpr void destructColonyBlockMemory(colony_block* colonyBlock) noexcept {
 			if (isConstantEvaluated()) {
-				using colony_block_allocator_type = Alloc::template rebind_alloc<colony_block>;
-				using skipfield_allocator_type = Alloc::template rebind_alloc<SkipFieldType>;
+				using colony_block_allocator_type = Alloc::template rebind<colony_block>;
+				using skipfield_allocator_type = Alloc::template rebind<SkipFieldType>;
 
-				allocator_type::deallocate(colonyBlock->data, colonyBlock->colonyBlockSize);
+				typed_allocator_type::deallocate(colonyBlock->data, colonyBlock->colonyBlockSize);
 				skipfield_allocator_type::deallocate(colonyBlock->skipField, colonyBlock->colonyBlockSize);
 				colony_block_allocator_type::deallocate(colonyBlock, 1);
 			} else {
-				using byte_allocator_type = Alloc::template rebind_alloc<Byte>;
+				using byte_allocator_type = Alloc::template rebind<Byte>;
 				byte_allocator_type::deallocate(colonyBlock->blockByteStorage, colonyBlock->byteSize);
 			}
 		}
@@ -342,14 +344,14 @@ namespace natl {
 		constexpr colony_block* createColonyBlock(const Size newColonyBlockCapacity) noexcept {
 			colony_block* newColonyBlock = nullptr;
 			if (isConstantEvaluated()) {
-				using colony_block_allocator_type = Alloc::template rebind_alloc<colony_block>;
-				using skipfield_allocator_type = Alloc::template rebind_alloc<SkipFieldType>;
+				using colony_block_allocator_type = Alloc::template rebind<colony_block>;
+				using skipfield_allocator_type = Alloc::template rebind<SkipFieldType>;
 
 				newColonyBlock = colony_block_allocator_type::allocate(1);
 				newColonyBlock->colonyBlockSize = 0;
 				newColonyBlock->colonyBlockCapacity = newColonyBlockCapacity;
 				newColonyBlock->skipField = skipfield_allocator_type::allocate(newColonyBlockCapacity);
-				newColonyBlock->data = allocator_type::allocate(newColonyBlockCapacity);
+				newColonyBlock->data = typed_allocator_type::allocate(newColonyBlockCapacity);
 				newColonyBlock->previousColonyBlock = nullptr;
 				newColonyBlock->nextColonyBlock = nullptr;
 				newColonyBlock->emptySkipFieldStartIndex = 0;
@@ -357,7 +359,7 @@ namespace natl {
 
 				defaultConstructAll<SkipFieldType>(newColonyBlock->skipField, newColonyBlockCapacity);
 			} else {
-				using byte_allocator_type = Alloc::template rebind_alloc<Byte>;
+				using byte_allocator_type = Alloc::template rebind<Byte>;
 				const Size storageByteSize =
 					(sizeof(colony_block) + alignof(colony_block)) +
 					((sizeof(SkipFieldType) * newColonyBlockCapacity) + alignof(SkipFieldType)) +

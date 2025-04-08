@@ -8,7 +8,7 @@
 
 //interface 
 namespace natl {
-	template<typename FunctionSignature, Size FunctionByteCapacity = 32 - alignof(char*), typename Alloc = DefaultAllocatorByte>
+	template<typename FunctionSignature, Size FunctionByteCapacity = 32 - alignof(char*), typename Alloc = DefaultAllocator>
 	struct FunctionCache {};
 
 	template<typename ReturnType, typename... ArgTypes, Size FunctionByteCapacity, typename Alloc>
@@ -129,7 +129,7 @@ namespace natl {
 			if (value.hasValue()) {
 				return value.value().value();
 			} else {
-				return resultCache.insert(argumentStorage, natl::forward<Functor>(functor)(natl::forward<ArgTypes>(arguments)...))->value();
+				return resultCache.insert(argumentStorage, natl::forward<Functor>(functor)(natl::forward<ArgTypes>(arguments)...)).iter()->value();
 			}
 
 		}

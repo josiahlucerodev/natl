@@ -523,11 +523,12 @@ namespace natl {
 		standard = genericFormat,
 	};
 
-	template<Size BufferSize = (128 - sizeof(BaseStringBaseMembersRef<Ascii>)), typename Alloc = DefaultAllocator<Ascii>>
-		requires(IsAllocator<Alloc>)
+	template<Size BufferSize = (128 - sizeof(BaseStringBaseMembersRef<Ascii>)), typename Alloc = DefaultAllocator>
+		requires(IsAllocatorC<Alloc>)
 	struct BasePath {
 	public:
 		using allocator_type = Alloc;
+		using typed_allocator_type = allocator_type::template rebind<Ascii>;
 		using string_type = BaseString<Ascii, BufferSize, Alloc>;
 
 		using path_view_type = PathView;
@@ -928,8 +929,8 @@ namespace natl {
 		}
 	};
 
-	template<Size ByteSize, typename Alloc = DefaultAllocator<Ascii>>
-		requires(ByteSize >= 32 && IsAllocator<Alloc>)
+	template<Size ByteSize, typename Alloc = DefaultAllocator>
+		requires(ByteSize >= 32 && IsAllocatorC<Alloc>)
 	using PathByteSize = BasePath<ByteSize - sizeof(BaseStringBaseMembersRef<Ascii>), Alloc>;
 
 	using Path = PathByteSize<128>;

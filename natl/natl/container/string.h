@@ -28,31 +28,32 @@ namespace natl {
 
 	template<typename CharType,
 		Size bufferSize, 
-		typename Alloc = DefaultAllocator<CharType>,
+		typename Alloc = DefaultAllocator,
 		Bool EnableDynAllocation = true, 
 		Bool EnableIncreasedSmallBufferSize = true>
-		requires(IsAllocator<Alloc>)
+		requires(IsAllocatorC<Alloc>)
 	struct BaseString {
 	public:
 		using allocator_type = Alloc;
+		using typed_allocator_type = allocator_type::template rebind<CharType>;
 
-		using value_type = typename Alloc::value_type;
-		using reference = typename Alloc::reference;
-		using const_reference = typename Alloc::const_reference;
-		using pointer = typename Alloc::pointer;
-		using const_pointer = typename Alloc::const_pointer;
-		using difference_type = typename Alloc::difference_type;
-		using size_type = typename Alloc::size_type;
+		using value_type = typename typed_allocator_type::value_type;
+		using reference = typename typed_allocator_type::reference;
+		using const_reference = typename typed_allocator_type::const_reference;
+		using pointer = typename typed_allocator_type::pointer;
+		using const_pointer = typename typed_allocator_type::const_pointer;
+		using difference_type = typename typed_allocator_type::difference_type;
+		using size_type = typename typed_allocator_type::size_type;
 
 		using optional_pointer = Option<pointer>;
 		using optional_const_pointer = Option<const_pointer>;
 
-		using iterator = RandomAccessIteratorAlloc<value_type, Alloc>;
-		using const_iterator = ConstRandomAccessIteratorAlloc<value_type, Alloc>;
-		using reverse_iterator = ReverseRandomAccessIteratorAlloc<value_type, Alloc>;
-		using const_reverse_iterator = ReverseConstRandomAccessIteratorAlloc<value_type, Alloc>;
+		using iterator = RandomAccessIteratorAlloc<value_type, allocator_type>;
+		using const_iterator = ConstRandomAccessIteratorAlloc<value_type, allocator_type>;
+		using reverse_iterator = ReverseRandomAccessIteratorAlloc<value_type, allocator_type>;
+		using const_reverse_iterator = ReverseConstRandomAccessIteratorAlloc<value_type, allocator_type>;
 
-		using allocation_move_adapater = AllocationMoveAdapater<value_type, Alloc>;
+		using allocation_move_adapater = AllocationMoveAdapater<value_type, allocator_type>;
 
 		constexpr static Bool enableSmallString = true;
 	private:
@@ -308,7 +309,7 @@ namespace natl {
 		constexpr ~BaseString() {
 			if constexpr (EnableDynAllocation) {
 				if (isNotSmallString() && stringPtr) {
-					Alloc::deallocate(stringPtr, capacity());
+					typed_allocator_type::deallocate(stringPtr, capacity());
 				}
 			}
 		}
@@ -811,7 +812,7 @@ namespace natl {
 	private:
 		constexpr void release() noexcept {
 			if (!isSmallString() && stringPtr) {
-				Alloc::deallocate(stringPtr, capacity());
+				typed_allocator_type::deallocate(stringPtr, capacity());
 				stringPtr = nullptr;
 			}
 		}
@@ -848,14 +849,14 @@ namespace natl {
 				if (reserveTest(newCapacity)) { return; }
 				newCapacity += 1;
 
-				pointer newStringPtr = Alloc::allocate(newCapacity);
+				pointer newStringPtr = typed_allocator_type::allocate(newCapacity);
 
 				const_pointer srcStringPtrFirst = data();
 				const_pointer srcStringPtrLast = srcStringPtrFirst + size();
 				uninitializedCopyNoOverlap<const_pointer, pointer>(srcStringPtrFirst, srcStringPtrLast, newStringPtr);
 
 				if (isNotSmallString() && stringPtr) {
-					Alloc::deallocate(stringPtr, capacity());
+					typed_allocator_type::deallocate(stringPtr, capacity());
 				} 
 
 				stringPtr = newStringPtr;
@@ -913,7 +914,7 @@ namespace natl {
 				const_pointer srcStringPtrLast = stringPtr + newCapacity;
 				uninitializedCopyNoOverlap<const_pointer, pointer>(srcStringPtrFirst, srcStringPtrLast, dstStringPtr);
 
-				Alloc::deallocate(oldStringPtr, oldCapacity);
+				typed_allocator_type::deallocate(oldStringPtr, oldCapacity);
 
 				setAsSmallString();
 				return;
@@ -929,11 +930,11 @@ namespace natl {
 				release();
 				stringSizeAndSmallStringFlag = 0;
 			} else {
-				pointer newStringPtr = Alloc::allocate(newCapacity);
+				pointer newStringPtr = typed_allocator_type::allocate(newCapacity);
 				const_pointer srcStringPtrFirst = stringPtr;
 				const_pointer srcStringPtrLast = stringPtr + newCapacity;
 				uninitializedCopyNoOverlap<const_pointer, pointer>(srcStringPtrFirst, srcStringPtrLast, newStringPtr);
-				Alloc::deallocate(stringPtr, capacity());
+				typed_allocator_type::deallocate(stringPtr, capacity());
 
 				stringPtr = newStringPtr;
 				stringCapacity = newCapacity;
@@ -1058,7 +1059,7 @@ namespace natl {
 			setSize(newSize);
 			addNullTerminater();
 		}
-		constexpr void pop_back() noexcept {
+		constexpr void popBack() noexcept {
 			setSize(size() - 1);
 			addNullTerminater();
 		}
@@ -1878,16 +1879,16 @@ namespace natl {
 		}
 	};
 
-	template<typename DataType, Size ByteSize, typename Alloc = DefaultAllocator<DataType>>
-		requires(ByteSize >= 32 && IsAllocator<Alloc>)
+	template<typename DataType, Size ByteSize, typename Alloc = DefaultAllocator>
+		requires(ByteSize >= 32 && IsAllocatorC<Alloc>)
 	using BaseStringByteSize = BaseString<DataType, (ByteSize - sizeof(BaseStringBaseMembersRef<DataType>)) / sizeof(DataType), Alloc>;
 
-	template<Size ByteSize, typename Alloc = DefaultAllocator<Ascii>>
-		requires(ByteSize >= 32 && IsAllocator<Alloc>)
+	template<Size ByteSize, typename Alloc = DefaultAllocator>
+		requires(ByteSize >= 32 && IsAllocatorC<Alloc>)
 	using StringByteSize = BaseString<Ascii, (ByteSize - sizeof(BaseStringBaseMembersRef<Ascii>)) / sizeof(Ascii), Alloc>;
 
-	template<Size ByteSize, typename Alloc = DefaultAllocator<Ascii>>
-		requires(ByteSize >= 32 && IsAllocator<Alloc>)
+	template<Size ByteSize, typename Alloc = DefaultAllocator>
+		requires(ByteSize >= 32 && IsAllocatorC<Alloc>)
 	using AsciiStringByteSize = StringByteSize<ByteSize, Alloc>;
 
 

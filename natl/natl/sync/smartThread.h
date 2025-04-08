@@ -216,7 +216,7 @@ namespace natl {
 					UninitializedValue<ThreadStopData>
 				>;
 
-				StorageTuple* storageTuple = DefaultAllocator<StorageTuple>::allocate(1);
+				StorageTuple* storageTuple = DefaultAllocator::template rebind<StorageTuple>::allocate(1);
 				StorageTuple& storageTupleRef = *storageTuple;
 				construct<StorageTuple>(storageTuple);
 				construct<FunctorStorage, Functor>(storageTupleRef.template get<0>().valueAsPtr(), natl::forward<Functor>(functor));
@@ -224,7 +224,7 @@ namespace natl {
 
 				auto destoryFunction = [](void* storagePtr) noexcept -> void {
 					StorageTuple* storageTupleToDestroy = reinterpret_cast<StorageTuple*>(storagePtr);
-					DefaultAllocator<StorageTuple>::deallocate(storageTupleToDestroy, 1);
+					DefaultAllocator::template rebind<StorageTuple>::deallocate(storageTupleToDestroy, 1);
 				};
 				threadStopData = storageTupleRef.getLast().valueAsPtr();
 				construct<ThreadStopData>(threadStopData, reinterpret_cast<void*>(storageTuple), destoryFunction);

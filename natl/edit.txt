@@ -1,0 +1,21 @@
+		constexpr Bool operator==(const ObserverPtr lhs, NullptrType) noexcept {
+			return lhs.data == nullptr;
+		}
+		constexpr Bool operator!=(const ObserverPtr lhs, NullptrType) noexcept {
+			return lhs.data != nullptr;
+		}
+		constexpr Bool operator<(const ObserverPtr lhs, NullptrType) noexcept {
+			return lhs.data < nullptr;
+		}
+		constexpr Bool operator>(const ObserverPtr lhs, NullptrType) noexcept {
+			return lhs.data > nullptr;
+		}
+		constexpr Bool operator<=(const ObserverPtr lhs, NullptrType) noexcept {
+			return lhs.data <= nullptr;
+		}
+		constexpr Bool operator>=(const ObserverPtr lhs, NullptrType) noexcept {
+			return lhs.data >= nullptr;
+		}
+		constexpr auto operator<=>(const ObserverPtr lhs, NullptrType) noexcept {
+			return lhs.data <=> nullptr;
+		}

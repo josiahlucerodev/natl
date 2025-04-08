@@ -167,6 +167,12 @@ namespace natl {
 		}
 	}
 
+	template<typename... AssertArgs>
+	constexpr void testAssertFail(Test& test, AssertArgs&&... assertArgs) noexcept {
+		testAssert<AssertArgs...>(test, false, natl::forward<AssertArgs>(assertArgs)...);
+	}
+
+
 	template<typename LhsType, typename RhsType, typename... AssertArgs>
 		requires(requires(const LhsType& expected, const RhsType& actual) { {expected == actual} -> IsConvertibleC<Bool>; } )
 	constexpr void testAssertEquals(Test& test, const LhsType& expected, const RhsType& actual, AssertArgs&&... assertArgs) noexcept {

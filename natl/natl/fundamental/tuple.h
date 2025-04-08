@@ -169,7 +169,7 @@ namespace natl {
 	private:
 		template<typename Tuple, Size... Indices>
 		constexpr Size internalHash([[maybe_unused]] const Tuple& tuple, IndexSequence<Indices...>) const noexcept
-			requires(Hashable<FirstDataType> && (Hashable<RestDataTypes> && ...)) {
+			requires(IsHashableC<FirstDataType> && (IsHashableC<RestDataTypes> && ...)) {
 			Size result = 0;
 			const Size hashValues[] = { hashValue(tuple.template get<Indices>())... };
 			for (Size index = 0; index < size(); ++index) {
@@ -181,7 +181,7 @@ namespace natl {
 	public:
 
 		constexpr Size hash() const noexcept
-			requires(Hashable<FirstDataType> && (Hashable<RestDataTypes> && ...)) {
+			requires(IsHashableC<FirstDataType> && (IsHashableC<RestDataTypes> && ...)) {
 			return internalHash(self(), MakeIndexSequence<tupleSize>());
 		}
 

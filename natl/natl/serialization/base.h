@@ -10,18 +10,18 @@
 
 //interface 
 namespace natl {
-	enum class SerializeFlag {
+	enum class SerializeFlags {
 		v_default = 0,
 		pretty = 1 << 0,
 		fullTypes = 1 << 1,
 	};
 
-	constexpr inline SerializeFlag operator|(const SerializeFlag lhs, const SerializeFlag rhs) noexcept {
-		using underlying_type = UnderlyingType<SerializeFlag>;
-		return static_cast<SerializeFlag>(static_cast<underlying_type>(lhs) | static_cast<underlying_type>(rhs));
-	} constexpr inline SerializeFlag operator&(const SerializeFlag lhs, const SerializeFlag rhs) noexcept {
-		using underlying_type = UnderlyingType<SerializeFlag>;
-		return static_cast<SerializeFlag>(static_cast<underlying_type>(lhs) & static_cast<underlying_type>(rhs));
+	constexpr inline SerializeFlags operator|(const SerializeFlags lhs, const SerializeFlags rhs) noexcept {
+		using underlying_type = UnderlyingType<SerializeFlags>;
+		return static_cast<SerializeFlags>(static_cast<underlying_type>(lhs) | static_cast<underlying_type>(rhs));
+	} constexpr inline SerializeFlags operator&(const SerializeFlags lhs, const SerializeFlags rhs) noexcept {
+		using underlying_type = UnderlyingType<SerializeFlags>;
+		return static_cast<SerializeFlags>(static_cast<underlying_type>(lhs) & static_cast<underlying_type>(rhs));
 	};
 
 	struct DummySerializer {
@@ -30,7 +30,7 @@ namespace natl {
 		using container_type = void;
 
 		constexpr static inline Size smallBufferSize = 0;
-		constexpr static inline SerializeFlag flag = SerializeFlag::v_default;
+		constexpr static inline SerializeFlags flag = SerializeFlags::v_default;
 	};
 
 	template<typename Type>
@@ -673,9 +673,8 @@ namespace natl {
 		fullname,
 	};
 
-	enum class ErrorHandlingFlag {
-		shorten,
-		full,
+	enum class DeserializeFlags {
+		shortenError,
 	};
 
 	struct DeserializeGlobalScope {};

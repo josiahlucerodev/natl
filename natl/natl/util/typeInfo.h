@@ -1,48 +1,21 @@
 #pragma once 
 
 //own
-#include "commonHashs.h"
-#include "../util/stringLiteral.h"
+#include "stringLiteral.h"
+#include "rawTypeInfo.h"
+#include "../container/stringView.h"
 #include "../container/stringView.h"
 
 //interface 
 namespace natl {
 	template<typename Type>
 	consteval auto getNameOfType() noexcept {
-#ifdef NATL_COMPILER_EMSCRIPTEN
-		ConstAsciiStringView name = __PRETTY_FUNCTION__;
-		//prefix: "auto natl::getNameOfType() [Type = "
-		//suffix: "]"
-		return ConstAsciiStringView(__PRETTY_FUNCTION__ + 35).removeSuffix(1); 
-#endif // NATL_COMPILER_EMSCRIPTEN
-
-#ifdef NATL_COMPILER_CLANG
-		ConstAsciiStringView name = __PRETTY_FUNCTION__;
-		const ConstAsciiStringView prefix = "auto natl::getNameOfType() [T = ";
-		const ConstAsciiStringView suffix = "]";
-#endif // NATL_COMPILER_CLANG
-
-#ifdef NATL_COMPILER_GCC 
-		//prefix: "consteval auto natl::getNameOfType() [with Type = ";
-		//suffix: "]";
-		return ConstAsciiStringView(__PRETTY_FUNCTION__ + 50).removeSuffix(1);
-#endif // NATL_COMPILER_GCC
-
-#ifdef NATL_COMPILER_MSVC
-		//prefix: "auto __cdecl natl::getNameOfType<"
-		//suffix:  ">(void) noexcept"
-		return ConstAsciiStringView(__FUNCSIG__ + 33).removeSuffix(16);
-#endif // NATL_COMPILER_MSVC
+		TypeNameStr name = getTypeNameStrOfType<Type>();
+		return ConstAsciiStringView(name.data(), name.length());
 	}
 
 	constexpr natl::Size getHashCodeFromNameOfType(const ConstAsciiStringView nameOfType) noexcept {
-		return fnv1aHash(nameOfType.c_str(), nameOfType.size());
-	}
-
-	template<typename Type>
-	consteval natl::Size getHashCodeOfType() noexcept {
-		constexpr ConstAsciiStringView nameOfType = getNameOfType<Type>();
-		return getHashCodeFromNameOfType(nameOfType);
+		return getHashCodeOfTypeName(nameOfType.c_str(), nameOfType.size());
 	}
 
 	struct TypeInfo {

@@ -2,6 +2,7 @@
 
 //own
 #include "../util/basicTypes.h"
+#include "../util/bits.h"
 #include "stringView.h"
 
 //interface
@@ -16,19 +17,21 @@ namespace natl {
 	};
 
 	template<typename BitStorageType, Size bitCountT>
-	struct BitArrayBitStorageType {
+	struct BitArrayBase {
+	public:
 		constexpr static const Size bitCount = bitCountT;
 		constexpr static const Size wordCount = bitCount == 0 ? 0 : (sizeof(BitStorageType) * 8) % bitCount;
 		constexpr static const Size byteCount = sizeof(BitStorageType) * 8 * wordCount;
 		constexpr static const Size bitsPerWordCount = sizeof(BitStorageType) * 8;
 		BitStorageType bitsArray[wordCount];
+
 	public:
 		struct reference {
-			BitArrayBitStorageType* bitArrayPtr;
+			BitArrayBase* bitArrayPtr;
 			Size index;
 		public:
 			constexpr reference() : bitArrayPtr(nullptr), index(0) {}
-			constexpr reference(BitArrayBitStorageType* const bitArrayPtrIn, const Size indexIn) noexcept : 
+			constexpr reference(BitArrayBase* const bitArrayPtrIn, const Size indexIn) noexcept : 
 				bitArrayPtr(bitArrayPtrIn), index(indexIn) {}
 			constexpr ~reference() = default;
 
@@ -51,27 +54,24 @@ namespace natl {
 				return bitArrayPtr->test(index);
 			}
 		};
-
-		constexpr BitArrayBitStorageType() : bitsArray() {}
-		constexpr ~BitArrayBitStorageType() = default;
-
-		constexpr BitArrayBitStorageType(const BitIndex bitIndex) {
+		
+	public:
+		//constructor
+		constexpr BitArrayBase() : bitsArray() {}
+		constexpr BitArrayBase(const BitIndex bitIndex) {
 			reset();
 			set(bitIndex, true);
 		}
-
-		constexpr BitArrayBitStorageType(const BitIndex bitIndex, const Bool value) {
+		constexpr BitArrayBase(const BitIndex bitIndex, const Bool value) {
 			reset();
 			set(bitIndex, value);
 		}
-
-		constexpr BitArrayBitStorageType(const BitStorageType value) noexcept {
+		constexpr BitArrayBase(const BitStorageType value) noexcept {
 			if constexpr (wordCount != 0) {
 				bitsArray[0] = value;
 			}
 		};
-
-		constexpr BitArrayBitStorageType(const StringView value) noexcept {
+		constexpr BitArrayBase(const StringView value) noexcept {
 			if constexpr (wordCount != 0) {
 				bitsArray[0] = value;
 			} else {
@@ -85,14 +85,20 @@ namespace natl {
 			}
 		};
 
-		constexpr BitArrayBitStorageType& self() noexcept { return self(); }
-		constexpr const BitArrayBitStorageType& self() const noexcept { return self(); }
+		//deconstructor
+		constexpr ~BitArrayBase() = default;
 
+		//util
+		constexpr BitArrayBase& self() noexcept { return self(); }
+		constexpr const BitArrayBase& self() const noexcept { return self(); }
+
+		//size
 		constexpr static Size size() noexcept { return bitCount; }
 		constexpr static Size bitSize() noexcept { return bitCount; }
 		constexpr static Size byteSize() noexcept { return byteCount; }
 
-		constexpr BitArrayBitStorageType& set() noexcept {
+		//modifiers
+		constexpr BitArrayBase& set() noexcept {
 			if (isConstantEvaluated()) {
 				for (Size i = 0; i < wordCount; i++) {
 					bitsArray[i] = ~BitStorageType(0);
@@ -106,7 +112,7 @@ namespace natl {
 			return bitsArray[index / bitsPerWordCount];
 		}
 
-		constexpr BitArrayBitStorageType& set(const Size index, Bool value = true) noexcept {
+		constexpr BitArrayBase& set(const Size index, Bool value = true) noexcept {
 			BitStorageType& word = atWord(index);
 			const BitStorageType& bitMask = BitStorageType{1} << index % bitsPerWordCount;
 			if (value) {
@@ -116,32 +122,31 @@ namespace natl {
 			}
 			return self();
 		}
-		constexpr BitArrayBitStorageType& reset() noexcept {
+		constexpr BitArrayBase& reset() noexcept {
 			for (Size i = 0; i < wordCount; i++) {
 				bitsArray[i] = ~bitsArray[i];
 			}
 			return self();
 		}
 
-		constexpr BitArrayBitStorageType& reset(const Size index) noexcept {
+		constexpr BitArrayBase& reset(const Size index) noexcept {
 			return set(index, false);
 		}
 
-		constexpr BitArrayBitStorageType& flip() noexcept {
+		constexpr BitArrayBase& flip() noexcept {
 			for (Size i = 0; i < wordCount; i++) {
 				bitsArray[i] = ~bitsArray[i];
 			}
 			return self();
 		}
-
+		
+		//accessors
 		constexpr Bool test(const Size index) const noexcept {
 			return (bitsArray[index / bitsPerWordCount] & (BitStorageType{1} << index % bitsPerWordCount)) != 0;
 		}
-
 		constexpr static Size endWordIndex() noexcept {
 			return bitCount == 0 ? 0 : wordCount - 1;
 		}
-
 		constexpr Bool all() const noexcept {
 			if constexpr (bitCount == 0) {
 				return true;
@@ -168,12 +173,19 @@ namespace natl {
 		constexpr Bool none() const noexcept {
 			return !any();
 		}
-
+		constexpr Size count() const noexcept {
+			Size countAccumulater = 0;
+			for (Size i = 0; i < wordCount; i++) {
+				countAccumulater = std::popcount<BitStorageType>(bitsArray[i]);
+			}
+			return countAccumulater;
+		}
 		constexpr reference operator[] (const Size index) const noexcept {
 			return reference(&self(), index);
 		}
 
-		constexpr Bool operator==(const BitArrayBitStorageType& rhs) const noexcept {
+		//operators 
+		constexpr Bool operator==(const BitArrayBase& rhs) const noexcept {
 			if (isConstantEvaluated()) {
 				for (Size i = 0; i < wordCount; i++) {
 					if (bitsArray[i] != rhs.bitsArray[i]) {
@@ -185,58 +197,55 @@ namespace natl {
 				return memcmp(&bitsArray, rhs.bitsArray, sizeof(bitsArray)) == 0;
 			}
 		}
-		constexpr Bool operator!=(const BitArrayBitStorageType& rhs) const noexcept {
+		constexpr Bool operator!=(const BitArrayBase& rhs) const noexcept {
 			return !(*this == rhs);
 		}
-
-		constexpr BitArrayBitStorageType& operator&=(const BitArrayBitStorageType& other) noexcept {
+		constexpr BitArrayBase& operator&=(const BitArrayBase& other) noexcept {
 			for (Size i = 0; i < wordCount; i++) {
 				bitsArray[i] &= other.bitsArray[i];
 			}
 		}
-		constexpr BitArrayBitStorageType& operator|=(const BitArrayBitStorageType& other) noexcept {
+		constexpr BitArrayBase& operator|=(const BitArrayBase& other) noexcept {
 			for (Size i = 0; i < wordCount; i++) {
 				bitsArray[i] |= other.bitsArray[i];
 			}
 		}
-		constexpr BitArrayBitStorageType& operator^=(const BitArrayBitStorageType& other) noexcept {
+		constexpr BitArrayBase& operator^=(const BitArrayBase& other) noexcept {
 			for (Size i = 0; i < wordCount; i++) {
 				bitsArray[i] ^= other.bitsArray[i];
 			}
 		}
-		constexpr BitArrayBitStorageType operator~() const noexcept {
-			BitArrayBitStorageType temp = self();
+		constexpr BitArrayBase operator~() const noexcept {
+			BitArrayBase temp = self();
 			temp.flip();
 			return temp;
 		}
-
-		constexpr BitArrayBitStorageType operator&(BitArrayBitStorageType& rhs) noexcept { 
-			BitArrayBitStorageType temp;
+		constexpr BitArrayBase operator&(BitArrayBase& rhs) noexcept { 
+			BitArrayBase temp;
 			for(Size i = 0; i < wordCount; i++) {
 				temp.bitsArray[i] = self().bitsArray[i] & rhs.bitsArray[i];
 			}
 			return temp;
 		}
-		constexpr BitArrayBitStorageType operator|(BitArrayBitStorageType& rhs) noexcept {
-			BitArrayBitStorageType temp;
+		constexpr BitArrayBase operator|(BitArrayBase& rhs) noexcept {
+			BitArrayBase temp;
 			for (Size i = 0; i < wordCount; i++) {
 				temp.bitsArray[i] = self().bitsArray[i] |  rhs.bitsArray[i];
 			}
 			return temp;
 		}
-		constexpr BitArrayBitStorageType operator^(BitArrayBitStorageType& rhs) noexcept {
-			BitArrayBitStorageType temp;
+		constexpr BitArrayBase operator^(BitArrayBase& rhs) noexcept {
+			BitArrayBase temp;
 			for (Size i = 0; i < wordCount; i++) {
 				temp.bitsArray[i] = self().bitsArray[i] ^ rhs.bitsArray[i];
 			}
 			return temp;
 		}
-
 		constexpr operator Bool() const noexcept {
 			return any(); 
 		}
 	};
 
 	template<Size bitCount>	
-	using BitArray = BitArrayBitStorageType<ui32, bitCount>;
+	using BitArray = BitArrayBase<ui32, bitCount>;
 }

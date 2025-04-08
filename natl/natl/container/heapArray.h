@@ -7,29 +7,30 @@
 
 //interface 
 namespace natl {
-	template<typename DataType, typename Alloc = DefaultAllocator<DataType>>
-		requires(IsAllocator<Alloc>)
+	template<typename DataType, typename Alloc = DefaultAllocator>
+		requires(IsAllocatorC<Alloc>)
 	struct HeapArray {
 	public:
 		using allocator_type = Alloc;
+		using typed_allocator_type = allocator_type::template rebind<DataType>;
 
-		using value_type = typename Alloc::value_type;
-		using reference = typename Alloc::reference;
-		using const_reference = typename Alloc::const_reference;
-		using pointer = typename Alloc::pointer;
-		using const_pointer = typename Alloc::const_pointer;
-		using difference_type = typename Alloc::difference_type;
-		using size_type = typename Alloc::size_type;
+		using value_type = typename typed_allocator_type::value_type;
+		using reference = typename typed_allocator_type::reference;
+		using const_reference = typename typed_allocator_type::const_reference;
+		using pointer = typename typed_allocator_type::pointer;
+		using const_pointer = typename typed_allocator_type::const_pointer;
+		using difference_type = typename typed_allocator_type::difference_type;
+		using size_type = typename typed_allocator_type::size_type;
 
 		using optional_pointer = Option<pointer>;
 		using optional_const_pointer = Option<const_pointer>;
 
-		using iterator = RandomAccessIteratorAlloc<value_type, Alloc>;
-		using const_iterator = ConstRandomAccessIteratorAlloc<value_type, Alloc>;
-		using reverse_iterator = ReverseRandomAccessIteratorAlloc<value_type, Alloc>;
-		using const_reverse_iterator = ReverseConstRandomAccessIteratorAlloc<value_type, Alloc>;
+		using iterator = RandomAccessIteratorAlloc<value_type, allocator_type>;
+		using const_iterator = ConstRandomAccessIteratorAlloc<value_type, allocator_type>;
+		using reverse_iterator = ReverseRandomAccessIteratorAlloc<value_type, allocator_type>;
+		using const_reverse_iterator = ReverseConstRandomAccessIteratorAlloc<value_type, allocator_type>;
 
-		using allocation_move_adapater = AllocationMoveAdapater<value_type, Alloc>;
+		using allocation_move_adapater = AllocationMoveAdapater<value_type, allocator_type>;
 	private:
 		pointer arrayDataPtr;
 		size_type arraySize;
@@ -41,10 +42,10 @@ namespace natl {
 			other.arrayDataPtr = nullptr;
 			other.arraySize = 0;
 		}
-		constexpr HeapArray(const size_type count) noexcept : arrayDataPtr(Alloc::allocate(count)), arraySize(count) {
+		constexpr HeapArray(const size_type count) noexcept : arrayDataPtr(typed_allocator_type::allocate(count)), arraySize(count) {
 			constructAll();
 		}
-		constexpr HeapArray(const size_type count, const value_type& value) noexcept : arrayDataPtr(Alloc::allocate(count)), arraySize(count) {
+		constexpr HeapArray(const size_type count, const value_type& value) noexcept : arrayDataPtr(typed_allocator_type::allocate(count)), arraySize(count) {
 			pointer fillDstPtrFirst = arrayDataPtr;
 			pointer fillDstPtrLast = fillDstPtrFirst + count;
 			natl::uninitializedFill<pointer, value_type>(fillDstPtrFirst, fillDstPtrLast, value);
@@ -56,7 +57,7 @@ namespace natl {
 				arraySize = 0;
 			} else if (allocationMoveAdapater.requiresCopy()) {
 				arraySize = allocationMoveAdapater.capacity();
-				arrayDataPtr = Alloc::allocate(arraySize);
+				arrayDataPtr = typed_allocator_type::allocate(arraySize);
 
 				pointer copyDstPtr = arrayDataPtr;
 				const_pointer copySrcPtrFirst = allocationMoveAdapater.data();
@@ -205,25 +206,25 @@ namespace natl {
 		constexpr void deallocate() noexcept {
 			if (arrayDataPtr) {
 				destructAll();
-				Alloc::deallocate(arrayDataPtr, size());
+				typed_allocator_type::deallocate(arrayDataPtr, size());
 			}
 		}
 		constexpr void allocate(const size_type count) noexcept {
 			deallocate();
-			arrayDataPtr = Alloc::allocate(count);
+			arrayDataPtr = typed_allocator_type::allocate(count);
 			arraySize = count;
 			constructAll();
 		}
 
 		constexpr void allocate(const size_type count, const value_type& value) noexcept {
 			deallocate();
-			arrayDataPtr = Alloc::allocate(count);
+			arrayDataPtr = typed_allocator_type::allocate(count);
 			arraySize = count;
 			uninitializedFill(value);
 		}
 		constexpr void allocate(const_pointer srcPtr, const size_type count) noexcept {
 			deallocate();
-			arrayDataPtr = Alloc::allocate(count);
+			arrayDataPtr = typed_allocator_type::allocate(count);
 			arraySize = count;
 
 			pointer copyDstPtr = arrayDataPtr;

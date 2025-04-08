@@ -27,10 +27,11 @@ namespace natl {
 		template<typename DataType>
 		struct AnyStorageConstexpr final : public AnyStorageConstexprPolymorphic {
 		public:
-			using value_type = DataType;
-			using allocator_type = DefaultAllocator<AnyStorageConstexpr>;
+			using allocator_type = DefaultAllocator;
+			using typed_allocator_type = allocator_type::template rebind<AnyStorageConstexpr>;
 			using any_storage_constexpr = AnyStorageConstexpr;
 			using any_storage_constexpr_polymorphic = AnyStorageConstexprPolymorphic;
+			using value_type = DataType;
 
 			using copy_function_type = any_storage_constexpr_polymorphic::copy_function_type;
 			using destory_function_type = any_storage_constexpr_polymorphic::destory_function_type;
@@ -44,7 +45,7 @@ namespace natl {
 			//creation
 			template<typename... ArgTypes>
 			constexpr static any_storage_constexpr_polymorphic* createNew(ArgTypes&&... args) noexcept {
-				AnyStorageConstexpr* newData = allocator_type::allocate(1);
+				AnyStorageConstexpr* newData = typed_allocator_type::allocate(1);
 				construct(newData, natl::forward<ArgTypes>(args)...);
 				return static_cast<any_storage_constexpr_polymorphic*>(newData);
 			}
@@ -59,7 +60,7 @@ namespace natl {
 				return [](any_storage_constexpr_polymorphic* anyStoragePolymorphic) -> void {
 					any_storage_constexpr* anyStorage = static_cast<any_storage_constexpr*>(anyStoragePolymorphic);
 					deconstruct(anyStorage);
-					allocator_type::deallocate(anyStorage, 1);
+					typed_allocator_type::deallocate(anyStorage, 1);
 				};
 			}
 			constexpr get_type_info_function_type getTypeInfoFunction() const noexcept override {
@@ -89,11 +90,11 @@ namespace natl {
 		};
 
 		template<typename DataType, typename Alloc>
-			requires(IsAllocator<Alloc>)
+			requires(IsAllocatorC<Alloc>)
 		struct AnyStorage final : public AnyStoragePolymorphic {
 		public:
 			using value_type = DataType;
-			using allocator_type = Alloc::template rebind_alloc<AnyStorage>;
+			using typed_allocator_type = Alloc::template rebind<AnyStorage>;
 			using any_storage = AnyStorage;
 			using any_storage_polymorphic = AnyStoragePolymorphic;
 
@@ -114,7 +115,7 @@ namespace natl {
 
 			template<typename... ArgTypes>
 			static any_storage_polymorphic* createNewOnHeap(ArgTypes&&... args) noexcept {
-				any_storage* newData = allocator_type::allocate(1);
+				any_storage* newData = typed_allocator_type::allocate(1);
 				construct(newData, natl::forward<ArgTypes>(args)...);
 				return static_cast<any_storage_polymorphic*>(newData);
 			}
@@ -141,7 +142,7 @@ namespace natl {
 					any_storage* anyStorage = static_cast<any_storage*>(anyStoragePolymorphic);
 					deconstruct(anyStorage);
 					if (shouldDeallocate == true) {
-						allocator_type::deallocate(anyStorage, 1);
+						typed_allocator_type::deallocate(anyStorage, 1);
 					}
 				};
 			}
@@ -164,7 +165,7 @@ namespace natl {
 		};
 
 		template<Size BufferSize, typename DataType>
-		concept BaseAnyDoesDataTypeFitInSmallBuffer = sizeof(AnyStorage<DataType, DefaultAllocatorByte>) <= BufferSize;
+		concept BaseAnyDoesDataTypeFitInSmallBuffer = sizeof(AnyStorage<DataType, DefaultAllocator>) <= BufferSize;
 
 		#ifdef NATL_64BIT
 			constexpr inline Size BaseAnyBaseMemberByteSize = 16;
@@ -183,9 +184,8 @@ namespace natl {
 	private:
 		using any_storage_constexpr_polymorphic = impl::AnyStorageConstexprPolymorphic;
 		using any_storage_polymorphic = impl::AnyStoragePolymorphic;
+	
 	private:
-
-
 		impl::AnyStorageState storageState;
 		ui32 numberOfBytesUsed;
 		const TypeInfo* typeInfo;
@@ -198,6 +198,13 @@ namespace natl {
 
 		template<Size AnyBufferSize>
 		friend struct BaseAny;
+
+	private:
+		constexpr void constructBaseInit() noexcept {
+			storageState = impl::AnyStorageState::noValue;
+			numberOfBytesUsed = 0;
+			typeInfo = nullptr;
+		}
 	public:
 
 		//constructor 
@@ -208,28 +215,41 @@ namespace natl {
 			constructAsDummy();
 		}
 
+		constexpr BaseAny(const BaseAny& other) noexcept {
+			constructBaseInit();
+			assign(other);
+		}
+
+		constexpr BaseAny(BaseAny&& other) noexcept {
+			constructBaseInit();
+			assign(forward<BaseAny>(other));
+		}
+
 		template<Size OtherBufferSize>
 		constexpr BaseAny(const BaseAny<OtherBufferSize>& other) noexcept {
-			internalAssign(other);
+			constructBaseInit();
+			assign(other);
 		}
 		template<Size OtherBufferSize>
 		constexpr BaseAny(BaseAny<OtherBufferSize>&& other) noexcept {
-			internalAssign(natl::forward<BaseAny<OtherBufferSize>>(other));
+			constructBaseInit();
+			assign(natl::forward<BaseAny<OtherBufferSize>>(other));
 		}
 	
 		template<typename DataType, typename Alloc, typename... ArgTypes>
 		constexpr BaseAny(TypeArg<DataType>, AllocatorArg<Alloc>, ArgTypes&&... args) noexcept {
-			internalAssign(TypeArg<DataType>{}, AllocatorArg<Alloc>{}, natl::forward<ArgTypes>(args)...);
+			constructBaseInit();
+			assign(TypeArg<DataType>{}, AllocatorArg<Alloc>{}, natl::forward<ArgTypes>(args)...);
 		}
 
 
 		//destructor 
 	private:
-		constexpr void internalDeconstruct() noexcept {
+		constexpr void deconstruct() noexcept {
 			if (isConstantEvaluated()) {
 				if (storageState != impl::AnyStorageState::noValue) {
 					constexprStorage->getDestoryFunction()(constexprStorage);
-					deconstruct(&constexprStorage);
+					natl::deconstruct(&constexprStorage);
 				}
 			} else {
 				switch (storageState) {
@@ -250,7 +270,7 @@ namespace natl {
 		}
 	public:
 		constexpr ~BaseAny() noexcept {
-			internalDeconstruct();
+			deconstruct();
 		}
 
 		//util 
@@ -266,7 +286,7 @@ namespace natl {
 		}
 
 		template<typename DataType, typename Alloc, typename... ArgTypes>
-		constexpr void internalAssign(TypeArg<DataType>, AllocatorArg<Alloc>, ArgTypes&&... args) noexcept {
+		constexpr void assign(TypeArg<DataType>, AllocatorArg<Alloc>, ArgTypes&&... args) noexcept {
 			if (isConstantEvaluated()) {
 				storageState = impl::AnyStorageState::constexprStorage;
 				using arg_storage_constexpr_type = impl::AnyStorageConstexpr<Decay<DataType>>;
@@ -287,7 +307,7 @@ namespace natl {
 		}
 	
 		template<Size OtherBufferSize>
-		constexpr void internalAssign(const BaseAny<OtherBufferSize>& other) noexcept {
+		constexpr void assign(const BaseAny<OtherBufferSize>& other) noexcept {
 			if (isConstantEvaluated()) {
 				storageState = other.storageState;
 				if (other.storageState == impl::AnyStorageState::noValue) {
@@ -305,7 +325,7 @@ namespace natl {
 					break;
 				case impl::AnyStorageState::smallBufferStorage: {
 					const any_storage_polymorphic* otherStorage = 
-						reinterpret_cast<const any_storage_polymorphic*>(other.smallBufferStorage.storage);
+						reinterpret_cast<const any_storage_polymorphic*>(other.smallBufferStorage);
 					if (other.numberOfBytesUsed <= BufferSize) {
 						otherStorage->copyStorage(smallBufferStorage);
 					} else {
@@ -331,7 +351,7 @@ namespace natl {
 		}
 
 		template<Size OtherBufferSize>
-		constexpr void internalAssign(BaseAny<OtherBufferSize>&& other) noexcept {
+		constexpr void assign(BaseAny<OtherBufferSize>&& other) noexcept {
 			if (isConstantEvaluated()) {
 				storageState = other.storageState;
 				if (other.storageState == impl::AnyStorageState::noValue) {
@@ -356,7 +376,7 @@ namespace natl {
 						storageState = impl::AnyStorageState::heapStorage;
 						heapStorage = otherStorage->moveStorage(nullptr);
 					}
-					other.internalDeconstruct();
+					other.deconstruct();
 					break;
 				}
 				case impl::AnyStorageState::heapStorage: {
@@ -364,7 +384,7 @@ namespace natl {
 					if (other.numberOfBytesUsed <= BufferSize) {
 						storageState = impl::AnyStorageState::smallBufferStorage;
 						otherStorage->moveStorage(smallBufferStorage);
-						other.internalDeconstruct();
+						other.deconstruct();
 					} else {
 						heapStorage = otherStorage;
 					}	
@@ -378,20 +398,33 @@ namespace natl {
 		}
 	public:
 
+		constexpr BaseAny operator=(const BaseAny& other) noexcept {
+			constructBaseInit();
+			assign(other);
+			return self();
+		}
+		constexpr BaseAny operator=(BaseAny&& other) noexcept {
+			constructBaseInit();
+			assign(forward<BaseAny>(other));
+			return self();
+		}
+
 		template<Size OtherBufferSize>
 		constexpr BaseAny operator=(const BaseAny<OtherBufferSize>& other) noexcept {
-			internalAssign(other);
+			deconstruct();
+			assign(other);
 			return self();
 		}
 		template<Size OtherBufferSize>
 		constexpr BaseAny operator=(BaseAny<OtherBufferSize>&& other) noexcept {
-			internalAssign(natl::forward<BaseAny<OtherBufferSize>>(other));
+			deconstruct();
+			assign(natl::forward<BaseAny<OtherBufferSize>>(other));
 			return self();
 		}
 
 		//modifiers 
 		constexpr void reset() noexcept {
-			internalDeconstruct();
+			deconstruct();
 			constructAsDummy();
 			storageState = impl::AnyStorageState::noValue;
 		}
@@ -428,7 +461,7 @@ namespace natl {
 						return OptionEmpty{};
 					}
 
-					using any_storage_type = impl::AnyStorage<Decay<DataType>, DefaultAllocatorByte>;
+					using any_storage_type = impl::AnyStorage<Decay<DataType>, DefaultAllocator>;
 					any_storage_type* anyStorage = reinterpret_cast<any_storage_type*>(smallBufferStorage);
 					return anyStorage->getPtr();
 				}
@@ -437,7 +470,7 @@ namespace natl {
 						return OptionEmpty{};
 					}
 
-					using any_storage_type = impl::AnyStorage<Decay<DataType>, DefaultAllocatorByte>;
+					using any_storage_type = impl::AnyStorage<Decay<DataType>, DefaultAllocator>;
 					any_storage_type* anyStorage = reinterpret_cast<any_storage_type*>(heapStorage);
 					return anyStorage->getPtr();
 				}
@@ -457,11 +490,17 @@ namespace natl {
 
 	template<typename DataType, typename... ArgTypes>
 	constexpr Any makeAny(ArgTypes&&... args) noexcept {
-		return Any(TypeArg<DataType>{}, AllocatorArg<DefaultAllocator<DataType>>{}, natl::forward<ArgTypes>(args)...);
+		return Any(TypeArg<DataType>{}, AllocatorArg<DefaultAllocator>{}, natl::forward<ArgTypes>(args)...);
 	}
 	template<Size ByteSize, typename DataType, typename... ArgTypes>
 	constexpr AnyByteSize<ByteSize> makeAnyByteSize(ArgTypes&&... args) noexcept {
-		return AnyByteSize<ByteSize>(TypeArg<DataType>{}, AllocatorArg<DefaultAllocator<DataType>>{}, natl::forward<ArgTypes>(args)...);
+		return AnyByteSize<ByteSize>(TypeArg<DataType>{}, AllocatorArg<DefaultAllocator>{}, natl::forward<ArgTypes>(args)...);
+	}
+
+	template<Size ByteSize, typename Alloc, typename DataType, typename... ArgTypes>
+		requires(IsAllocatorC<Alloc>)
+	constexpr AnyByteSize<ByteSize> makeAnyByteSizeAlloc(ArgTypes&&... args) noexcept {
+		return AnyByteSize<ByteSize>(TypeArg<DataType>{}, AllocatorArg<Alloc>{}, natl::forward<ArgTypes>(args)...);
 	}
 
 	template<typename DataType, Size BufferSize>

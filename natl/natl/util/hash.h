@@ -1,9 +1,5 @@
 #pragma once
 
-//std
-#include <functional>
-#include <bit>
-
 //own
 #include "basicTypes.h"
 #include "typeTraits.h"
@@ -12,41 +8,179 @@
 
 //interface 
 namespace natl {
-	template<typename DataType>
-	concept HasStaticHashFunction = requires(const DataType& value) {
-		{ DataType::staticHash(value) } -> SameAs<Size>;
+	//fnv1a
+	constexpr inline Size fnv1aOffsetBasis = Size(14695981039346656037ULL);
+	constexpr inline Size fnv1aPrime = Size(1099511628211ULL);
+	constexpr Size fnv1aHashCstr(const Ascii* strPtr, Size hash = fnv1aOffsetBasis) noexcept {
+		while (*strPtr != '\0') {
+			hash ^= static_cast<Size>(*strPtr++);
+			hash *= fnv1aPrime;
+		}
+		return hash;
+	}
+	constexpr Size fnv1aHashCstr(const Utf32* strPtr, Size hash = fnv1aOffsetBasis) noexcept {
+		while (*strPtr != '\0') {
+			hash ^= static_cast<Size>(*strPtr++);
+			hash *= fnv1aPrime;
+		}
+		return hash;
+	}
+
+	constexpr Size fnv1aHash(const Ascii* strPtr, const Size size, Size hash = fnv1aOffsetBasis) noexcept {
+		const Ascii* endPtr = strPtr + size;
+		for (; strPtr < endPtr; strPtr++) {
+			hash ^= static_cast<Size>(*strPtr);
+			hash *= fnv1aPrime;
+		}
+		return hash;
+	}
+	constexpr Size fnv1aHash(const Utf32* strPtr, const Size size, Size hash = fnv1aOffsetBasis) noexcept {
+		const Utf32* endPtr = strPtr + size;
+		for (; strPtr < endPtr; strPtr++) {
+			hash ^= static_cast<Size>(*strPtr);
+			hash *= fnv1aPrime;
+		}
+		return hash;
+	}
+
+	template<typename Type>
+	concept HasStaticHashFunctionC = requires(const Type& value) {
+		{ Type::staticHash(value) } -> SameAs<Size>;
 	};
-	template<typename DataType>
-	concept HasHashFunction = requires(const DataType& value) {
+	template<typename Type> struct HasStaticHashFunctionV : BoolConstant<HasStaticHashFunctionC<Type>> {};
+	template<typename Type> constexpr inline Bool HasStaticHashFunction = HasStaticHashFunctionC<Type>;
+
+	template<typename Type>
+	concept HasHashFunctionC = requires(const Type& value) {
 		{ value.hash() } -> SameAs<Size>;
 	};
-	template <typename DataType>
-	concept StdHashable = requires(const DataType& a) {
-		{ std::hash<DataType>{}(a) } -> ConvertibleTo<Size>;
+	template<typename Type> struct HasHashFunctionV : BoolConstant<HasHashFunctionC<Type>> {};
+	template<typename Type> constexpr inline Bool HasHashFunction = HasHashFunctionC<Type>;
+
+	template <typename Type>
+	concept StdHashableC = requires(const Type& a) {
+		{ std::hash<Type>{}(a) } -> ConvertibleTo<Size>;
 	};
+	template<typename Type> struct StdHashableV : BoolConstant<StdHashableC<Type>> {};
+	template<typename Type> constexpr inline Bool StdHashable = StdHashableC<Type>;
 
+	template<typename HashCombiner>
+	concept IsHashCombinerC = requires(HashCombiner & hashCombiner) {
+		{ hashCombiner.hashCombine(declval<Size>(), declval<Size>()) };
+	};
+	template<typename Type> struct IsHashCombinerV : BoolConstant<IsHashCombinerC<Type>> {};
+	template<typename Type> constexpr inline Bool IsHashCombiner = IsHashCombinerC<Type>;
 
-	template<typename DataType>
-	concept Hashable = HasStaticHashFunction<DataType> || HasHashFunction<DataType> || IsPointerC<DataType> || StdHashable<DataType>;
+	template<typename Hasher>
+	concept IsHasherC = requires(Hasher & hasher) {
+		typename Hasher::hash_combiner;
+		{ hasher.hashCode() } -> IsSameC<Size>;
+		{ hasher.reset() } -> IsSameC<void>;
+		{ hasher.hashAppend(declval<const Ascii*>(), declval<Size>()) } -> IsSameC<void>;
+		{ hasher.hashAppend(declval<Size>()) } -> IsSameC<void>;
+	};
+	template<typename Type> struct IsHasherV : BoolConstant<IsHasherC<Type>> {};
+	template<typename Type> constexpr inline Bool IsHasher = IsHasherC<Type>;
 
-	template<typename DataType>
-	struct Hash {
-	public:
-		constexpr static Size hash(const DataType& value) requires(Hashable<DataType>) {
-			if constexpr (HasStaticHashFunction<DataType>) {
-				return DataType::staticHash(value);
-			} else if constexpr (HasHashFunction<DataType>) {
-				return value.hash();
-			} else if constexpr (IsPointerC<DataType>) {
-				return static_cast<Size>(natl::bitCast<UIntPtrSized, DataType>(value));
-			} else if constexpr (StdHashable<DataType>) {
-				return static_cast<Size>(std::hash<DataType>{}(value));
-			} else {
-				unreachable();
-			}
+	template<typename Hasher, typename Type>
+	concept HasHashAppendC = requires(const Type& value, Hasher& hasher) {
+		{ value.template hashAppend<Hasher>(hasher) };
+	};
+	template<typename Hasher, typename Type> struct HasHashAppendV : BoolConstant<HasHashAppendC<Hasher, Type>> {};
+	template<typename Hasher, typename Type> constexpr inline Bool HasHashAppend = HasHashAppendC<Hasher, Type>;
+
+	template<typename Type> struct Hash;
+	template<typename Type> concept HasHashC = requires() {
+		typename Hash<Type>;
+	};
+	template<typename Type> struct HasHashV : BoolConstant<HasHashC<Type>> {};
+	template<typename Type> constexpr inline Bool HasHash = HasHashC<Type>;
+
+	struct StandardHashCombiner {
+		constexpr Size hashCombine(const Size hash, const Size otherHash) const noexcept {
+			return (hash ^ otherHash) + (Size(0x9e3779b9)) + ((hash << Size(6))) + ((hash >> Size(2)));
 		}
 	};
 
+	template<typename HashCombiner>
+		requires(IsHashCombinerC<HashCombiner>)
+	struct Fnv1aHasher {
+		using hash_combiner = HashCombiner;
+		Size hash = fnv1aOffsetBasis;
+		hash_combiner hashCombiner;
+
+		constexpr Size hashCode() const noexcept {
+			return hash;
+		}
+		constexpr void reset() noexcept {
+			hash = fnv1aOffsetBasis;
+		}
+		constexpr void hashAppend(const Ascii* str, const Size len) noexcept {
+			const Ascii* strPtr = str;
+			const Ascii* endPtr = str + len;
+			for (; strPtr < endPtr; strPtr++) {
+				hash ^= static_cast<Size>(*strPtr);
+				hash *= fnv1aPrime;
+			}
+		}
+		constexpr void hashAppend(const Size otherHash) noexcept {
+			hash = hashCombiner.hashCombine(hash, otherHash);
+		}
+	};
+
+	using StandardHasher = Fnv1aHasher<StandardHashCombiner>;
+
+	template<typename Type>
+	concept IsHashableC = HasStaticHashFunctionC<Type> || HasHashFunctionC<Type>
+		|| IsPointerC<Type> || StdHashableC<Type> || HasHashAppendC<StandardHasher, Type>
+		|| HasHashC<Type>;
+	template<typename Type> struct IsHashableV : BoolConstant<IsHashableC<Type>> {};
+	template<typename Type> constexpr inline Bool IsHashable = IsHashableC<Type>;
+
+	namespace impl {
+		template<typename Hasher, typename Type>
+		constexpr void hashAppendSingle(Hasher& hasher, const Type& value) noexcept {
+			if constexpr (HasHashAppendC<Hasher, Type>) {
+				value.template hashAppend<Hasher>(hasher);
+			} else {
+				hasher.hashAppend(hashValue<Type>(value));
+			}
+		}
+	}
+
+	template<typename Hasher, typename... Types>
+		requires(IsHasherC<Hasher> && (IsHashableC<Types> && ...))
+	constexpr void hashAppend(Hasher& hasher, const Types&... value) noexcept {
+		(impl::hashAppendSingle<Hasher, Types>(hasher, value), ...);
+	}
+
+	template<typename Hasher, typename... Types>
+		requires(IsHasherC<Hasher> && (IsHashableC<Types> && ...))
+	constexpr Size hashValues(const Types&... values) {
+		Hasher hasher{};
+		(hashAppend<Hasher, Types>(hasher, values), ...);
+		return hasher.hashCode();
+	}
+
+	template<typename Type>
+	struct Hash {
+	public:
+		constexpr static Size hash(const Type& value) requires(IsHashableC<Type>) {
+			if constexpr (HasStaticHashFunctionC<Type>) {
+				return Type::staticHash(value);
+			} else if constexpr (HasHashAppendC<StandardHasher, Type>) {
+				return hashValues<StandardHasher>(value);
+			} else if constexpr (HasHashFunctionC<Type>) {
+				return value.hash();
+			} else if constexpr (IsPointerC<Type>) {
+				return static_cast<Size>(natl::bitCast<UIntPtrSized, Type>(value));
+			} else if constexpr (StdHashableC<Type>) {
+				return static_cast<Size>(std::hash<Type>{}(value));
+			} else {
+				static_assert(AlwaysFalse<Type>, "natl: Hash<Type>::hash - Type has no hash");
+			}
+		}
+	};
 
 	template<> struct Hash<i8> {
 		constexpr static Size hash(const i8 value) { return static_cast<Size>(natl::bitCast<ui8, i8>(value)); }
@@ -81,9 +215,11 @@ namespace natl {
 		constexpr static Size hash(const double value) { return static_cast<Size>(natl::bitCast<ui64, double>(value)); }
 	};
 
-	template<typename DataType>
-		requires(Hashable<DataType>)
-	constexpr Size hashValue(const DataType& value) noexcept {
-		return Hash<Decay<DataType>>().hash(value);
+	template<typename Type>
+		requires(IsHashableC<Type>)
+	constexpr Size hashValue(const Type& value) noexcept {
+		return Hash<Decay<Type>>().hash(value);
 	}
  }
+ static_assert(natl::IsHashCombinerC<natl::StandardHashCombiner>, "natl: StandardHashCombiner is not a natl::HasherCombiner");
+ static_assert(natl::IsHasherC<natl::Fnv1aHasher<natl::StandardHashCombiner>>, "natl: Fnv1aHasher is not a natl::Hasher");

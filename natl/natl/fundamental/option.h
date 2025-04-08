@@ -7,8 +7,6 @@
 
 //interface
 namespace natl {
-	struct OptionEmpty {};
-
 	template<typename DataType>
 	struct Option {
 	public:
@@ -106,8 +104,8 @@ namespace natl {
 				if (isValid == true) {
 					data = other.data;
 				} else {
-					isValid = true;
 					construct(other.data);
+					isValid = true;
 				}
 			} else {
 				if (isValid == true) {
@@ -139,8 +137,8 @@ namespace natl {
 				if (isValid == true) {
 					data = other.data;
 				} else {
-					isValid = true;
 					construct(other.data);
+					isValid = true;
 				}
 			} else {
 				if (isValid == true) {
@@ -156,8 +154,8 @@ namespace natl {
 				if (isValid == true) {
 					data = natl::forward<OtherDataType>(other.data);
 				} else {
-					isValid = true;
 					construct(natl::forward<OtherDataType>(other.data));
+					isValid = true;
 				}
 			} else {
 				if (isValid == true) {
@@ -177,8 +175,8 @@ namespace natl {
 					natl::construct(&data, valueIn);
 				}
 			} else {
-				isValid = true;
 				construct(valueIn);
+				isValid = true;
 			}
 			return self();
 		}
@@ -187,8 +185,8 @@ namespace natl {
 			if (isValid == true) {
 				data = natl::forward<DataType>(valueIn);
 			} else {
-				isValid = true;
 				construct(natl::forward<DataType>(valueIn));
+				isValid = true;
 			}
 			return self();
 		}
@@ -210,8 +208,8 @@ namespace natl {
 			if (isValid == true) {
 				data = natl::forward<OtherDataType>(valueIn);
 			} else {
-				isValid = true;
 				construct(natl::forward<OtherDataType>(valueIn));
+				isValid = true;
 			}
 			return self();
 		}
@@ -307,7 +305,7 @@ namespace natl {
 		}
 
 		//special
-		constexpr Size staticHash(const Option& option) requires(Hashable<DataType>) {
+		constexpr Size staticHash(const Option& option) requires(IsHashableC<DataType>) {
 			if (option.hasValue()) {
 				return Hash<DataType>::hash(value());
 			} else {
@@ -320,96 +318,5 @@ namespace natl {
 		constexpr Bool operator==(OptionEmpty) const noexcept { return doesNotHaveValue(); }
 		constexpr Bool operator!=(NullptrType) const noexcept { return hasValue(); }
 		constexpr Bool operator!=(OptionEmpty) const noexcept { return hasValue(); }
-	};
-
-	template<typename DataType>
-	struct OptionPtr {
-	public:
-		using value_type = DataType;
-	private:
-		DataType* dataPtr;
-	public:
-		//constructor 
-		constexpr OptionPtr() noexcept : dataPtr(nullptr) {}
-		constexpr OptionPtr(const OptionPtr& other) noexcept : dataPtr(other.dataPtr) {}
-		constexpr OptionPtr(OptionPtr&& other) noexcept : dataPtr(other.dataPtr) {
-			other.dataPtr = nullptr;
-		}
-		constexpr OptionPtr(DataType* dataPtrIn) noexcept : dataPtr(dataPtrIn) {}
-		constexpr OptionPtr(NullptrType) noexcept : dataPtr(nullptr) {}
-		constexpr OptionPtr(OptionEmpty) noexcept : dataPtr(nullptr) {}
-
-		//destructor 
-		constexpr ~OptionPtr() noexcept = default;
-
-		//util 
-		constexpr OptionPtr& self() noexcept { return *this; }
-		constexpr const OptionPtr& self() const noexcept { return *this; }
-
-		//assignment 
-		constexpr OptionPtr& operator=(const OptionPtr& other) noexcept {
-			dataPtr = other.dataPtr;
-			return self();
-		}
-		constexpr OptionPtr& operator=(OptionPtr&& other) noexcept {
-			dataPtr = other.dataPtr;
-			other.dataPtr = nullptr;	
-			return self();
-		}
-		constexpr OptionPtr& operator=(DataType* dataPtrIn) noexcept {
-			dataPtr = dataPtrIn;
-			return self();
-		}
-		constexpr OptionPtr& operator=(NullptrType) noexcept {
-			dataPtr = nullptr;
-			return self();
-		}
-		constexpr OptionPtr& operator=(OptionEmpty) noexcept {
-			dataPtr = nullptr;
-			return self();
-		}
-
-		//observers
-		constexpr Bool hasValue() const noexcept { return dataPtr != nullptr; }
-		constexpr Bool doesNotHaveValue() const noexcept { return dataPtr == nullptr; }
-		constexpr explicit operator Bool() const noexcept { return hasValue(); }
-
-		//access
-		constexpr DataType& value() & noexcept { return *dataPtr; }
-		constexpr const DataType& value() const& noexcept { return *dataPtr; };
-		constexpr DataType* getPtr() noexcept { return dataPtr; }
-		constexpr const DataType* getPtr() const noexcept { return dataPtr; }
-		constexpr const DataType* operator->() const noexcept { return dataPtr; }
-		constexpr DataType* operator->() noexcept { return dataPtr; }
-		constexpr const DataType& operator*() const& noexcept { return *dataPtr; }
-		constexpr DataType& operator*() & noexcept { return *dataPtr; }
-		constexpr const DataType&& operator*() const&& noexcept { return *dataPtr; }
-		constexpr DataType&& operator*() && noexcept { return *dataPtr; }
-
-
-		//modifiers 
-		constexpr void reset() noexcept {
-			dataPtr = nullptr;
-		}
-
-		//compare 
-		constexpr Bool operator==(const OptionPtr other) const noexcept { return dataPtr == other.dataPtr; }
-		constexpr Bool operator!=(const OptionPtr other) const noexcept { return dataPtr != other.dataPtr; }
-		constexpr Bool operator<(const OptionPtr other) const noexcept { return dataPtr < other.dataPtr; }
-		constexpr Bool operator<=(const OptionPtr other) const noexcept { return dataPtr <= other.dataPtr; }
-		constexpr Bool operator>(const OptionPtr other) const noexcept { return dataPtr > other.dataPtr; }
-		constexpr Bool operator>=(const OptionPtr other) const noexcept { return dataPtr >= other.dataPtr; }
-
-		constexpr Bool operator==(const DataType* otherPtr) const noexcept { return dataPtr == otherPtr; }
-		constexpr Bool operator!=(const DataType* otherPtr) const noexcept { return dataPtr != otherPtr; }
-		constexpr Bool operator<(const DataType* otherPtr) const noexcept { return dataPtr < otherPtr; }
-		constexpr Bool operator<=(const DataType* otherPtr) const noexcept { return dataPtr <= otherPtr; }
-		constexpr Bool operator>(const DataType* otherPtr) const noexcept { return dataPtr > otherPtr; }
-		constexpr Bool operator>=(const DataType* otherPtr) const noexcept { return dataPtr >= otherPtr; }
-
-		constexpr Bool operator==(NullptrType) const noexcept { return dataPtr == nullptr; }
-		constexpr Bool operator==(OptionEmpty) const noexcept { return dataPtr == nullptr; }
-		constexpr Bool operator!=(NullptrType) const noexcept { return dataPtr != nullptr; }
-		constexpr Bool operator!=(OptionEmpty) const noexcept { return dataPtr != nullptr; }
 	};
 }

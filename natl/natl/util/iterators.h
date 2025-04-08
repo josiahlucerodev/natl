@@ -207,10 +207,17 @@ namespace natl {
 	}
 
 	template <typename Iter>
-	concept IsRandomAccessIterator = IsIterPtr<Iter> || IsSame<IteratorCategory<Iter>, RandomAccessIteratorTag>;
+	concept IsRandomAccessIteratorC = IsIterPtr<Iter> && IsSame<IteratorCategory<Iter>, RandomAccessIteratorTag>;
+	template <typename Iter> constexpr static inline Bool IsRandomAccessIterator = IsRandomAccessIteratorC<Iter>;
+	template <typename Iter> struct IsRandomAccessIteratorV : BoolConstant<IsRandomAccessIteratorC<Iter>> {};
 
 	template <typename Iter>
-	constexpr typename IteratorCategory<Iter>::difference_type
+	concept IsBidirectionalIteratorC = IsIterPtr<Iter> && IsSame<IteratorCategory<Iter>, BidirectionalIteratorTag>;
+	template <typename Iter> constexpr static inline Bool IsBidirectionalIterator = IsBidirectionalIteratorC<Iter>;
+	template <typename Iter> struct IsBidirectionalIteratorV : BoolConstant<IsBidirectionalIteratorC<Iter>> {};
+
+	template <typename Iter>
+	constexpr typename IteratorCategory<Iter>::difference_type 
 		iterDistance(Iter first, Iter last) noexcept {
 		typename IteratorTraits<Iter>::difference_type distance = 0;
 		while (first != last) {
@@ -221,7 +228,7 @@ namespace natl {
 	}
 
 	template <typename Iter>
-		requires(IsRandomAccessIterator<Iter>)
+		requires(IsRandomAccessIteratorC<Iter>)
 	constexpr Size iterDistance(Iter first, Iter last) noexcept {
 		if constexpr (IsIterPtr<Iter>) {
 			return static_cast<Size>(last - first);
@@ -420,18 +427,20 @@ namespace natl {
 	using ReverseConstRandomAccessIterator = ReverseIterator<ConstRandomAccessIterator<DataType>>;
 
 	template<typename DataType, typename Alloc>
+		requires(IsAllocatorC<Alloc>)
 	struct RandomAccessIteratorAlloc {
 	public:
 		using iterator = RandomAccessIteratorAlloc<DataType, Alloc>;
 		using allocator_type = Alloc;
+		using typed_allocator_type = allocator_type::template rebind<DataType>;
 
-		using value_type = typename Alloc::value_type;
-		using reference = typename Alloc::reference;
-		using const_reference = typename Alloc::const_reference;
-		using pointer = typename Alloc::pointer;
-		using const_pointer = typename Alloc::const_pointer;
-		using difference_type = typename Alloc::difference_type;
-		using size_type = typename Alloc::size_type;
+		using value_type = typename typed_allocator_type::value_type;
+		using reference = typename typed_allocator_type::reference;
+		using const_reference = typename typed_allocator_type::const_reference;
+		using pointer = typename typed_allocator_type::pointer;
+		using const_pointer = typename typed_allocator_type::const_pointer;
+		using difference_type = typename typed_allocator_type::difference_type;
+		using size_type = typename typed_allocator_type::size_type;
 
 		using iterator_category = RandomAccessIteratorTag;
 	private:
@@ -473,13 +482,16 @@ namespace natl {
 	};
 
 	template<typename DataType, typename Alloc>
-	using ConstRandomAccessIteratorAlloc = RandomAccessIteratorAlloc<const DataType, typename Alloc::template rebind_alloc<const DataType>>;
+		requires(IsAllocatorC<Alloc>)
+	using ConstRandomAccessIteratorAlloc = RandomAccessIteratorAlloc<const DataType, Alloc>;
 
 	template<typename DataType, typename Alloc>
+		requires(IsAllocatorC<Alloc>)
 	using ReverseRandomAccessIteratorAlloc = ReverseIterator<RandomAccessIteratorAlloc<DataType, Alloc>>;
 
 	template<typename DataType, typename Alloc>
-	using ReverseConstRandomAccessIteratorAlloc = ReverseIterator<ConstRandomAccessIteratorAlloc<DataType, typename Alloc::template rebind_alloc<const DataType>>>;
+		requires(IsAllocatorC<Alloc>)
+	using ReverseConstRandomAccessIteratorAlloc = ReverseIterator<ConstRandomAccessIteratorAlloc<DataType, Alloc>>;
 
 
 	template<typename OutputIter>
@@ -487,5 +499,44 @@ namespace natl {
 		if constexpr (requires(OutputIter testOutputIter) { { testOutputIter.reserve(Size()) }; }) {
 			outputIter.reserve(newCapacity);
 		}
+	}
+
+	template<typename LhsIter, typename RhsIter>
+		requires(requires(LhsIter lhs, RhsIter rhs) { { swap(*lhs, *rhs) }; })
+	constexpr void iterSwap(LhsIter lhs, RhsIter rhs) noexcept {
+		swap(*lhs, *rhs);
+	}
+
+	template<typename InputIter, class DifferenceType = typename IteratorTraits<InputIter>::difference_type>
+		requires(IsIterPtr<InputIter>)
+	constexpr void advance(InputIter& iter, DifferenceType distance) noexcept {
+		using iterator_category = Decay<typename std::iterator_traits<InputIter>::iterator_category>;
+		if constexpr (IsSame<iterator_category, RandomAccessIteratorTag>) {
+			iter += distance;
+		} else {
+			if constexpr (IsSame<iterator_category, BidirectionalIteratorTag>) {
+				while (distance < 0) {
+					++distance;
+					--iter;
+				}
+			}
+			while (distance > 0) {
+				--distance;
+				++iter;
+			}
+		}
+	}
+
+	template<typename InputIter, typename DifferenceType = typename IteratorTraits<InputIter>::difference_type>
+		requires(IsIterPtr<InputIter>)
+	constexpr InputIter next(InputIter iter, DifferenceType distance = 1) noexcept {
+		advance<InputIter, DifferenceType>(iter, distance);
+		return iter;
+	}
+	template<typename BidirIter, typename DifferenceType = typename IteratorTraits<BidirIter>::difference_type>
+		requires(IsIterPtr<BidirIter> && (IsRandomAccessIteratorC<BidirIter> || IsBidirectionalIteratorC<BidirIter>))
+	constexpr BidirIter prev(BidirIter iter, DifferenceType distance = 1) noexcept {
+		advance<BidirIter, DifferenceType>(iter, -distance);
+		return iter;
 	}
 }

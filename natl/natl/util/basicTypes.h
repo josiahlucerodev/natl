@@ -182,6 +182,10 @@ namespace natl {
 	template<Size ByteSize> using FloatOfByteSize = typename FloatOfByteSizeT<ByteSize>::type;
 
 	using SSize = IntOfByteSize<sizeof(Size)>;
+
+	struct Empty {};
+	using Id = Size;
+	struct OptionEmpty {};
 }
 
 namespace natl::literals {

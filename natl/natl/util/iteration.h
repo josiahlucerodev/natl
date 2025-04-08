@@ -420,15 +420,15 @@ namespace natl {
     template<typename Container>
     struct BackInsertIterator {
     public:
-        using allocator_type = Container::allocator_type;
+        using typed_allocator_type = Container::typed_allocator_type;
 
-        using value_type = typename allocator_type::value_type;
-        using reference = typename allocator_type::reference;
-        using const_reference = typename allocator_type::const_reference;
-        using pointer = typename allocator_type::pointer;
-        using const_pointer = typename allocator_type::const_pointer;
-        using difference_type = typename allocator_type::difference_type;
-        using size_type = typename allocator_type::size_type;
+        using value_type = typename typed_allocator_type::value_type;
+        using reference = typename typed_allocator_type::reference;
+        using const_reference = typename typed_allocator_type::const_reference;
+        using pointer = typename typed_allocator_type::pointer;
+        using const_pointer = typename typed_allocator_type::const_pointer;
+        using difference_type = typename typed_allocator_type::difference_type;
+        using size_type = typename typed_allocator_type::size_type;
 
         using iterator_category = std::output_iterator_tag;
     private:
@@ -527,7 +527,8 @@ namespace natl {
         template<typename DataType, typename Container>
         struct TypeErasedBackInsertIteratorDataConstexpr final : public TypeErasedBackInsertIteratorDataConstexprPolymorphic<DataType> {
         public:
-            using allocator_type = DefaultAllocator<TypeErasedBackInsertIteratorDataConstexpr>;
+            using allocator_type = DefaultAllocator;
+            using typed_allocator_type = allocator_type::template rebind<TypeErasedBackInsertIteratorDataConstexpr>;
             using data_constexpr_polymorphic = TypeErasedBackInsertIteratorDataConstexprPolymorphic<DataType>;
             using reserve_function_type = data_constexpr_polymorphic::reserve_function_type;
             using push_back_function_type = data_constexpr_polymorphic::push_back_function_type;
@@ -540,7 +541,7 @@ namespace natl {
             constexpr TypeErasedBackInsertIteratorDataConstexpr(Container* containerIn) noexcept : container(containerIn) {}
 
             constexpr static data_constexpr_polymorphic* createNew(Container* newContainer) noexcept {
-                TypeErasedBackInsertIteratorDataConstexpr* newData = allocator_type::allocate(1);
+                TypeErasedBackInsertIteratorDataConstexpr* newData = typed_allocator_type::allocate(1);
                 construct(newData, newContainer);
                 return static_cast<data_constexpr_polymorphic*>(newData);;
             }
@@ -574,7 +575,7 @@ namespace natl {
                 return [](data_constexpr_polymorphic* dataPolymorphic) noexcept -> void {
                     TypeErasedBackInsertIteratorDataConstexpr* data = static_cast<TypeErasedBackInsertIteratorDataConstexpr*>(dataPolymorphic);
                     deconstruct(data);
-                    allocator_type::deallocate(data, 1);
+                    typed_allocator_type::deallocate(data, 1);
                 };
             }
         };

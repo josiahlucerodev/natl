@@ -224,16 +224,6 @@ namespace natl {
     }
 }
 
-
-#define NATL_TEXT(a) #a
-
-#ifdef NATL_COMPILER_MSVC
-#define NATL_NAMESPACE_NAME_FOR_TUPLE_GET(Namespace) std
-#else
-#define NATL_NAMESPACE_NAME_FOR_TUPLE_GET(Namespace) Namespace
-#endif // NATL_COMPILER_MSVC
-
-
 //counter 
 #if defined(NATL_COMPILER_EMSCRIPTEN) 
 #define NATL_COUNTER __COUNTER__
@@ -245,4 +235,28 @@ namespace natl {
 #define NATL_COUNTER __COUNTER__
 #else
 static_cast(false, "natl: counter for compiler not implemented");
+#endif
+
+//warnings 
+#if defined(NATL_COMPILER_EMSCRIPTEN) 
+#define NATL_DISABLE_WARNINGS \
+    _Pragma("GCC diagnostic push") \
+    _Pragma("GCC diagnostic ignored \"-Wall\"")
+#define NATL_ENABLE_WARNINGS _Pragma("GCC diagnostic pop")
+#elif defined(NATL_COMPILER_CLANG)
+#define NATL_DISABLE_WARNINGS \
+    _Pragma("GCC diagnostic push") \
+    _Pragma("GCC diagnostic ignored \"-Wall\"")
+#define NATL_ENABLE_WARNINGS _Pragma("GCC diagnostic pop")
+#elif defined(NATL_COMPILER_GCC)
+#define NATL_DISABLE_WARNINGS \
+    _Pragma("GCC diagnostic push") \
+    _Pragma("GCC diagnostic ignored \"-Wall\"")
+#define NATL_ENABLE_WARNINGS _Pragma("GCC diagnostic pop")
+#elif defined(NATL_COMPILER_MSVC)
+#define NATL_DISABLE_WARNINGS __pragma(warning(push, 0))
+#define NATL_ENABLE_WARNINGS __pragma(warning(pop))
+#else
+static_cast(false, "natl: disable warnings not implmeented");
+static_cast(false, "natl: enable warnings not implmeented");
 #endif

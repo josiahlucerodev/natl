@@ -7,3 +7,4 @@
 #include "serialization/utils.h"
 #include "serialization/basicSerializations.h"
 #include "serialization/serializations.h"
+#include "serialization/error.h"

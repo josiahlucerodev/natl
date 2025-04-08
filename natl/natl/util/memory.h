@@ -1,14 +1,11 @@
 #pragma once 
 
-//std
-#include <bit>
-
 //own
 #include "../fundamental/expect.h"
 #include "basicTypes.h"
-#include "math.h"
 #include "numerics.h"
 #include "error.h"
+#include "bits.h"
 
 //interface
 namespace natl {
@@ -38,7 +35,6 @@ namespace natl {
 		return std::launder(static_cast<const DataType*>(std::memmove(const_cast<DataType*>(ptr), ptr, sizeof(DataType) * number)));
 	}
 
-
 	enum struct AlignPtrError {
 		invalidAlignment,  
 		outOfSpace,  
@@ -49,7 +45,6 @@ namespace natl {
 		void* nextPtr;
 		natl::Size remainingSpace;
 	};
-
 
 	constexpr AlignPtrInfo createAlignPtrInfo(void* ptr, const natl::Size space) noexcept {
 		AlignPtrInfo alignPtrInfo;
@@ -122,6 +117,22 @@ namespace natl {
 			default:
 				unreachable();
 			}
-		}
+	}
+	}
+
+	constexpr Size memberOffset(const Size sizeA, const Size alignmentB) noexcept {
+		return (sizeA + (alignmentB - 1)) & ~(alignmentB - 1);
+	}
+	template<typename LhsMemberType, typename RhsMemberType> 
+	consteval Size memberOffset() noexcept {
+		return memberOffset(sizeof(LhsMemberType), alignof(RhsMemberType));
+	}
+
+	constexpr Size memberToMemberOffset(const Size sizeA, const Size alignmentB) noexcept {
+		return memberOffset(sizeA, alignmentB) - sizeA ;
+	}
+	template<typename LhsMemberType, typename RhsMemberType>
+	consteval Size memberToMemberOffset() noexcept {
+		return memberToMemberOffset(sizeof(LhsMemberType), alignof(RhsMemberType));
 	}
 }

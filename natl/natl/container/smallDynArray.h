@@ -9,19 +9,20 @@
 
 //interface 
 namespace natl {
-	template<typename DataType, Size bufferSize, typename Alloc = DefaultAllocatorByte>
-		requires(IsAllocator<Alloc>)
+	template<typename DataType, Size bufferSize, typename Alloc = DefaultAllocator>
+		requires(IsAllocatorC<Alloc>)
 	struct SmallDynArray {
 	public:
-		using allocator_type = typename Alloc::template rebind_alloc<DataType>;
+		using allocator_type = Alloc;
+		using typed_allocator_type = typename Alloc::template rebind<DataType>;
 
-		using value_type = typename allocator_type::value_type;
-		using reference = typename allocator_type::reference;
-		using const_reference = typename allocator_type::const_reference;
-		using pointer = typename allocator_type::pointer;
-		using const_pointer = typename allocator_type::const_pointer;
-		using difference_type = typename allocator_type::difference_type;
-		using size_type = typename allocator_type::size_type;
+		using value_type = typename typed_allocator_type::value_type;
+		using reference = typename typed_allocator_type::reference;
+		using const_reference = typename typed_allocator_type::const_reference;
+		using pointer = typename typed_allocator_type::pointer;
+		using const_pointer = typename typed_allocator_type::const_pointer;
+		using difference_type = typename typed_allocator_type::difference_type;
+		using size_type = typename typed_allocator_type::size_type;
 
 		using optional_pointer = Option<pointer>;
 		using optional_const_pointer = Option<const_pointer>;
@@ -173,7 +174,7 @@ namespace natl {
 		//destructor 
 		constexpr ~SmallDynArray() {
 			if (isNotSmallArray() && arrayDataPtr) {
-				allocator_type::deallocate(arrayDataPtr, capacity());
+				typed_allocator_type::deallocate(arrayDataPtr, capacity());
 			}
 		}
 
@@ -259,7 +260,7 @@ namespace natl {
 		template<typename Iter>
 			requires(IsIterPtr<Iter>&& IsSameC<typename IteratorTraits<Iter>::value_type, value_type>)
 		constexpr SmallDynArray& construct(Iter first, Iter last) noexcept {
-			if constexpr (IsRandomAccessIterator<Iter>) {
+			if constexpr (IsRandomAccessIteratorC<Iter>) {
 				const size_type count = iterDistance<Iter>(first, last);
 				const_pointer firstPtr = iteratorToAddress<Iter>(first);
 				return construct(firstPtr, count);
@@ -514,7 +515,7 @@ namespace natl {
 			if (reserveTest(newCapacity)) { return; }
 			if (newCapacity < capacity()) { return; }
 
-			pointer newDataPtr = allocator_type::allocate(newCapacity);
+			pointer newDataPtr = typed_allocator_type::allocate(newCapacity);
 
 			if (data()) {
 				const_pointer srcDataPtrFirst = data();
@@ -530,7 +531,7 @@ namespace natl {
 				}
 			}
 			if (arrayDataPtr) {
-				allocator_type::deallocate(arrayDataPtr, capacity());
+				typed_allocator_type::deallocate(arrayDataPtr, capacity());
 			}
 
 			arrayDataPtr = newDataPtr;
@@ -558,7 +559,7 @@ namespace natl {
 				const_pointer srcDataPtrLast = arrayDataPtr + newCapacity;
 				uninitializedCopyNoOverlap<const_pointer, pointer>(srcDataPtrFirst, srcDataPtrLast, dstDataPtr);
 
-				allocator_type::deallocate(arrayDataPtr, capacity());
+				typed_allocator_type::deallocate(arrayDataPtr, capacity());
 				arrayCapacity = 0;
 				arrayDataPtr = nullptr;
 
@@ -568,7 +569,7 @@ namespace natl {
 			}
 
 
-			pointer newDataPtr = allocator_type::allocate(newCapacity);
+			pointer newDataPtr = typed_allocator_type::allocate(newCapacity);
 			const_pointer srcDataPtrFirst = data();
 			const_pointer srcDataPtrLast = srcDataPtrFirst + size();
 			uninitializedCopyNoOverlap<const_pointer, pointer>(srcDataPtrFirst, srcDataPtrLast, newDataPtr);
@@ -577,7 +578,7 @@ namespace natl {
 				deconstructAll<value_type>(data(), size());
 			}
 
-			allocator_type::deallocate(arrayDataPtr, capacity());
+			typed_allocator_type::deallocate(arrayDataPtr, capacity());
 
 			arrayDataPtr = newDataPtr;
 			arrayCapacity = newCapacity;
@@ -602,7 +603,7 @@ namespace natl {
 					deconstructAll<value_type>(data(), size());
 				}
 
-				allocator_type::deallocate(arrayDataPtr, capacity());
+				typed_allocator_type::deallocate(arrayDataPtr, capacity());
 				arrayDataPtr = nullptr;
 			}
 		}
@@ -837,7 +838,7 @@ namespace natl {
 		template<typename Iter>
 			requires(IsIterPtr<Iter>&& IsSameC<typename IteratorTraits<Iter>::value_type, value_type>)
 		constexpr iterator insert(const_iterator pos, Iter first, Iter last) {
-			if constexpr (IsRandomAccessIterator<Iter>) {
+			if constexpr (IsRandomAccessIteratorC<Iter>) {
 				const size_type count = iterDistance<Iter>(first, last);
 				const_pointer firstPtr = iteratorToAddress<Iter>(first);
 				insert(pos, firstPtr, count);
@@ -952,7 +953,7 @@ namespace natl {
 		}
 
 		template<typename... Args >
-		constexpr reference emplace_back(Args&&... args) noexcept {
+		constexpr reference emplaceBack(Args&&... args) noexcept {
 			const size_type index = size();
 			const size_type newSize = index + 1;
 			factorReserve(newSize);
@@ -989,7 +990,7 @@ namespace natl {
 			return append(ilist.begin(), ilist.end());
 		}
 
-		constexpr void pop_back() noexcept {
+		constexpr void popBack() noexcept {
 			if (!IsTriviallyDestructible<value_type> || isConstantEvaluated()) {
 				deconstruct<value_type>(&at(backIndex()));
 			}
@@ -1219,7 +1220,7 @@ namespace natl {
 		}
 
 		//hash
-		constexpr size_type hash() const noexcept requires(Hashable<value_type>) {
+		constexpr size_type hash() const noexcept requires(IsHashableC<value_type>) {
 			size_type seed = size();
 			const value_type srcDataPtr = beginPtr();
 			const value_type srcDataPtrEnd = endPtr();
@@ -1228,7 +1229,7 @@ namespace natl {
 			}
 			return seed;
 		}
-		constexpr static size_type staticHash(const SmallDynArray& dynArray) noexcept requires(Hashable<value_type>) {
+		constexpr static size_type staticHash(const SmallDynArray& dynArray) noexcept requires(IsHashableC<value_type>) {
 			return dynArray.hash();
 		}
 	};
@@ -1262,8 +1263,8 @@ namespace natl {
 		: FalseType {};
 
 
-	template<Size bufferSize, typename Alloc = DefaultAllocatorByte>
-		requires(IsAllocator<Alloc>)
+	template<Size bufferSize, typename Alloc = DefaultAllocator>
+		requires(IsAllocatorC<Alloc>)
 	struct SmallDynArrayUnboundTypeT {
 		template<typename DataType> using type = SmallDynArray<DataType, bufferSize, Alloc>;
 	};
