@@ -85,7 +85,7 @@ namespace natl {
 	GlobalTracker createAllocationGlobalTraker() {
 		return GlobalTracker(false, 
 			makeGlobalTrackerStorage<AllocationTrakerStorage>(),
-			[](ObserverPtr<GlobalTracker> gt) -> GlobalTracker {
+			[](ObserverPtr<GlobalTracker>) -> GlobalTracker {
 				return move(createAllocationGlobalTraker());
 			}, 
 			[](GlobalTracker& gt) -> void {

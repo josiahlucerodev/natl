@@ -438,8 +438,8 @@ namespace natl {
 					Batch batch = allocateBatch();
 					BatchElement* elements = batch;
 					batchs[i] = batch;
-					for (Size i = 0; i < BatchSize; i++) {
-						freeSlots.pushBack(elements[i].data.valueAsPtr());
+					for (Size j = 0; j < BatchSize; j++) {
+						freeSlots.pushBack(elements[j].data.valueAsPtr());
 					}
 				}
 			}

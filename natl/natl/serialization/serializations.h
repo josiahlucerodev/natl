@@ -17,13 +17,16 @@ namespace natl {
 	struct Serialize<BaseString<CharType, bufferSize, Alloc, EnableDynAllocation, EnableIncreasedSmallBufferSize>> {
 		using as_type = SerializeStr;
 		using type = BaseString<CharType, bufferSize, Alloc, EnableDynAllocation, EnableIncreasedSmallBufferSize>;
-		template<typename Serializer> using error_type = void;
+		template<typename Serializer> using error_type = StandardSerializeError<Serializer>;
+		constexpr static ConstAsciiStringView sourceName = "natl::Serialize<natl::BaseString<...>>::write";
 
 		template<typename Serializer, SerializeWriteFlag Flags,
 			CustomSerializeWriteFlag<Serializer> CustomFlags, typename SerializeComponentType>
 			requires(IsSerializerC<Serializer>&& IsSerializeComponentC<SerializeComponentType>&& CanSerializeStrC<Serializer>)
-		constexpr static void write(Serializer& serializer, const type& str) noexcept {
-			serializer.template writeStr<Flags, CustomFlags, SerializeComponentType>(str.toStringView());
+		[[nodiscard]] constexpr static Option<error_type<Serializer>> write(Serializer& serializer, const type& str) noexcept {
+			auto error = serializer.template writeStr<Flags, CustomFlags, SerializeComponentType>(str.toStringView());
+			if (error.hasValue()) { return error.value().addSource(sourceName); }
+			return natl::OptionEmpty{};
 		}
 	};
 
@@ -34,13 +37,13 @@ namespace natl {
 	struct Deserialize<BaseString<CharType, bufferSize, Alloc, EnableDynAllocation, EnableIncreasedSmallBufferSize>> {
 		using as_type = SerializeStr;
 		using type = BaseString<CharType, bufferSize, Alloc, EnableDynAllocation, EnableIncreasedSmallBufferSize>;
-		constexpr static ConstAsciiStringView sourceName = "Deserialize<BaseString<...>>::read";
+		constexpr static ConstAsciiStringView sourceName = "natl::Deserialize<natl::BaseString<...>>::read";
 		template<typename Deserializer> using error_type = StandardDeserializeError<Deserializer>;
 
 		template<typename Deserializer, DeserializeReadFlag Flags,
 			CustomDeserializeReadFlag<Deserializer> CustomFlags, typename SerializeComponentType>
 			requires(IsDeserializerC<Deserializer>&& IsSerializeComponentC<SerializeComponentType>&& CanDeserializeStrC<Deserializer>)
-		constexpr static Option<error_type<Deserializer>>
+		[[nodiscard]] constexpr static Option<error_type<Deserializer>>
 			read(Deserializer& deserializer,
 				typename Deserializer::template deserialize_info<as_type>& info,
 				type& dst) noexcept {
@@ -55,42 +58,51 @@ namespace natl {
 	template<typename DataType> struct Serialize<Option<DataType>> {
 		using as_type = SerializeOptional<DataType>;
 		using type = Option<DataType>;
-		template<typename Serializer> using error_type = void;
+		template<typename Serializer> using error_type = StandardSerializeError<Serializer>;
+		constexpr static ConstAsciiStringView sourceName = "natl::Serialize<natl::Option<...>>::write";
 
 		template<typename Serializer, SerializeWriteFlag Flags,
 			CustomSerializeWriteFlag<Serializer> CustomFlags, typename SerializeComponentType,
 			typename... DeserializerArgs>
-			requires(CanSerializeStrC<Serializer> && IsSerializeComponentC<SerializeComponentType> 
-				&& CanDeserializeOptionalC<Serializer> && CanSerializeC<Serializer, DataType>)
-		constexpr static void write(Serializer& serializer, const type& value, DeserializerArgs&&... deserializerArgs) noexcept {
+			requires(CanSerializeStrC<Serializer>&& IsSerializeComponentC<SerializeComponentType>
+				&& CanDeserializeOptionalC<Serializer>&& CanSerializeC<Serializer, DataType>)
+		[[nodiscard]] constexpr static Option<error_type<Serializer>> write(Serializer& serializer, const type& value, DeserializerArgs&&... deserializerArgs) noexcept {
 			if (!value.hasValue()) {
-				serializer.template writeEmptyOptional<Flags, CustomFlags, SerializeComponentType>();
+				auto error = serializer.template writeEmptyOptional<Flags, CustomFlags, SerializeComponentType>();
+				if (error.hasValue()) { return error.value().addSource(sourceName); }
 			} else {
 				using optional_component = SerializeOptionalComponent<type>;
-				serializer.template beginWriteOptional<Flags, CustomFlags, SerializeComponentType>();
-				serializeWrite<Serializer, Flags, CustomFlags, optional_component>(
+
+				auto beginError = serializer.template beginWriteOptional<Flags, CustomFlags, SerializeComponentType>();
+				if (beginError.hasValue()) { return beginError.value().addSource(sourceName); }
+
+				auto error = serializeWrite<Serializer, Flags, CustomFlags, optional_component>(
 					serializer, value.value(), forward<DeserializerArgs>(deserializerArgs)...);
-				serializer.template endWriteOptional<Flags, CustomFlags, SerializeComponentType>();
+				if (error.hasValue()) { return error.value().addSource(sourceName); }
+
+				auto endError = serializer.template endWriteOptional<Flags, CustomFlags, SerializeComponentType>();
+				if (endError.hasValue()) { return endError.value().addSource(sourceName); }
 			}
+			return natl::OptionEmpty{};
 		}
 	};
 
 	template<typename DataType> struct Deserialize<Option<DataType>> {
 		using as_type = SerializeChar;
 		using type = Option<DataType>;
-		constexpr static ConstAsciiStringView sourceName = "Deserialize<Ascii>::read";
+		constexpr static ConstAsciiStringView sourceName = "natl::Deserialize<natl::Option<...>>::read";
 		template<typename Deserializer> using error_type = StandardDeserializeError<Deserializer>;
 
 		template<typename Deserializer, DeserializeReadFlag Flags, CustomDeserializeReadFlag<Deserializer> CustomFlags,
 			typename SerializeComponentType, typename... DeserializerArgs>
-			requires(IsDeserializerC<Deserializer> && IsSerializeComponentC<SerializeComponentType> 
-				&& CanDeserializeOptionalC<Deserializer> && CanDeserializeC<Deserializer, DataType>)
-		constexpr static Option<error_type<Deserializer>>
+			requires(IsDeserializerC<Deserializer>&& IsSerializeComponentC<SerializeComponentType>
+				&& CanDeserializeOptionalC<Deserializer>&& CanDeserializeC<Deserializer, DataType>)
+		[[nodiscard]] constexpr static Option<error_type<Deserializer>>
 			read(Deserializer& deserializer,
 				typename Deserializer::template deserialize_info<as_type>& info,
 				type& dst,
 				DeserializerArgs&&... deserializerArgs) noexcept {
-			auto isNullExpect = deserializer.template readIsOptionalNull
+			auto isNullExpect = deserializer.template readIsEmptyOptional
 				<Flags, CustomFlags, SerializeComponentType>(info);
 			if (isNullExpect.hasError()) {
 				return isNullExpect.error().addSource(sourceName, "");
@@ -100,7 +112,7 @@ namespace natl {
 			}
 
 			auto optionalInfoExpect = deserializer.template beginReadOptional
-				<Flags, CustomFlags, SerializeComponentType>(isNullExpect.value(), info);
+				<Flags, CustomFlags, SerializeComponentType>(info);
 			if (optionalInfoExpect.hasError()) {
 				return optionalInfoExpect.error().addSource(sourceName, "");
 			}
@@ -129,40 +141,52 @@ namespace natl {
 	struct Serialize<Variant<Elements...>> {
 		using as_type = SerializeVariant<ui64, Decay<typename Elements::value_type>...>;
 		using type = Variant<Elements...>;
-		template<typename Serializer> using error_type = void;
+		template<typename Serializer> using error_type = StandardSerializeError<Serializer>;
+		constexpr static ConstAsciiStringView sourceName = "natl::Serialize<natl::Variant<...>>::write";
 
 		template<typename Serializer>
-		using VariantSerializeFunction = void(*)(Serializer&, const type&);
+		using VariantSerializeFunction = Option<error_type<Serializer>>(*)(Serializer&, const type&);
 
 		template<typename Serializer, SerializeWriteFlag Flags,
 			CustomSerializeWriteFlag<Serializer> CustomFlags, typename SerializeComponentType,
 			typename Element, Size Index>
 		constexpr static VariantSerializeFunction<Serializer> getSerializeFunction() noexcept {
-			return [](Serializer& serializer, const type& value) -> void {
-				using variant_member = SerializeVariantComponent<type, Index>;
-				serializer.template beginWriteVariant<Flags, CustomFlags, SerializeComponentType, as_type, Index>(Element::name);
-				Serialize<Decay<typename Element::value_type>>::template write<Serializer, Flags, CustomFlags, variant_member>(serializer,
+			return [](Serializer& serializer, const type& value) -> Option<error_type<Serializer>> {
+				using variant_member = SerializeVariantComponent<type, typename type::elements::template at<Index>,Index>;
+
+				auto beginError = serializer.template beginWriteVariant<Flags, CustomFlags, SerializeComponentType, as_type, Index>(Element::name);
+				if (beginError.hasValue()) { return beginError.value().addSource(sourceName); }
+				
+				auto error = Serialize<Decay<typename Element::value_type>>::template write<Serializer, Flags, CustomFlags, variant_member>(serializer,
 					value.template get<Index>()
 				);
-				serializer.template endWriteVariant<Flags, CustomFlags, SerializeComponentType, as_type>();
-				};
+				if (error.hasValue()) { return error.value().addSource(sourceName); }
+				
+				auto endError = serializer.template endWriteVariant<Flags, CustomFlags, SerializeComponentType, as_type>();
+				if (endError.hasValue()) { return endError.value().addSource(sourceName); }
+				return natl::OptionEmpty{};
+			};
 		}
 
 		template<typename Serializer, SerializeWriteFlag Flags,
 			CustomSerializeWriteFlag<Serializer> CustomFlags, typename SerializeComponentType>
-			requires(IsSerializerC<Serializer> && IsSerializeComponentC<SerializeComponentType> 
+			requires(IsSerializerC<Serializer>&& IsSerializeComponentC<SerializeComponentType>
 				&& CanSerializeVariantC<Serializer> && (CanSerializeC<Serializer, typename Elements::value_type> && ...))
-		constexpr static void write(Serializer& serializer, const type& value) noexcept {
-			[&] <Size... Indices>(IndexSequence<Indices...>) -> void {
+		[[nodiscard]] constexpr static Option<error_type<Serializer>> write(Serializer& serializer, const type& value) noexcept {
+			return [&] <Size... Indices>(IndexSequence<Indices...>) -> Option<error_type<Serializer>> {
 				VariantSerializeFunction<Serializer> serializeFunctions[sizeof...(Elements)] = {
 					getSerializeFunction<Serializer, Flags, CustomFlags, SerializeComponentType, Elements, Indices>()...
 				};
 
 				if (value.hasValue()) {
-					serializeFunctions[value.getIndex() - 1](serializer, value);
+					auto valueError = serializeFunctions[value.getIndex() - 1](serializer, value);
+					if (valueError.hasValue()) { return valueError; }
 				} else {
-					serializer.template writeEmptyVariant<Flags, CustomFlags, SerializeComponentType>();
+					auto emptyError = serializer.template writeEmptyVariant<Flags, CustomFlags, SerializeComponentType, as_type>();
+					if (emptyError.hasValue()) { return emptyError.value().addSource(sourceName); }
 				}
+
+				return natl::OptionEmpty{};
 			}(MakeIndexSequence<sizeof...(Elements)>{});
 		}
 	};
@@ -172,7 +196,7 @@ namespace natl {
 	struct Deserialize<Variant<Elements...>> {
 		using as_type = SerializeTypeOf<Variant<Elements...>>;
 		using type = Variant<Elements...>;
-		constexpr static ConstAsciiStringView sourceName = "Deserialize<Variant<Elements...>>::read";
+		constexpr static ConstAsciiStringView sourceName = "natl::Deserialize<natl::Variant<...>>::read";
 		template<typename Deserializer> using error_type = StandardDeserializeError<Deserializer>;
 
 		template<typename Deserializer>
@@ -185,36 +209,36 @@ namespace natl {
 			return [](Deserializer& deserializer,
 				typename Deserializer::template deserialize_info<as_type>& variantInfo,
 				type& dst) -> Option<error_type<Deserializer>> {
-					using element_type = typename Element::value_type;
-					using element_serialize_type = SerializeTypeOf<element_type>;
+				using element_type = typename Element::value_type;
+				using element_serialize_type = SerializeTypeOf<element_type>;
 
-					auto variantElementExpect = deserializer.template beginReadVariantOfType<
-						Flags, CustomFlags, SerializeComponentType, element_type>(variantInfo);
-					if (variantElementExpect.hasError()) {
-						return variantElementExpect.error();
-					}
-					auto variantElementInfo = variantElementExpect.value();
+				auto variantElementExpect = deserializer.template beginReadVariantOfType<
+					Flags, CustomFlags, SerializeComponentType, element_type>(variantInfo);
+				if (variantElementExpect.hasError()) {
+					return variantElementExpect.error();
+				}
+				auto variantElementInfo = variantElementExpect.value();
 
-					using variant_component = SerializeVariantComponent<type, Index>;
-					auto expectValue = deserializeReadMatch<element_serialize_type, Deserializer,
-						Flags, CustomFlags, variant_component, element_type>(
-							deserializer, variantElementInfo);
-					if (expectValue.hasError()) {
-						return expectValue.error();
-					}
+				using variant_component = SerializeVariantComponent<type, typename type::elements::template at<Index>, Index>;
+				auto expectValue = deserializeReadMatch<element_serialize_type, Deserializer,
+					Flags, CustomFlags, variant_component, element_type>(
+						deserializer, variantElementInfo);
+				if (expectValue.hasError()) {
+					return expectValue.error();
+				}
 
-					dst.template assign<Index>(move(expectValue.value()));
+				dst.template assign<Index>(move(expectValue.value()));
 
-					return deserializer.template endReadVariant<
-						Flags, CustomFlags, SerializeComponentType>(variantInfo);
-				};
+				return deserializer.template endReadVariant<
+					Flags, CustomFlags, SerializeComponentType>(variantInfo);
+			};
 		}
 
 		template<typename Deserializer, DeserializeReadFlag Flags,
 			CustomDeserializeReadFlag<Deserializer> CustomFlags, typename SerializeComponentType>
-			requires(IsDeserializerC<Deserializer> && IsSerializeComponentC<SerializeComponentType> 
+			requires(IsDeserializerC<Deserializer>&& IsSerializeComponentC<SerializeComponentType>
 				&& CanDeserializeVariantC<Deserializer> && (CanDeserializeC<Deserializer, typename Elements::value_type> && ...))
-		constexpr static Option<error_type<Deserializer>>
+		[[nodiscard]] constexpr static Option<error_type<Deserializer>>
 			read(Deserializer& deserializer,
 				typename Deserializer::template deserialize_info<as_type>& variantInfo,
 				type& dst) noexcept {
@@ -231,7 +255,6 @@ namespace natl {
 
 			auto variantIndexExpect = deserializer.template beginReadVariantGetIndex<Flags, CustomFlags, SerializeComponentType>(
 				variantInfo,
-				isEmpty,
 				type::stringToIndexNotShiftedStatic);
 			if (variantIndexExpect.hasError()) {
 				return variantIndexExpect.error().addSource(sourceName, "");
@@ -271,42 +294,57 @@ namespace natl {
 	struct Serialize<impl::BaseFlatHashMap<DynamicArrayType, KeyType, ValueType, Hash, Compare>> {
 		using as_type = SerializeDic<KeyType, ValueType>;
 		using type = impl::BaseFlatHashMap<DynamicArrayType, KeyType, ValueType, Hash, Compare>;
-		template<typename Serializer> using error_type = void;
+		template<typename Serializer> using error_type = StandardSerializeError<Serializer>;
+		constexpr static ConstAsciiStringView sourceName = "natl::Serialize<natl::BaseFlatHashMap<...>>::write";
 
 		template<typename Serializer, SerializeWriteFlag Flags,
 			CustomSerializeWriteFlag<Serializer> CustomFlags, typename SerializeComponentType,
 			typename... KeySerializerArgs, typename... ValueSerializerArgs>
-			requires(IsSerializerC<Serializer> && IsSerializeComponentC<SerializeComponentType> 
-				&& CanSerializeDicC<Serializer> && CanSerializeC<Serializer, KeyType> && CanSerializeC<Serializer, ValueType>)
-		constexpr static void write(Serializer& serializer, const type& dic,
-			const FuncArgs<KeySerializerArgs...>& keySerializerArgs = {},
-			const FuncArgs<ValueSerializerArgs...>& valueSerializerArgs = {}) noexcept {
+			requires(IsSerializerC<Serializer>&& IsSerializeComponentC<SerializeComponentType>
+				&& CanSerializeDicC<Serializer>&& CanSerializeC<Serializer, KeyType>&& CanSerializeC<Serializer, ValueType>)
+		[[nodiscard]] constexpr static Option<error_type<Serializer>> write(Serializer& serializer, const type& dic,
+				const FuncArgs<KeySerializerArgs...>& keySerializerArgs = {},
+				const FuncArgs<ValueSerializerArgs...>& valueSerializerArgs = {}) noexcept {
 			if (dic.size() == 0) {
-				serializer.template writeEmptyDic<Flags, CustomFlags, SerializeComponentType>();
-				return;
+				auto emptyError = serializer.template writeEmptyDic<Flags, CustomFlags, SerializeComponentType>();
+				if (emptyError.hasValue()) { return emptyError.value().addSource(sourceName); }
+				return natl::OptionEmpty{};
 			}
 
-			serializer.template beginWriteDic<Flags, CustomFlags, SerializeComponentType>(dic.size());
-			for (auto&& [key, value] : dic) {
-				serializer.template beginWriteDicElement<Flags, CustomFlags, SerializeComponentType>();
+			auto beginError = serializer.template beginWriteDic<Flags, CustomFlags, SerializeComponentType>(dic.size());
+			if (beginError.hasValue()) { return beginError.value().addSource(sourceName); }
 
-				serializer.template writeDicKey<Flags, CustomFlags, SerializeComponentType>();
+			for (auto&& [key, value] : dic) {
+				auto beginElementError = serializer.template beginWriteDicElement<Flags, CustomFlags, SerializeComponentType>();
+				if (beginElementError.hasValue()) { return beginElementError.value().addSource(sourceName); }
+
 				using dic_key_member = SerializeDicKeyComponent<type>;
-				[&] <Size... Indices> (IndexSequence<Indices...>) {
+				auto keyError = serializer.template writeDicKey<Flags, CustomFlags, dic_key_member>();
+				if (keyError.hasValue()) { return keyError.value().addSource(sourceName); }
+				
+				auto keyWriteError = [&] <Size... Indices> (IndexSequence<Indices...>) {
 					return serializeWrite<Serializer, Flags, CustomFlags, dic_key_member, KeyType, KeySerializerArgs...>(
 						serializer, key, forward<KeySerializerArgs>(keySerializerArgs.template get<Indices>())...);
 				}(MakeIndexSequence<sizeof...(KeySerializerArgs)>{});
+				if (keyWriteError.hasValue()) { return keyWriteError.value().addSource(sourceName); }
 
-				serializer.template writeDicValue<Flags, CustomFlags, SerializeComponentType>();
 				using dic_value_member = SerializeDicValueComponent<type>;
-				[&] <Size... Indices> (IndexSequence<Indices...>) {
+				auto valueError = serializer.template writeDicValue<Flags, CustomFlags, dic_value_member>();
+				if (valueError.hasValue()) { return valueError.value().addSource(sourceName); }
+				
+				auto valueWriteError = [&] <Size... Indices> (IndexSequence<Indices...>) {
 					return serializeWrite<Serializer, Flags, CustomFlags, dic_value_member, KeyType, ValueSerializerArgs...>(
 						serializer, value, forward<ValueSerializerArgs>(valueSerializerArgs.template get<Indices>())...);
 				}(MakeIndexSequence<sizeof...(ValueSerializerArgs)>{});
+				if (valueWriteError.hasValue()) { return valueWriteError.value().addSource(sourceName); }
 
-				serializer.template endWriteDicElement<Flags, CustomFlags, SerializeComponentType>();
+				auto endElementError = serializer.template endWriteDicElement<Flags, CustomFlags, SerializeComponentType>();
+				if (endElementError.hasValue()) { return endElementError.value().addSource(sourceName); }
 			}
-			serializer.template endWriteDic<Flags, CustomFlags, SerializeComponentType>();
+			
+			auto endError = serializer.template endWriteDic<Flags, CustomFlags, SerializeComponentType>();
+			if (endError.hasValue()) { return endError.value().addSource(sourceName); }
+			return natl::OptionEmpty{};
 		}
 	};
 
@@ -316,15 +354,15 @@ namespace natl {
 	struct Deserialize<impl::BaseFlatHashMap<DynamicArrayType, KeyType, ValueType, Hash, Compare>> {
 		using type = impl::BaseFlatHashMap<DynamicArrayType, KeyType, ValueType, Hash, Compare>;
 		using as_type = SerializeTypeOf<type>;
-		constexpr static ConstAsciiStringView sourceName = "Deserialize<BaseFlatHashMap<...>>::read";
+		constexpr static ConstAsciiStringView sourceName = "natl::Deserialize<natl::BaseFlatHashMap<...>>::read";
 		template<typename Deserializer> using error_type = StandardDeserializeError<Deserializer>;
 
 		template<typename Deserializer, DeserializeReadFlag Flags,
 			CustomDeserializeReadFlag<Deserializer> CustomFlags, typename SerializeComponentType,
 			typename... KeyDeserializerArgs, typename... ValueDeserializerArgs>
-			requires(IsDeserializerC<Deserializer> && IsSerializeComponentC<SerializeComponentType> 
-				&& CanDeserializeDicC<Deserializer> && CanDeserializeC<Deserializer, KeyType> && CanDeserializeC<Deserializer, ValueType>)
-		constexpr static Option<error_type<Deserializer>>
+			requires(IsDeserializerC<Deserializer>&& IsSerializeComponentC<SerializeComponentType>
+				&& CanDeserializeDicC<Deserializer>&& CanDeserializeC<Deserializer, KeyType>&& CanDeserializeC<Deserializer, ValueType>)
+		[[nodiscard]] constexpr static Option<error_type<Deserializer>>
 			read(Deserializer& deserializer,
 				typename Deserializer::template deserialize_info<as_type>& info,
 				type& dst,
@@ -406,28 +444,40 @@ namespace natl {
 	struct Serialize<DynArray<DataType, Alloc>> {
 		using as_type = SerializeArray<Decay<DataType>>;
 		using type = DynArray<DataType, Alloc>;
-		template<typename Serializer> using error_type = void;
+		template<typename Serializer> using error_type = StandardSerializeError<Serializer>;
+		constexpr static ConstAsciiStringView sourceName = "natl::Serialize<natl::DynArray<...>>::write";
 
 		template<typename Serializer, SerializeWriteFlag Flags,
 			CustomSerializeWriteFlag<Serializer> CustomFlags, typename SerializeComponentType,
 			typename... ElementSerializeArgs>
-			requires(IsSerializerC<Serializer> && IsSerializeComponentC<SerializeComponentType> 
-				&& CanSerializeArrayC<Serializer> && CanSerializeC<Serializer, DataType>)
-		constexpr static void write(Serializer& serializer, const type& array, ElementSerializeArgs&&... elementSerializeArgs) noexcept {
+			requires(IsSerializerC<Serializer>&& IsSerializeComponentC<SerializeComponentType>
+				&& CanSerializeArrayC<Serializer>&& CanSerializeC<Serializer, DataType>)
+		[[nodiscard]] constexpr static Option<error_type<Serializer>> write(Serializer& serializer, const type& array, ElementSerializeArgs&&... elementSerializeArgs) noexcept {
 			if (array.isEmpty()) {
-				serializer.template writeEmptyArray<Flags, CustomFlags, SerializeComponentType>();
+				auto emptyError = serializer.template writeEmptyArray<Flags, CustomFlags, SerializeComponentType>();
+				if (emptyError.hasValue()) { return emptyError.value().addSource(sourceName); }
 			} else {
-				serializer.template beginWriteArray<Flags, CustomFlags, SerializeComponentType>(array.size());
+				auto beginError = serializer.template beginWriteArray<Flags, CustomFlags, SerializeComponentType>(array.size());
+				if (beginError.hasValue()) { return beginError.value().addSource(sourceName); }
+				
 				for (Size i = 0; i < array.size(); i++) {
 					using array_member = SerializeArrayComponent<type>;
 
-					serializer.template beginWriteArrayElement<Flags, CustomFlags, array_member>();
-					serializeWrite<Serializer, Flags, CustomFlags, array_member>(
+					auto beginElementError = serializer.template beginWriteArrayElement<Flags, CustomFlags, array_member>();
+					if (beginElementError.hasValue()) { return beginElementError.value().addSource(sourceName); }
+
+					auto elementWriteError = serializeWrite<Serializer, Flags, CustomFlags, array_member>(
 						serializer, array[i], forward<ElementSerializeArgs>(elementSerializeArgs)...);
-					serializer.template endWriteArrayElement<Flags, CustomFlags, array_member>();
+					if (elementWriteError.hasValue()) { return elementWriteError.value().addSource(sourceName); }
+
+					auto endElementError = serializer.template endWriteArrayElement<Flags, CustomFlags, array_member>();
+					if (endElementError.hasValue()) { return endElementError.value().addSource(sourceName); }
 				}
-				serializer.template endWriteArray<Flags, CustomFlags, SerializeComponentType>();
+
+				auto endError = serializer.template endWriteArray<Flags, CustomFlags, SerializeComponentType>();
+				if (endError.hasValue()) { return endError.value().addSource(sourceName); }
 			}
+			return natl::OptionEmpty{};
 		}
 	};
 
@@ -442,9 +492,9 @@ namespace natl {
 
 		template<typename Deserializer, DeserializeReadFlag Flags, CustomDeserializeReadFlag<Deserializer> CustomFlags,
 			typename SerializeComponentType, typename... DeserializerArgs>
-			requires(IsDeserializerC<Deserializer> && IsSerializeComponentC<SerializeComponentType> 
-				&& CanDeserializeArrayC<Deserializer> && CanDeserializeC<Deserializer, DataType>)
-		constexpr static Option<error_type<Deserializer>>
+			requires(IsDeserializerC<Deserializer>&& IsSerializeComponentC<SerializeComponentType>
+				&& CanDeserializeArrayC<Deserializer>&& CanDeserializeC<Deserializer, DataType>)
+		[[nodiscard]] constexpr static Option<error_type<Deserializer>>
 			read(Deserializer& deserializer,
 				typename Deserializer::template deserialize_info<as_type>& info,
 				type& dst,
@@ -500,28 +550,40 @@ namespace natl {
 	struct Serialize<SmallDynArray<DataType, bufferSize, allocator_type>> {
 		using as_type = SerializeArray<SerializeTypeOf<DataType>>;
 		using type = SmallDynArray<DataType, bufferSize, allocator_type>;
-		template<typename Serializer> using error_type = void;
+		template<typename Serializer> using error_type = StandardSerializeError<Serializer>;
+		constexpr static ConstAsciiStringView sourceName = "natl::Serialize<natl::SmallDynArray<...>>::write";
 
 		template<typename Serializer, SerializeWriteFlag Flags,
 			CustomSerializeWriteFlag<Serializer> CustomFlags, typename SerializeComponentType,
 			typename... ElementSerializeArgs>
 			requires(IsSerializerC<Serializer> && IsSerializeComponentC<SerializeComponentType> 
 				&& CanSerializeArrayC<Serializer> && CanSerializeC<Serializer, DataType>)
-		constexpr static void write(Serializer& serializer, const type& array, ElementSerializeArgs&&... elementSerializeArgs) noexcept {
+		[[nodiscard]] constexpr static Option<error_type<Serializer>> write(Serializer& serializer, const type& array, ElementSerializeArgs&&... elementSerializeArgs) noexcept {
 			if (array.isEmpty()) {
-				serializer.template writeEmptyArray<Flags, CustomFlags, SerializeComponentType>();
+				auto emptyError = serializer.template writeEmptyArray<Flags, CustomFlags, SerializeComponentType>();
+				if (emptyError.hasValue()) { return emptyError.value().addSource(sourceName); }
 			} else {
-				serializer.template beginWriteArray<Flags, CustomFlags, SerializeComponentType>(array.size());
+				auto beginError = serializer.template beginWriteArray<Flags, CustomFlags, SerializeComponentType>(array.size());
+				if (beginError.hasValue()) { return beginError.value().addSource(sourceName); }
+
 				for (Size i = 0; i < array.size(); i++) {
 					using array_member = SerializeArrayComponent<type>;
 
-					serializer.template beginWriteArrayElement<Flags, CustomFlags, array_member>();
-					serializeWrite<Serializer, Flags, CustomFlags, array_member>(
+					auto beginElementError = serializer.template beginWriteArrayElement<Flags, CustomFlags, array_member>();
+					if (beginElementError.hasValue()) { return beginElementError.value().addSource(sourceName); }
+
+					auto elementWriteError = serializeWrite<Serializer, Flags, CustomFlags, array_member>(
 						serializer, array[i], forward<ElementSerializeArgs>(elementSerializeArgs)...);
-					serializer.template endWriteArrayElement<Flags, CustomFlags, array_member>();
+					if (elementWriteError.hasValue()) { return elementWriteError.value().addSource(sourceName); }
+
+					auto endElementError = serializer.template endWriteArrayElement<Flags, CustomFlags, array_member>();
+					if (endElementError.hasValue()) { return endElementError.value().addSource(sourceName); }
 				}
-				serializer.template endWriteArray<Flags, CustomFlags, SerializeComponentType>();
+
+				auto endError = serializer.template endWriteArray<Flags, CustomFlags, SerializeComponentType>();
+				if (endError.hasValue()) { return endError.value().addSource(sourceName); }
 			}
+			return natl::OptionEmpty{};
 		}
 	};
 

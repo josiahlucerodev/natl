@@ -262,6 +262,8 @@ namespace natl {
 	template<typename... AnyTypes> using MakeVoid = MakeVoidT<AnyTypes...>::type;
 	template <typename... Types> using Void = void;
 
+	struct NoReturn {};
+
 
 	template<typename DataType, template<typename...> typename Primary>
 	struct IsSpecializationV : FalseType {};
@@ -904,7 +906,7 @@ namespace natl {
 	template<typename Type> constexpr inline Bool IsCopyableStorageDst = IsCopyableStorageDstT<Type>::value;
 	template<typename Type> concept IsCopyableStorageDstC = IsCopyableStorageDstT<Type>::value;
 
-	template<typename Type> concept IsByteLikeC = IsConvertibleC<Type, ui8>;
+	template<typename Type> concept IsByteLikeC = sizeof(Type) == 1;
 	template<typename Type> struct IsByteLikeT : BoolConstant<IsByteLikeC<Type>> {};
 	template<typename Type> constexpr inline Bool IsByteLike = IsByteLikeC<Type>;
 

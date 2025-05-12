@@ -20,7 +20,7 @@ namespace natl {
 		using value_type = DataType;
 		constexpr operator BaseNamedElement() const noexcept { return BaseNamedElement(); };
 	};
-
+	
 	struct BaseVariantAssign {};
 	template<TemplateStringLiteral InputName, typename DataType>
 	struct VariantAssign {
@@ -116,6 +116,11 @@ namespace natl {
 	public:
 		constexpr static Size numberOfVariants = sizeof...(Elements);
 		constexpr static Size emptyVariantValue = 0;
+		using named_elements = TypePack<Elements...>;
+		using types = TypePack<typename Elements::value_type...>;
+		using elements = TypePack<typename Elements::value_type...>;
+
+
 	private:
 		Size variantIndex;
 
@@ -221,6 +226,7 @@ namespace natl {
 		constexpr Variant(const Variant& other) noexcept {
 			if (!other.hasValue()) {
 				variantIndex = 0;
+				return;
 			}
 			constRefConstruct(other);
 		}
@@ -228,8 +234,9 @@ namespace natl {
 		constexpr Variant(Variant&& other) noexcept {
 			if (!other.hasValue()) {
 				variantIndex = 0;
+				return;
 			}
-			moveConstruct(other);
+			moveConstruct(forward<Variant>(other));
 		}
 
 		constexpr ~Variant() noexcept {
@@ -435,6 +442,7 @@ namespace natl {
 		template<TemplateStringLiteral name, typename DataType>
 		constexpr Variant& assign(DataType&& value) noexcept {
 			constexpr Size index = impl::FindIndexofStringLiteral<StringLiteral<name>, StringLiteral<Elements::name>...>::value;
+			using decayed_data_type = Decay<DataType>;
 			if constexpr (index != IndexNotFound::value) {
 				using VariantTypeAtIndex = typename TemplatePackNthElement<index, Elements...>::type::value_type;
 
@@ -443,19 +451,19 @@ namespace natl {
 						if (isConstantEvaluated()) {
 							recursiveStorage.template getRef<index, VariantTypeAtIndex>() = forward<DataType>(value);
 						} else {
-							*reinterpret_cast<DataType*>(byteStorage) = forward<DataType>(value);
+							*reinterpret_cast<decayed_data_type*>(byteStorage) = forward<DataType>(value);
 						}
 					} else {
 						destoryValue();
 						if (isConstantEvaluated()) {
 							natl::construct<VariantTypeAtIndex, VariantTypeAtIndex>(
 								&recursiveStorage.template getRef<index, VariantTypeAtIndex>(),
-								forward<DataType>(value)
+								forward<decayed_data_type>(value)
 							);
 						} else {
 							natl::construct<VariantTypeAtIndex, VariantTypeAtIndex>(
-								reinterpret_cast<DataType*>(byteStorage),
-								forward<DataType>(value)
+								reinterpret_cast<decayed_data_type*>(byteStorage),
+								forward<decayed_data_type>(value)
 							);
 						}
 					}
@@ -608,7 +616,7 @@ namespace natl {
 		}
 
 		//special 
-		private:
+	private:
 		using test_element_str_function = Bool(*)(const ConstAsciiStringView&);
 		template<Size Index, typename Element>
 		constexpr static test_element_str_function getTestElementStrFunction() noexcept {

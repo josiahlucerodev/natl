@@ -8,136 +8,111 @@
 #include "../container/stringView.h"
 #include "../container/string.h"
 #include "../fundamental/expect.h"
+#include "../math/satruatedArithmetic.h"
 
 //interface
 namespace natl {
-	enum struct StringNumericConvertError {
-		unknown = 0,
-		invalid,
-		valueExceedsLimits,
-		none,
+	struct NumericConvertError {
+	public:
+		enum struct Flag {
+			none = 0,
+			noCharacters,
+			valueExceedsUpperLimits,
+			valueExceedsLowerLimits,
+			unknownCharacter,
+			expectedNumericCharacter,
+		};
+
+	public:
+		Flag flag;
+		Size index;
+
+	public:
+		constexpr NumericConvertError() noexcept {};
+		constexpr NumericConvertError(const Flag& flagIn, const Size& indexIn) noexcept 
+			:  flag(flagIn), index(indexIn) {};
+		constexpr NumericConvertError(const Flag& flagIn) noexcept 
+			: flag(flagIn), index(0) {};
 	};
 
-	constexpr ConstStringView convertErrorToStringView(const StringNumericConvertError convertError) {
+	constexpr ConstStringView convertErrorToString(const NumericConvertError::Flag convertError) {
 		switch (convertError) {
-		case StringNumericConvertError::unknown:
-			return "unknown";
-		case StringNumericConvertError::invalid:
-			return "invalid";
-		case StringNumericConvertError::valueExceedsLimits:
-			return "value exceeds numeric Limits";
-		case StringNumericConvertError::none:
+		case NumericConvertError::Flag::none:
 			return "none";
+		case NumericConvertError::Flag::noCharacters:
+			return "noCharacters";
+		case NumericConvertError::Flag::valueExceedsUpperLimits:
+			return "valueExceedsUpperLimits";
+		case NumericConvertError::Flag::valueExceedsLowerLimits:
+			return "valueExceedsLowerLimits";
+		case NumericConvertError::Flag::unknownCharacter:
+			return "unknownCharacter";
+		case NumericConvertError::Flag::expectedNumericCharacter:
+			return "expectedNumericCharacter";
 		default:
-			return "unknown case";
+			unreachable();
 		}
 	}
 
-
-	constexpr ui64 convertDecimalCharacterToNumber(const char& character) noexcept {
-		return static_cast<ui64>(character) - ui64(48);
-	}
-	constexpr Bool checkIfStringConvertInRange(const Bool hardEnd, const Bool softEnd, const ui64 maxEndingPosValue,
-		const ui64 maxTrailingValue, const ui64 number, const ui64 value) noexcept {
-		return hardEnd || (number > maxEndingPosValue && softEnd) || (static_cast<ui64>(number) == maxEndingPosValue && value > maxTrailingValue);
+	template<typename Integer>
+	constexpr Integer convertDecimalCharacterToNumber(const Ascii& character) noexcept {
+		return static_cast<Integer>(character) - Integer(48);
 	}
 	template<typename Integer>
 		requires(IsBuiltInIntegerC<Integer>)
-	constexpr Integer stringDecimalToInt(const ConstStringView& string, StringNumericConvertError& convertError) noexcept {
+	constexpr natl::Expect<Integer, NumericConvertError> stringDecimalToInt(const ConstStringView& string) noexcept {
+		using decayed_integer = Decay<Integer>;
+		
 		if (string.size() == 0) {
-			convertError = StringNumericConvertError::invalid;
-			return 0;
+			return unexpected(NumericConvertError(NumericConvertError::Flag::noCharacters));
 		}
-		if (string.c_str()[0] == '-') {
-			if constexpr (IsBuiltInUnsignedIntegerC<Integer>) {
-				convertError = StringNumericConvertError::invalid;
-				return 0;
+
+		Size index = 0;
+		Bool isNegative = false;
+
+		if constexpr (IsBuiltInSignedIntegerC<decayed_integer>) {
+			if (string[index] == '-') {
+				isNegative = true;
+				index += 1;
+			} else if (string[index] == '+') {
+				isNegative = false;
+				index += 1;
 			}
 		}
 
-		const i64 endIndex = IsBuiltInSignedIntegerC<Integer> && string.c_str()[0] == '-' ? 0 : static_cast<i64>(-1);
-		const Size length = string.length();
-		Conditional<IsBuiltInSignedInteger<Integer>, i64, ui64> value = 0;
-		ui64 mul = 1; ui32 pos = 0;
-
-		for (i64 i = static_cast<i64>(length) - 1; static_cast<i64>(i) > endIndex; i--) {
-			const char numberCharacter = string.c_str()[static_cast<Size>(i)];
-			if (numberCharacter == ',') {
+		decayed_integer value = 0;
+		for (; index < string.size(); index++) {
+			const Ascii character = string[index];
+			if (character == ',') {
 				continue;
 			}
-			if (!isDigit(numberCharacter)) {
-				convertError = StringNumericConvertError::invalid;
-				return 0;
-			}
-			const ui64 number = convertDecimalCharacterToNumber(numberCharacter);
 
-			if constexpr (SameAs<i64, Integer>) { //9223372036854775807
-				if (checkIfStringConvertInRange(pos > 18, pos == 18, 9, 223372036854775807, number, static_cast<ui64>(value))) {
-					convertError = StringNumericConvertError::valueExceedsLimits;
-					return string.c_str()[0] == '-' ? Limits<i64>::min() : Limits<i64>::max();
-				}
+			if (!isDigit(character)) {
+				return unexpected(NumericConvertError(
+					NumericConvertError::Flag::expectedNumericCharacter, index));
 			}
-			else if constexpr (SameAs<ui64, Integer>) { //18,446,744,073,709,551,615
-				if (checkIfStringConvertInRange(pos > 19, pos == 19, 1, 8446744073709551615, number, static_cast<ui64>(value))) {
-					convertError = StringNumericConvertError::valueExceedsLimits;
-					return Limits<ui64>::max();
-				}
+			decayed_integer characterValue = convertDecimalCharacterToNumber<decayed_integer>(character);
+			if constexpr (IsBuiltInSignedIntegerC<decayed_integer>) {
+				characterValue = characterValue > 0 && isNegative ? -characterValue : characterValue;
 			}
 
-			value += static_cast<decltype(value)>(number * mul);
-			mul = mul * 10;
-			pos += 1;
-
-			if constexpr (!SameAs<i64, Integer> && !SameAs<ui64, Integer>) {
-				if (value > Limits<Integer>::max()) {
-					convertError = StringNumericConvertError::valueExceedsLimits;
-					return Limits<Integer>::max();
+			if (natl::math::mulOverflow(value, decayed_integer(10), value) 
+				|| natl::math::addOverflow(value, static_cast<decayed_integer>(characterValue), value)) {
+				if (isNegative) {
+					return unexpected(NumericConvertError(
+						NumericConvertError::Flag::valueExceedsLowerLimits, index));
+				} else {
+					return unexpected(NumericConvertError(
+						NumericConvertError::Flag::valueExceedsUpperLimits, index));
 				}
 			}
 		}
 
-		if constexpr (IsBuiltInSignedIntegerC<Integer>) {
-			if (string.c_str()[0] == '-') {
-				value *= -1;
-			}
-		}
-
-		convertError = StringNumericConvertError::none;
-		return static_cast<Integer>(value);
+		return value;
 	}
 
 	template<typename Integer>
-		requires(IsBuiltInIntegerC<Integer>)
-	constexpr  Integer stringDecimalToInt(const ConstStringView& string) noexcept {
-		StringNumericConvertError convertError;
-		return stringDecimalToInt<Integer>(string, convertError);
-	}
-
-	template<typename Integer>
-		requires(IsBuiltInIntegerC<Integer>)
-	constexpr Expect<Integer, StringNumericConvertError> stringDecimalToIntExpect(const ConstStringView& string) noexcept {
-		StringNumericConvertError convertError = StringNumericConvertError::unknown;
-		Integer value = stringDecimalToInt<Integer>(string, convertError);
-		if (convertError != StringNumericConvertError::none) {
-			return unexpected<StringNumericConvertError>(convertError);
-		} else {
-			return value;
-		}
-	}
-
-	template<typename Integer>
-		requires(IsBuiltInIntegerC<Integer>)
-	constexpr Option<Integer> stringDecimalToIntOption(const ConstStringView& string) noexcept {
-		StringNumericConvertError convertError = StringNumericConvertError::unknown;
-		Integer value = stringDecimalToInt<Integer>(string, convertError);
-		if (convertError != StringNumericConvertError::none) {
-			return OptionEmpty{};
-		} else {
-			return value;
-		}
-	}
-
-	constexpr ui64 convertHexCharacterToNumber(const char& character) noexcept {
+	constexpr Integer convertHexadecimalCharacterToNumber(const Ascii& character) noexcept {
 		switch (character) {
 		case '0': return 0; case '1': return 1;
 		case '2': return 2; case '3': return 3;
@@ -155,87 +130,76 @@ namespace natl {
 	}
 
 	template<typename Integer>
-		requires(IsBuiltInUnsignedIntegerC<Integer>)
-	constexpr Integer stringHexadecimalToInt(const ConstStringView& string, StringNumericConvertError& convertError) noexcept {
+		requires(IsBuiltInIntegerC<Integer>)
+	constexpr natl::Expect<Integer, NumericConvertError> stringHexadecimalToInt(const ConstStringView& string) noexcept {
+		using decayed_integer = Decay<Integer>;
 		if (string.size() == 0) {
-			convertError = StringNumericConvertError::invalid;
-			return 0;
+			return unexpected(NumericConvertError(NumericConvertError::Flag::noCharacters));
 		}
 
-		const Size length = string.length();
+		Size index = 0;
+		Bool isNegative = false;
+
+		if constexpr (IsBuiltInSignedIntegerC<decayed_integer>) {
+			if (string[index] == '-') {
+				isNegative = true;
+				index += 1;
+			} else if (string[index] == '+') {
+				isNegative = false;
+				index += 1;
+			}
+		}
+
+		if (string.size() - index >= 2 && string[index] == '0' 
+			&& (string[index + 1] == 'x' || string[index + 1] == 'X')) {
+			index += 2;
+		}
+
 		ui64 value = 0;
-		ui64 mul = 1; ui32 pos = 0;
-
-		Size endIndex = static_cast<Size>(-1);
-		if (string.length() >= 2 && string.at(0) == '0' && string.at(1) == 'x') {
-			endIndex += 2;
-		}
-
-		for (Size index = length - 1; index > endIndex; index--) {
-			const char numberCharacter = string.c_str()[index];
-			if (numberCharacter == ',' || numberCharacter == '_') {
-				continue;
+		Size numCharacters = 0;
+		for (; index < string.size(); index++) {
+			const Ascii character = string[index];
+			if (not isHexadecimalDigit(character)) {
+				return unexpected(NumericConvertError(
+					NumericConvertError::Flag::expectedNumericCharacter, index));
 			}
-			if (!isHexadecimalDigit(numberCharacter)) {
-				convertError = StringNumericConvertError::invalid;
-				return 0;
-			}
-			const ui64 number = convertHexCharacterToNumber(numberCharacter);
-
-			if constexpr (SameAs<ui64, Integer>) { //0xFFFFFFFFFFFFFFFF
-				if (pos > 15) {
-					convertError = StringNumericConvertError::valueExceedsLimits;
-					return Limits<ui64>::max();
+			numCharacters++;
+			if (numCharacters > (sizeof(Integer) * 2)) {
+				if (isNegative) {
+					return unexpected(NumericConvertError(
+						NumericConvertError::Flag::valueExceedsLowerLimits, index));
+				} else {
+					return unexpected(NumericConvertError(
+						NumericConvertError::Flag::valueExceedsUpperLimits, index));
 				}
 			}
+			const decayed_integer characterValue = convertHexadecimalCharacterToNumber<decayed_integer>(character);
+			value = (value << 4) + characterValue;
+		}
 
-			value += number * mul;
-			mul = mul * 16;
-			pos += 1;
-
-			if constexpr (!SameAs<ui64, Integer>) {
-				if (value > Limits<Integer>::max()) {
-					convertError = StringNumericConvertError::valueExceedsLimits;
-					return Limits<Integer>::max();
-				}
+		if constexpr (IsBuiltInSignedIntegerC<decayed_integer>) {
+			if (isNegative && value > static_cast<ui64>(Limits<Integer>::min())) {
+				return unexpected(NumericConvertError(
+					NumericConvertError::Flag::valueExceedsLowerLimits, index));
+			} else if (value > static_cast<ui64>(Limits<Integer>::max())) {
+				return unexpected(NumericConvertError(
+					NumericConvertError::Flag::valueExceedsUpperLimits, index));
 			}
 		}
 
-		convertError = StringNumericConvertError::none;
-		return static_cast<Integer>(value);
-	}
 
-	template<typename Integer>
-	constexpr Integer stringHexadecimalToInt(const ConstStringView& string) noexcept {
-		StringNumericConvertError convertError;
-		return stringHexadecimalToInt<Integer>(string, convertError);
-	}
-
-	template<typename Integer>
-		requires(IsBuiltInIntegerC<Integer>)
-	constexpr Expect<Integer, StringNumericConvertError> stringHexadecimalToIntExpect(const ConstStringView& string) noexcept {
-		StringNumericConvertError convertError = StringNumericConvertError::unknown;
-		Integer value = stringHexadecimalToInt<Integer>(string, convertError);
-		if (convertError != StringNumericConvertError::none) {
-			return unexpected<StringNumericConvertError>(convertError);
+		if constexpr (IsBuiltInSignedIntegerC<decayed_integer>) {
+			if (isNegative && value == static_cast<ui64>(Limits<decayed_integer>::max()) + 1) {
+				return Limits<decayed_integer>::min();
+			}
+			return isNegative ? -decayed_integer(value) : decayed_integer(value);
 		} else {
-			return value;
+			return static_cast<decayed_integer>(value);
 		}
 	}
 
 	template<typename Integer>
-		requires(IsBuiltInIntegerC<Integer>)
-	constexpr Option<Integer> stringHexadecimalToIntOption(const ConstStringView& string) noexcept {
-		StringNumericConvertError convertError = StringNumericConvertError::unknown;
-		Integer value = stringHexadecimalToInt<Integer>(string, convertError);
-		if (convertError != StringNumericConvertError::none) {
-			return OptionEmpty{};
-		} else {
-			return value;
-		}
-	}
-
-	constexpr ui64 convertBinaryCharacterToNumber(const char& character) noexcept {
+	constexpr Integer convertBinaryCharacterToNumber(const Ascii& character) noexcept {
 		switch (character) {
 		case '0': return 0; case '1': return 1;
 		default: return 0;
@@ -243,176 +207,134 @@ namespace natl {
 	}
 
 	template<typename Integer>
-		requires(IsBuiltInUnsignedIntegerC<Integer>)
-	constexpr Integer stringBinaryToInt(const ConstStringView& string, StringNumericConvertError& convertError) noexcept {
+		requires(IsBuiltInIntegerC<Integer>)
+	constexpr Expect<Integer, NumericConvertError> stringBinaryToInt(const ConstStringView& string) noexcept {
+		using decayed_integer = Decay<Integer>;
 		if (string.size() == 0) {
-			convertError = StringNumericConvertError::invalid;
-			return 0;
+			return unexpected(NumericConvertError(NumericConvertError::Flag::noCharacters));
 		}
 
-		const Size length = string.length();
+		Size index = 0;
+		Bool isNegative = false;
+
+		if constexpr (IsBuiltInSignedIntegerC<decayed_integer>) {
+			if (string[index] == '-') {
+				isNegative = true;
+				index += 1;
+			} else if (string[index] == '+') {
+				isNegative = false;
+				index += 1;
+			}
+		}
+
+		if (string.size() - index >= 2 && string[index] == '0'
+			&& (string[index + 1] == 'b' || string[index + 1] == 'B')) {
+			index += 2;
+		}
+
 		ui64 value = 0;
-		ui64 mul = 1; ui32 pos = 0;
-
-		for (i64 i = static_cast<i64>(length) - 1; i > -1; i--) {
-			const char numberCharacter = string.c_str()[i];
-			if (numberCharacter == ',' || numberCharacter == '_') {
-				continue;
+		Size numCharacters = 0;
+		for (; index < string.size(); index++) {
+			const Ascii character = string[index];
+			if (not isBinaryDigit(character)) {
+				return unexpected(NumericConvertError(
+					NumericConvertError::Flag::expectedNumericCharacter, index));
 			}
-			if (!isBinaryDigit(numberCharacter)) {
-				convertError = StringNumericConvertError::invalid;
-				return 0;
-			}
-			const ui64 number = convertBinaryCharacterToNumber(numberCharacter);
-
-			if constexpr (SameAs<ui64, Integer>) { //1111111111111111111111111111111111111111111111111111111111111111
-				if (pos > 63) {
-					convertError = StringNumericConvertError::valueExceedsLimits;
-					return Limits<ui64>::max();
+			numCharacters++;
+			if (numCharacters > (sizeof(Integer) * 8)) {
+				if (isNegative) {
+					return unexpected(NumericConvertError(
+						NumericConvertError::Flag::valueExceedsLowerLimits, index));
+				} else {
+					return unexpected(NumericConvertError(
+						NumericConvertError::Flag::valueExceedsUpperLimits, index));
 				}
 			}
+			const ui64 characterValue = convertBinaryCharacterToNumber<decayed_integer>(character);
+			value = (value << 1) + characterValue;
+		}
 
-			value += number * mul;
-			mul = mul * 2;
-			pos += 1;
-
-			if constexpr (!SameAs<ui64, Integer>) {
-				if (value > Limits<Integer>::max()) {
-					convertError = StringNumericConvertError::valueExceedsLimits;
-					return Limits<Integer>::max();
-				}
+		if constexpr (IsBuiltInSignedIntegerC<decayed_integer>) {
+			if (isNegative && value > static_cast<ui64>(Limits<decayed_integer>::min())) {
+				return unexpected(NumericConvertError(
+					NumericConvertError::Flag::valueExceedsLowerLimits, index));
+			} else if (value > static_cast<ui64>(Limits<decayed_integer>::max())) {
+				return unexpected(NumericConvertError(
+					NumericConvertError::Flag::valueExceedsUpperLimits, index));
 			}
 		}
 
-		convertError = StringNumericConvertError::none;
-		return static_cast<Integer>(value);
-	}
-
-	template<typename Integer>
-		requires(IsBuiltInIntegerC<Integer>)
-	constexpr Integer stringBinaryToInt(const ConstStringView& string) noexcept {
-		StringNumericConvertError convertError;
-		return stringBinaryToInt<Integer>(string, convertError);
-	}
-
-	template<typename Integer>
-		requires(IsBuiltInIntegerC<Integer>)
-	constexpr Expect<Integer, StringNumericConvertError> stringBinaryToIntExpect(const ConstStringView& string) noexcept {
-		StringNumericConvertError convertError = StringNumericConvertError::unknown;
-		Integer value = stringBinaryToInt<Integer>(string, convertError);
-		if (convertError != StringNumericConvertError::none) {
-			return unexpected<StringNumericConvertError>(convertError);
+		if constexpr (IsBuiltInSignedIntegerC<decayed_integer>) {
+			if (isNegative && value == static_cast<ui64>(Limits<decayed_integer>::max()) + 1) {
+				return Limits<decayed_integer>::min();
+			}
+			return isNegative ? -decayed_integer(value) : decayed_integer(value);
 		} else {
-			return value;
-		}
-	}
-
-	template<typename Integer>
-		requires(IsBuiltInIntegerC<Integer>)
-	constexpr Option<Integer> stringBinaryToIntOption(const ConstStringView& string) noexcept {
-		StringNumericConvertError convertError = StringNumericConvertError::unknown;
-		Integer value = stringBinaryToInt<Integer>(string, convertError);
-		if (convertError != StringNumericConvertError::none) {
-			return OptionEmpty{};
-		} else {
-			return value;
+			return static_cast<decayed_integer>(value);
 		}
 	}
 
 	template<typename Float>
 		requires(IsBuiltInFloatingPointC<Float>)
-	constexpr Float stringDecimalToFloat(const ConstStringView& string, StringNumericConvertError& convertError) noexcept {
+	constexpr Expect<Float, NumericConvertError> stringDecimalToFloat(const ConstStringView& string) noexcept {
 		if (string.size() == 0) {
-			convertError = StringNumericConvertError::invalid;
-			return 0;
+			return unexpected(NumericConvertError(NumericConvertError::Flag::noCharacters));
 		}
 
-		const Size length = string.length();
-		Float result = 0.0f; 
 		Bool isNegative = false;
-		Bool decimalFound = false;
-		Float decimalMul = 10.0f;
 		Size index = 0;
 
-		// Check for a sign
-		if (string.c_str()[0] == '-') {
+		if (string[index] == '-') {
 			isNegative = true;
 			++index;
 		}
-		else if (string.c_str()[0] == '+') {
+		else if (string[index] == '+') {
 			isNegative = false;
 			++index;
 		}
 
-		for (; index < length; ++index) {
-			const char numberCharacter = string.c_str()[index];
+		Float result = 0.0f; 
+		Bool decimalFound = false;
+		Float decimalMul = 10.0f;
+		Size numberOfCharacters = 0;
 
-			if (isDigit(numberCharacter)) {
-				const ui64 number = convertDecimalCharacterToNumber(numberCharacter);
+		for (; index < string.size(); ++index) {
+			const Ascii valueCharacter = string[index];
+			numberOfCharacters++;
+
+			if (isDigit(valueCharacter)) {
+				const ui64 number = convertDecimalCharacterToNumber<ui64>(valueCharacter);
 				if (decimalFound) {
 					result = result + (static_cast<Float>(number) / decimalMul);
 					decimalMul *= 10.0f;
-				}
-				else {
+				} else {
+					constexpr Size maxNumOfCharacter = IsSameC<f32, Decay<Float>> ? 38 : 308;
+					if (numberOfCharacters > maxNumOfCharacter) {
+						if (isNegative) {
+							return unexpected(NumericConvertError(
+								NumericConvertError::Flag::valueExceedsLowerLimits, index));
+						} else {
+							return unexpected(NumericConvertError(
+								NumericConvertError::Flag::valueExceedsUpperLimits, index));
+						}
+					}
 					result = result * 10.0f + static_cast<Float>(number);
 				}
-
-			}
-			else if (numberCharacter == '.') {
+			} else if (valueCharacter == '.') {
 				if (decimalFound) {
-					convertError = StringNumericConvertError::invalid;
-					return 0;
+					return unexpected(NumericConvertError(
+						NumericConvertError::Flag::unknownCharacter, index));
 				}
-
 				decimalFound = true;
-			}
-			else {
-				convertError = StringNumericConvertError::invalid;
+				numberOfCharacters = 0;
+			} else {
+				return unexpected(NumericConvertError(
+					NumericConvertError::Flag::expectedNumericCharacter, index));
 				return 0;
 			}
 		}
 
-		if (result > Limits<Float>::max() && !isNegative) {
-			convertError = StringNumericConvertError::valueExceedsLimits;
-			return Limits<Float>::max();
-		} else if (result < Limits<Float>::min() && isNegative) {
-			convertError = StringNumericConvertError::valueExceedsLimits;
-			return Limits<Float>::min();
-		}
-
-		convertError = StringNumericConvertError::none;
 		return isNegative ? -result : result;
-	}
-
-	template<typename Float>
-		requires(IsBuiltInFloatingPointC<Float>)
-	constexpr Float stringDecimalToFloat(const ConstStringView& string) noexcept {
-		StringNumericConvertError convertError;
-		return stringDecimalToFloat<Float>(string, convertError);
-	}
-
-	template<typename Float>
-		requires(IsBuiltInFloatingPointC<Float>)
-	constexpr Expect<Float, StringNumericConvertError> stringToFloatExpect(const ConstStringView& string) noexcept {
-		StringNumericConvertError convertError = StringNumericConvertError::unknown;
-		Float value = stringDecimalToFloat<Float>(string, convertError);
-		if (convertError != StringNumericConvertError::none) {
-			return unexpected<StringNumericConvertError>(convertError);
-		} else {
-			return value;
-		}
-	}
-
-	template<typename Float>
-		requires(IsBuiltInFloatingPointC<Float>)
-	constexpr Option<Float> stringToFloatOption(const ConstStringView& string) noexcept {
-		StringNumericConvertError convertError = StringNumericConvertError::unknown;
-		Float value = stringDecimalToFloat<Float>(string, convertError);
-		if (convertError != StringNumericConvertError::none) {
-			return OptionEmpty{};
-		} else {
-			return value;
-		}
 	}
 
 	template<typename DynStringContainer>

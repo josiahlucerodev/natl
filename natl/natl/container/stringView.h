@@ -915,4 +915,43 @@ namespace natl {
 
 	template<typename DataType>
 	struct IsCopyableStorageDstT<BaseStringView<DataType>> : TrueType {};
+
+	struct DummyString {
+	public:
+		constexpr DummyString() noexcept;
+		constexpr ~DummyString() noexcept;
+		constexpr Size size() noexcept;
+		constexpr void reserve(Size) noexcept;
+		constexpr void resize(Size) noexcept;
+		constexpr void pushBack(Ascii) noexcept;
+		constexpr Ascii operator[](Size) noexcept;
+		constexpr DummyString& operator+=(DummyString) noexcept;
+		constexpr DummyString operator+(DummyString) noexcept;
+		constexpr DummyString& operator+=(Ascii) noexcept;
+		constexpr DummyString operator+(Ascii) noexcept;
+		constexpr DummyString operator+=(ConstAsciiStringView) noexcept;
+		constexpr DummyString operator+(ConstAsciiStringView) noexcept;
+	};
+
+	template<typename StringLike, typename CharType = Ascii>
+	concept IsDynSizedStringC = requires(StringLike string) {
+		{ string.size() } -> IsConvertibleC<Size>;
+		{ string.reserve(declval<Size>()) };
+		{ string.resize(declval<Size>()) };
+		{ string.pushBack(declval<Size>()) };
+		{ string[0] } -> IsConvertibleC<CharType>;
+		{ string += declval<CharType>() };
+		{ string + declval<CharType>() };
+		{ string += string };
+		{ string + string };
+		{ string += declval<ConstAsciiStringView>() };
+		{ string + declval<ConstAsciiStringView>() };
+	};
+
+	template<typename StringLike, typename CharType = Ascii>
+	constexpr static inline Bool IsDynSizedString = IsDynSizedStringC<StringLike, CharType>
+	template<typename StringLike, typename CharType = Ascii>
+	struct IsDynSizedStringV = BoolConstant<IsDynSizedStringC<StringLike, CharType>> {};
+
+	static_assert(IsDynSizedStringC<DummyString>);
 }

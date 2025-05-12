@@ -16,10 +16,10 @@ namespace natl {
 		&& requires(Serializer& serializer, const i8 value) {
 			{
 				serializer.template writeI8<
-					SerializeWriteFlag::v_default,
+					SerializeWriteFlag::none,
 					DefaultCustomSerializeWriteFlag<Serializer>,
-					SerializeGlobalComponent>(value)
-			} -> IsSameC<void>;
+					SerializeGlobalComponent<i8>>(value)
+			} -> IsSameC<Option<StandardSerializeError<Serializer>>>;
 	};
 	template<typename Serializer> constexpr inline Bool CanSerializeI8 = CanSerializeI8C<Serializer>;
 	template<typename Serializer> struct CanSerializeI8V : BoolConstant<CanSerializeI8C<Serializer>> {};
@@ -29,10 +29,10 @@ namespace natl {
 		&& requires(Serializer& serializer, const i16 value) {
 			{
 				serializer.template writeI16<
-					SerializeWriteFlag::v_default,
+					SerializeWriteFlag::none,
 					DefaultCustomSerializeWriteFlag<Serializer>,
-					SerializeGlobalComponent>(value)
-			} -> IsSameC<void>;
+					SerializeGlobalComponent<i16>>(value)
+			} -> IsSameC<Option<StandardSerializeError<Serializer>>>;
 	};
 	template<typename Serializer> constexpr inline Bool CanSerializeI16 = CanSerializeI16C<Serializer>;
 	template<typename Serializer> struct CanSerializeI16V : BoolConstant<CanSerializeI16C<Serializer>> {};
@@ -42,10 +42,10 @@ namespace natl {
 		&& requires(Serializer& serializer, const i32 value) {
 			{
 				serializer.template writeI32<
-					SerializeWriteFlag::v_default,
+					SerializeWriteFlag::none,
 					DefaultCustomSerializeWriteFlag<Serializer>,
-					SerializeGlobalComponent>(value)
-			} -> IsSameC<void>;
+					SerializeGlobalComponent<i32>>(value)
+			} -> IsSameC<Option<StandardSerializeError<Serializer>>>;
 	};
 	template<typename Serializer> constexpr inline Bool CanSerializeI32 = CanSerializeI32C<Serializer>;
 	template<typename Serializer> struct CanSerializeI32V : BoolConstant<CanSerializeI32C<Serializer>> {};
@@ -55,10 +55,10 @@ namespace natl {
 		&& requires(Serializer& serializer, const i64 value) {
 			{
 				serializer.template writeI64<
-					SerializeWriteFlag::v_default,
+					SerializeWriteFlag::none,
 					DefaultCustomSerializeWriteFlag<Serializer>,
-					SerializeGlobalComponent>(value)
-			} -> IsSameC<void>;
+					SerializeGlobalComponent<i64>>(value)
+			} -> IsSameC<Option<StandardSerializeError<Serializer>>>;
 	};
 	template<typename Serializer> constexpr inline Bool CanSerializeI64 = CanSerializeI64C<Serializer>;
 	template<typename Serializer> struct CanSerializeI64V : BoolConstant<CanSerializeI64C<Serializer>> {};
@@ -68,10 +68,10 @@ namespace natl {
 		&& requires(Serializer& serializer, const ui8 value) {
 			{
 				serializer.template writeUI8<
-					SerializeWriteFlag::v_default,
+					SerializeWriteFlag::none,
 					DefaultCustomSerializeWriteFlag<Serializer>,
-					SerializeGlobalComponent>(value)
-			} -> IsSameC<void>;
+					SerializeGlobalComponent<ui8>>(value)
+			} -> IsSameC<Option<StandardSerializeError<Serializer>>>;
 	};
 	template<typename Serializer> constexpr inline Bool CanSerializeUI8 = CanSerializeUI8C<Serializer>;
 	template<typename Serializer> struct CanSerializeUI8V : BoolConstant<CanSerializeUI8C<Serializer>> {};
@@ -81,10 +81,10 @@ namespace natl {
 		&& requires(Serializer& serializer, const ui16 value) {
 			{
 				serializer.template writeUI16<
-					SerializeWriteFlag::v_default,
+					SerializeWriteFlag::none,
 					DefaultCustomSerializeWriteFlag<Serializer>,
-					SerializeGlobalComponent>(value)
-			} -> IsSameC<void>;
+					SerializeGlobalComponent<ui16>>(value)
+			} -> IsSameC<Option<StandardSerializeError<Serializer>>>;
 	};
 	template<typename Serializer> constexpr inline Bool CanSerializeUI16 = CanSerializeUI16C<Serializer>;
 	template<typename Serializer> struct CanSerializeUI16V : BoolConstant<CanSerializeUI16C<Serializer>> {};
@@ -94,10 +94,10 @@ namespace natl {
 		&& requires(Serializer& serializer, const ui32 value) {
 			{
 				serializer.template writeUI32<
-					SerializeWriteFlag::v_default,
+					SerializeWriteFlag::none,
 					DefaultCustomSerializeWriteFlag<Serializer>,
-					SerializeGlobalComponent>(value)
-			} -> IsSameC<void>;
+					SerializeGlobalComponent<ui32>>(value)
+			} -> IsSameC<Option<StandardSerializeError<Serializer>>>;
 	};
 	template<typename Serializer> constexpr inline Bool CanSerializeUI32 = CanSerializeUI32C<Serializer>;
 	template<typename Serializer> struct CanSerializeUI32V : BoolConstant<CanSerializeUI32C<Serializer>> {};
@@ -107,10 +107,10 @@ namespace natl {
 		&& requires(Serializer& serializer, const ui64 value) {
 			{
 				serializer.template writeUI64<
-					SerializeWriteFlag::v_default,
+					SerializeWriteFlag::none,
 					DefaultCustomSerializeWriteFlag<Serializer>,
-					SerializeGlobalComponent>(value)
-			} -> IsSameC<void>;
+					SerializeGlobalComponent<ui64>>(value)
+			} -> IsSameC<Option<StandardSerializeError<Serializer>>>;
 	};
 	template<typename Serializer> constexpr inline Bool CanSerializeUI64 = CanSerializeUI64C<Serializer>;
 	template<typename Serializer> struct CanSerializeUI64V : BoolConstant<CanSerializeUI64C<Serializer>> {};
@@ -124,10 +124,10 @@ namespace natl {
 		&& requires(Serializer& serializer, const f32 value) {
 			{
 				serializer.template writeF32<
-					SerializeWriteFlag::v_default,
+					SerializeWriteFlag::none,
 					DefaultCustomSerializeWriteFlag<Serializer>,
-					SerializeGlobalComponent>(value)
-			} -> IsSameC<void>;
+					SerializeGlobalComponent<f32>>(value)
+			} -> IsSameC<Option<StandardSerializeError<Serializer>>>;
 	};
 	template<typename Serializer> constexpr inline Bool CanSerializeF32 = CanSerializeF32C<Serializer>;
 	template<typename Serializer> struct CanSerializeF32V : BoolConstant<CanSerializeF32C<Serializer>> {};
@@ -137,10 +137,10 @@ namespace natl {
 		&& requires(Serializer& serializer, const f64 value) {
 			{
 				serializer.template writeF64<
-					SerializeWriteFlag::v_default,
+					SerializeWriteFlag::none,
 					DefaultCustomSerializeWriteFlag<Serializer>,
-					SerializeGlobalComponent>(value)
-			} -> IsSameC<void>;
+					SerializeGlobalComponent<f64>>(value)
+			} -> IsSameC<Option<StandardSerializeError<Serializer>>>;
 	};
 	template<typename Serializer> constexpr inline Bool CanSerializeF64 = CanSerializeF64C<Serializer>;
 	template<typename Serializer> struct CanSerializeF64V : BoolConstant<CanSerializeF64C<Serializer>> {};
@@ -150,10 +150,10 @@ namespace natl {
 		&& requires(Serializer& serializer, const Bool value) {
 			{
 				serializer.template writeBool<
-					SerializeWriteFlag::v_default,
+					SerializeWriteFlag::none,
 					DefaultCustomSerializeWriteFlag<Serializer>,
-					SerializeGlobalComponent>(value)
-			} -> IsSameC<void>;
+					SerializeGlobalComponent<Bool>>(value)
+			} -> IsSameC<Option<StandardSerializeError<Serializer>>>;
 	};
 	template<typename Serializer> constexpr inline Bool CanSerializeBool = CanSerializeBoolC<Serializer>;
 	template<typename Serializer> struct CanSerializeBoolV : BoolConstant<CanSerializeBoolC<Serializer>> {};
@@ -163,10 +163,10 @@ namespace natl {
 		&& requires(Serializer& serializer, const Ascii value) {
 			{
 				serializer.template writeChar<
-					SerializeWriteFlag::v_default,
+					SerializeWriteFlag::none,
 					DefaultCustomSerializeWriteFlag<Serializer>,
-					SerializeGlobalComponent>(value)
-			} -> IsSameC<void>;
+					SerializeGlobalComponent<Ascii>>(value)
+			} -> IsSameC<Option<StandardSerializeError<Serializer>>>;
 	};
 	template<typename Serializer> constexpr inline Bool CanSerializeChar = CanSerializeCharC<Serializer>;
 	template<typename Serializer> struct CanSerializeCharV : BoolConstant<CanSerializeCharC<Serializer>> {};
@@ -181,9 +181,9 @@ namespace natl {
 		&& requires(Deserializer & deserializer) {
 			{
 				deserializer.template readI8<
-					DeserializeReadFlag::v_default,
+					DeserializeReadFlag::none,
 					DefaultCustomDeserializeReadFlag<Deserializer>,
-					SerializeGlobalComponent>(
+					SerializeGlobalComponent<i8>>(
 						declref<DeserializeInfo<Deserializer, SerializeI8>>())
 			} -> IsSameC<Expect<i8, StandardDeserializeError<Deserializer>>>;
 	};
@@ -195,9 +195,9 @@ namespace natl {
 		&& requires(Deserializer & deserializer) {
 			{
 				deserializer.template readI16<
-					DeserializeReadFlag::v_default,
+					DeserializeReadFlag::none,
 					DefaultCustomDeserializeReadFlag<Deserializer>,
-					SerializeGlobalComponent>(
+					SerializeGlobalComponent<i16>>(
 						declref<DeserializeInfo<Deserializer, SerializeI16>>())
 			} -> IsSameC<Expect<i16, StandardDeserializeError<Deserializer>>>;
 	};
@@ -209,9 +209,9 @@ namespace natl {
 		&& requires(Deserializer & deserializer) {
 			{
 				deserializer.template readI32<
-					DeserializeReadFlag::v_default,
+					DeserializeReadFlag::none,
 					DefaultCustomDeserializeReadFlag<Deserializer>,
-					SerializeGlobalComponent>(
+					SerializeGlobalComponent<i32>>(
 						declref<DeserializeInfo<Deserializer, SerializeI32>>())
 			} -> IsSameC<Expect<i32, StandardDeserializeError<Deserializer>>>;
 	};
@@ -223,9 +223,9 @@ namespace natl {
 		&& requires(Deserializer & deserializer) {
 			{
 				deserializer.template readI64<
-					DeserializeReadFlag::v_default,
+					DeserializeReadFlag::none,
 					DefaultCustomDeserializeReadFlag<Deserializer>,
-					SerializeGlobalComponent>(
+					SerializeGlobalComponent<i64>>(
 						declref<DeserializeInfo<Deserializer, SerializeI64>>())
 			} -> IsSameC<Expect<i64, StandardDeserializeError<Deserializer>>>;
 	};
@@ -237,9 +237,9 @@ namespace natl {
 		&& requires(Deserializer & deserializer) {
 			{
 				deserializer.template readUI8<
-					DeserializeReadFlag::v_default,
+					DeserializeReadFlag::none,
 					DefaultCustomDeserializeReadFlag<Deserializer>,
-					SerializeGlobalComponent>(
+					SerializeGlobalComponent<ui8>>(
 						declref<DeserializeInfo<Deserializer, SerializeUI8>>())
 			} -> IsSameC<Expect<ui8, StandardDeserializeError<Deserializer>>>;
 	};
@@ -251,9 +251,9 @@ namespace natl {
 		&& requires(Deserializer & deserializer) {
 			{
 				deserializer.template readUI16<
-					DeserializeReadFlag::v_default,
+					DeserializeReadFlag::none,
 					DefaultCustomDeserializeReadFlag<Deserializer>,
-					SerializeGlobalComponent>(
+					SerializeGlobalComponent<ui16>>(
 						declref<DeserializeInfo<Deserializer, SerializeUI16>>())
 			} -> IsSameC<Expect<ui16, StandardDeserializeError<Deserializer>>>;
 	};
@@ -265,9 +265,9 @@ namespace natl {
 		&& requires(Deserializer & deserializer) {
 			{
 				deserializer.template readUI32<
-					DeserializeReadFlag::v_default,
+					DeserializeReadFlag::none,
 					DefaultCustomDeserializeReadFlag<Deserializer>,
-					SerializeGlobalComponent>(
+					SerializeGlobalComponent<ui32>>(
 						declref<DeserializeInfo<Deserializer, SerializeUI32>>())
 			} -> IsSameC<Expect<ui32, StandardDeserializeError<Deserializer>>>;
 	};
@@ -279,9 +279,9 @@ namespace natl {
 		&& requires(Deserializer & deserializer) {
 			{
 				deserializer.template readUI64<
-					DeserializeReadFlag::v_default,
+					DeserializeReadFlag::none,
 					DefaultCustomDeserializeReadFlag<Deserializer>,
-					SerializeGlobalComponent>(
+					SerializeGlobalComponent<ui64>>(
 						declref<DeserializeInfo<Deserializer, SerializeUI64>>())
 			} -> IsSameC<Expect<ui64, StandardDeserializeError<Deserializer>>>;
 	};
@@ -293,9 +293,9 @@ namespace natl {
 		&& requires(Deserializer & deserializer) {
 			{
 				deserializer.template readF32<
-					DeserializeReadFlag::v_default,
+					DeserializeReadFlag::none,
 					DefaultCustomDeserializeReadFlag<Deserializer>,
-					SerializeGlobalComponent>(
+					SerializeGlobalComponent<f32>>(
 						declref<DeserializeInfo<Deserializer, SerializeF32>>())
 			} -> IsSameC<Expect<f32, StandardDeserializeError<Deserializer>>>;
 	};
@@ -307,9 +307,9 @@ namespace natl {
 		&& requires(Deserializer & deserializer) {
 			{
 				deserializer.template readF64<
-					DeserializeReadFlag::v_default,
+					DeserializeReadFlag::none,
 					DefaultCustomDeserializeReadFlag<Deserializer>,
-					SerializeGlobalComponent>(
+					SerializeGlobalComponent<f64>>(
 						declref<DeserializeInfo<Deserializer, SerializeF64>>())
 			} -> IsSameC<Expect<f64, StandardDeserializeError<Deserializer>>>;
 	};
@@ -319,9 +319,9 @@ namespace natl {
 		&& requires(Deserializer & deserializer) {
 			{
 				deserializer.template readBool<
-					DeserializeReadFlag::v_default,
+					DeserializeReadFlag::none,
 					DefaultCustomDeserializeReadFlag<Deserializer>,
-					SerializeGlobalComponent>(
+					SerializeGlobalComponent<Bool>>(
 						declref<DeserializeInfo<Deserializer, SerializeBool>>())
 			} -> IsSameC<Expect<Bool, StandardDeserializeError<Deserializer>>>;
 	};
@@ -333,9 +333,9 @@ namespace natl {
 		&& requires(Deserializer & deserializer) {
 			{
 				deserializer.template readChar<
-					DeserializeReadFlag::v_default,
+					DeserializeReadFlag::none,
 					DefaultCustomDeserializeReadFlag<Deserializer>,
-					SerializeGlobalComponent>(
+					SerializeGlobalComponent<Char>>(
 						declref<DeserializeInfo<Deserializer, SerializeChar>>())
 			} -> IsSameC<Expect<Char, StandardDeserializeError<Deserializer>>>;
 	};

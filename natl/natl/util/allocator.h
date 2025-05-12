@@ -175,7 +175,7 @@ namespace natl {
 		[[nodiscard]] constexpr static pointer allocateAligned(const Size number, const Size alignment) noexcept {
 			auto maxFunc = [](Size s1, Size s2) -> Size {
 				return (s1 > s2) ? s1 : s2;
-				};
+			};
 
 			pointer ptr;
 			if (isConstantEvaluated()) {
@@ -227,6 +227,7 @@ namespace natl {
 		using rebind = StandardAllocator<Other>;
 		using allocator_type = StandardAllocator<Byte>;
 		using typed_allocator_type = StandardAllocator<DataType>;
+
 	public:
 		[[nodiscard]] constexpr static pointer allocate(const Size number) noexcept {
 			pointer ptr = typed_fallback_allocator::allocate(number);
@@ -260,6 +261,46 @@ namespace natl {
 		requires(IsAllocatorC<Alloc>)
 	struct AllocatorArg {};
 	using DefaultAllocatorArg = AllocatorArg<DefaultAllocator>;
+
+	template<typename DataType, Size MinAlignment, typename Alloc>
+		requires(IsAllocatorC<Alloc>)
+	struct MinAlignmentAllocator {
+	public:
+		using fallback_allocator = Alloc;
+		using typed_fallback_allocator = Alloc::template rebind<DataType>;
+		using support_allocator = Alloc;
+		using typed_support_allocator = Alloc::template rebind<DataType>;
+
+		using value_type = typed_support_allocator::value_type;
+		using reference = typed_support_allocator::reference;
+		using const_reference = typed_support_allocator::const_reference;
+		using pointer = typed_support_allocator::pointer;
+		using const_pointer = typed_support_allocator::const_pointer;
+		using difference_type = typed_support_allocator::difference_type;
+		using size_type = typed_support_allocator::size_type;
+
+		template <typename Other>
+		using rebind = MinAlignmentAllocator<Other, MinAlignment, Alloc>;
+		using allocator_type = MinAlignmentAllocator<Byte, MinAlignment, Alloc>;
+		using typed_allocator_type = MinAlignmentAllocator<DataType, MinAlignment, Alloc>;
+
+		constexpr static inline Size minAlignment = MinAlignment;
+
+	public:
+		[[nodiscard]] constexpr static pointer allocate(const Size number) noexcept {
+			return typed_support_allocator::allocateAligned(number, minAlignment);
+		}
+		[[nodiscard]] constexpr static pointer allocateAligned(const Size number, const Size alignment) noexcept {
+			auto maxFunc = [](Size s1, Size s2) -> Size {
+				return (s1 > s2) ? s1 : s2;
+			};
+			return typed_support_allocator::allocateAligned(number, maxFunc(minAlignment, alignment));
+		}
+
+		constexpr void static deallocate(pointer ptr, const Size number) noexcept {
+			typed_support_allocator::deallocate(ptr, number);
+		}
+	};
 
 #ifdef NATL_COMPILER_MSVC
 #pragma warning(pop)

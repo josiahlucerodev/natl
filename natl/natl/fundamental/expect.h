@@ -5,6 +5,7 @@
 #include "../util/basicTypes.h"
 #include "../util/dataMovement.h"
 #include "../util/error.h"
+#include "optionPtr.h"
 
 //interface
 namespace natl {
@@ -210,11 +211,11 @@ namespace natl {
 		};
 		constexpr DataType&& value() && noexcept {
 			testValue();
-			return data; 
+			return move(data); 
 		};
 		constexpr const DataType&& value() const&& noexcept { 
 			testValue();
-			return data; 
+			return move(data); 
 		};
 
 		constexpr ErrorType& error() & noexcept { 
@@ -227,11 +228,69 @@ namespace natl {
 		};
 		constexpr ErrorType&& error() && noexcept { 
 			testError();
-			return errorData;
+			return move(errorData);
 		};
 		constexpr const ErrorType&& error() const&& noexcept { 
 			testError();
-			return errorData;
+			return move(errorData);
+		};
+
+		constexpr OptionPtr<DataType> optionalValue()& noexcept {
+			if (state == ExpectState::value) {
+				return &data;
+			} else {
+				return natl::OptionEmpty{};
+			}
+		}
+		constexpr OptionPtr<DataType> optionalValue() const& noexcept {
+			if (state == ExpectState::value) {
+				return &data;
+			} else {
+				return natl::OptionEmpty{};
+			}
+		};
+		constexpr OptionPtr<DataType> optionalValue() && noexcept {
+			if (state == ExpectState::value) {
+				return &data;
+			} else {
+				return natl::OptionEmpty{};
+			}
+		};
+		constexpr OptionPtr<DataType> optionalValue() const&& noexcept {
+			if (state == ExpectState::value) {
+				return &data;
+			} else {
+				return natl::OptionEmpty{};
+			}
+		};
+
+		constexpr OptionPtr<ErrorType> optionalError() & noexcept {
+			if (state == ExpectState::value) {
+				return &errorData;
+			} else {
+				return natl::OptionEmpty{};
+			}
+		}
+		constexpr OptionPtr<ErrorType> optionalError() const& noexcept {
+			if (state == ExpectState::value) {
+				return &errorData;
+			} else {
+				return natl::OptionEmpty{};
+			}
+		};
+		constexpr OptionPtr<ErrorType> optionalError() && noexcept {
+			if (state == ExpectState::value) {
+				return &errorData;
+			} else {
+				return natl::OptionEmpty{};
+			}
+		};
+		constexpr OptionPtr<ErrorType> optionalError() const&& noexcept {
+			if (state == ExpectState::value) {
+				return &errorData;
+			} else {
+				return natl::OptionEmpty{};
+			}
 		};
 
 		constexpr const DataType* operator->() const noexcept { return value(); }

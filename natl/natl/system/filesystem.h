@@ -555,8 +555,14 @@ namespace natl {
 
 		constexpr static value_type pathSeparator = getPlatformPreferredPathSeparator();
 		constexpr static PathFormat autoFormat = PathFormat::standard;
+
+		template<Size, typename Alloc>
+			requires(IsAllocatorC<Alloc>)
+		friend struct BasePath;
+
 	private:
 		string_type pathStorage;
+
 	public:
 		//constructor
 		constexpr BasePath() noexcept = default;
