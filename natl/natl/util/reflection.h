@@ -9,10 +9,28 @@
 namespace natl {
 	constexpr static inline Size MaxStructMemberNumberEvaluated = 20;
 
-
 	namespace impl {
+
+		template<typename StructType>
+		struct StructMemberCastable {
+			Size& memberCountRef;
+			
+			constexpr StructMemberCastable(Size& memberCountRefIn) noexcept
+				: memberCountRef(memberCountRefIn) {}
+
+
+			template<typename MemberType>
+				requires(not SameAs<StructType, MemberType>)
+			constexpr operator MemberType() const noexcept {
+				if constexpr (not IsBaseOfC<MemberType, StructType>) {
+					memberCountRef += 1;
+				}
+				return {};
+			}
+		};
+
 		template<typename Type>
-		struct StructMemberCountAggregate;
+		struct StructMemberCountAggregate {};
 
 #define NATL_IMPL_STRUCT_MEMBER_COUNT_BASE(N, N2) \
 		template<typename Type> \
@@ -20,7 +38,12 @@ namespace natl {
 				requires() { { Type{ NATL_REPEAT_WITH_COMMAS(N, natl::RestrictedUniversallyCastable<Type>{}) } }; } \
 				&& !requires() { { Type{ NATL_REPEAT_WITH_COMMAS(N2, natl::RestrictedUniversallyCastable<Type>{}) } }; } ) \
 		struct StructMemberCountAggregate<Type> { \
-			constexpr static Size value = N; \
+			constexpr static Size getValue() noexcept { \
+				Size memberCount = 0; \
+				Type{NATL_REPEAT_WITH_COMMAS(N, StructMemberCastable<Type>{memberCount})}; \
+				return memberCount; \
+			} \
+			constexpr static inline Size value = getValue(); \
 		}
 
 		NATL_IMPL_STRUCT_MEMBER_COUNT_BASE(1, 2);
@@ -44,8 +67,8 @@ namespace natl {
 		NATL_IMPL_STRUCT_MEMBER_COUNT_BASE(19, 20);
 		NATL_IMPL_STRUCT_MEMBER_COUNT_BASE(20, 21);
 
-	#undef NATL_IMPL_STRUCT_MEMBER_COUNT_IMPL_2D
-	#undef NATL_IMPL_STRUCT_MEMBER_COUNT_IMPL_1D
+#undef NATL_IMPL_STRUCT_MEMBER_COUNT_IMPL_2D
+#undef NATL_IMPL_STRUCT_MEMBER_COUNT_IMPL_1D
 	}
 
 	template<typename Type> struct StructMemberCountV;
@@ -53,25 +76,25 @@ namespace natl {
 
 	template<typename Type> 
 	concept HasStructMemberCountC = requires() {
-		{ natl::StructMemberCountV<Type>::value } -> ConvertibleTo<Size>;
+		natl::impl::StructMemberCountAggregate<Type>::value;
 	};
 	template<typename Type> struct HasStructMemberCountV : BoolConstant<HasStructMemberCountC<Type>> {};
 	template<typename Type> inline constexpr Bool HasStructMemberCount = HasStructMemberCountC<Type>;
 
 	template<typename Type>
-		requires(IsAggregateC<Type> && !HasTupleSizeC<Type>)
+		requires(!HasTupleSizeC<Type>)
 	struct StructMemberCountV<Type> : impl::StructMemberCountAggregate<Type> {};
+	
 	template<typename Type>
 		requires(HasTupleSizeC<Type>)
 	struct StructMemberCountV<Type> : TupleSizeV<Type> {};
-
 
 	//struct member 
 	namespace impl {
 		template<Size MemberCount, typename Type>
 		struct GetStructMemberAggregate;
-
 		/*
+
 			for i in range(20 + 1):
 				print("#undef NATL_IMPL_GET_STRUCT_MEMBER_" + str(i))
 			for i in range(20 + 2):
@@ -80,6 +103,17 @@ namespace natl {
 			for i in range(20 + 1):
 				print("template<typename Type> struct ", end="")
 				print("GetStructMemberAggregate<" + str(i) + ", Type> {")
+
+				print("\ttemplate<Size Index>")
+				print("\tconstexpr static auto& get(Type& value) noexcept {")
+				print("\t\tauto& [",  end="")
+				for j in range(i):
+					print("m" + str(j), end="")
+					if j != i - 1:
+						print(", ", end ="")
+				print("] = value;")
+				print("\t\tNATL_IMPL_GET_STRUCT_MEMBER_" + str(i))
+				print("\t}")
 
 				print("\ttemplate<Size Index>")
 				print("\tconstexpr static const auto& get(const Type& value) noexcept {")
@@ -102,6 +136,18 @@ namespace natl {
 				print("] = value;")
 				print("\t\tNATL_IMPL_GET_STRUCT_MEMBER_" + str(i))
 				print("\t}")
+
+				print("\ttemplate<Size Index>")
+				print("\tconstexpr static const auto&& get(const Type&& value) noexcept {")
+				print("\t\tconst auto&& [",  end="")
+				for j in range(i):
+					print("m" + str(j), end="")
+					if j != i - 1:
+						print(", ", end ="")
+				print("] = value;")
+				print("\t\tNATL_IMPL_GET_STRUCT_MEMBER_" + str(i))
+				print("\t}")
+
 
 				print("};")
 		*/
@@ -129,8 +175,12 @@ namespace natl {
 #define NATL_IMPL_GET_STRUCT_MEMBER_20 NATL_IMPL_GET_STRUCT_MEMBER_19 NATL_IMPL_GET_STRUCT_MEMBER_BASE(19)
 #define NATL_IMPL_GET_STRUCT_MEMBER_21 NATL_IMPL_GET_STRUCT_MEMBER_20 NATL_IMPL_GET_STRUCT_MEMBER_BASE(20)
 
-
 		template<typename Type> struct GetStructMemberAggregate<1, Type> {
+			template<Size Index>
+			constexpr static auto& get(Type& value) noexcept {
+				auto& [m0] = value;
+				NATL_IMPL_GET_STRUCT_MEMBER_1
+			}
 			template<Size Index>
 			constexpr static const auto& get(const Type& value) noexcept {
 				const auto& [m0] = value;
@@ -141,8 +191,18 @@ namespace natl {
 				auto&& [m0] = value;
 				NATL_IMPL_GET_STRUCT_MEMBER_1
 			}
+			template<Size Index>
+			constexpr static const auto&& get(const Type&& value) noexcept {
+				const auto&& [m0] = value;
+				NATL_IMPL_GET_STRUCT_MEMBER_1
+			}
 		};
 		template<typename Type> struct GetStructMemberAggregate<2, Type> {
+			template<Size Index>
+			constexpr static auto& get(Type& value) noexcept {
+				auto& [m0, m1] = value;
+				NATL_IMPL_GET_STRUCT_MEMBER_2
+			}
 			template<Size Index>
 			constexpr static const auto& get(const Type& value) noexcept {
 				const auto& [m0, m1] = value;
@@ -153,8 +213,18 @@ namespace natl {
 				auto&& [m0, m1] = value;
 				NATL_IMPL_GET_STRUCT_MEMBER_2
 			}
+			template<Size Index>
+			constexpr static const auto&& get(const Type&& value) noexcept {
+				const auto&& [m0, m1] = value;
+				NATL_IMPL_GET_STRUCT_MEMBER_2
+			}
 		};
 		template<typename Type> struct GetStructMemberAggregate<3, Type> {
+			template<Size Index>
+			constexpr static auto& get(Type& value) noexcept {
+				auto& [m0, m1, m2] = value;
+				NATL_IMPL_GET_STRUCT_MEMBER_3
+			}
 			template<Size Index>
 			constexpr static const auto& get(const Type& value) noexcept {
 				const auto& [m0, m1, m2] = value;
@@ -165,8 +235,18 @@ namespace natl {
 				auto&& [m0, m1, m2] = value;
 				NATL_IMPL_GET_STRUCT_MEMBER_3
 			}
+			template<Size Index>
+			constexpr static const auto&& get(const Type&& value) noexcept {
+				const auto&& [m0, m1, m2] = value;
+				NATL_IMPL_GET_STRUCT_MEMBER_3
+			}
 		};
 		template<typename Type> struct GetStructMemberAggregate<4, Type> {
+			template<Size Index>
+			constexpr static auto& get(Type& value) noexcept {
+				auto& [m0, m1, m2, m3] = value;
+				NATL_IMPL_GET_STRUCT_MEMBER_4
+			}
 			template<Size Index>
 			constexpr static const auto& get(const Type& value) noexcept {
 				const auto& [m0, m1, m2, m3] = value;
@@ -177,8 +257,18 @@ namespace natl {
 				auto&& [m0, m1, m2, m3] = value;
 				NATL_IMPL_GET_STRUCT_MEMBER_4
 			}
+			template<Size Index>
+			constexpr static const auto&& get(const Type&& value) noexcept {
+				const auto&& [m0, m1, m2, m3] = value;
+				NATL_IMPL_GET_STRUCT_MEMBER_4
+			}
 		};
 		template<typename Type> struct GetStructMemberAggregate<5, Type> {
+			template<Size Index>
+			constexpr static auto& get(Type& value) noexcept {
+				auto& [m0, m1, m2, m3, m4] = value;
+				NATL_IMPL_GET_STRUCT_MEMBER_5
+			}
 			template<Size Index>
 			constexpr static const auto& get(const Type& value) noexcept {
 				const auto& [m0, m1, m2, m3, m4] = value;
@@ -189,8 +279,18 @@ namespace natl {
 				auto&& [m0, m1, m2, m3, m4] = value;
 				NATL_IMPL_GET_STRUCT_MEMBER_5
 			}
+			template<Size Index>
+			constexpr static const auto&& get(const Type&& value) noexcept {
+				const auto&& [m0, m1, m2, m3, m4] = value;
+				NATL_IMPL_GET_STRUCT_MEMBER_5
+			}
 		};
 		template<typename Type> struct GetStructMemberAggregate<6, Type> {
+			template<Size Index>
+			constexpr static auto& get(Type& value) noexcept {
+				auto& [m0, m1, m2, m3, m4, m5] = value;
+				NATL_IMPL_GET_STRUCT_MEMBER_6
+			}
 			template<Size Index>
 			constexpr static const auto& get(const Type& value) noexcept {
 				const auto& [m0, m1, m2, m3, m4, m5] = value;
@@ -201,8 +301,18 @@ namespace natl {
 				auto&& [m0, m1, m2, m3, m4, m5] = value;
 				NATL_IMPL_GET_STRUCT_MEMBER_6
 			}
+			template<Size Index>
+			constexpr static const auto&& get(const Type&& value) noexcept {
+				const auto&& [m0, m1, m2, m3, m4, m5] = value;
+				NATL_IMPL_GET_STRUCT_MEMBER_6
+			}
 		};
 		template<typename Type> struct GetStructMemberAggregate<7, Type> {
+			template<Size Index>
+			constexpr static auto& get(Type& value) noexcept {
+				auto& [m0, m1, m2, m3, m4, m5, m6] = value;
+				NATL_IMPL_GET_STRUCT_MEMBER_7
+			}
 			template<Size Index>
 			constexpr static const auto& get(const Type& value) noexcept {
 				const auto& [m0, m1, m2, m3, m4, m5, m6] = value;
@@ -213,8 +323,18 @@ namespace natl {
 				auto&& [m0, m1, m2, m3, m4, m5, m6] = value;
 				NATL_IMPL_GET_STRUCT_MEMBER_7
 			}
+			template<Size Index>
+			constexpr static const auto&& get(const Type&& value) noexcept {
+				const auto&& [m0, m1, m2, m3, m4, m5, m6] = value;
+				NATL_IMPL_GET_STRUCT_MEMBER_7
+			}
 		};
 		template<typename Type> struct GetStructMemberAggregate<8, Type> {
+			template<Size Index>
+			constexpr static auto& get(Type& value) noexcept {
+				auto& [m0, m1, m2, m3, m4, m5, m6, m7] = value;
+				NATL_IMPL_GET_STRUCT_MEMBER_8
+			}
 			template<Size Index>
 			constexpr static const auto& get(const Type& value) noexcept {
 				const auto& [m0, m1, m2, m3, m4, m5, m6, m7] = value;
@@ -225,8 +345,18 @@ namespace natl {
 				auto&& [m0, m1, m2, m3, m4, m5, m6, m7] = value;
 				NATL_IMPL_GET_STRUCT_MEMBER_8
 			}
+			template<Size Index>
+			constexpr static const auto&& get(const Type&& value) noexcept {
+				const auto&& [m0, m1, m2, m3, m4, m5, m6, m7] = value;
+				NATL_IMPL_GET_STRUCT_MEMBER_8
+			}
 		};
 		template<typename Type> struct GetStructMemberAggregate<9, Type> {
+			template<Size Index>
+			constexpr static auto& get(Type& value) noexcept {
+				auto& [m0, m1, m2, m3, m4, m5, m6, m7, m8] = value;
+				NATL_IMPL_GET_STRUCT_MEMBER_9
+			}
 			template<Size Index>
 			constexpr static const auto& get(const Type& value) noexcept {
 				const auto& [m0, m1, m2, m3, m4, m5, m6, m7, m8] = value;
@@ -237,8 +367,18 @@ namespace natl {
 				auto&& [m0, m1, m2, m3, m4, m5, m6, m7, m8] = value;
 				NATL_IMPL_GET_STRUCT_MEMBER_9
 			}
+			template<Size Index>
+			constexpr static const auto&& get(const Type&& value) noexcept {
+				const auto&& [m0, m1, m2, m3, m4, m5, m6, m7, m8] = value;
+				NATL_IMPL_GET_STRUCT_MEMBER_9
+			}
 		};
 		template<typename Type> struct GetStructMemberAggregate<10, Type> {
+			template<Size Index>
+			constexpr static auto& get(Type& value) noexcept {
+				auto& [m0, m1, m2, m3, m4, m5, m6, m7, m8, m9] = value;
+				NATL_IMPL_GET_STRUCT_MEMBER_10
+			}
 			template<Size Index>
 			constexpr static const auto& get(const Type& value) noexcept {
 				const auto& [m0, m1, m2, m3, m4, m5, m6, m7, m8, m9] = value;
@@ -249,8 +389,18 @@ namespace natl {
 				auto&& [m0, m1, m2, m3, m4, m5, m6, m7, m8, m9] = value;
 				NATL_IMPL_GET_STRUCT_MEMBER_10
 			}
+			template<Size Index>
+			constexpr static const auto&& get(const Type&& value) noexcept {
+				const auto&& [m0, m1, m2, m3, m4, m5, m6, m7, m8, m9] = value;
+				NATL_IMPL_GET_STRUCT_MEMBER_10
+			}
 		};
 		template<typename Type> struct GetStructMemberAggregate<11, Type> {
+			template<Size Index>
+			constexpr static auto& get(Type& value) noexcept {
+				auto& [m0, m1, m2, m3, m4, m5, m6, m7, m8, m9, m10] = value;
+				NATL_IMPL_GET_STRUCT_MEMBER_11
+			}
 			template<Size Index>
 			constexpr static const auto& get(const Type& value) noexcept {
 				const auto& [m0, m1, m2, m3, m4, m5, m6, m7, m8, m9, m10] = value;
@@ -261,8 +411,18 @@ namespace natl {
 				auto&& [m0, m1, m2, m3, m4, m5, m6, m7, m8, m9, m10] = value;
 				NATL_IMPL_GET_STRUCT_MEMBER_11
 			}
+			template<Size Index>
+			constexpr static const auto&& get(const Type&& value) noexcept {
+				const auto&& [m0, m1, m2, m3, m4, m5, m6, m7, m8, m9, m10] = value;
+				NATL_IMPL_GET_STRUCT_MEMBER_11
+			}
 		};
 		template<typename Type> struct GetStructMemberAggregate<12, Type> {
+			template<Size Index>
+			constexpr static auto& get(Type& value) noexcept {
+				auto& [m0, m1, m2, m3, m4, m5, m6, m7, m8, m9, m10, m11] = value;
+				NATL_IMPL_GET_STRUCT_MEMBER_12
+			}
 			template<Size Index>
 			constexpr static const auto& get(const Type& value) noexcept {
 				const auto& [m0, m1, m2, m3, m4, m5, m6, m7, m8, m9, m10, m11] = value;
@@ -273,8 +433,18 @@ namespace natl {
 				auto&& [m0, m1, m2, m3, m4, m5, m6, m7, m8, m9, m10, m11] = value;
 				NATL_IMPL_GET_STRUCT_MEMBER_12
 			}
+			template<Size Index>
+			constexpr static const auto&& get(const Type&& value) noexcept {
+				const auto&& [m0, m1, m2, m3, m4, m5, m6, m7, m8, m9, m10, m11] = value;
+				NATL_IMPL_GET_STRUCT_MEMBER_12
+			}
 		};
 		template<typename Type> struct GetStructMemberAggregate<13, Type> {
+			template<Size Index>
+			constexpr static auto& get(Type& value) noexcept {
+				auto& [m0, m1, m2, m3, m4, m5, m6, m7, m8, m9, m10, m11, m12] = value;
+				NATL_IMPL_GET_STRUCT_MEMBER_13
+			}
 			template<Size Index>
 			constexpr static const auto& get(const Type& value) noexcept {
 				const auto& [m0, m1, m2, m3, m4, m5, m6, m7, m8, m9, m10, m11, m12] = value;
@@ -285,8 +455,18 @@ namespace natl {
 				auto&& [m0, m1, m2, m3, m4, m5, m6, m7, m8, m9, m10, m11, m12] = value;
 				NATL_IMPL_GET_STRUCT_MEMBER_13
 			}
+			template<Size Index>
+			constexpr static const auto&& get(const Type&& value) noexcept {
+				const auto&& [m0, m1, m2, m3, m4, m5, m6, m7, m8, m9, m10, m11, m12] = value;
+				NATL_IMPL_GET_STRUCT_MEMBER_13
+			}
 		};
 		template<typename Type> struct GetStructMemberAggregate<14, Type> {
+			template<Size Index>
+			constexpr static auto& get(Type& value) noexcept {
+				auto& [m0, m1, m2, m3, m4, m5, m6, m7, m8, m9, m10, m11, m12, m13] = value;
+				NATL_IMPL_GET_STRUCT_MEMBER_14
+			}
 			template<Size Index>
 			constexpr static const auto& get(const Type& value) noexcept {
 				const auto& [m0, m1, m2, m3, m4, m5, m6, m7, m8, m9, m10, m11, m12, m13] = value;
@@ -297,8 +477,18 @@ namespace natl {
 				auto&& [m0, m1, m2, m3, m4, m5, m6, m7, m8, m9, m10, m11, m12, m13] = value;
 				NATL_IMPL_GET_STRUCT_MEMBER_14
 			}
+			template<Size Index>
+			constexpr static const auto&& get(const Type&& value) noexcept {
+				const auto&& [m0, m1, m2, m3, m4, m5, m6, m7, m8, m9, m10, m11, m12, m13] = value;
+				NATL_IMPL_GET_STRUCT_MEMBER_14
+			}
 		};
 		template<typename Type> struct GetStructMemberAggregate<15, Type> {
+			template<Size Index>
+			constexpr static auto& get(Type& value) noexcept {
+				auto& [m0, m1, m2, m3, m4, m5, m6, m7, m8, m9, m10, m11, m12, m13, m14] = value;
+				NATL_IMPL_GET_STRUCT_MEMBER_15
+			}
 			template<Size Index>
 			constexpr static const auto& get(const Type& value) noexcept {
 				const auto& [m0, m1, m2, m3, m4, m5, m6, m7, m8, m9, m10, m11, m12, m13, m14] = value;
@@ -309,8 +499,18 @@ namespace natl {
 				auto&& [m0, m1, m2, m3, m4, m5, m6, m7, m8, m9, m10, m11, m12, m13, m14] = value;
 				NATL_IMPL_GET_STRUCT_MEMBER_15
 			}
+			template<Size Index>
+			constexpr static const auto&& get(const Type&& value) noexcept {
+				const auto&& [m0, m1, m2, m3, m4, m5, m6, m7, m8, m9, m10, m11, m12, m13, m14] = value;
+				NATL_IMPL_GET_STRUCT_MEMBER_15
+			}
 		};
 		template<typename Type> struct GetStructMemberAggregate<16, Type> {
+			template<Size Index>
+			constexpr static auto& get(Type& value) noexcept {
+				auto& [m0, m1, m2, m3, m4, m5, m6, m7, m8, m9, m10, m11, m12, m13, m14, m15] = value;
+				NATL_IMPL_GET_STRUCT_MEMBER_16
+			}
 			template<Size Index>
 			constexpr static const auto& get(const Type& value) noexcept {
 				const auto& [m0, m1, m2, m3, m4, m5, m6, m7, m8, m9, m10, m11, m12, m13, m14, m15] = value;
@@ -321,8 +521,18 @@ namespace natl {
 				auto&& [m0, m1, m2, m3, m4, m5, m6, m7, m8, m9, m10, m11, m12, m13, m14, m15] = value;
 				NATL_IMPL_GET_STRUCT_MEMBER_16
 			}
+			template<Size Index>
+			constexpr static const auto&& get(const Type&& value) noexcept {
+				const auto&& [m0, m1, m2, m3, m4, m5, m6, m7, m8, m9, m10, m11, m12, m13, m14, m15] = value;
+				NATL_IMPL_GET_STRUCT_MEMBER_16
+			}
 		};
 		template<typename Type> struct GetStructMemberAggregate<17, Type> {
+			template<Size Index>
+			constexpr static auto& get(Type& value) noexcept {
+				auto& [m0, m1, m2, m3, m4, m5, m6, m7, m8, m9, m10, m11, m12, m13, m14, m15, m16] = value;
+				NATL_IMPL_GET_STRUCT_MEMBER_17
+			}
 			template<Size Index>
 			constexpr static const auto& get(const Type& value) noexcept {
 				const auto& [m0, m1, m2, m3, m4, m5, m6, m7, m8, m9, m10, m11, m12, m13, m14, m15, m16] = value;
@@ -333,8 +543,18 @@ namespace natl {
 				auto&& [m0, m1, m2, m3, m4, m5, m6, m7, m8, m9, m10, m11, m12, m13, m14, m15, m16] = value;
 				NATL_IMPL_GET_STRUCT_MEMBER_17
 			}
+			template<Size Index>
+			constexpr static const auto&& get(const Type&& value) noexcept {
+				const auto&& [m0, m1, m2, m3, m4, m5, m6, m7, m8, m9, m10, m11, m12, m13, m14, m15, m16] = value;
+				NATL_IMPL_GET_STRUCT_MEMBER_17
+			}
 		};
 		template<typename Type> struct GetStructMemberAggregate<18, Type> {
+			template<Size Index>
+			constexpr static auto& get(Type& value) noexcept {
+				auto& [m0, m1, m2, m3, m4, m5, m6, m7, m8, m9, m10, m11, m12, m13, m14, m15, m16, m17] = value;
+				NATL_IMPL_GET_STRUCT_MEMBER_18
+			}
 			template<Size Index>
 			constexpr static const auto& get(const Type& value) noexcept {
 				const auto& [m0, m1, m2, m3, m4, m5, m6, m7, m8, m9, m10, m11, m12, m13, m14, m15, m16, m17] = value;
@@ -345,8 +565,18 @@ namespace natl {
 				auto&& [m0, m1, m2, m3, m4, m5, m6, m7, m8, m9, m10, m11, m12, m13, m14, m15, m16, m17] = value;
 				NATL_IMPL_GET_STRUCT_MEMBER_18
 			}
+			template<Size Index>
+			constexpr static const auto&& get(const Type&& value) noexcept {
+				const auto&& [m0, m1, m2, m3, m4, m5, m6, m7, m8, m9, m10, m11, m12, m13, m14, m15, m16, m17] = value;
+				NATL_IMPL_GET_STRUCT_MEMBER_18
+			}
 		};
 		template<typename Type> struct GetStructMemberAggregate<19, Type> {
+			template<Size Index>
+			constexpr static auto& get(Type& value) noexcept {
+				auto& [m0, m1, m2, m3, m4, m5, m6, m7, m8, m9, m10, m11, m12, m13, m14, m15, m16, m17, m18] = value;
+				NATL_IMPL_GET_STRUCT_MEMBER_19
+			}
 			template<Size Index>
 			constexpr static const auto& get(const Type& value) noexcept {
 				const auto& [m0, m1, m2, m3, m4, m5, m6, m7, m8, m9, m10, m11, m12, m13, m14, m15, m16, m17, m18] = value;
@@ -357,8 +587,18 @@ namespace natl {
 				auto&& [m0, m1, m2, m3, m4, m5, m6, m7, m8, m9, m10, m11, m12, m13, m14, m15, m16, m17, m18] = value;
 				NATL_IMPL_GET_STRUCT_MEMBER_19
 			}
+			template<Size Index>
+			constexpr static const auto&& get(const Type&& value) noexcept {
+				const auto&& [m0, m1, m2, m3, m4, m5, m6, m7, m8, m9, m10, m11, m12, m13, m14, m15, m16, m17, m18] = value;
+				NATL_IMPL_GET_STRUCT_MEMBER_19
+			}
 		};
 		template<typename Type> struct GetStructMemberAggregate<20, Type> {
+			template<Size Index>
+			constexpr static auto& get(Type& value) noexcept {
+				auto& [m0, m1, m2, m3, m4, m5, m6, m7, m8, m9, m10, m11, m12, m13, m14, m15, m16, m17, m18, m19] = value;
+				NATL_IMPL_GET_STRUCT_MEMBER_20
+			}
 			template<Size Index>
 			constexpr static const auto& get(const Type& value) noexcept {
 				const auto& [m0, m1, m2, m3, m4, m5, m6, m7, m8, m9, m10, m11, m12, m13, m14, m15, m16, m17, m18, m19] = value;
@@ -369,8 +609,12 @@ namespace natl {
 				auto&& [m0, m1, m2, m3, m4, m5, m6, m7, m8, m9, m10, m11, m12, m13, m14, m15, m16, m17, m18, m19] = value;
 				NATL_IMPL_GET_STRUCT_MEMBER_20
 			}
+			template<Size Index>
+			constexpr static const auto&& get(const Type&& value) noexcept {
+				const auto&& [m0, m1, m2, m3, m4, m5, m6, m7, m8, m9, m10, m11, m12, m13, m14, m15, m16, m17, m18, m19] = value;
+				NATL_IMPL_GET_STRUCT_MEMBER_20
+			}
 		};
-
 
 #undef NATL_IMPL_GET_STRUCT_MEMBER_0
 #undef NATL_IMPL_GET_STRUCT_MEMBER_1
@@ -395,6 +639,7 @@ namespace natl {
 #undef NATL_IMPL_GET_STRUCT_MEMBER_20
 	}
 
+	//get struct member
 	template<typename Type> 
 	struct GetStructMember {};
 	template<typename Type> concept HasGetStructMemberC = requires() {
@@ -404,7 +649,7 @@ namespace natl {
 	template<typename Type> constexpr inline Bool HasGetStructMember = HasGetStructMemberC<Type>;
 
 	template<typename Type>
-		requires(IsAggregateC<Type> && !HasTupleSizeC<Type> && HasStructMemberCountC<Type>)
+		requires(!HasTupleSizeC<Type> && HasStructMemberCountC<Type>)
 	struct GetStructMember<Type> : impl::GetStructMemberAggregate<StructMemberCount<Decay<Type>>, Type> {};
 	template<typename Type>
 		requires(HasTupleSizeC<Type> && HasGetTupleElementC<Type>)
@@ -415,15 +660,15 @@ namespace natl {
 
 	template<Size Index, typename Type>
 		requires(HasGetStructMemberC<Decay<Type>> && Index < StructMemberCount<Decay<Type>>)
-	constexpr auto&& getStructMember(Type&& value) noexcept {
-		return GetStructMember<Decay<Type>>::template get<Index>(value);
+	constexpr decltype(auto) getStructMember(Type&& value) noexcept {
+		return GetStructMember<Decay<Type>>::template get<Index>(forward<Type>(value));
 	}
 
 
 
 	//get struct member
 	template<typename Type>
-		requires(HasGetStructMemberC<Type>)
+		requires(HasGetStructMemberC<Decay<Type>>)
 	struct GetStructMembers {
 		constexpr static decltype(auto) get(Type&& value) noexcept {
 			return [&] <Size... Indices> (IndexSequence<Indices...>) {
@@ -441,7 +686,7 @@ namespace natl {
 	template<typename Type>
 		requires(IsStructC<Decay<Type>> && HasStructMemberCountC<Decay<Type>>)
 	constexpr decltype(auto) getStructMembers(Type&& value) noexcept {
-		return GetStructMembers<Type>::get(value);
+		return GetStructMembers<Type>::get(forward<Type>(value));
 	}
 
 	template<typename Type>

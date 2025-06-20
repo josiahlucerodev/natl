@@ -20,10 +20,10 @@ namespace natl {
 
 		//compare
 		constexpr Bool operator==(const Tuple<>&) const noexcept { return true; }
-		constexpr Bool operator!=(const Tuple<>&) const noexcept { return true; }
-		constexpr Bool operator<(const Tuple<>&) const noexcept { return true; }
+		constexpr Bool operator!=(const Tuple<>&) const noexcept { return false; }
+		constexpr Bool operator<(const Tuple<>&) const noexcept { return false; }
 		constexpr Bool operator<=(const Tuple<>&) const noexcept { return true; }
-		constexpr Bool operator>(const Tuple<>&) const noexcept { return true; }
+		constexpr Bool operator>(const Tuple<>&) const noexcept { return false; }
 		constexpr Bool operator>=(const Tuple<>&) const noexcept { return true; }
 		constexpr StrongOrdering operator<=>(const Tuple<>&) const noexcept { return StrongOrdering::equal; }
 	};
@@ -205,25 +205,27 @@ namespace natl {
 			requires(tupleSize == sizeof...(RhsDataTypes) && IsOneWayLessThanTestable<FirstDataType, typename Tuple<RhsDataTypes...>::first_value_type>)
 		constexpr Bool operator<(const Tuple<RhsDataTypes...>& rhs) const noexcept {
 			const Tuple& lhs = self();
-			return lhs.first < rhs.first && lhs.rest < rhs.rest;
+			if (lhs.first < rhs.first) return true;
+			if (rhs.first < lhs.first) return false;
+			return lhs.rest < rhs.rest;
 		}
 		template<typename... RhsDataTypes>
 			requires(tupleSize == sizeof...(RhsDataTypes) && IsOneWayLessThanEqualTestable<FirstDataType, typename Tuple<RhsDataTypes...>::first_value_type>)
 		constexpr Bool operator<=(const Tuple<RhsDataTypes...>& rhs) const noexcept {
 			const Tuple& lhs = self();
-			return lhs.first <= rhs.first && lhs.rest <= rhs.rest;
+			return !(rhs < lhs);
 		}
 		template<typename... RhsDataTypes>
 			requires(tupleSize == sizeof...(RhsDataTypes) && IsOneWayGreaterThanTestable<FirstDataType, typename Tuple<RhsDataTypes...>::first_value_type>)
 		constexpr Bool operator>(const Tuple<RhsDataTypes...>& rhs) const noexcept {
 			const Tuple& lhs = self();
-			return lhs.first > rhs.first && lhs.rest > rhs.rest;
+			return rhs < lhs;
 		}
 		template<typename... RhsDataTypes>
 			requires(tupleSize == sizeof...(RhsDataTypes) && IsOneWayGreaterThanEqualTestable<FirstDataType, typename Tuple<RhsDataTypes...>::first_value_type>)
 		constexpr Bool operator>=(const Tuple<RhsDataTypes...>& rhs) const noexcept {
 			const Tuple& lhs = self();
-			return lhs.first >= rhs.first && lhs.rest >= rhs.rest;
+			return !(lhs < rhs);
 		}
 	};
 

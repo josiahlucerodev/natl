@@ -105,6 +105,7 @@ natl/util/iterators.h
 natl/util/lexicographicalCompare.h
 natl/util/limits.h
 natl/util/memory.h
+natl/util/mixin.h
 natl/util/numerics.h
 natl/util/pointer.h
 natl/util/preprocessor.h

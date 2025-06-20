@@ -207,6 +207,10 @@ namespace natl {
 	template<typename... Types> constexpr inline Bool IsSameByteSize = IsSameByteSizeV<Types...>::value;
 	template<typename... Types> concept IsSameByteSizeC = IsSameByteSize<Types...>;
 
+	template<typename BaseType, typename DerivedType> struct IsBaseOfV : BoolConstant<std::is_base_of_v<BaseType, DerivedType>> {};
+	template<typename BaseType, typename DerivedType> inline constexpr Bool IsBaseOf = IsBaseOfV<BaseType, DerivedType>::value;
+	template<typename BaseType, typename DerivedType> concept IsBaseOfC = IsBaseOf<BaseType, DerivedType>;
+
 	//basic type properties
 	template<typename Type> struct IsConstV : FalseType {};
 	template<typename Type> struct IsConstV<const Type> : TrueType {};

@@ -220,6 +220,13 @@ namespace natl {
     concept TemplatePackHasElementC = TemplatePackHasElement<TypeCompare, TestElement, Elements...>;
 
 
+    //template pack elements are 
+    template<template<typename> typename Predicate, typename... Elements>
+    struct TemplatePackElementsAreV {
+        constexpr static Bool value = (Predicate<Elements>::value && ...);
+    };
+
+
     template<typename... Elements>
     struct TypePack {
         template<typename... NewElements>
@@ -703,5 +710,25 @@ namespace natl {
             }(natl::forward<ArgTypes>(args)...);
         }(MakeIndexSequence<Index>{});
     }
+
+    //type pack elements are 
+    namespace impl {
+        template<template<typename> typename Predicate, typename Type>
+        struct TypePackElementsAreImplV {};
+        template<template<typename> typename Predicate, typename... Types>
+        struct TypePackElementsAreImplV<Predicate, TypePack<Types...>> {
+            constexpr static Bool value = TemplatePackElementsAreV<Predicate, Types...>::value;
+        };
+    }
+
+    template<template<typename> typename Predicate, typename TypePackArg>
+        requires(IsTypePackC<TypePackArg>)
+    struct TypePackElementsAreV {
+        constexpr static Bool value = impl::TypePackElementsAreImplV<Predicate, TypePackArg>::value;
+    };
+    template<template<typename> typename Predicate, typename TypePackArg>
+    concept TypePackElementsAreC = TypePackElementsAreV<Predicate, TypePackArg>::value;
+    template<template<typename> typename Predicate, typename TypePackArg>
+    constexpr static inline Bool TypePackElementsAre = TypePackElementsAreV<Predicate, TypePackArg>::value;
 
 }

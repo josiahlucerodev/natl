@@ -36,8 +36,8 @@ namespace natl {
     using CommonComparisonCategory = CommonComparisonCategoryType<DataTypes...>::type;
 
     template <typename Type>
-    concept ThreeWayComparable = requires(const RemoveReference<Type>& __a, const RemoveReference<Type>& __b) {
-            { __a <=> __b };
+    concept ThreeWayComparable = requires(const RemoveReference<Type>& lhs, const RemoveReference<Type>& rhs) {
+            { lhs <=> rhs };
     };
 
     template <typename LhsType, typename RhsType>
@@ -84,7 +84,6 @@ namespace natl {
     template<typename LhsDataType, typename RhsDataType = LhsDataType>
     concept IsThreeWayTestable = requires(const LhsDataType& lhs, const RhsDataType& rhs) {
         { lhs <=> rhs };
-        { rhs <=> lhs };
     };
 
     template<typename DataType>
@@ -168,5 +167,4 @@ namespace natl {
             return lhs != rhs;
         }
     };
-
 }

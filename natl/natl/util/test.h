@@ -197,6 +197,28 @@ namespace natl {
 
 	template<typename LhsType, typename RhsType, typename... AssertArgs>
 		requires(requires(const LhsType& expected, const RhsType& actual) { { expected == actual } -> IsConvertibleC<Bool>; })
+	constexpr void testAssertNotEquals(Test& test, const LhsType& expected, const RhsType& actual, AssertArgs&&... assertArgs) noexcept {
+		if (expected != actual) {
+			test.passedTest();
+		} else {
+			if (natl::isConstantEvaluated()) {
+				natl::constantEvaluatedError();
+			} else {
+				test.failedTest();
+				if constexpr (IsFormattableC<Decay<LhsType>, natl::Ascii> && IsFormattableC<Decay<RhsType>, natl::Ascii>) {
+					natl::printlnfc("natl: ", test.from, natl::PrintColor::red,
+						" test failed: ", forward<AssertArgs>(assertArgs)...,
+						" expected: ", expected, ", actual: ", actual);
+				} else {
+					natl::printlnfc("natl: ", test.from, natl::PrintColor::red,
+						" test failed: ", forward<AssertArgs>(assertArgs)...);
+				}
+			}
+		}
+	}
+
+	template<typename LhsType, typename RhsType, typename... AssertArgs>
+		requires(requires(const LhsType& expected, const RhsType& actual) { { expected == actual } -> IsConvertibleC<Bool>; })
 	constexpr void testOptionAssertEquals(Test& test, const LhsType& expected, const Option<RhsType>& actual, AssertArgs&&... assertArgs) noexcept {
 		if (actual.hasValue() && (expected == actual.value())) {
 			test.passedTest();
