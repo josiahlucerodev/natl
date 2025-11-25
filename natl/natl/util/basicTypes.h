@@ -1,9 +1,11 @@
 #pragma once
 
+//@begin_non_modules
 //own
 #include "compilerDependent.h"
+//@end_non_modules
 
-//interface 
+//@export
 namespace natl {
 	using GenericInt = int;
 	
@@ -188,6 +190,7 @@ namespace natl {
 	struct OptionEmpty {};
 }
 
+//@export
 namespace natl::literals {
 	constexpr i8 operator""_i8(unsigned long long value) noexcept { return static_cast<i8>(value); }
 	constexpr i16 operator""_i16(unsigned long long value) noexcept { return static_cast<i16>(value); }

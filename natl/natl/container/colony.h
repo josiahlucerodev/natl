@@ -9,9 +9,9 @@
 #include "../util/stringConvert.h"
 #include "../util/numerics.h"
 #include "../util/bits.h"
-#include "../fundamental/option.h"
+#include "../util/option.h"
 
-//interface 
+//@export
 namespace natl {
 	using ColonySkipFieldType = Bool;
 	struct ColonyLimits {
@@ -594,7 +594,7 @@ namespace natl {
 				static_cast<difference_type>(skipFieldIndex),
 				skipFieldPos);
 		}
-		constexpr iterator insertGetIter() {
+		constexpr iterator insertGetIter() noexcept {
 			reserve(colonySize + 1); 
 			colonySize += 1;
 

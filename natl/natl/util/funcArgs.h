@@ -1,11 +1,16 @@
 #pragma once
 
+//@begin_non_modules
+//std
+#include <tuple>
+//@end_non_modules
+
 //own
 #include "typeTraits.h"
 #include "typePack.h"
-#include "../fundamental/tuple.h"
+#include "../util/tuple.h"
 
-//interface 
+//@export
 namespace natl {
 	template<typename... ArgTypes>
 	struct FuncArgs {

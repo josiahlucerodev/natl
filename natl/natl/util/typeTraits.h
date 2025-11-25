@@ -1,14 +1,18 @@
 #pragma once
 
+//@begin_non_modules
 //std
 #include <concepts>
 #include <type_traits>
 
 //own
-#include "basicTypes.h"
 #include "compilerDependent.h"
+//@end_non_modules
 
-//interface
+//own
+#include "basicTypes.h"
+
+//@export
 namespace natl {
 	template<typename Type>
 	struct TypeArg {};

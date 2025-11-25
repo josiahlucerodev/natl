@@ -1,17 +1,14 @@
 #pragma once
 
-//std
-#include <cmath>
-#include <array>
-
 //own
 #include "../util/bits.h"
 #include "../util/assert.h"
+#include "../util/memory.h"
 #include "../container/array.h"
-#include "../math.h"
+#include "../math/all.h"
 #include "simdBase.h"
 
-//interface
+//@export
 namespace natl::simd {
 	template<typename DataType, Size registerSize>
 	struct StandardSimdRegisterBase {
@@ -690,7 +687,7 @@ namespace natl::simd {
 		constexpr inline static SimdRegisterType addsat(SimdRegisterType lhs, SimdRegisterType rhs) noexcept {
 			SimdRegisterType output;
 			for (Size i = 0; i < SimdRegisterToInfo<SimdRegisterType>::count(); i++) {
-				output[i] = natlm::addsat<typename SimdRegisterToInfo<SimdRegisterType>::value_type>(lhs[i], rhs[i]);
+				output[i] = natl::math::addsat<typename SimdRegisterToInfo<SimdRegisterType>::value_type>(lhs[i], rhs[i]);
 			}
 			return output;
 		}
@@ -727,7 +724,7 @@ namespace natl::simd {
 			SimdRegisterType output{};
 			for (Size i = 0; i < SimdRegisterToInfo<SimdRegisterType>::count(); i++) {
 				if (mmask[i]) {
-					output[i] = natlm::addsat<typename SimdRegisterToInfo<SimdRegisterType>::value_type>(lhs[i], rhs[i]);
+					output[i] = natl::math::addsat<typename SimdRegisterToInfo<SimdRegisterType>::value_type>(lhs[i], rhs[i]);
 				}
 			}
 			return output;
@@ -765,7 +762,7 @@ namespace natl::simd {
 			SimdRegisterType output = src;
 			for (Size i = 0; i < SimdRegisterToInfo<SimdRegisterType>::count(); i++) {
 				if (mmask[i]) {
-					output[i] = natlm::addsat<typename SimdRegisterToInfo<SimdRegisterType>::value_type>(lhs[i], rhs[i]);
+					output[i] = natl::math::addsat<typename SimdRegisterToInfo<SimdRegisterType>::value_type>(lhs[i], rhs[i]);
 				}
 			}
 			return output;
@@ -803,7 +800,7 @@ namespace natl::simd {
 		constexpr inline static SimdRegisterType subsat(SimdRegisterType lhs, SimdRegisterType rhs) noexcept {
 			SimdRegisterType output;
 			for (Size i = 0; i < SimdRegisterToInfo<SimdRegisterType>::count(); i++) {
-				output[i] = natlm::subsat<typename SimdRegisterToInfo<SimdRegisterType>::value_type>(lhs[i], rhs[i]);
+				output[i] = natl::math::subsat<typename SimdRegisterToInfo<SimdRegisterType>::value_type>(lhs[i], rhs[i]);
 			}
 			return output;
 		}
@@ -840,7 +837,7 @@ namespace natl::simd {
 			SimdRegisterType output{};
 			for (Size i = 0; i < SimdRegisterToInfo<SimdRegisterType>::count(); i++) {
 				if (mmask[i]) {
-					output[i] = natlm::subsat<typename SimdRegisterToInfo<SimdRegisterType>::value_type>(lhs[i], rhs[i]);
+					output[i] = natl::math::subsat<typename SimdRegisterToInfo<SimdRegisterType>::value_type>(lhs[i], rhs[i]);
 				}
 			}
 			return output;
@@ -878,7 +875,7 @@ namespace natl::simd {
 			SimdRegisterType output = src;
 			for (Size i = 0; i < SimdRegisterToInfo<SimdRegisterType>::count(); i++) {
 				if (mmask[i]) {
-					output[i] = natlm::subsat<typename SimdRegisterToInfo<SimdRegisterType>::value_type>(lhs[i], rhs[i]);
+					output[i] = natl::math::subsat<typename SimdRegisterToInfo<SimdRegisterType>::value_type>(lhs[i], rhs[i]);
 				}
 			}
 			return output;
@@ -915,7 +912,7 @@ namespace natl::simd {
 		constexpr inline static SimdRegisterType mulsat(SimdRegisterType lhs, SimdRegisterType rhs) noexcept {
 			SimdRegisterType output;
 			for (Size i = 0; i < SimdRegisterToInfo<SimdRegisterType>::count(); i++) {
-				output[i] = natlm::mulsat<typename SimdRegisterToInfo<SimdRegisterType>::value_type>(lhs[i], rhs[i]);
+				output[i] = natl::math::mulsat<typename SimdRegisterToInfo<SimdRegisterType>::value_type>(lhs[i], rhs[i]);
 			}
 			return output;
 		}
@@ -952,7 +949,7 @@ namespace natl::simd {
 			SimdRegisterType output{};
 			for (Size i = 0; i < SimdRegisterToInfo<SimdRegisterType>::count(); i++) {
 				if (mmask[i]) {
-					output[i] = natlm::mulsat<typename SimdRegisterToInfo<SimdRegisterType>::value_type>(lhs[i], rhs[i]);
+					output[i] = natl::math::mulsat<typename SimdRegisterToInfo<SimdRegisterType>::value_type>(lhs[i], rhs[i]);
 				}
 			}
 			return output;
@@ -990,7 +987,7 @@ namespace natl::simd {
 			SimdRegisterType output = src;
 			for (Size i = 0; i < SimdRegisterToInfo<SimdRegisterType>::count(); i++) {
 				if (mmask[i]) {
-					output[i] = natlm::mulsat<typename SimdRegisterToInfo<SimdRegisterType>::value_type>(lhs[i], rhs[i]);
+					output[i] = natl::math::mulsat<typename SimdRegisterToInfo<SimdRegisterType>::value_type>(lhs[i], rhs[i]);
 				}
 			}
 			return output;
@@ -1027,7 +1024,7 @@ namespace natl::simd {
 		constexpr inline static SimdRegisterType divsat(SimdRegisterType lhs, SimdRegisterType rhs) noexcept {
 			SimdRegisterType output;
 			for (Size i = 0; i < SimdRegisterToInfo<SimdRegisterType>::count(); i++) {
-				output[i] = natlm::divsat<typename SimdRegisterToInfo<SimdRegisterType>::value_type>(lhs[i], rhs[i]);
+				output[i] = natl::math::divsat<typename SimdRegisterToInfo<SimdRegisterType>::value_type>(lhs[i], rhs[i]);
 			}
 			return output;
 		}
@@ -1064,7 +1061,7 @@ namespace natl::simd {
 			SimdRegisterType output{};
 			for (Size i = 0; i < SimdRegisterToInfo<SimdRegisterType>::count(); i++) {
 				if (mmask[i]) {
-					output[i] = natlm::divsat<typename SimdRegisterToInfo<SimdRegisterType>::value_type>(lhs[i], rhs[i]);
+					output[i] = natl::math::divsat<typename SimdRegisterToInfo<SimdRegisterType>::value_type>(lhs[i], rhs[i]);
 				}
 			}
 			return output;
@@ -1102,7 +1099,7 @@ namespace natl::simd {
 			SimdRegisterType output = src;
 			for (Size i = 0; i < SimdRegisterToInfo<SimdRegisterType>::count(); i++) {
 				if (mmask[i]) {
-					output[i] = natlm::divsat<typename SimdRegisterToInfo<SimdRegisterType>::value_type>(lhs[i], rhs[i]);
+					output[i] = natl::math::divsat<typename SimdRegisterToInfo<SimdRegisterType>::value_type>(lhs[i], rhs[i]);
 				}
 			}
 			return output;
@@ -1874,7 +1871,7 @@ namespace natl::simd {
 			SimdRegisterType output = value;
 			for (Size i = 0; i < SimdRegisterToInfo<SimdRegisterType>::count(); i++) {
 				if (mmask[i]) {
-					output[i] = natlm::abs<typename SimdRegisterToInfo<SimdRegisterType>::value_type>(value[i]);
+					output[i] = natl::math::abs<typename SimdRegisterToInfo<SimdRegisterType>::value_type>(value[i]);
 				}
 			}
 			return output;
@@ -1906,7 +1903,7 @@ namespace natl::simd {
 			SimdRegisterType output = src;
 			for (Size i = 0; i < SimdRegisterToInfo<SimdRegisterType>::count(); i++) {
 				if (mmask[i]) {
-					output[i] = natlm::abs<typename SimdRegisterToInfo<SimdRegisterType>::value_type>(value[i]);
+					output[i] = natl::math::abs<typename SimdRegisterToInfo<SimdRegisterType>::value_type>(value[i]);
 				}
 			}
 			return output;
@@ -7545,7 +7542,7 @@ namespace natl::simd {
 		//shift left 
 		template<typename SimdRegisterType>
 		constexpr inline static SimdRegisterType shiftLeft(const SimdRegisterType value, const Size count) noexcept {
-			NATL_ASSERT(count > SimdRegisterToInfo<SimdRegisterType>::count(), "cannot shift left register more than ", SimdRegisterToInfo<SimdRegisterType>::count(), " but shift was ", count);
+			cassertPre(count > SimdRegisterToInfo<SimdRegisterType>::count(), "cannot shift left register more than ", SimdRegisterToInfo<SimdRegisterType>::count(), " but shift was ", count);
 			SimdRegisterType output = setZero<SimdRegisterType>();
 			const Size amountLeft = SimdRegisterToInfo<SimdRegisterType>::count() - count;
 			for (Size i = 0; i < amountLeft; i++) {
@@ -7590,7 +7587,7 @@ namespace natl::simd {
 		//shift right
 		template<typename SimdRegisterType>
 		constexpr inline static SimdRegisterType shiftRight(const SimdRegisterType value, const Size count) noexcept {
-			NATL_ASSERT(count > SimdRegisterToInfo<SimdRegisterType>::count(), "cannot shift right register more than ", SimdRegisterToInfo<SimdRegisterType>::count(), " but shift was ", count);
+			cassertPre(count > SimdRegisterToInfo<SimdRegisterType>::count(), "cannot shift right register more than ", SimdRegisterToInfo<SimdRegisterType>::count(), " but shift was ", count);
 			SimdRegisterType output = setZero<SimdRegisterType>();
 			const Size amountLeft = SimdRegisterToInfo<SimdRegisterType>::count() - count;
 			for (Size i = 0; i < amountLeft; i++) {
@@ -8321,7 +8318,7 @@ namespace natl::simd {
 					}
 				}
 			} else {
-				std::memcpy(output.values.data(), value.values.data(), sizeof(Src));
+				natl::memcpy(output.values.data(), value.values.data(), sizeof(Src));
 			}
 			return output;
 		}
@@ -8380,7 +8377,7 @@ namespace natl::simd {
 				return output;
 			} else {
 				Src output;
-				std::memcpy(output.values.data(), src.values.data(), sizeof(Src));
+				natl::memcpy(output.values.data(), src.values.data(), sizeof(Src));
 				return output;
 			}
 		}

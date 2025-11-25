@@ -1,13 +1,18 @@
 #pragma once 
 
+//@begin_non_modules
+//std
+#include <memory>
+//@end_non_modules
+
 //own
-#include "../fundamental/expect.h"
+#include "expect.h"
 #include "basicTypes.h"
 #include "numerics.h"
 #include "error.h"
 #include "bits.h"
 
-//interface
+//@export
 namespace natl {
 	template<typename DataType>
 	void* castToVoidPtr(DataType* ptr) noexcept {
@@ -134,5 +139,13 @@ namespace natl {
 	template<typename LhsMemberType, typename RhsMemberType>
 	consteval Size memberToMemberOffset() noexcept {
 		return memberToMemberOffset(sizeof(LhsMemberType), alignof(RhsMemberType));
+	}
+
+	inline void* memcpy(void* dest, const void* src, Size count) noexcept {
+		Byte* d = reinterpret_cast<Byte*>(dest); 
+		const Byte* s = reinterpret_cast<const Byte*>(src);
+		for (Size i = 0; i < count; i++, d++, s++) {
+			*d = *s;
+		}
 	}
 }

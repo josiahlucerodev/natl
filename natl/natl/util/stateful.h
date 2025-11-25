@@ -1,10 +1,8 @@
 #pragma once 
 
 //own
-#include "basicTypes.h"
-#include "typePack.h"
-
-//interface 
+#include "compilerDependent.h"
+ 
 #if defined(NATL_COMPILER_GCC)
 #define NATL_DEFINE_STATEFUL_IMPL_START \
         _Pragma("GCC diagnostic push") \
@@ -46,12 +44,6 @@
     constexpr auto CounterName = Value; \
     NATL_DEFINE_STATEFUL_IMPL_END
 
-
-
-namespace natl {
-    NATL_DEFINE_STATEFUL_COUNTER(Counter);
-}
-
 #define NATL_DEFINE_STATEFUL_TYPEPACK(TypePackName) \
     NATL_DEFINE_STATEFUL_IMPL_START \
     namespace impl { \
@@ -85,4 +77,8 @@ namespace natl {
     template<auto Unique = [] {}> \
     using TypePackName = decltype(get##TypePackName<Unique>()); \
     NATL_DEFINE_STATEFUL_IMPL_END
+
+#define NATL_UNIQUE_FUNCTION template<auto Unique = []{}>
+#define NATL_UNIQUE_FUNCTION_TYPE auto Unique = []{}
+
 

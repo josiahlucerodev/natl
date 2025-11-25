@@ -1,5 +1,11 @@
 #pragma once
 
+
+//@begin_non_modules
+//std
+#include <initializer_list>
+//@end_non_modules
+
 //own
 #include "../util/iterators.h"
 #include "../util/algorithm.h"
@@ -9,7 +15,7 @@
 #include "functional.h"
 #include "arrayView.h"
 
-//interface
+//@export
 namespace natl {
 	template<typename DataType, typename SequentialDynamicContainer = DynArray<DataType>, typename Compare = CompareLess<DataType>>
 	struct PriorityQueue {

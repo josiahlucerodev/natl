@@ -10,7 +10,7 @@
 #include "array.h"
 #include "string.h"
 
-//interface 
+//@export
 namespace natl {
 	struct BaseNamedElement {};
 	template<TemplateStringLiteral InputName, typename DataType>

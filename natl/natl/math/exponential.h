@@ -1,12 +1,16 @@
 #pragma once
 
+//@begin_non_modules
+//own
+#include "../util/compilerDependent.h"
+//@end_non_modules
+
 //own 
 #include "../util/bits.h"
-#include "../util/compilerDependent.h"
 #include "constants.h"
 #include "basicFloatOperations.h"
 
-//interface
+//@export
 namespace natl::math {
 	//exp
 

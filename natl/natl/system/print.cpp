@@ -1,5 +1,9 @@
-//interface
+//@interface
 #include "print.h"
+
+//@begin_non_modules
+//own
+#include "../util/compilerDependent.h"
 
 //system 
 #ifdef NATL_WINDOWS_PLATFORM
@@ -10,41 +14,34 @@
 #if defined(NATL_UNIX_PLATFORM) || defined(NATL_WEB_PLATFORM)
 #include <unistd.h>
 #endif // NATL_UNIX_PLATFORM || NATL_WEB_PLATFORM
-
-
-//implementation 
+//@end_non_modules
+ 
 namespace natl {
 #ifdef NATL_WINDOWS_PLATFORM
-	Bool print(const Ascii* string, const Size size) noexcept {
-		HANDLE consoleOutputHandle = GetStdHandle(STD_OUTPUT_HANDLE);
-		if (consoleOutputHandle == INVALID_HANDLE_VALUE) {
+	Bool print(const Ascii* string, const Size size) noexcept {		
+		HANDLE outputHandle = GetStdHandle(STD_OUTPUT_HANDLE);
+		if (outputHandle == INVALID_HANDLE_VALUE) {
 			return false;
 		}
 
+		DWORD mode;
 		DWORD charactersWritten;
-		if (!WriteConsoleA(consoleOutputHandle, string, static_cast<DWORD>(size), &charactersWritten, NULL)) {
-			return false;
+		if (GetConsoleMode(outputHandle, &mode)) {
+			if (!WriteConsoleA(outputHandle, string, static_cast<DWORD>(size), &charactersWritten, NULL)) {
+				return false;
+			}
+		} else {
+			WriteFile(outputHandle, string, static_cast<DWORD>(size), &charactersWritten, NULL);
 		}
 
 		return true;
 	}
 
 	Bool println(const Ascii* string, const Size size) noexcept {
-		HANDLE consoleOutputHandle = GetStdHandle(STD_OUTPUT_HANDLE);
-		if (consoleOutputHandle == INVALID_HANDLE_VALUE) {
+		if (!print(string, size)) {
 			return false;
 		}
-
-		DWORD charactersWritten;
-		if (!WriteConsoleA(consoleOutputHandle, string, static_cast<DWORD>(size), &charactersWritten, NULL)) {
-			return false;
-		}
-		const Ascii newLineCharacter = '\n';
-		if (!WriteConsoleA(consoleOutputHandle, &newLineCharacter, 1, &charactersWritten, NULL)) {
-			return false;
-		}
-
-		return true;
+		return print("\n", 1);
 	}
 
 	InputReturn input(Ascii* dst, const Size dstSize) noexcept {

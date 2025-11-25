@@ -7,7 +7,7 @@
 #include "array.h"
 #include "dynArray.h"
 
-//interface 
+//@export
 namespace natl {
 	template<typename DataType, typename Alloc>
 		requires(IsAllocatorC<Alloc>)
@@ -26,10 +26,10 @@ namespace natl {
 		using optional_pointer = Option<pointer>;
 		using optional_const_pointer = Option<const_pointer>;
 
-		using iterator = RandomAccessIteratorAlloc<value_type, Alloc>;
-		using const_iterator = ConstRandomAccessIteratorAlloc<value_type, Alloc>;
-		using reverse_iterator = ReverseRandomAccessIteratorAlloc<value_type, Alloc>;
-		using const_reverse_iterator = ReverseConstRandomAccessIteratorAlloc<value_type, Alloc>;
+		using iterator = ContiguousIteratorAlloc<value_type, Alloc>;
+		using const_iterator = ConstContiguousIteratorAlloc<value_type, Alloc>;
+		using reverse_iterator = ReverseContiguousIteratorAlloc<value_type, Alloc>;
+		using const_reverse_iterator = ReverseConstContiguousIteratorAlloc<value_type, Alloc>;
 
 		using allocation_move_adapater = AllocationMoveAdapater<value_type, Alloc>;
 	private:
@@ -126,10 +126,10 @@ namespace natl {
 		using optional_pointer = Option<pointer>;
 		using optional_const_pointer = Option<const_pointer>;
 
-		using iterator = RandomAccessIteratorAlloc<value_type, Alloc>;
-		using const_iterator = ConstRandomAccessIteratorAlloc<value_type, Alloc>;
-		using reverse_iterator = ReverseRandomAccessIteratorAlloc<value_type, Alloc>;
-		using const_reverse_iterator = ReverseConstRandomAccessIteratorAlloc<value_type, Alloc>;
+		using iterator = ContiguousIteratorAlloc<value_type, Alloc>;
+		using const_iterator = ConstContiguousIteratorAlloc<value_type, Alloc>;
+		using reverse_iterator = ReverseContiguousIteratorAlloc<value_type, Alloc>;
+		using const_reverse_iterator = ReverseConstContiguousIteratorAlloc<value_type, Alloc>;
 
 		using allocation_move_adapater = AllocationMoveAdapater<value_type, Alloc>;
 	public:

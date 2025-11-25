@@ -1,15 +1,19 @@
 #pragma once
 
+//@begin_non_modules
+//own
+#include "../util/compilerDependent.h"
+//@end_non_modules
+
 //own
 #include "../util/basicTypes.h"
 #include "../util/typeTraits.h"
 #include "../util/typePack.h"
-#include "../util/compilerDependent.h"
 #include "../util/stringLiteral.h"
 #include "../container/array.h"
 #include "../processing/format.h"
 
-//interface
+//@export
 namespace natl {
     namespace impl {
         template<typename DataType>

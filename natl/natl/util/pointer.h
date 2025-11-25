@@ -5,11 +5,11 @@
 #include "allocator.h"
 #include "dataMovement.h"
 #include "algorithm.h"
-#include "../util/bits.h"
+#include "bits.h"
 #include "../sync/atomic.h"
 #include "../container/functional.h"
 
-//interface
+//@export
 namespace natl {
 	template<typename DataType>
 	struct Ptr {
@@ -244,7 +244,7 @@ namespace natl {
 		constexpr Bool operator<=(const UniquePtr& other) const noexcept { return get() <= other.get(); }
 		constexpr Bool operator>(const UniquePtr& other) const noexcept { return get() > other.get(); }
 		constexpr Bool operator>=(const UniquePtr& other) const noexcept { return get() >= other.get(); }
-		constexpr std::compare_three_way_result_t<pointer> operator<=>(const UniquePtr& other) { return get() <=> other.get(); };
+		constexpr CompareThreeWayResult<pointer> operator<=>(const UniquePtr& other) const noexcept { return get() <=> other.get(); };
 
 		constexpr Bool operator==(NullptrType) const noexcept { return !self(); }
 		constexpr Bool operator!=(NullptrType) const noexcept { return static_cast<Bool>(self()); }
@@ -283,15 +283,13 @@ namespace natl {
 	struct IsTriviallyMoveAssignableV<UniquePtr<DataType, Alloc, Deleter>>
 		: FalseType {};
 
-	template<typename CharT, typename Traits, typename DataType, typename Alloc, typename Deleter>
-	std::basic_ostream<CharT, Traits>& operator<<(std::basic_ostream<CharT, Traits>& os, const UniquePtr<DataType, Alloc, Deleter>& ptr) {
-		os << ptr.get();
-		return os;
-	}
-
 	template<typename PtrDataType, typename SmallDataType>
 	struct PackedPtrAndSmallData {
 	public:
+		constexpr static Bool isConstantEvaluated() noexcept {
+			return true; // natl::isConstantEvaluated();
+		}
+
 		using pointer_type = PtrDataType*;
 		using small_data_type = SmallDataType;
 	private:
@@ -593,6 +591,8 @@ namespace natl {
 						control_block_deleter_function_type controlBlockDeleter = natl::move(controlBlockSeperate->controlBlockDeleter);
 						controlBlockDeleter.invoke(controlBlockSeperate);
 					}
+				} else {
+					controlBlockSeperate->useCount--;
 				}
 			}
 			static inline void destoryWeak(SharedPtrControlBlockSeperate* controlBlockSeperate) noexcept {
@@ -711,6 +711,8 @@ namespace natl {
 						control_block_deleter_function_type controlBlockDeleter = natl::move(controlBlockFused->controlBlockDeleter);
 						controlBlockDeleter.invoke(controlBlockFused);
 					}
+				} else {
+					controlBlockFused->useCount--;
 				}
 			}
 			static inline void destoryWeak(SharedPtrControlBlockFused* controlBlockFused) noexcept {
@@ -835,9 +837,11 @@ namespace natl {
 							controlBlockDeleterFunc.invoke(controlBlock);
 							return true;
 						}
+					} else {
+						controlBlock->useCount--;
 					}
 					return false;
-					};
+				};
 			}
 			[[nodiscard]] constexpr control_block_polymorphic_destroy_function getWeakDestoryFunction() const noexcept override {
 				return [](SharedPtrControlBlockSeperatePolymorphicConstexpr* controlBlockPolymorpic) -> Bool {
@@ -857,19 +861,19 @@ namespace natl {
 				return [](SharedPtrControlBlockSeperatePolymorphicConstexpr* controlBlockPolymorpic) -> void {
 					auto controlBlock = static_cast<SharedPtrControlBlockSeperateConstexpr*>(controlBlockPolymorpic);
 					controlBlock->useCount++;
-					};
+				};
 			}
 			constexpr control_block_polymorphic_increment_function getWeakRefIncrementFunction() const noexcept override {
 				return [](SharedPtrControlBlockSeperatePolymorphicConstexpr* controlBlockPolymorpic) -> void {
 					auto controlBlock = static_cast<SharedPtrControlBlockSeperateConstexpr*>(controlBlockPolymorpic);
 					controlBlock->weakCount++;
-					};
+				};
 			}
 			constexpr control_block_polymorphic_get_count_function getUseCountFunction() const noexcept override {
 				return [](SharedPtrControlBlockSeperatePolymorphicConstexpr* controlBlockPolymorpic) -> Size {
 					auto controlBlock = static_cast<SharedPtrControlBlockSeperateConstexpr*>(controlBlockPolymorpic);
 					return controlBlock->useCount;
-					};
+				};
 			}
 			constexpr control_block_polymorphic_increment_if_not_zero_function getIncrementIfNotZeroFunction() const noexcept override {
 				return [](SharedPtrControlBlockSeperatePolymorphicConstexpr* controlBlockPolymorpic) -> Bool {
@@ -898,6 +902,9 @@ namespace natl {
 	template<typename DataType>
 	struct WeakPtr {
 	public:
+		template<typename O>
+		friend struct SharedPtr;
+
 		using element_type = DataType;
 		using element_pointer = DataType*;
 
@@ -916,6 +923,11 @@ namespace natl {
 			control_block_fused_polymorphic* controlBlockFusedPolymorphic;
 			control_block_seperate_polymorphic_constexpr* controlBlockSeperatePolymorphicConstexpr;
 		};
+
+		constexpr static Bool isConstantEvaluated() noexcept {
+			return true; // natl::isConstantEvaluated();
+		}
+
 	public:
 		//constructor 
 		constexpr WeakPtr() noexcept : dataPtrAndControlBlockState(nullptr, impl::SharedPtrControlBlockState::seperate), controlBlockSeperate() {}
@@ -924,13 +936,13 @@ namespace natl {
 	private:
 		template<typename OtherType>
 		constexpr void constructCopy(const OtherType& other) noexcept {
-			if (other.dataPtr == nullptr) {
+			if (other.dataPtrAndControlBlockState.getPtr() == nullptr) {
 				dataPtrAndControlBlockState.setValues(nullptr, impl::SharedPtrControlBlockState::seperate);
 				controlBlockSeperate = nullptr;
 			} else {
 				dataPtrAndControlBlockState = other.dataPtrAndControlBlockState;
 
-				switch (other.controlBlockState) {
+				switch (other.dataPtrAndControlBlockState.getSmallData()) {
 				case impl::SharedPtrControlBlockState::seperate:
 					controlBlockSeperate = other.controlBlockSeperate;
 					controlBlockSeperate->weakCount++;
@@ -993,7 +1005,7 @@ namespace natl {
 				}
 			}
 
-			other.dataPtr = nullptr;
+			other.dataPtrAndControlBlockState.setAsNull();
 		}
 		template<typename OtherType>
 		constexpr void constructPolymorphicCopy(const OtherType& other) noexcept {
@@ -1238,7 +1250,7 @@ namespace natl {
 		}
 
 		//observers
-		constexpr Size use_count() const noexcept {
+		constexpr Size useCount() const noexcept {
 			if (dataPtrAndControlBlockState.getPtr()) {
 				switch (dataPtrAndControlBlockState.getSmallData()) {
 				case impl::SharedPtrControlBlockState::seperate:
@@ -1263,7 +1275,7 @@ namespace natl {
 		}
 
 		constexpr Bool expired() const noexcept {
-			return use_count() == 0;
+			return useCount() == 0;
 		}
 		constexpr SharedPtr<DataType> lock() const noexcept {
 			if (isConstantEvaluated()) {
@@ -1277,8 +1289,6 @@ namespace natl {
 		constexpr Bool isEmpty() const noexcept { return empty(); }
 		constexpr Bool isNotEmpty() const noexcept { return !empty(); }
 		explicit constexpr operator Bool() const noexcept { return isNotEmpty(); }
-
-		friend SharedPtr<DataType>;
 	};
 
 	template<typename DataType>
@@ -1312,6 +1322,9 @@ namespace natl {
 	template<typename DataType>
 	struct SharedPtr {
 	public:
+		template<typename O>
+		friend struct WeakPtr;
+
 		using element_type = DataType;
 		using element_pointer = DataType*;
 
@@ -1321,6 +1334,10 @@ namespace natl {
 		using control_block_fused_polymorphic = impl::SharedPtrControlBlockFusedPolymorphic;
 		using control_block_seperate_polymorphic_constexpr = impl::SharedPtrControlBlockSeperatePolymorphicConstexpr;
 		using pointer_and_control_block_state = PackedPtrAndSmallData<element_type, impl::SharedPtrControlBlockState>;
+
+		constexpr static Bool isConstantEvaluated() noexcept {
+			return true; // natl::isConstantEvaluated();
+		}
 	private:
 		pointer_and_control_block_state dataPtrAndControlBlockState;
 		union {
@@ -1557,7 +1574,7 @@ namespace natl {
 	private:
 		template<typename OtherType>
 		constexpr Bool incrementIfNotZero(const OtherType& other) noexcept {
-			switch (dataPtrAndControlBlockState.getSmallData()) {
+			switch (other.dataPtrAndControlBlockState.getSmallData()) {
 			case impl::SharedPtrControlBlockState::seperate:
 				return control_block_seperate::incrementIfNotZero(other.controlBlockSeperate);
 			case impl::SharedPtrControlBlockState::fused:
@@ -1747,10 +1764,12 @@ namespace natl {
 
 		template<typename Alloc, typename... ConstructArgTypes>
 			requires(IsAllocatorC<Alloc>&& IsConstructibleC<DataType, ConstructArgTypes...>)
-		constexpr SharedPtr(SharedPtrFusedConstruct, Alloc, ConstructArgTypes... constructArg) noexcept {
+		constexpr SharedPtr(SharedPtrFusedConstruct, Alloc, ConstructArgTypes&&... constructArgs) noexcept {
 			if (isConstantEvaluated()) {
+				DataType* ptr = Alloc::template rebind<DataType>::allocate(1);
+				natl::construct(ptr, natl::forward<ConstructArgTypes>(constructArgs)...);
 				constructContexpr<DataType, Alloc>(
-					Alloc::template rebind<DataType>::allocate(1),
+					ptr,
 					constructConstexprNullPreDelete<DataType>(),
 					constructConstexprNullPostDelete<DataType>(),
 					constructConstexprStandardDeleter<DataType, Alloc>());
@@ -1765,7 +1784,7 @@ namespace natl {
 				typename control_block_fused::pre_delete_function_type(),
 				typename control_block_fused::post_delete_function_type(),
 				DefaultDeleter<control_block_fused, control_block_fused_alloc>(),
-				natl::forward<ConstructArgTypes>(constructArg)...);
+				natl::forward<ConstructArgTypes>(constructArgs)...);
 
 			dataPtrAndControlBlockState.setValues(&controlBlockFused->data, impl::SharedPtrControlBlockState::fused);
 		}
@@ -1948,7 +1967,7 @@ namespace natl {
 			return get();
 		}
 
-		constexpr Size use_count() const noexcept {
+		constexpr Size useCount() const noexcept {
 			if (dataPtrAndControlBlockState.getPtr()) {
 				switch (dataPtrAndControlBlockState.getSmallData()) {
 				case impl::SharedPtrControlBlockState::seperate:
@@ -2006,4 +2025,10 @@ namespace natl {
 	template<typename DataType>
 	struct IsTriviallyMoveAssignableV<SharedPtr<DataType>>
 		: FalseType {};
+
+
+	template<typename Type, typename... ArgTypes>
+	constexpr SharedPtr<Type> makeShared(ArgTypes&&... args) noexcept {
+		return SharedPtr<Type>(natl::SharedPtrFusedConstruct{}, natl::DefaultAllocator{}, forward<ArgTypes>(args)...);
+	}
 }

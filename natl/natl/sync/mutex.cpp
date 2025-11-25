@@ -1,5 +1,9 @@
-//interface 
+//@interface 
 #include "mutex.h"
+
+//@begin_non_modules
+//own
+#include "../util/compilerDependent.h"
 
 //system 
 #ifdef NATL_WINDOWS_PLATFORM
@@ -10,8 +14,8 @@
 #if defined(NATL_UNIX_PLATFORM) || defined(NATL_WEB_PLATFORM)
 #include <pthread.h>
 #endif // NATL_UNIX_PLATFORM || NATL_WEB_PLATFORM
+//@end_non_modules
 
-//implementation 
 namespace natl {
 #ifdef NATL_WINDOWS_PLATFORM
 	Bool createMutex(NativeMutex& mutexDst) noexcept {

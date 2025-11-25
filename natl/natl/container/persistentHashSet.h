@@ -4,7 +4,7 @@
 #include "flatHashSet.h"
 #include "batchPool.h"
 
-//interface 
+//@export
 namespace natl {
 	namespace impl {
 		template<typename DataType, typename storage_iterator, typename Alloc>

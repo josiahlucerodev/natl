@@ -4,7 +4,7 @@
 #include "typeTraits.h"
 #include "dataMovement.h"
 
-//interface 
+//@export
 namespace natl {
 	template<typename DataType>
 	struct UninitializedValue {

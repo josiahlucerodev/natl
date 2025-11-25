@@ -1,8 +1,12 @@
 #pragma once
 
+//@begin_non_modules
 //std
 #include <iterator>
 #include <cstring>
+//own
+#include "compilerDependent.h"
+//@end_non_modules
 
 //own
 #include "typeTraits.h"
@@ -10,7 +14,7 @@
 #include "allocator.h"
 #include "compare.h"
 
-//interface 
+//@export 
 namespace natl {
 #ifdef NATL_COMPILER_MSVC
 #pragma warning(push)
@@ -33,7 +37,10 @@ namespace natl {
 #endif // NATL_COMPILER_MSVC
 
 	using RandomAccessIteratorTag = std::random_access_iterator_tag;
+	using ContiguousIteratorTag = std::contiguous_iterator_tag;
 	using BidirectionalIteratorTag = std::bidirectional_iterator_tag;
+	using OutputIteratorTag = std::output_iterator_tag;
+	using InputIteratorTag = std::input_iterator_tag;
 
 	template<typename Iter>
 	struct IteratorTraits {
@@ -207,13 +214,18 @@ namespace natl {
 	}
 
 	template <typename Iter>
-	concept IsRandomAccessIteratorC = IsIterPtr<Iter> && IsSame<IteratorCategory<Iter>, RandomAccessIteratorTag>;
-	template <typename Iter> constexpr static inline Bool IsRandomAccessIterator = IsRandomAccessIteratorC<Iter>;
+	concept IsContiguousIteratorC = IsIterPtr<Iter> && IsSame<IteratorCategory<Iter>, ContiguousIteratorTag>;
+	template <typename Iter> constexpr inline Bool IsContiguousIterator = IsContiguousIteratorC<Iter>;
+	template <typename Iter> struct IsContiguousIteratorV : BoolConstant<IsContiguousIteratorC<Iter>> {};
+	
+	template <typename Iter>
+	concept IsRandomAccessIteratorC = IsIterPtr<Iter> && (IsSame<IteratorCategory<Iter>, RandomAccessIteratorTag> || IsContiguousIteratorC<Iter>);
+	template <typename Iter> constexpr inline Bool IsRandomAccessIterator = IsRandomAccessIteratorC<Iter>;
 	template <typename Iter> struct IsRandomAccessIteratorV : BoolConstant<IsRandomAccessIteratorC<Iter>> {};
-
+	
 	template <typename Iter>
 	concept IsBidirectionalIteratorC = IsIterPtr<Iter> && IsSame<IteratorCategory<Iter>, BidirectionalIteratorTag>;
-	template <typename Iter> constexpr static inline Bool IsBidirectionalIterator = IsBidirectionalIteratorC<Iter>;
+	template <typename Iter> constexpr inline Bool IsBidirectionalIterator = IsBidirectionalIteratorC<Iter>;
 	template <typename Iter> struct IsBidirectionalIteratorV : BoolConstant<IsBidirectionalIteratorC<Iter>> {};
 
 	template <typename Iter>
@@ -369,68 +381,151 @@ namespace natl {
 
 
 	template<typename DataType>
-	struct RandomAccessIterator {
+	struct ContiguousIterator {
 	public:
-		using iterator = RandomAccessIterator<DataType>;
+		using iterator = ContiguousIterator<DataType>;
 		using difference_type = PtrDiff;
 		using value_type = DataType;
 		using reference = DataType&;
 		using const_reference = const DataType&;
 		using pointer = DataType*;
 		using const_pointer = const DataType*;
-		using iterator_category = std::random_access_iterator_tag;
+		using iterator_category = ContiguousIteratorTag;
 		using size_type = Size;
+
 	private:
-		DataType* dataPtr;
+		constexpr static inline Bool testConstantEvaluation = false;
+
+	private:
+		pointer dataPtr;
+		pointer beginPtr;
+		pointer endPtr;
+
 	public:
-		constexpr RandomAccessIterator() : dataPtr(nullptr) {}
-		constexpr RandomAccessIterator(DataType* const ptr) noexcept : dataPtr(ptr) {}
-		constexpr ~RandomAccessIterator() = default;
+		constexpr ContiguousIterator() : dataPtr(nullptr), beginPtr(nullptr), endPtr(nullptr) {}
+		constexpr ContiguousIterator(pointer ptr, pointer bptr, pointer eptr) noexcept requires(IsNotConst<value_type>)
+			: dataPtr(ptr), beginPtr(bptr), endPtr(eptr) {}
+		constexpr ContiguousIterator(const_pointer ptr, const_pointer bptr, const_pointer eptr) noexcept requires(IsConst<value_type>)
+			: dataPtr(ptr), beginPtr(bptr), endPtr(eptr) {}
+
+		constexpr ~ContiguousIterator() = default;
 	private:
 		constexpr iterator& self() noexcept { return *this; }
 		constexpr const iterator& self() const noexcept { return *this; }
 	public:
-		constexpr reference operator*() noexcept requires(IsNotConst<DataType>) { return *dataPtr; }
+		constexpr reference operator*() noexcept requires(IsNotConst<value_type>) { return *dataPtr; }
 		constexpr const_reference operator*() const noexcept { return *dataPtr; }
-		constexpr pointer operator->() noexcept requires(IsNotConst<DataType>) { return dataPtr; }
+		constexpr pointer operator->() noexcept requires(IsNotConst<value_type>) { return dataPtr; }
 		constexpr const_pointer operator->() const noexcept { return dataPtr; }
-		constexpr reference operator[](const size_type pos) noexcept requires(IsNotConst<DataType>) { return dataPtr[pos]; };
+		constexpr reference operator[](const size_type pos) noexcept requires(IsNotConst<value_type>) { return dataPtr[pos]; };
 		constexpr const_reference operator[](const size_type pos) const noexcept { return dataPtr[pos]; };
 
-		constexpr Bool operator== (const iterator rhs) const noexcept { return dataPtr == rhs.dataPtr; }
-		constexpr Bool operator!= (const iterator rhs) const noexcept { return dataPtr != rhs.dataPtr; }
-		constexpr Bool operator<(const iterator rhs) const noexcept { return dataPtr < rhs.dataPtr; }
-		constexpr Bool operator>(const iterator rhs) const noexcept { return dataPtr > rhs.dataPtr; }
-		constexpr Bool operator<=(const iterator rhs) const noexcept { return dataPtr <= rhs.dataPtr; }
-		constexpr Bool operator>=(const iterator rhs) const noexcept { return dataPtr >= rhs.dataPtr; }
+		constexpr Bool operator== (const iterator rhs) const noexcept {
+			return dataPtr == rhs.dataPtr;
+		}
+		constexpr Bool operator!= (const iterator rhs) const noexcept {
+			return dataPtr != rhs.dataPtr;
+		}
 
-		constexpr iterator& operator++() noexcept { dataPtr++; return self(); }
-		constexpr iterator operator++(int) noexcept { iterator tempIt = self(); ++self().dataPtr; return tempIt; }
-		constexpr iterator& operator--() noexcept { dataPtr--; return self(); }
-		constexpr iterator operator--(int) noexcept { iterator tempIt = self(); --self().dataPtr; return tempIt; }
+	public:
+		constexpr Bool operator<(const iterator rhs) const noexcept {
+			return dataPtr < rhs.dataPtr;
+		}
+		constexpr Bool operator>(const iterator rhs) const noexcept {
+			return dataPtr > rhs.dataPtr;
+		}
+		constexpr Bool operator<=(const iterator rhs) const noexcept {
+			return dataPtr <= rhs.dataPtr;
+		}
+		constexpr Bool operator>=(const iterator rhs) const noexcept {
+			return dataPtr >= rhs.dataPtr;
+		}
 
-		constexpr iterator& operator+=(const difference_type offset) noexcept { dataPtr += offset; return self(); }
-		constexpr iterator operator+(const difference_type offset) const noexcept { return iterator(dataPtr + offset); }
-		constexpr friend iterator operator+(const difference_type offset, const iterator& rhs) noexcept { return iterator(rhs.dataPtr + offset); }
-		constexpr iterator& operator-=(const difference_type offset) noexcept { dataPtr -= offset; return self(); }
-		constexpr iterator operator-(const difference_type offset) const noexcept { return iterator(dataPtr - offset); }
-		constexpr difference_type operator-(const iterator rhs) const noexcept { return self().dataPtr - rhs.dataPtr; }
+		constexpr iterator& operator++() noexcept {
+			if (testConstantEvaluation || isConstantEvaluated()) {
+				if (dataPtr == nullptr) {
+					dataPtr = beginPtr;
+					return self();
+				}
+			}
+
+			dataPtr++;
+			return self();
+		}
+		constexpr iterator operator++(int) noexcept {
+			iterator tempIt = self();
+			++self();
+			return tempIt;
+		}
+		constexpr iterator& operator--() noexcept {
+			if (testConstantEvaluation || isConstantEvaluated()) {
+				if (dataPtr == beginPtr) {
+					dataPtr = nullptr;
+					return self();
+				}
+			}
+
+			dataPtr--;
+			return self();
+		}
+		constexpr iterator operator--(int) noexcept {
+			iterator tempIt = self();
+			--(self());
+			return tempIt;
+		}
+
+		constexpr iterator& operator+=(const difference_type offset) noexcept {
+			if (testConstantEvaluation || isConstantEvaluated()) {
+				if (dataPtr == nullptr && offset == 1) {
+					dataPtr = beginPtr;
+					return self();
+				}
+			}
+			
+			dataPtr += offset;
+			return self();
+		}
+		constexpr iterator operator+(const difference_type offset) const noexcept {
+			iterator iter = self();
+			return iter += offset;
+		}
+		constexpr friend iterator operator+(const difference_type offset, const iterator& rhs) noexcept {
+			return rhs + offset;
+		}
+		constexpr iterator& operator-=(const difference_type offset) noexcept {
+			if (testConstantEvaluation || isConstantEvaluated()) {
+				if (dataPtr - beginPtr < offset) {
+					dataPtr = nullptr;
+					return self();
+				}
+			}
+
+			dataPtr -= offset;
+			return self();
+		}
+		constexpr iterator operator-(const difference_type offset) const noexcept {
+			iterator iter = self();
+			return iter -= offset;
+		}
+		constexpr difference_type operator-(const iterator rhs) const noexcept {
+			return self().dataPtr - rhs.dataPtr;
+		}
 	};
 
 	template<typename DataType>
-	using ConstRandomAccessIterator = ReverseIterator<RandomAccessIterator<const DataType>>;
+	using ConstContiguousIterator = ContiguousIterator<const DataType>;
 
 	template<typename DataType>
-	using ReverseRandomAccessIterator = ReverseIterator<RandomAccessIterator<DataType>>;
+	using ReverseContiguousIterator = ReverseIterator<ContiguousIterator<DataType>>;
 
 	template<typename DataType>
-	using ReverseConstRandomAccessIterator = ReverseIterator<ConstRandomAccessIterator<DataType>>;
+	using ReverseConstContiguousIterator = ReverseIterator<ConstContiguousIterator<DataType>>;
 
 	template<typename DataType, typename Alloc>
 		requires(IsAllocatorC<Alloc>)
-	struct RandomAccessIteratorAlloc {
+	struct ContiguousIteratorAlloc {
 	public:
-		using iterator = RandomAccessIteratorAlloc<DataType, Alloc>;
+		using iterator = ContiguousIteratorAlloc<DataType, Alloc>;
 		using allocator_type = Alloc;
 		using typed_allocator_type = allocator_type::template rebind<DataType>;
 
@@ -444,54 +539,87 @@ namespace natl {
 
 		using iterator_category = RandomAccessIteratorTag;
 	private:
-		pointer dataPtr;
+		ContiguousIterator<DataType> iter;
+
 	public:
-		constexpr RandomAccessIteratorAlloc() : dataPtr(nullptr) {}
-		constexpr RandomAccessIteratorAlloc(pointer ptr) noexcept requires(IsNotConst<value_type>) : dataPtr(ptr) {}
-		constexpr RandomAccessIteratorAlloc(const_pointer ptr) noexcept requires(IsConst<value_type>) : dataPtr(ptr) {}
-		constexpr ~RandomAccessIteratorAlloc() = default;
+		constexpr ContiguousIteratorAlloc() noexcept : iter() {}
+		constexpr ContiguousIteratorAlloc(pointer ptr, pointer bptr, pointer eptr) noexcept requires(IsNotConst<value_type>)
+			: iter(ptr, bptr, eptr) {}
+		constexpr ContiguousIteratorAlloc(const_pointer ptr, const_pointer bptr, const_pointer eptr) noexcept requires(IsConst<value_type>)
+			: iter(ptr, bptr, eptr) {}
+
+		constexpr ~ContiguousIteratorAlloc() noexcept = default;
+
+	private:
+		constexpr ContiguousIteratorAlloc(ContiguousIterator<DataType> inIter) noexcept : iter(inIter) {}
+
 	private:
 		constexpr iterator& self() noexcept { return *this; }
 		constexpr const iterator& self() const noexcept { return *this; }
+
 	public:
-		constexpr reference operator*() noexcept requires(IsNotConst<value_type>) { return *dataPtr; }
-		constexpr const_reference operator*() const noexcept { return *dataPtr; }
-		constexpr pointer operator->() noexcept requires(IsNotConst<value_type>) { return dataPtr; }
-		constexpr const_pointer operator->() const noexcept { return dataPtr; }
-		constexpr reference operator[](const size_type pos) noexcept requires(IsNotConst<value_type>) { return dataPtr[pos]; };
-		constexpr const_reference operator[](const size_type pos) const noexcept { return dataPtr[pos]; };
+		constexpr reference operator*() noexcept requires(IsNotConst<DataType>) { return iter.operator*(); }
+		constexpr const_reference operator*() const noexcept { return iter.operator*(); }
+		constexpr pointer operator->() noexcept requires(IsNotConst<DataType>) { return iter.operator->(); }
+		constexpr const_pointer operator->() const noexcept { return iter.operator->(); }
+		constexpr reference operator[](const size_type pos) noexcept requires(IsNotConst<DataType>) { return iter[pos]; }
+		constexpr const_reference operator[](const size_type pos) const noexcept { return iter[pos]; }
 
-		constexpr Bool operator== (const iterator rhs) const noexcept { return dataPtr == rhs.dataPtr; }
-		constexpr Bool operator!= (const iterator rhs) const noexcept { return dataPtr != rhs.dataPtr; }
-		constexpr Bool operator<(const iterator rhs) const noexcept { return dataPtr < rhs.dataPtr; }
-		constexpr Bool operator>(const iterator rhs) const noexcept { return dataPtr > rhs.dataPtr; }
-		constexpr Bool operator<=(const iterator rhs) const noexcept { return dataPtr <= rhs.dataPtr; }
-		constexpr Bool operator>=(const iterator rhs) const noexcept { return dataPtr >= rhs.dataPtr; }
+		constexpr Bool operator== (const iterator rhs) const noexcept { return iter == rhs.iter; }
+		constexpr Bool operator!= (const iterator rhs) const noexcept { return iter != rhs.iter; }
+		constexpr Bool operator<(const iterator rhs) const noexcept { return iter < rhs.iter; }
+		constexpr Bool operator>(const iterator rhs) const noexcept { return iter > rhs.iter; }
+		constexpr Bool operator<=(const iterator rhs) const noexcept { return iter <= rhs.iter; }
+		constexpr Bool operator>=(const iterator rhs) const noexcept { return iter >= rhs.iter; }
 
-		constexpr iterator& operator++() noexcept { dataPtr++; return self(); }
-		constexpr iterator operator++(int) noexcept { iterator tempIt = self(); ++self().dataPtr; return tempIt; }
-		constexpr iterator& operator--() noexcept { dataPtr--; return self(); }
-		constexpr iterator operator--(int) noexcept { iterator tempIt = self(); --self().dataPtr; return tempIt; }
+		constexpr iterator& operator++() noexcept {
+			++iter;
+			return self();
+		}
+		constexpr iterator operator++(int) noexcept {
+			return iter++;
+		}
+		constexpr iterator& operator--() noexcept {
+			--iter;
+			return self();
+		}
+		constexpr iterator operator--(int) noexcept {
+			return iter--;
+		}
 
-		constexpr iterator& operator+=(const difference_type offset) noexcept { dataPtr += offset; return self(); }
-		constexpr iterator operator+(const difference_type offset) const noexcept { return iterator(dataPtr + offset); }
-		constexpr friend iterator operator+(const difference_type offset, const iterator& rhs) noexcept { return iterator(rhs.dataPtr + offset); }
-		constexpr iterator& operator-=(const difference_type offset) noexcept { dataPtr -= offset; return self(); }
-		constexpr iterator operator-(const difference_type offset) const noexcept { return iterator(dataPtr - offset); }
-		constexpr difference_type operator-(const iterator rhs) const noexcept { return self().dataPtr - rhs.dataPtr; }
+		constexpr iterator& operator+=(const difference_type offset) noexcept {
+			iter += offset;
+			return self();
+		}
+		constexpr iterator operator+(const difference_type offset) const noexcept {
+			return iter + offset;
+		}
+		constexpr friend iterator operator+(const difference_type offset, const iterator& rhs) noexcept {
+			return rhs.iter + offset;
+		}
+		constexpr iterator& operator-=(const difference_type offset) noexcept {
+			iter -= offset;
+			return self();
+		}
+		constexpr iterator operator-(const difference_type offset) const noexcept {
+			return iter - offset;
+		}
+		constexpr difference_type operator-(const iterator rhs) const noexcept {
+			return iter - rhs.iter;
+		}
 	};
 
 	template<typename DataType, typename Alloc>
 		requires(IsAllocatorC<Alloc>)
-	using ConstRandomAccessIteratorAlloc = RandomAccessIteratorAlloc<const DataType, Alloc>;
+	using ConstContiguousIteratorAlloc = ContiguousIteratorAlloc<const DataType, Alloc>;
 
 	template<typename DataType, typename Alloc>
 		requires(IsAllocatorC<Alloc>)
-	using ReverseRandomAccessIteratorAlloc = ReverseIterator<RandomAccessIteratorAlloc<DataType, Alloc>>;
+	using ReverseContiguousIteratorAlloc = ReverseIterator<ContiguousIteratorAlloc<DataType, Alloc>>;
 
 	template<typename DataType, typename Alloc>
 		requires(IsAllocatorC<Alloc>)
-	using ReverseConstRandomAccessIteratorAlloc = ReverseIterator<ConstRandomAccessIteratorAlloc<DataType, Alloc>>;
+	using ReverseConstContiguousIteratorAlloc = ReverseIterator<ConstContiguousIteratorAlloc<DataType, Alloc>>;
 
 
 	template<typename OutputIter>
@@ -510,7 +638,7 @@ namespace natl {
 	template<typename InputIter, class DifferenceType = typename IteratorTraits<InputIter>::difference_type>
 		requires(IsIterPtr<InputIter>)
 	constexpr void advance(InputIter& iter, DifferenceType distance) noexcept {
-		using iterator_category = Decay<typename std::iterator_traits<InputIter>::iterator_category>;
+		using iterator_category = Decay<typename IteratorTraits<InputIter>::iterator_category>;
 		if constexpr (IsSame<iterator_category, RandomAccessIteratorTag>) {
 			iter += distance;
 		} else {

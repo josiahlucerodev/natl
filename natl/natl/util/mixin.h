@@ -4,9 +4,9 @@
 #include "typePack.h"
 #include "reflection.h"
 #include "uninitialized.h"
-#include "../fundamental/tuple.h"
+#include "tuple.h"
 
-//interface 
+//@export
 namespace natl {
 	template<typename Derived> 
 	struct CRTPBase {

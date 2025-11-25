@@ -1,5 +1,10 @@
 #pragma once
 
+//@begin_non_modules
+//own
+#include "../util/compilerDependent.h"
+//@end_non_modules
+
 //own
 #include "../util/basicTypes.h"
 #include "../util/typeTraits.h"
@@ -7,7 +12,7 @@
 #include "../util/allocator.h"
 #include "../util/typePack.h"
 
-//interface
+//@export
 namespace natl {
 #ifdef NATL_COMPILER_MSVC
 #pragma warning(push)

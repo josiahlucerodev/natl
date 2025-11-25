@@ -1,16 +1,20 @@
 #pragma once 
 
+//@begin_non_modules
+//own
+#include "../util/compilerDependent.h"
+//@end_non_modules
+
 //own
 #include "../util/basicTypes.h"
 #include "../util/allocator.h"
 #include "../util/typeTraits.h"
 #include "../util/dataMovement.h"
 #include "../util/typeInfo.h"
-#include "../fundamental/option.h"
+#include "../util/option.h"
 
-//interface 
+//@export
 namespace natl {
-
 	namespace impl {
 		struct AnyStorageConstexprPolymorphic {
 		public:
@@ -282,6 +286,7 @@ namespace natl {
 		constexpr void constructAsDummy() noexcept {
 			if (isConstantEvaluated()) {
 				construct<Dummy>(&dummy);
+				storageState = impl::AnyStorageState::noValue;
 			}
 		}
 

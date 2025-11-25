@@ -1,5 +1,11 @@
 #pragma once 
 
+//@begin_non_modules
+//std
+#include <cstddef>
+#include <tuple>
+//@end_non_modules
+
 //own
 #include "../util/hash.h"
 #include "../util/iterators.h"
@@ -8,11 +14,11 @@
 #include "../util/funcArgs.h"
 #include "../util/compare.h"
 #include "../processing/format.h"
-#include "../fundamental/option.h"
+#include "../util/option.h"
 #include "dynArray.h"
 #include "smallDynArray.h"
 
-//interface
+//@export
 namespace natl {
 	template<typename KeyType, typename ValueType>
 	struct KeyValueRef {
@@ -21,8 +27,8 @@ namespace natl {
 		using mapped_type = ValueType;
 
 	private:
-		key_type* keyPtr;
-		mapped_type* valuePtr;
+		mutable key_type* keyPtr;
+		mutable mapped_type* valuePtr;
 
 	public:
 		//constructor 
@@ -40,14 +46,10 @@ namespace natl {
 		}
 
 		//accessors
-		constexpr key_type& key() noexcept { return *keyPtr; }
-		constexpr const key_type& key() const noexcept { return *keyPtr; }
-		constexpr key_type* keyAsPtr() noexcept { return keyPtr; }
-		constexpr const key_type* keyAsPtr() const noexcept { return keyPtr; }
-		constexpr mapped_type& value() noexcept { return *valuePtr; }
-		constexpr const mapped_type& value() const noexcept { return *valuePtr; }
-		constexpr mapped_type* valueAsPtr() noexcept { return valuePtr; }
-		constexpr const mapped_type* valueAsPtr() const noexcept { return valuePtr; }
+		constexpr key_type& key() const noexcept { return *keyPtr; }
+		constexpr key_type* keyAsPtr() const noexcept { return keyPtr; }
+		constexpr mapped_type& value() const noexcept { return *valuePtr; }
+		constexpr mapped_type* valueAsPtr() const noexcept { return valuePtr; }
 	};
 
 	template<typename IterType>
@@ -90,14 +92,14 @@ namespace natl {
 			union KeyDetachedLifetime{
 				Dummy dummy;
 				key_type key;
-				KeyDetachedLifetime() {}
-				~KeyDetachedLifetime() {}
+				constexpr KeyDetachedLifetime() noexcept {}
+				constexpr ~KeyDetachedLifetime() noexcept {}
 			} key_detachedLifetime;
 			union ValueDetachedLifetime {
 				Dummy dummy;
 				mapped_type value;
-				ValueDetachedLifetime() {}
-				~ValueDetachedLifetime() {}
+				constexpr ValueDetachedLifetime() noexcept {}
+				constexpr ~ValueDetachedLifetime() noexcept {}
 			} value_detachedLifetime;
 
 		public:
@@ -894,6 +896,7 @@ namespace natl {
 	};
 }
 
+//@export
 namespace natl {
 	template <std::size_t Index, typename KeyType, typename ValueType>
 	constexpr decltype(auto) get(const natl::KeyValueRef<KeyType, ValueType>& obj) {
@@ -927,6 +930,7 @@ namespace natl {
 	}
 }
 
+//@export
 namespace natl::impl {
 	template <std::size_t Index, typename KeyType, typename ValueType>
 	constexpr decltype(auto) get(const natl::impl::FlatMapHashKeyValueUnit<KeyType, ValueType>& obj) {
@@ -960,6 +964,7 @@ namespace natl::impl {
 	}
 }
 
+//@export
 namespace std {
 	template<typename KeyType, typename ValueType>
 	struct tuple_size<natl::KeyValueRef<KeyType, ValueType>> {

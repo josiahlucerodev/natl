@@ -5,7 +5,7 @@
 #include "dataMovement.h"
 #include "../container/stringView.h"
 
-//interface 
+//@export
 namespace natl {
 	template <Size StringSize>
 	struct TemplateStringLiteral {
@@ -103,26 +103,9 @@ namespace natl {
 
 	template<auto> struct AsStringLiteralT {};
 	template<auto Value> using AsStringLiteral = AsStringLiteralT<Value>::type;
-}
 
-#if defined(NATL_COMPILER_EMSCRIPTEN)
-
-#define NATL_MAKE_TEMPLATE_STRING_LITERAL_FROM_STRING_VIEW(stringView) natl::TemplateStringLiteral<stringView.size() + 1>(stringView.c_str())
-
-#elif defined(NATL_COMPILER_GCC)
-
-#define NATL_MAKE_TEMPLATE_STRING_LITERAL_FROM_STRING_VIEW(stringView) natl::TemplateStringLiteral<stringView.size() + 1>(stringView.c_str())
-
-#elif defined(NATL_COMPILER_MSVC)
-
-namespace natl {
 	template<ConstAsciiStringView Name>
 	consteval inline TemplateStringLiteral<Name.size() + 1> makeTemplateStringLiteral() noexcept {
 		return TemplateStringLiteral<Name.size() + 1>(Name);
 	};
 }
-#define NATL_MAKE_TEMPLATE_STRING_LITERAL_FROM_STRING_VIEW(stringView) natl::makeTemplateStringLiteral<stringView>()
-
-#else
-static_assert("natl: macro NATL_MAKE_TEMPLATE_STRING_LITERAL_FROM_STRING_VIEW not implemented");
-#endif 

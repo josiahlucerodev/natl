@@ -1,17 +1,24 @@
 #pragma once 
 
+
+//@begin_non_modules
 //own
-#include "../util/basicTypes.h"
-#include "../util/typeTraits.h"
-#include "../util/limits.h"
+#include "../util/compilerDependent.h"
 
 //intrinsics
 #ifdef NATL_COMPILER_MSVC
 #include <immintrin.h>
 #include <intrin.h>
 #endif //NATL_COMPILER_MSVC
+//@end_non_modules
 
-//interface 
+//own
+#include "../util/utility.h"
+#include "../util/basicTypes.h"
+#include "../util/typeTraits.h"
+#include "../util/limits.h"
+
+//@export 
 namespace natl::math {
 	//add sat
 	template<typename IntegerType>

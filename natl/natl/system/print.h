@@ -1,12 +1,11 @@
 #pragma once 
 
 //own
-#include "../util/compilerDependent.h"
 #include "../util/basicTypes.h"
 #include "../util/stringOperations.h"
 #include "../util/typeTraits.h"
 
-//interface
+//@export
 namespace natl {
 	struct InputReturn {
 		Bool successful;
@@ -22,5 +21,8 @@ namespace natl {
 	}
 	inline Bool println(const Ascii* string) noexcept {
 		return println(string, cstringLength(string));
+	}
+	inline Bool println() noexcept {
+		return print("\n");
 	}
 }

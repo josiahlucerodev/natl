@@ -1,8 +1,12 @@
 #pragma once 
 
+//@begin_non_modules
 //std
-#include <string>
-#include <string_view>
+#include <initializer_list>
+
+//own
+#include "../util/compilerDependent.h"
+//@end_non_modules
 
 //own
 #include "../util/bits.h"
@@ -11,18 +15,17 @@
 #include "../util/iterators.h"
 #include "../util/dataMovement.h"
 #include "../util/algorithm.h"
+#include "../util/limits.h"
 #include "container.h"
 #include "stringView.h"
 #include "arrayView.h"
-#include "limits.h"
 
-//interface 
+//@export
 namespace natl {
-	template<typename CharType>
 	struct BaseStringBaseMembersRef {
 	public:
 		Size stringSizeAndSmallStringFlag;
-		CharType* stringPtr;
+		Ascii* stringPtr;
 		Size stringCapacity;
 	};
 
@@ -48,24 +51,26 @@ namespace natl {
 		using optional_pointer = Option<pointer>;
 		using optional_const_pointer = Option<const_pointer>;
 
-		using iterator = RandomAccessIteratorAlloc<value_type, allocator_type>;
-		using const_iterator = ConstRandomAccessIteratorAlloc<value_type, allocator_type>;
-		using reverse_iterator = ReverseRandomAccessIteratorAlloc<value_type, allocator_type>;
-		using const_reverse_iterator = ReverseConstRandomAccessIteratorAlloc<value_type, allocator_type>;
+		using iterator = ContiguousIteratorAlloc<value_type, allocator_type>;
+		using const_iterator = ConstContiguousIteratorAlloc<value_type, allocator_type>;
+		using reverse_iterator = ReverseContiguousIteratorAlloc<value_type, allocator_type>;
+		using const_reverse_iterator = ReverseConstContiguousIteratorAlloc<value_type, allocator_type>;
 
 		using allocation_move_adapater = AllocationMoveAdapater<value_type, allocator_type>;
 
 		constexpr static Bool enableSmallString = true;
 	private:
 		constexpr static Bool enableIncreasedSmallBufferSize = 
-			sizeof(BaseStringBaseMembersRef<CharType>) + bufferSize <= 64
+			sizeof(BaseStringBaseMembersRef) + bufferSize <= 64
 			&& TypeByteSize<CharType> == 1 &&
 			EnableIncreasedSmallBufferSize;
 		constexpr static Size increasedSmallBufferForCharSize = sizeof(size_type) - sizeof(ui8);
 		constexpr static Size standardSmallBufferSize = sizeof(size_type) - sizeof(ui8);
 		constexpr static Size increasedSizeToSmallBuffer = (enableIncreasedSmallBufferSize) ? increasedSmallBufferForCharSize : 0;
+	
 	public:
 		constexpr static Size smallBufferSize = ((sizeof(CharType*) + sizeof(size_type) + bufferSize) / sizeof(CharType)) + increasedSizeToSmallBuffer;
+		constexpr static Size nonSmallBufferSize = (sizeof(size_type) / sizeof(CharType)) - increasedSizeToSmallBuffer;
 
 		static const size_type npos = size_type(-1);
 
@@ -74,7 +79,7 @@ namespace natl {
 
 		/*
 		in increased small buffer state
-			if is samllString()
+			if is smallString()
 				stringSizeAndSmallStringFlag format is 
 				1 bit small string flag | 7 bits size storage | (sizeof(size_type) * 8) - 8 bits additional small buffer storage 
 			else  
@@ -86,10 +91,39 @@ namespace natl {
 			1 bit small string flag | (sizeof(size_type) * 8) - 1 bits is size storage 
 		*/
 	private:
-		size_type stringSizeAndSmallStringFlag; 
-		pointer stringPtr;
-		size_type stringCapacity;
-		value_type smallStringStorage[bufferSize];
+#ifdef NATL_COMPILER_MSVC
+#pragma warning(push)
+#pragma warning(disable: 4201)  // Disable "nonstandard extension used: nameless struct/union"
+
+		union {
+			struct {
+				size_type stringSizeAndSmallStringFlag;
+				pointer stringPtr;
+				size_type stringCapacity;
+				value_type smallStringStorage[bufferSize];
+			};
+			struct {
+				value_type nonSmallBufferDisplay[nonSmallBufferSize];
+				value_type fullSmallBufferDisplay[smallBufferSize];
+			};
+			struct {
+				size_type smallBufferSizeDisplay : 7;
+				size_type smallBufferFlagDisplay : 1;
+				[[maybe_unused]] pointer _u1;
+				[[maybe_unused]] size_type _u2;
+				[[maybe_unused]] value_type _u3[bufferSize];
+			};
+		};
+
+#pragma warning(pop)
+#else
+		struct {
+			size_type stringSizeAndSmallStringFlag;
+			pointer stringPtr;
+			size_type stringCapacity;
+			value_type smallStringStorage[bufferSize];
+		};
+#endif // NATL_COMPILER_MSVC
 
 		//small string 
 	private:
@@ -367,7 +401,7 @@ namespace natl {
 		template<typename Iter>
 			requires(IsIterPtr<Iter>&& IsSameC<typename IteratorTraits<Iter>::value_type, value_type>)
 		constexpr BaseString& construct(Iter first, Iter last) noexcept {
-			if constexpr (std::contiguous_iterator<Iter>) {
+			if constexpr (IsContiguousIteratorC<Iter>) {
 				const size_type count = iterDistance<Iter>(first, last);
 				const_pointer firstPtr = iteratorToAddress<Iter>(first);
 				return construct(firstPtr, count);
@@ -794,12 +828,12 @@ namespace natl {
 		constexpr pointer endPtr() noexcept { return data() + size(); }
 		constexpr const_pointer endPtr() const noexcept { return data() + size(); }
 
-		constexpr iterator begin() noexcept { return iterator(beginPtr()); }
-		constexpr const_iterator begin() const noexcept { return const_iterator(beginPtr()); }
-		constexpr const_iterator cbegin() const noexcept { return const_iterator(beginPtr()); }
-		constexpr iterator end() noexcept { return iterator(endPtr()); }
-		constexpr const_iterator end() const noexcept { return const_iterator(endPtr()); }
-		constexpr const_iterator cend() const noexcept { return const_iterator(endPtr()); }
+		constexpr iterator begin() noexcept { return iterator(beginPtr(), beginPtr(), endPtr()); }
+		constexpr const_iterator begin() const noexcept { return const_iterator(beginPtr(), beginPtr(), endPtr()); }
+		constexpr const_iterator cbegin() const noexcept { return const_iterator(beginPtr(), beginPtr(), endPtr()); }
+		constexpr iterator end() noexcept { return iterator(endPtr(), beginPtr(), endPtr()); }
+		constexpr const_iterator end() const noexcept { return const_iterator(endPtr(), beginPtr(), endPtr()); }
+		constexpr const_iterator cend() const noexcept { return const_iterator(endPtr(), beginPtr(), endPtr()); }
 		constexpr reverse_iterator rbegin() noexcept { return reverse_iterator(end()); }
 		constexpr const_reverse_iterator rbegin() const noexcept { return const_reverse_iterator(end()); }
 		constexpr const_reverse_iterator crbegin() const noexcept { return const_reverse_iterator(end()); }
@@ -1881,11 +1915,11 @@ namespace natl {
 
 	template<typename DataType, Size ByteSize, typename Alloc = DefaultAllocator>
 		requires(ByteSize >= 32 && IsAllocatorC<Alloc>)
-	using BaseStringByteSize = BaseString<DataType, (ByteSize - sizeof(BaseStringBaseMembersRef<DataType>)) / sizeof(DataType), Alloc>;
+	using BaseStringByteSize = BaseString<DataType, (ByteSize - sizeof(BaseStringBaseMembersRef)) / sizeof(DataType), Alloc>;
 
 	template<Size ByteSize, typename Alloc = DefaultAllocator>
 		requires(ByteSize >= 32 && IsAllocatorC<Alloc>)
-	using StringByteSize = BaseString<Ascii, (ByteSize - sizeof(BaseStringBaseMembersRef<Ascii>)) / sizeof(Ascii), Alloc>;
+	using StringByteSize = BaseString<Ascii, (ByteSize - sizeof(BaseStringBaseMembersRef)) / sizeof(Ascii), Alloc>;
 
 	template<Size ByteSize, typename Alloc = DefaultAllocator>
 		requires(ByteSize >= 32 && IsAllocatorC<Alloc>)
@@ -1935,6 +1969,7 @@ namespace natl {
 	using AsciiString = String32;
 	using Utf32String = Utf32String64;
 
+	//@export
 	namespace literals {
 		constexpr String32 operator ""_string(const Ascii* str, StdSize len) noexcept {
 			return String32(str, static_cast<Size>(len));

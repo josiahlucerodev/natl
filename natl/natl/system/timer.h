@@ -1,15 +1,20 @@
 #pragma once
 
+//@begin_non_modules
+//natl
+#include "../util/compilerDependent.h"
+//@end_non_modules
+
 //own
 #include "../util/basicTypes.h"
 #include "../util/stringConvert.h"
 #include "../container/string.h"
 #include "../container/stringView.h"
 #include "../container/dynArray.h"
-#include "../fundamental/strongType.h"
+#include "../util/strongType.h"
 #include "../units/standard.h"
 
-//interface
+//@export
 namespace natl {
 
 	template<typename DataType, typename Tag>

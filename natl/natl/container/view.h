@@ -3,9 +3,9 @@
 //own
 #include "container.h"
 #include "../util/iterators.h"
-#include "../fundamental/option.h"
+#include "../util/option.h"
 
-//interface
+//@export
 namespace natl {
 	template<typename Iter>
 	struct View {

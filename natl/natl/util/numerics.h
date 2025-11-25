@@ -1,12 +1,15 @@
 #pragma once 
 
+//@begin_non_modules
+//own
+#include "compilerDependent.h"
+//@end_non_modules
+
 //own
 #include "basicTypes.h"
 #include "typeTraits.h"
-#include "compilerDependent.h"
-#include "math.h"
 
-//interface
+//@export
 namespace natl {
     template<typename Integer>
         requires(IsBuiltInInteger<Integer>)

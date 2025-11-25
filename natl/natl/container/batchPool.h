@@ -7,9 +7,9 @@
 #include "../util/uninitialized.h"
 #include "../util/memory.h"
 
-//interface
+//@export
 namespace natl {
-	constexpr static inline Size defaultBatchSize = 32;
+	constexpr inline Size defaultBatchSize = 32;
 
 	template<template<typename> typename DynArrayType
 		, typename DataType, Size BatchSize = defaultBatchSize
@@ -60,14 +60,15 @@ namespace natl {
 					pointer batch = batchs[i];
 					deconstructAll<value_type>(batch, BatchSize);
 				}
+
+				for (size_type i = 0; i < activeBatchIndex - 1; i++) {
+					deallocateBatch(batchs[i]);
+				}
 			}
 				
 			pointer activeBatch = batchs[activeBatchIndex];
 			deconstructAll<value_type>(activeBatch, activeBatchSize);
-
-			for (pointer batch : batchs) {
-				deallocateBatch(batch);
-			}
+			deallocateBatch(activeBatch);
 		}
 
 	public:
@@ -366,7 +367,7 @@ namespace natl {
 		constexpr BatchPoolBase() noexcept : batchs(), freeSlots(), poolSize() {}
 		constexpr BatchPoolBase(const BatchPoolBase&) noexcept = delete;
 		constexpr BatchPoolBase(BatchPoolBase&& other) noexcept : 
-			batchs(move(other.batchs)), freeSlots(move(other.freeSlots)), poolSize(poolSize) {
+			batchs(move(other.batchs)), freeSlots(move(other.freeSlots)), poolSize(other.poolSize) {
 			other.poolSize = 0;
 		}
 
@@ -489,7 +490,7 @@ namespace natl {
 		}
 
 	private:
-		inline Batch allocateBatch() noexcept {
+		constexpr inline Batch allocateBatch() noexcept {
 			BatchElement* elements = allocator_type::template rebind<BatchElement>::allocate(BatchSize);
 			for (Size i = 0; i < BatchSize; i++) {
 				BatchElement* element = &elements[i];
@@ -500,7 +501,7 @@ namespace natl {
 			return elements;
 		}
 
-		inline void deallocateBatch(Batch batch) noexcept {
+		constexpr inline void deallocateBatch(Batch batch) noexcept {
 			BatchElement* elements = batch;
 			for (Size i = 0; i < BatchSize; i++) {
 				BatchElement& element = elements[i];

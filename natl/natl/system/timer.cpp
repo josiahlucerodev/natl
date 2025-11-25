@@ -1,5 +1,9 @@
-//interface
+//@interface
 #include "timer.h"
+
+//@begin_non_modules
+//own
+#include "../util/compilerDependent.h"
 
 //system 
 #ifdef NATL_WINDOWS_PLATFORM
@@ -8,11 +12,13 @@
 #endif // NATL_WINDOWS_PLATFORM 
 
 #if defined(NATL_UNIX_PLATFORM) || defined(NATL_WEB_PLATFORM)
-#include <pthread.h>
 #include <unistd.h>
 #endif // NATL_UNIX_PLATFORM || NATL_WEB_PLATFORM
+//@end_non_modules
 
-//implementation 
+//own
+#include "../util/random.h"
+
 namespace natl {
 #ifdef NATL_WINDOWS_PLATFORM
 	HighResolutionTimePoint highResolutionNow() noexcept {
@@ -45,4 +51,8 @@ namespace natl {
 	}
 #endif
 
+	Size rand() noexcept {
+		static StandardRNG rng = StandardRNG(highResolutionNow().value());
+		return rng.random();
+	}
 }

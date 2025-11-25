@@ -1,5 +1,9 @@
-//interface
+//@interface
 #include "filesystem.h"
+
+//@begin_non_modules
+//own
+#include "../util/compilerDependent.h"
 
 //system 
 #ifdef NATL_WINDOWS_PLATFORM
@@ -13,9 +17,8 @@
 #include <sys/stat.h>
 #include <limits.h>
 #endif // NATL_UNIX_PLATFORM || NATL_WEB_PLATFORM
+//@end_non_modules
 
-
-//implementation 
 namespace natl {
 #ifdef NATL_WINDOWS_PLATFORM
 	Option<Size> getFileSize(const FileHandle& file) noexcept {
@@ -201,9 +204,7 @@ namespace natl {
 		return result != 0;
 	}
 
-#endif // NATL_WINDOWS_PLATFORM
-
-#if defined(NATL_UNIX_PLATFORM) || defined(NATL_WEB_PLATFORM)
+#elif defined(NATL_UNIX_PLATFORM) || defined(NATL_WEB_PLATFORM)
 
 	using UnixNativeFileHandle = GenericInt;
 	constexpr inline UnixNativeFileHandle unixFileOpFailValue = -1;
@@ -364,5 +365,7 @@ namespace natl {
 		return FileType::unknown;
 	}
 
-#endif // NATL_UNIX_PLATFORM || NATL_WEB_PLATFORM
+#else // NATL_UNIX_PLATFORM || NATL_WEB_PLATFORM
+	static_assert(false, "natl: filesystem not implemented for platform");
+#endif
 }

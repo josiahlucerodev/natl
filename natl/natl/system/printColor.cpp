@@ -1,5 +1,9 @@
-//interface
-#include "print.h"
+//@interface
+#include "printColor.h"
+
+//@begin_non_modules
+//own
+#include "../util/compilerDependent.h"
 
 //system 
 #ifdef NATL_WINDOWS_PLATFORM
@@ -10,9 +14,8 @@
 #if defined(NATL_UNIX_PLATFORM) || defined(NATL_WEB_PLATFORM)
 #include <unistd.h>
 #endif // NATL_UNIX_PLATFORM || NATL_WEB_PLATFORM
+//@end_non_modules
 
-
-//implementation 
 namespace natl {
 	Bool enablePrintExtendedColor() noexcept {
 #ifdef NATL_WINDOWS_PLATFORM

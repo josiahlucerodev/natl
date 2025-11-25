@@ -1,7 +1,9 @@
 #pragma once 
 
+//@begin_non_modules
 //std
 #include <initializer_list>
+//@end_non_modules
 
 //own
 #include "../util/dataMovement.h"
@@ -10,11 +12,10 @@
 #include "../util/typePack.h"
 #include "../util/typeTraits.h"
 #include "../util/iterators.h"
-#include "../fundamental/option.h"
-#include "container.h"
+#include "../util/option.h"
 #include "../container/arrayView.h"
 
-//interface
+//@export
 namespace natl {
 	template<typename DataType, Size Number>
 	struct Array {
@@ -29,12 +30,15 @@ namespace natl {
 		using difference_type = PtrDiff;
 		using size_type = Size;
 
-		using iterator = RandomAccessIterator<DataType>;
-		using const_iterator = RandomAccessIterator<const DataType>;
-		using reverse_iterator = ReverseRandomAccessIterator<DataType>;
-		using const_reverse_iterator = ReverseRandomAccessIterator<const DataType>;
-	
+		using iterator = ContiguousIterator<DataType>;
+		using const_iterator = ConstContiguousIterator<DataType>;
+		using reverse_iterator = ReverseContiguousIterator<DataType>;
+		using const_reverse_iterator = ReverseConstContiguousIterator<DataType>;
+
+		constexpr static natl::Size number = Number;
+	public:	
 		DataType dataStorage[Number];
+
 	public:
 		constexpr Array() = default;
 		constexpr Array(const Array&) noexcept = default;
@@ -101,18 +105,18 @@ namespace natl {
 		constexpr pointer endPtr() noexcept { return data() + Number; }
 		constexpr const_pointer endPtr() const noexcept { return data() + Number; }
 
-		constexpr iterator begin() noexcept { return iterator(beginPtr()); }
-		constexpr const_iterator begin() const noexcept { return const_iterator(beginPtr()); }
-		constexpr const_iterator cbegin() const noexcept { return const_iterator(beginPtr()); }
-		constexpr iterator end() noexcept { return iterator(endPtr()); }
-		constexpr const_iterator end() const noexcept { return const_iterator(endPtr()); }
-		constexpr const_iterator cend() const noexcept { return const_iterator(endPtr()); }
-		constexpr reverse_iterator rbegin() noexcept { return reverse_iterator(endPtr()); }
-		constexpr const_reverse_iterator rbegin() const noexcept { return const_reverse_iterator(endPtr()); }
-		constexpr const_reverse_iterator crbegin() const noexcept { return const_reverse_iterator(endPtr()); }
-		constexpr reverse_iterator rend() noexcept { return reverse_iterator(beginPtr()); }
-		constexpr const_reverse_iterator rend() const noexcept { return const_reverse_iterator(beginPtr()); }
-		constexpr const_reverse_iterator crend() const noexcept { return const_reverse_iterator(beginPtr()); }
+		constexpr iterator begin() noexcept { return iterator(beginPtr(), beginPtr(), endPtr()); }
+		constexpr const_iterator begin() const noexcept { return const_iterator(beginPtr(), beginPtr(), endPtr()); }
+		constexpr const_iterator cbegin() const noexcept { return const_iterator(beginPtr(), beginPtr(), endPtr()); }
+		constexpr iterator end() noexcept { return iterator(endPtr(), beginPtr(), endPtr()); }
+		constexpr const_iterator end() const noexcept { return const_iterator(endPtr(), beginPtr(), endPtr()); }
+		constexpr const_iterator cend() const noexcept { return const_iterator(endPtr(), beginPtr(), endPtr()); }
+		constexpr reverse_iterator rbegin() noexcept { return reverse_iterator(end()); }
+		constexpr const_reverse_iterator rbegin() const noexcept { return const_reverse_iterator(end()); }
+		constexpr const_reverse_iterator crbegin() const noexcept { return const_reverse_iterator(end()); }
+		constexpr reverse_iterator rend() noexcept { return reverse_iterator(begin()); }
+		constexpr const_reverse_iterator rend() const noexcept { return const_reverse_iterator(begin()); }
+		constexpr const_reverse_iterator crend() const noexcept { return const_reverse_iterator(begin()); }
 
 		//capacity
 		constexpr Bool isEmpty() const noexcept { return !Bool(Number); }

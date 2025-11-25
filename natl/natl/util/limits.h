@@ -1,10 +1,14 @@
 #pragma once 
 
+//@begin_non_modules
+//own
+#include "compilerDependent.h"
+//@end_non_modules
+
 //own
 #include "basicTypes.h"
-#include "compilerDependent.h"
 
-//interface
+//@export
 namespace natl {
 	template<typename Type>
 	struct Limits;

@@ -2,10 +2,10 @@
 
 //own
 #include "../util/typeTraits.h"
-#include "../fundamental/tuple.h"
+#include "../util/tuple.h"
 #include "mutex.h"
 
-//interface 
+//@export
 namespace natl {
 	template<typename DataType, typename MutexType>
 	struct SynchronizedValueBase {

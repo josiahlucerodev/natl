@@ -1,5 +1,11 @@
 #pragma once
 
+//@begin_non_modules
+//std
+#include <memory>
+#include <type_traits>
+//@end_non_modules
+
 //own
 #include "../container/container.h"
 #include "allocator.h"
@@ -7,7 +13,7 @@
 #include "bits.h"
 #include "typeTraits.h"
 
-//interface
+//@export
 namespace natl {
     template<typename DataType>
     constexpr DataType* addressof(DataType& val) noexcept {
@@ -394,13 +400,13 @@ namespace natl {
         using difference_type = PtrDiff;
         using size_type = Size;
 
-        using iterator = RandomAccessIterator<DataType>;
-        using const_iterator = RandomAccessIterator<const DataType>;
-        using reverse_iterator = ReverseRandomAccessIterator<DataType>;
-        using const_reverse_iterator = ReverseRandomAccessIterator<const DataType>;
+        using iterator = ContiguousIterator<DataType>;
+        using const_iterator = ContiguousIterator<const DataType>;
+        using reverse_iterator = ReverseContiguousIterator<DataType>;
+        using const_reverse_iterator = ReverseContiguousIterator<const DataType>;
 
         template<typename OtherDataType>
-        using rebindation_move_adapater = AllocationMoveAdapater<OtherDataType, typename Alloc::template rebind<OtherDataType>>;
+        using rebind = AllocationMoveAdapater<OtherDataType, typename Alloc::template rebind<OtherDataType>>;
 
     private:
         DataType* arrayDataPtr;
@@ -476,14 +482,14 @@ namespace natl {
         constexpr pointer beginPtr() const noexcept { return data(); }
         constexpr pointer endPtr() const noexcept { return data() + size(); }
 
-        constexpr iterator begin() const noexcept { return iterator(beginPtr()); }
-        constexpr const_iterator cbegin() const noexcept { return const_iterator(beginPtr()); }
-        constexpr iterator end() const noexcept { return iterator(endPtr()); }
-        constexpr const_iterator cend() const noexcept { return const_iterator(endPtr()); }
-        constexpr reverse_iterator rbegin() const noexcept { return reverse_iterator(endPtr()); }
-        constexpr const_reverse_iterator crbegin() const noexcept { return const_reverse_iterator(endPtr()); }
-        constexpr reverse_iterator rend() const noexcept { return reverse_iterator(beginPtr()); }
-        constexpr const_reverse_iterator crend() const noexcept { return const_reverse_iterator(beginPtr()); }
+        constexpr iterator begin() const noexcept { return iterator(beginPtr(), beginPtr(), endPtr()); }
+        constexpr const_iterator cbegin() const noexcept { return const_iterator(beginPtr(), beginPtr(), endPtr()); }
+        constexpr iterator end() const noexcept { return iterator(endPtr(), beginPtr(), endPtr()); }
+        constexpr const_iterator cend() const noexcept { return const_iterator(endPtr(), beginPtr(), endPtr()); }
+        constexpr reverse_iterator rbegin() const noexcept { return reverse_iterator(end()); }
+        constexpr const_reverse_iterator crbegin() const noexcept { return const_reverse_iterator(end()); }
+        constexpr reverse_iterator rend() const noexcept { return reverse_iterator(begin()); }
+        constexpr const_reverse_iterator crend() const noexcept { return const_reverse_iterator(begin()); }
 
         //allocation 
         constexpr void deallocate() noexcept {
@@ -546,10 +552,10 @@ namespace natl {
         requires(
             IsSpecializationC<FromAllocationMoveAdapaterType, AllocationMoveAdapater> &&
             IsSameByteSize<ToDataType, typename FromAllocationMoveAdapaterType::value_type>)
-        constexpr typename FromAllocationMoveAdapaterType::template rebindation_move_adapater<ToDataType>
+        constexpr typename FromAllocationMoveAdapaterType::template rebind<ToDataType>
         equivalentCastAllocationMoveAdapter(FromAllocationMoveAdapaterType&& allocationMoveAdapter) noexcept {
 
-        using ToAllocationMoveAdapterType = typename FromAllocationMoveAdapaterType::template rebindation_move_adapater<ToDataType>;
+        using ToAllocationMoveAdapterType = typename FromAllocationMoveAdapaterType::template rebind<ToDataType>;
         using ToAlloc = ToAllocationMoveAdapterType::allocator_type;
         //using FromAlloc = FromAllocationMoveAdapaterType::allocator_type;
         using FromDataType = FromAllocationMoveAdapaterType::value_type;

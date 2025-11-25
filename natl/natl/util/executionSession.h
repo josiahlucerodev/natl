@@ -1,7 +1,11 @@
 #pragma once 
 
+//@begin_non_modules
 //c
 #include <setjmp.h>
+//own
+#include "compilerDependent.h"
+//@end_non_modules
 
 //own
 #include "typeInfo.h"
@@ -11,16 +15,16 @@
 #include "../container/functional.h"
 #include "../container/any.h"
 #include "../container/string.h"
-#include "../fundamental/observerPtr.h"
-#include "../fundamental/option.h"
-#include "../fundamental/expect.h"
+#include "../util/observerPtr.h"
+#include "../util/option.h"
+#include "../util/expect.h"
 
 //disable set_jmp warnings 
 #ifdef NATL_COMPILER_MSVC
 #pragma warning(disable : 4611)
 #endif // NATL_COMPILER_MSVC
 
-//interface 
+//@export
 namespace natl {
 	using JumpBuffer = jmp_buf;
 	using ExecutionSessionAlloc = UntrackedStandardAllocator<>;
@@ -167,8 +171,6 @@ namespace natl {
 	RegisterGlobalTrakerError registerGlobalTrakerToAll(const ConstAsciiStringView& name, GlobalTracker&& globalTraker) noexcept;
 	Expect<ObserverPtr<GlobalTracker>, GetGlobalTrackerError> getGlobalTraker(const ConstAsciiStringView& name) noexcept;
 	Bool isGlobalTrackerName(GlobalTracker* globalTraker, const ConstAsciiStringView& name) noexcept;
-
-#define NATL_EXECUTION_SESSION_ERROR(ExecutionSessionVarName) setjmp(natl::getExecutionSessionJumpBuffer(ExecutionSessionVarName))
 
 	Expect<ObserverPtr<GlobalTracker>, RegisterGlobalTrakerError> registerAllocationGlobalTraker(
 		const ConstAsciiStringView& name, OptionPtr<TopGlobalTracker> top = nullptr) noexcept;

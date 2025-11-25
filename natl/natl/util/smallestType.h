@@ -4,13 +4,13 @@
 #include "basicTypes.h"
 #include "limits.h"
 
-//interface
+//@export
 namespace natl {
 	namespace impl {
 		template<i64 value>
 		struct SmallestIntT {
-			static consteval getType() noexcept {
-				if constexpr (value <= Limits<i8>::max() && value >= Limits<i8>::min()>) {
+			static consteval auto getType() noexcept {
+				if constexpr (value <= Limits<i8>::max() && value >= Limits<i8>::min()) {
 					return i8(value);
 				} else if constexpr(value <= Limits<i16>::max() && value >= Limits<i16>::min()) {
 					return i16{};
@@ -30,7 +30,7 @@ namespace natl {
 	namespace impl {
 		template<ui64 value>
 		struct SmallestUIntT {
-			static consteval getType() noexcept {
+			static consteval auto getType() noexcept {
 				if constexpr (value <= Limits<ui8>::max()) {
 					return ui8(value);
 				} else if constexpr (value <= Limits<ui16>::max()) {

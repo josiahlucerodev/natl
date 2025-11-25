@@ -1,12 +1,12 @@
 #pragma once 
 
 //own
-#include "../fundamental/tuple.h"
-#include "../fundamental/option.h"
+#include "../util/tuple.h"
+#include "../util/option.h"
 #include "functional.h"
 #include "flatHashMap.h"
 
-//interface 
+//@export
 namespace natl {
 	template<typename FunctionSignature, Size FunctionByteCapacity = 32 - alignof(char*), typename Alloc = DefaultAllocator>
 	struct FunctionCache {};
@@ -108,10 +108,12 @@ namespace natl {
 		}
 	};
 
-	template<typename ResultCacheType>
-	inline ResultCacheType& getThreadLocalResultCacheOfCallFunctionCached() noexcept {
-		thread_local ResultCacheType resultCache;
-		return resultCache;
+	namespace impl {
+		template<typename ResultCacheType>
+		inline ResultCacheType& getThreadLocalResultCacheOfCallFunctionCached() noexcept {
+			thread_local ResultCacheType resultCache;
+			return resultCache;
+		}
 	}
 
 	template<typename Functor, typename... ArgTypes>
@@ -124,7 +126,7 @@ namespace natl {
 			return natl::forward<Functor>(functor)(natl::forward<ArgTypes>(arguments)...);
 		} else {
 			ArgsStorageType argumentStorage(arguments...);
-			ResultCacheType& resultCache = getThreadLocalResultCacheOfCallFunctionCached<ResultCacheType>();
+			ResultCacheType& resultCache = impl::getThreadLocalResultCacheOfCallFunctionCached<ResultCacheType>();
 			typename ResultCacheType::option_key_value_const_ref value = resultCache.find(argumentStorage);
 			if (value.hasValue()) {
 				return value.value().value();

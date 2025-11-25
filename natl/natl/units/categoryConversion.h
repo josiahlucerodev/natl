@@ -5,7 +5,7 @@
 #include "imperial.h"
 #include "metric.h"
 
-//interface
+//@export
 namespace natl {
     //length 
     template<typename FloatDataType, typename FromTag, typename ToTag>

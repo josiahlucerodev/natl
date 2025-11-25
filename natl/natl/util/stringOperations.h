@@ -6,20 +6,13 @@
 #include "typeTraits.h"
 #include "limits.h"
 
-//std
-#include <cstring>
-
-//natl
+//@export
 namespace natl {
 	constexpr Size cstringLength(const Ascii* str) noexcept {
-		if (isConstantEvaluated()) {
-			if (str == nullptr) { return 0; }
-			Size size = 0;
-			while (str[size] != '\0') { size += 1; }
-			return size;
-		} else {
-			return std::strlen(str);
-		}
+		if (str == nullptr) { return 0; }
+		Size size = 0;
+		while (str[size] != '\0') { size += 1; }
+		return size;
 	}
 	constexpr Size cstringLength(const Utf32* str) noexcept {
 		if (str == nullptr) { return 0; }

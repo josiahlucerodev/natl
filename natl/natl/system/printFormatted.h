@@ -6,7 +6,7 @@
 #include "print.h"
 #include "printColor.h"
 
-//interface
+//@export
 namespace natl {
 	template<typename StringViewLike>
 		requires(IsStringViewLike<StringViewLike, Ascii>)

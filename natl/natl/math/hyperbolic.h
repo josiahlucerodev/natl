@@ -1,11 +1,16 @@
 #pragma once
 
+//@begin_non_modules
+//own
+#include "../util/compilerDependent.h"
+//@end_non_modules
+
 //own
 #include "basicFloatOperations.h"
 #include "exponential.h"
 #include "power.h"
 
-//interface 
+//@export
 namespace natl::math {
 	//sinh
 	NATL_FORCE_INLINE constexpr f32 basicSinhF32(const f32 value) noexcept {

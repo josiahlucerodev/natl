@@ -2,9 +2,8 @@
 
 //own
 #include "base.h"
-#include "basicSerializations.h"
 
-//interface 
+//@export
 namespace natl {
 	//can serialize 
 	template<typename Serializer, typename SerializeType>

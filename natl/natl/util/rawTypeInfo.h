@@ -1,11 +1,16 @@
 #pragma once 
 
+//@begin_non_modules
+//own
+#include "compilerDependent.h"
+//@end_non_modules
+
 //own
 #include "basicTypes.h"
 #include "hash.h"
 #include "stringOperations.h"
 
-//interface 
+//@export
 namespace natl {
 	struct TypeNameStr {
 		const Ascii* strPtr;

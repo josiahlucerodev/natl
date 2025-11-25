@@ -5,7 +5,7 @@
 #include "container.h"
 #include "arrayView.h"
 
-//interface 
+//@export
 namespace natl {
 	template<typename DataType, typename Alloc = DefaultAllocator>
 		requires(IsAllocatorC<Alloc>)
@@ -25,10 +25,10 @@ namespace natl {
 		using optional_pointer = Option<pointer>;
 		using optional_const_pointer = Option<const_pointer>;
 
-		using iterator = RandomAccessIteratorAlloc<value_type, allocator_type>;
-		using const_iterator = ConstRandomAccessIteratorAlloc<value_type, allocator_type>;
-		using reverse_iterator = ReverseRandomAccessIteratorAlloc<value_type, allocator_type>;
-		using const_reverse_iterator = ReverseConstRandomAccessIteratorAlloc<value_type, allocator_type>;
+		using iterator = ContiguousIteratorAlloc<value_type, allocator_type>;
+		using const_iterator = ConstContiguousIteratorAlloc<value_type, allocator_type>;
+		using reverse_iterator = ReverseContiguousIteratorAlloc<value_type, allocator_type>;
+		using const_reverse_iterator = ReverseConstContiguousIteratorAlloc<value_type, allocator_type>;
 
 		using allocation_move_adapater = AllocationMoveAdapater<value_type, allocator_type>;
 	private:
@@ -50,7 +50,7 @@ namespace natl {
 			pointer fillDstPtrLast = fillDstPtrFirst + count;
 			natl::uninitializedFill<pointer, value_type>(fillDstPtrFirst, fillDstPtrLast, value);
 		}
-		constexpr HeapArray(const_pointer srcPtr, const size_type count) noexcept : arrayDataPtr(srcPtr), arraySize(count) {}
+		constexpr HeapArray(pointer srcPtr, const size_type count) noexcept : arrayDataPtr(srcPtr), arraySize(count) {}
 		constexpr HeapArray(allocation_move_adapater&& allocationMoveAdapater) {
 			if (allocationMoveAdapater.isEmpty()) {
 				arrayDataPtr = 0;
@@ -166,12 +166,12 @@ namespace natl {
 		constexpr pointer endPtr() noexcept { return data() + size(); }
 		constexpr const_pointer endPtr() const noexcept { return data() + size(); }
 
-		constexpr iterator begin() noexcept { return iterator(beginPtr()); }
-		constexpr const_iterator begin() const noexcept { return const_iterator(beginPtr()); }
-		constexpr const_iterator cbegin() const noexcept { return const_iterator(beginPtr()); }
-		constexpr iterator end() noexcept { return iterator(endPtr()); }
-		constexpr const_iterator end() const noexcept { return const_iterator(endPtr()); }
-		constexpr const_iterator cend() const noexcept { return const_iterator(endPtr()); }
+		constexpr iterator begin() noexcept { return iterator(beginPtr(), beginPtr(), endPtr()); }
+		constexpr const_iterator begin() const noexcept { return const_iterator(beginPtr(), beginPtr(), endPtr()); }
+		constexpr const_iterator cbegin() const noexcept { return const_iterator(beginPtr(), beginPtr(), endPtr()); }
+		constexpr iterator end() noexcept { return iterator(endPtr(), beginPtr(), endPtr()); }
+		constexpr const_iterator end() const noexcept { return const_iterator(endPtr(), beginPtr(), endPtr()); }
+		constexpr const_iterator cend() const noexcept { return const_iterator(endPtr(), beginPtr(), endPtr()); }
 		constexpr reverse_iterator rbegin() noexcept { return reverse_iterator(endPtr()); }
 		constexpr const_reverse_iterator rbegin() const noexcept { return const_reverse_iterator(endPtr()); }
 		constexpr const_reverse_iterator crbegin() const noexcept { return const_reverse_iterator(endPtr()); }

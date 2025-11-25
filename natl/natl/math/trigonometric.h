@@ -1,12 +1,16 @@
 #pragma once 
 
+//@begin_non_modules
+//own
+#include "../util/compilerDependent.h"
+//@end_non_modules
+
 //own
 #include "../util/basicTypes.h"
-#include "../util/compilerDependent.h"
 #include "basicFloatOperations.h"
 #include "constants.h"
 
-//interface 
+//@export
 namespace natl::math {
 	NATL_FORCE_INLINE f32 degToRad(const f32 degrees) noexcept {
 		using namespace natl::literals;

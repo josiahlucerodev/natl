@@ -4,7 +4,7 @@
 #include "simdBase.h"
 #include "simdOf.h"
 
-//interface 
+//@export
 namespace natl::simd {
 	template<typename DataType, typename Arch>
 		requires(IsBuiltInNumericC<DataType> && IsSimdArch<Arch>)

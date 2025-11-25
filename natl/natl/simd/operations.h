@@ -3,7 +3,7 @@
 //own
 #include "simdBase.h"
 
-//interface
+//@export
 namespace natl::simd {
 	//arithmetic//
 

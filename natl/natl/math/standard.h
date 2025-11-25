@@ -1,9 +1,16 @@
 #pragma once 
 
+//@begin_non_modules
+//own
+#include "../util/compilerDependent.h"
+//@end_non_modules
+
 //own
 #include "../util/basicTypes.h"
+#include "../util/typeTraits.h"
+#include "../util/limits.h"
 
-//interface 
+//@export 
 namespace natl::math {
 	//abs 
 	template<typename NumericType>

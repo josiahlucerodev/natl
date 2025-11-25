@@ -3,7 +3,7 @@
 //own
 #include "base.h"
 
-//interface
+//@export
 namespace natl {
     enum struct MetricLengthType {
         millimeter,

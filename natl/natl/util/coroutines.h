@@ -1,9 +1,18 @@
 #pragma once 
 
+
+//@begin_non_modules
 //std
 #include <coroutine>
 
-//interface
+//own
+#include "compilerDependent.h"
+//@end_non_modules
+
+//own
+#include "basicTypes.h"
+
+//@export
 namespace natl {
 	template<typename Promise = void>
 	using CoroutineHandle = std::coroutine_handle<Promise>;

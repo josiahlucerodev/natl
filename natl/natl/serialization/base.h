@@ -1,14 +1,14 @@
 #pragma once 
 
 //own
+#include "../util/utility.h"
 #include "../util/typeTraits.h"
-#include "../util/compilerDependent.h"
 #include "../container/stringView.h"
 #include "../container/arrayView.h"
-#include "../fundamental/expect.h"
-#include "../fundamental/strongType.h"
+#include "../util/expect.h"
+#include "../util/strongType.h"
 
-//interface 
+//@export
 namespace natl {
 	enum class SerializeFlags {
 		none = 0,
@@ -829,7 +829,7 @@ namespace natl {
 	namespace impl {
 		template<typename StructType, typename SerializeType>
 			requires(IsSerializeStructC<SerializeType>)
-		consteval static auto generateStructMemberComponentsType() noexcept {
+		consteval auto generateStructMemberComponentsType() noexcept {
 			return[]<Size... Indices>(IndexSequence<Indices...>) {
 				return TypePack<SerializeStructComponent<StructType, SerializeType::members::template at<Indices>, Indices>...>{};
 			}(MakeIndexSequence<SerializeType::members::size>{});
@@ -1184,7 +1184,7 @@ namespace natl {
 	struct DummyDeserializeErrorHandler {
 		constexpr DummyDeserializeErrorHandler(
 			const ConstAsciiStringView&,
-			const ConstAsciiStringView& locationDetails,
+			const ConstAsciiStringView&,
 			const DeserializeErrorLocation&,
 			const DeserializeErrorFlag&) noexcept {
 		}

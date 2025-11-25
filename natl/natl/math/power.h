@@ -1,17 +1,22 @@
 #pragma once
 
+//@begin_non_modules
 //own
 #include "../util/compilerDependent.h"
-#include "../util/bits.h"
-#include "../util/typeTraits.h"
-#include "basicFloatOperations.h"
 
 //intrinsics
 #ifdef NATL_COMPILER_MSVC
 #include <immintrin.h>
 #endif //NATL_COMPILER_MSVC
+//@end_non_modules
 
-//interface 
+//own
+#include "../util/bits.h"
+#include "../util/typeTraits.h"
+#include "basicFloatOperations.h"
+
+
+//@export 
 namespace natl::math {
 	//sqrt
 	namespace impl {

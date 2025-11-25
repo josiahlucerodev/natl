@@ -1,12 +1,17 @@
 #pragma once 
 
+//@begin_non_modules
+#include <coroutine>
+//@end_non_modules
+
 //own
 #include "../util/typeTraits.h"
 #include "../util/coroutines.h"
 #include "../util/error.h"
+#include "../util/iterators.h"
 #include "../container/container.h"
 
-//interface
+//@export
 namespace natl {
 	template<typename DataType>
 	struct [[nodiscard]] Generator {
@@ -56,7 +61,7 @@ namespace natl {
 
 		struct GeneratorIterator {
 		public:
-			using iterator_category = std::input_iterator_tag;
+			using iterator_category = InputIteratorTag;
 			using difference_type = PtrDiff;
 			using value_type = DataType;
 			using reference = DataType&;

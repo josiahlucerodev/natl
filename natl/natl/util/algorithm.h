@@ -3,8 +3,9 @@
 //own
 #include "iterators.h"
 #include "compare.h"
+#include "random.h"
 
-//interface
+//@export
 namespace natl {
 	template<typename DataType> 
 	constexpr DataType min(const DataType& a, const DataType& b) noexcept {
@@ -15,7 +16,7 @@ namespace natl {
 		return (b > a) ? b : a;
 	}
 	template<typename DataType>
-	constexpr static DataType clamp(const DataType value, const DataType min, const DataType max) noexcept {
+	constexpr DataType clamp(const DataType value, const DataType min, const DataType max) noexcept {
 		return (value < min) ? min : ((value > max) ? max : value);
 	}
 
@@ -243,5 +244,14 @@ namespace natl {
 		requires(IsRandomAccessIteratorC<RandomIter>)
 	constexpr void sort(RandomIter first, RandomIter last, Compare compare = Compare{}) noexcept {
 		introSort(first, last, compare);
+	}
+
+	template<typename RandomIter, typename RandomGenerator = RandomGeneratorFunction>
+		requires(IsRandomAccessIteratorC<RandomIter> && IsRandomGenerator<Decay<RandomGenerator>>)
+	constexpr void shuffle(RandomIter first, RandomIter last, RandomGenerator&& rg = randomGenerator()) noexcept {
+		for (auto i = last - first - 1; i > 0; --i) {
+			auto utilRg = UtilRandomGenerator(randomGeneratorRef(rg));
+			swap(first[i], first[utilRg.randomI64(0, i)]);
+		}
 	}
 }

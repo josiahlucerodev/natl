@@ -8,11 +8,11 @@
 #include "../util/funcArgs.h"
 #include "../util/compare.h"
 #include "../processing/format.h"
-#include "../fundamental/option.h"
+#include "../util/option.h"
 #include "dynArray.h"
 #include "smallDynArray.h"
 
-//interface 
+//@export
 namespace natl {
 	template<typename IterType>
 	struct SetInsertResult {
@@ -135,12 +135,11 @@ namespace natl {
 			using unit_type = Option<key_type>;
 			using storage_array = DynamicArrayType<unit_type>;
 			using allocator_type = storage_array::allocator_type;
-			using typed_allocator_type = storage_array::typed_allocator_type;
+			using typed_allocator_type = allocator_type::template rebind<DataType>;
 
 			using iterator_traits = DefaultIteratorTraits<unit_type>;
 			using iterator_category = BidirectionalIteratorTag;
 
-			using set_value_type = DataType;
 			using value_type = typed_allocator_type::value_type;
 			using reference = typed_allocator_type::reference;
 			using const_reference = typed_allocator_type::const_reference;
@@ -203,13 +202,14 @@ namespace natl {
 
 			//iterators
 		private:
-			constexpr pointer beginPtr() noexcept { return storageArray.data(); }
-			constexpr const_pointer beginPtr() const noexcept { return storageArray.data(); }
-			constexpr pointer endPtr() noexcept { return storageArray.data() + storageArray.size(); }
-			constexpr const_pointer endPtr() const noexcept { return storageArray.data() + storageArray.size(); }
+			constexpr unit_type* beginPtr() noexcept { return storageArray.data(); }
+			constexpr const unit_type* beginPtr() const noexcept { return storageArray.data(); }
+			constexpr unit_type* endPtr() noexcept { return storageArray.data() + storageArray.size(); }
+			constexpr const unit_type* endPtr() const noexcept { return storageArray.data() + storageArray.size(); }
+
 		public:
 			constexpr iterator begin() noexcept {
-				pointer dataPtr = beginPtr();
+				unit_type* dataPtr = beginPtr();
 				iterator firstIter = iterator(dataPtr, beginPtr(), endPtr());
 				if (dataPtr == nullptr) {
 					return firstIter;
@@ -222,7 +222,7 @@ namespace natl {
 				}
 			}
 			constexpr const_iterator begin() const noexcept {
-				const_pointer dataPtr = beginPtr();
+				const unit_type* dataPtr = beginPtr();
 				const_iterator firstIter = const_iterator(dataPtr, beginPtr(), endPtr());
 				if (dataPtr == nullptr) {
 					return firstIter;
@@ -243,7 +243,7 @@ namespace natl {
 			constexpr const_iterator cend() const noexcept { return const_iterator(endPtr(), beginPtr(), endPtr()); }
 
 			constexpr reverse_iterator rbegin() noexcept {
-				pointer dataPtr = endPtr();
+				unit_type* dataPtr = endPtr();
 				reverse_iterator firstIter = reverse_iterator(dataPtr, beginPtr(), endPtr());
 				if (dataPtr == nullptr) {
 					return firstIter;
@@ -256,7 +256,7 @@ namespace natl {
 				}
 			}
 			constexpr const_reverse_iterator rbegin() const noexcept {
-				const_pointer dataPtr = endPtr();
+				const unit_type* dataPtr = endPtr();
 				const_reverse_iterator firstIter = const_reverse_iterator(dataPtr, beginPtr(), endPtr());
 				if (dataPtr == nullptr) {
 					return firstIter;
@@ -285,10 +285,10 @@ namespace natl {
 				resizeAndRehash(static_cast<size_type>(static_cast<f64>(newCapacity) / loadFactor));
 			}
 
-			constexpr insert_result insert(const set_value_type& value) noexcept {
+			constexpr insert_result insert(const value_type& value) noexcept {
 				resizeAndRehash();
 
-				pointer dataLocation = nullptr;
+				unit_type* dataLocation = nullptr;
 				size_type index = Hash::hash(value) % capacity();
 				while (storageArray[index].hasValue()) {
 					if (Compare::compare(storageArray[index].value(), value)) {
@@ -304,10 +304,10 @@ namespace natl {
 				return insert_result(true, iterator(dataLocation, beginPtr(), endPtr()));
 			};
 
-			constexpr insert_result insert(set_value_type&& value) noexcept {
+			constexpr insert_result insert(value_type&& value) noexcept {
 				resizeAndRehash();
 
-				pointer dataLocation = nullptr;
+				unit_type* dataLocation = nullptr;
 				size_type index = Hash::hash(value) % capacity();
 				while (storageArray[index].hasValue()) {
 					if (Compare::compare(storageArray[index].value(), value)) {
@@ -317,13 +317,13 @@ namespace natl {
 				}
 
 				dataLocation = &storageArray[index];
-				*dataLocation = natl::forward<set_value_type>(value);
+				*dataLocation = natl::forward<value_type>(value);
 				++setSize;
 
 				return insert_result(true, iterator(dataLocation, beginPtr(), endPtr()));
 			};
 
-			constexpr iterator insertWithReplacement(const set_value_type& value) noexcept {
+			constexpr iterator insertWithReplacement(const value_type& value) noexcept {
 				insert_result insertResult = insert(value);
 				if (insertResult.insertFailed()) {
 					*insertResult.iter() = value;
@@ -331,15 +331,15 @@ namespace natl {
 				return insertResult.iter();
 			}
 
-			constexpr iterator insertWithReplacement(set_value_type&& value) noexcept {
-				insert_result insertResult = insert(forward<set_value_type>(value));
+			constexpr iterator insertWithReplacement(value_type&& value) noexcept {
+				insert_result insertResult = insert(forward<value_type>(value));
 				if (insertResult.insertFailed()) {
-					*insertResult.iter() = forward<set_value_type>(value);
+					*insertResult.iter() = forward<value_type>(value);
 				}
 				return insertResult.iter();
 			}
 
-			constexpr Bool erase(const set_value_type& value) noexcept {
+			constexpr Bool erase(const value_type& value) noexcept {
 				iterator location = findIter(value);
 				return erase(location);
 			}
@@ -363,7 +363,7 @@ namespace natl {
 			}
 
 			//lookups
-			constexpr iterator findIter(const set_value_type& value) noexcept {
+			constexpr iterator findIter(const value_type& value) noexcept {
 				if (size() == 0) { return end(); }
 				size_type index = Hash::hash(value) % capacity();
 				size_type originalIndex = index;
@@ -381,7 +381,7 @@ namespace natl {
 				return end();
 			}
 
-			constexpr const_iterator findIter(const set_value_type& value) const noexcept {
+			constexpr const_iterator findIter(const value_type& value) const noexcept {
 				if (size() == 0) { return end(); }
 				size_type index = Hash::hash(value) % capacity();
 				size_type originalIndex = index;
@@ -399,14 +399,14 @@ namespace natl {
 				return end();
 			}
 
-			constexpr option_value_type find(const set_value_type& value) noexcept {
+			constexpr option_value_type find(const value_type& value) noexcept {
 				if (size() == 0) { return option_value_type(natl::OptionEmpty()); }
 				size_type index = Hash::hash(value) % capacity();
 				size_type originalIndex = index;
 
 				while (true) {
 					if (storageArray[index].hasValue() && Compare::compare(storageArray[index].value(), value)) {
-						return option_value_type(storageArray[index].value());
+						return option_value_type(&storageArray[index].value());
 					}
 
 					index = (index + 1) % capacity();
@@ -417,14 +417,14 @@ namespace natl {
 				return option_value_type(natl::OptionEmpty());
 			}
 
-			constexpr const_option_value_type find(const set_value_type& value) const noexcept {
+			constexpr const_option_value_type find(const value_type& value) const noexcept {
 				if (size() == 0) { return const_option_value_type(natl::OptionEmpty()); }
 				size_type index = Hash::hash(value) % capacity();
 				size_type originalIndex = index;
 
 				while (true) {
 					if (storageArray[index].hasValue() && Compare::compare(storageArray[index].value(), value)) {
-						return const_option_value_type(storageArray[index].value());
+						return const_option_value_type(&storageArray[index].value());
 					}
 
 					index = (index + 1) % capacity();
@@ -435,7 +435,7 @@ namespace natl {
 				return const_option_value_type();
 			}
 
-			constexpr Bool contains(const set_value_type& value) const noexcept {
+			constexpr Bool contains(const value_type& value) const noexcept {
 				return find(value).hasValue();
 			}
 

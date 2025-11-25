@@ -1,12 +1,14 @@
 #pragma once 
 
-//std
-#include <compare>
+//@begin_non_modules
+//natl
+#include "../util/compilerDependent.h"
+//@end_non_modules
 
 //own
 #include "typeTraits.h"
 
-//interface 
+//@export
 namespace natl {
 	using PartialOrdering = std::partial_ordering;
 	using WeakOrdering = std::weak_ordering;
@@ -86,85 +88,118 @@ namespace natl {
         { lhs <=> rhs };
     };
 
-    template<typename DataType>
+    template<typename LhsType, typename RhsType = LhsType>
     struct CompareEqual {
     public:
-        constexpr static Bool compare(const DataType& lhs, const DataType& rhs) noexcept {
+        constexpr static Bool compare(const LhsType& lhs, const RhsType& rhs) noexcept {
             return lhs == rhs;
         }
-        constexpr Bool operator()(const DataType& lhs, const DataType& rhs) const noexcept {
+        constexpr Bool operator()(const LhsType& lhs, const RhsType& rhs) const noexcept {
             return lhs == rhs;
         }
     };
-    template<typename Type>
+
+    template<typename LhsType, typename RhsType = LhsType> 
+    concept HasCompareEqualC = requires(const LhsType& lhs, const RhsType& rhs) {
+        { CompareEqual<LhsType, RhsType>::compare(lhs, rhs) } -> natl::IsSameC<natl::Bool>;
+        { CompareEqual<LhsType, RhsType>{}(lhs, rhs) } -> natl::IsSameC<natl::Bool>;
+    };
+    template<typename LhsType, typename RhsType = LhsType> struct HasCompareEqualT : BoolConstant<HasCompareEqualC<LhsType, RhsType>> {};
+    template<typename LhsType, typename RhsType = LhsType> constexpr inline Bool HasCompareEqual = HasCompareEqualC<LhsType, RhsType>;
+
+
+    template<typename LhsType, typename RhsType = LhsType>
     struct CompareNotEqual {
     public:
-        constexpr static Bool compare(const Type& lhs, const Type& rhs) noexcept {
+        constexpr static Bool compare(const LhsType& lhs, const RhsType& rhs) noexcept {
             return lhs != rhs;
         }
-        constexpr Bool operator()(const Type& lhs, const Type& rhs) const noexcept {
+        constexpr Bool operator()(const LhsType& lhs, const RhsType& rhs) const noexcept {
             return lhs != rhs;
         }
     };
 
-    template<typename Type>
+    template<typename LhsType, typename RhsType = LhsType>
+    concept HasCompareNotEqualC = requires(const LhsType & lhs, const RhsType & rhs) {
+        { CompareNotEqual<LhsType, RhsType>::compare(lhs, rhs) } -> natl::IsSameC<natl::Bool>;
+        { CompareNotEqual<LhsType, RhsType>{}(lhs, rhs) } -> natl::IsSameC<natl::Bool>;
+    };
+    template<typename LhsType, typename RhsType = LhsType> struct HasCompareNotEqualT : BoolConstant<HasCompareNotEqualC<LhsType, RhsType>> {};
+    template<typename LhsType, typename RhsType = LhsType> constexpr inline Bool HasCompareNotEqual = HasCompareNotEqualC<LhsType, RhsType>;
+
+    template<typename LhsType, typename RhsType = LhsType>
     struct CompareLess {
     public:
-        constexpr static Bool compare(const Type& lhs, const Type& rhs) noexcept {
+        constexpr static Bool compare(const LhsType& lhs, const RhsType& rhs) noexcept {
             return lhs < rhs;
         }
-        constexpr Bool operator()(const Type& lhs, const Type& rhs) const noexcept { 
+        constexpr Bool operator()(const LhsType& lhs, const LhsType& rhs) const noexcept { 
             return lhs < rhs; 
         }
     };
-    template<typename Type>
+
+    template<typename LhsType, typename RhsType = LhsType>
+    concept HasCompareLessC = requires(const LhsType & lhs, const RhsType & rhs) {
+        { CompareLess<LhsType, RhsType>::compare(lhs, rhs) } -> natl::IsSameC<natl::Bool>;
+        { CompareLess<LhsType, RhsType>{}(lhs, rhs) } -> natl::IsSameC<natl::Bool>;
+    };
+    template<typename LhsType, typename RhsType = LhsType> struct HasCompareLessT : BoolConstant<HasCompareLessC<LhsType, RhsType>> {};
+    template<typename LhsType, typename RhsType = LhsType> constexpr inline Bool HasCompareLess = HasCompareLessC<LhsType, RhsType>;
+
+    template<typename LhsType, typename RhsType = LhsType>
     struct CompareGreater {
     public:
-        constexpr static Bool compare(const Type& lhs, const Type& rhs) noexcept {
+        constexpr static Bool compare(const LhsType& lhs, const RhsType& rhs) noexcept {
             return lhs > rhs;
         }
-        constexpr Bool operator()(const Type& lhs, const Type& rhs) const noexcept { 
+        constexpr Bool operator()(const LhsType& lhs, const RhsType& rhs) const noexcept { 
             return lhs > rhs; 
         }
     };
-    template<typename Type>
+
+    template<typename LhsType, typename RhsType = LhsType>
+    concept HasCompareGreaterC = requires(const LhsType & lhs, const RhsType & rhs) {
+        { CompareGreater<LhsType, RhsType>::compare(lhs, rhs) } -> natl::IsSameC<natl::Bool>;
+        { CompareGreater<LhsType, RhsType>{}(lhs, rhs) } -> natl::IsSameC<natl::Bool>;
+    };
+    template<typename LhsType, typename RhsType = LhsType> struct HasCompareGreaterT : BoolConstant<HasCompareGreaterC<LhsType, RhsType>> {};
+    template<typename LhsType, typename RhsType = LhsType> constexpr inline Bool HasCompareGreater = HasCompareGreaterC<LhsType, RhsType>;
+
+    template<typename LhsType, typename RhsType = LhsType>
     struct CompareLessEqual {
     public:
-        constexpr static Bool compare(const Type& lhs, const Type& rhs) noexcept {
+        constexpr static Bool compare(const LhsType& lhs, const RhsType& rhs) noexcept {
             return lhs <= rhs;
         }
-        constexpr Bool operator()(const Type& lhs, const Type& rhs) const noexcept { 
+        constexpr Bool operator()(const LhsType& lhs, const RhsType& rhs) const noexcept { 
             return lhs <= rhs; 
         }
     };
-    template<typename Type>
+
+    template<typename LhsType, typename RhsType = LhsType>
+    concept HasCompareLessEqualC = requires(const LhsType & lhs, const RhsType & rhs) {
+        { CompareLessEqual<LhsType, RhsType>::compare(lhs, rhs) } -> natl::IsSameC<natl::Bool>;
+        { CompareLessEqual<LhsType, RhsType>{}(lhs, rhs) } -> natl::IsSameC<natl::Bool>;
+    };
+    template<typename LhsType, typename RhsType = LhsType> struct HasCompareLessEqualT : BoolConstant<HasCompareLessEqualC<LhsType, RhsType>> {};
+    template<typename LhsType, typename RhsType = LhsType> constexpr inline Bool HasCompareLessEqual = HasCompareLessEqualC<LhsType, RhsType>;
+
+    template<typename LhsType, typename RhsType = LhsType>
     struct CompareGreaterEqual {
     public:
-        constexpr static Bool compare(const Type& lhs, const Type& rhs) noexcept {
+        constexpr static Bool compare(const LhsType& lhs, const RhsType& rhs) noexcept {
             return lhs >= rhs;
         }
-        constexpr Bool operator()(const Type& lhs, const Type& rhs) const noexcept { 
+        constexpr Bool operator()(const LhsType& lhs, const RhsType& rhs) const noexcept {
             return lhs >= rhs; 
         }
     };
-    template<typename Type>
-    struct CompareEqualTo {
-    public:
-        constexpr static Bool compare(const Type& lhs, const Type& rhs) noexcept {
-            return lhs == rhs;
-        }
-        constexpr Bool operator()(const Type& lhs, const Type& rhs) const noexcept {
-            return lhs == rhs;
-        }
+
+    template<typename LhsType, typename RhsType = LhsType>
+    concept HasCompareGreaterEqualC = requires(const LhsType & lhs, const RhsType & rhs) {
+        { CompareGreaterEqual<LhsType, RhsType>::compare(lhs, rhs) } -> natl::IsSameC<natl::Bool>;
+        { CompareGreaterEqual<LhsType, RhsType>{}(lhs, rhs) } -> natl::IsSameC<natl::Bool>;
     };
-    template<typename Type>
-    struct CompareNotEqualTo {
-    public:
-        constexpr static Bool compare(const Type& lhs, const Type& rhs) noexcept {
-            return lhs != rhs;
-        }
-        constexpr Bool operator()(const Type& lhs, const Type& rhs) const noexcept {
-            return lhs != rhs;
-        }
-    };
+    template<typename LhsType, typename RhsType = LhsType> struct HasCompareGreaterEqualT : BoolConstant<HasCompareGreaterEqualC<LhsType, RhsType>> {};
+    template<typename LhsType, typename RhsType = LhsType> constexpr inline Bool HasCompareGreaterEqual = HasCompareGreaterEqualC<LhsType, RhsType>;
 }

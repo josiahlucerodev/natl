@@ -9,10 +9,11 @@
 #include "../util/characterTest.h"
 #include "../util/iteration.h"
 #include "../util/typeInfo.h"
-#include "../fundamental/tuple.h"
-#include "../fundamental/strongType.h"
+#include "../util/tuple.h"
+#include "../util/strongType.h"
+#include "../container/string.h"
 
-//interface
+//@export
 namespace natl {
 	template<typename Type, typename CharType = Ascii>
 	struct Formatter { using not_formattable = void; };
@@ -31,7 +32,7 @@ namespace natl {
 		using difference_type = OutputIter::difference_type;
 		using size_type = OutputIter::size_type;
 
-		using iterator_category = std::output_iterator_tag;
+		using iterator_category = OutputIteratorTag;
 	private:
 		OutputIter outputIter;
 		Size internalColumnNumber;
@@ -755,8 +756,8 @@ namespace natl {
 					if constexpr (IsStringLiteral<TemplateFlag>) {
 						constexpr ConstAsciiStringView tflagName = TemplateFlag::toStringView();
 
-						if constexpr (tflagName.starts_with("p: ")) {
-							constexpr Size newPrecision = stringDecimalToInt<Size>(tflagName.substr(3));
+						if constexpr (tflagName.startsWith("p: ")) {
+							constexpr Size newPrecision = stringDecimalToInt<Size>(tflagName.substr(3)).value();
 							precision = newPrecision;
 						} else if constexpr (tflagName == "standard") {
 							floatFormat = FloatFormat::standard;
@@ -1330,14 +1331,14 @@ namespace natl {
 		consteval static Bool getValue() noexcept {
 			if constexpr (IsStringLiteralC<TemplateFlag>) {
 				constexpr ConstAsciiStringView tflagName = TemplateFlag::toStringView();
-				return tflagName.starts_with("k: ");
+				return tflagName.startsWith("k: ");
 			} else {
 				return impl::IsFormatKeyC<TemplateFlag>;
 			}
 		}
 		constexpr static Bool value = getValue();
 	};
-	template<typename Type> constexpr static Bool IsKeyFormatTemplateFlag = IsKeyFormatTemplateFlagV<Type>::value;
+	template<typename Type> constexpr inline Bool IsKeyFormatTemplateFlag = IsKeyFormatTemplateFlagV<Type>::value;
 	template<typename Type> concept IsKeyFormatTemplateFlagC = IsKeyFormatTemplateFlagV<Type>::value;
 
 
@@ -1346,18 +1347,18 @@ namespace natl {
 		consteval static Bool getValue() noexcept {
 			if constexpr (IsStringLiteralC<TemplateFlag>) {
 				constexpr ConstAsciiStringView tflagName = TemplateFlag::toStringView();
-				return tflagName.starts_with("v: ");
+				return tflagName.startsWith("v: ");
 			} else {
 				return impl::IsFormatValueC<TemplateFlag>;
 			}
 		}
 		constexpr static Bool value = getValue();
 	};
-	template<typename Type> constexpr static Bool IsValueFormatTemplateFlag = IsValueFormatTemplateFlagV<Type>::value;
+	template<typename Type> constexpr inline Bool IsValueFormatTemplateFlag = IsValueFormatTemplateFlagV<Type>::value;
 	template<typename Type> concept IsValueFormatTemplateFlagC = IsValueFormatTemplateFlagV<Type>::value;
 
 	template<typename Type> concept IsKeyOrValueFormatTemplateFlagC = IsKeyFormatTemplateFlagC<Type> || IsValueFormatTemplateFlagC<Type>;
-	template<typename Type> constexpr static Bool IsKeyOrValueFormatTemplateFlag = IsKeyOrValueFormatTemplateFlagC<Type>;
+	template<typename Type> constexpr inline Bool IsKeyOrValueFormatTemplateFlag = IsKeyOrValueFormatTemplateFlagC<Type>;
 	template<typename Type> struct IsKeyOrValueFormatTemplateFlagV : BoolConstant<IsKeyOrValueFormatTemplateFlagC<Type>> {};
 
 	template<typename TemplateFlag>

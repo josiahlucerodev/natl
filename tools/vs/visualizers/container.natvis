@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
+    <Type Name="natl::Array&lt;*&gt;">
+      <DisplayString>size = {number}</DisplayString>
+      <Expand>
+        <Item Name="[size]">number</Item>
+        <ArrayItems>
+          <Size>number</Size>
+          <ValuePointer>dataStorage</ValuePointer>
+        </ArrayItems>
+      </Expand>
+    </Type>
+
+    <Type Name="natl::ArrayView&lt;*&gt;">
+      <DisplayString>size = {arraySize}</DisplayString>
+      <Expand>
+        <Item Name="[size]">arraySize</Item>
+        <Item Name="[ptr]">dataPtr</Item>
+        <ArrayItems>
+          <Size>arraySize</Size>
+          <ValuePointer>dataPtr</ValuePointer>
+        </ArrayItems>
+      </Expand>
+    </Type>
+
+    <Type Name="natl::BaseStringView&lt;*&gt;">
+      <DisplayString>{_dataPtr, sb}</DisplayString>
+      <Expand>
+         <Item Name="[size]">_stringLength</Item>
+         <Item Name="[ptr]">_dataPtr</Item>
+      </Expand>
+    </Type>
+
+    <Type Name="natl::BaseString&lt;*&gt;">
+      <DisplayString>
+        { (stringSizeAndSmallStringFlag >= 0x4000000000000000) ? stringPtr : fullSmallBufferDisplay } 
+      </DisplayString>
+      <Expand>
+         <Item Name="[size]" Condition="stringSizeAndSmallStringFlag &gt;= 0x4000000000000000">
+            smallBufferSizeDisplay
+         </Item>
+         <Item Name="[capacity]" Condition="stringSizeAndSmallStringFlag &gt;= 0x4000000000000000">
+            stringCapacity
+         </Item>
+         <Item Name="[str]" Condition="stringSizeAndSmallStringFlag &gt;= 0x4000000000000000">
+            stringPtr
+         </Item>
+
+         <Item Name="[size]" Condition="stringSizeAndSmallStringFlag &lt; 0x4000000000000000">
+             smallBufferSizeDisplay
+         </Item>
+         <Item Name="[capacity]" Condition="stringSizeAndSmallStringFlag &lt; 0x4000000000000000">
+            smallBufferSize
+         </Item>
+         <Item Name="[str]" Condition="stringSizeAndSmallStringFlag &lt; 0x4000000000000000">
+            fullSmallBufferDisplay
+         </Item>
+
+      </Expand>
+    </Type>
+
+</AutoVisualizer>

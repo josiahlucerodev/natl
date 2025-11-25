@@ -1,0 +1,51 @@
+{
+	"projects": [
+		{
+			"name": "natl",
+			"srcDirs": ["natl/natl"],
+			"excludeDirs": [""],
+			"excludeFiles": [
+				"pch.h", 
+				"compilerDependent.h", 
+				"testMacros.h", 
+				"mainMacros.h", 
+				"castMacros.h", 
+				"stringLiteralMacros.h", 
+				"executionSessionMacros.h", 
+				"preprocessor.h", 
+				"stateful.h"],
+			"moduleOutput": "natl/modules",
+			"srcListOutput": "natl/CMakeSources.cmake",
+
+			"copyFiles": [
+				"compilerDependent.h", 
+				"testMacros.h", 
+				"mainMacros.h", 
+				"castMacros.h", 
+				"stringLiteralMacros.h", 
+				"executionSessionMacros.h",
+				"preprocessor.h", 
+				"stateful.h"],
+			"allFileName": "all",
+			
+			"cppHeaderExts": ["hpp", "h"],
+			"cppSourceExts": ["cpp"],
+			"cppModuleInterfaceExt": "ixx",
+			"cppModuleImplementationExt": "cppm"
+		},
+		{
+			"name": "tests",
+			"srcDirs": ["tests/"],
+			"excludeDirs": [""],
+			"excludeFiles": [""],
+			"copyFiles": [""],
+			"moduleOutput": "tests/modules",
+			"allFileName": "all",
+
+			"cppHeaderExts": ["hpp", "h"],
+			"cppSourceExts": ["cpp"],
+			"cppModuleInterfaceExt": "ixx",
+			"cppModuleImplementationExt": "cppm"
+		}
+	]
+}

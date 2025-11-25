@@ -4,7 +4,7 @@
 #include "flatHashMap.h"
 #include "batchPool.h"
 
-//interface 
+//@export
 namespace natl {
 	namespace impl {
 		template<typename KeyType, typename ValueType, typename storage_iterator, typename Alloc>

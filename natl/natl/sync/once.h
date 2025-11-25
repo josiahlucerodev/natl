@@ -4,7 +4,7 @@
 #include "mutex.h"
 #include "atomic.h"
 
-//interface 
+//@export
 namespace natl {
     struct OnceFlag {
         Mutex mutex;

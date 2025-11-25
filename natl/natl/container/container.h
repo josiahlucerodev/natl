@@ -1,16 +1,18 @@
 #pragma once
 
+//@begin_non_modules
 //std
 #include <cstdint>
 #include <iterator>
 #include <type_traits>
 #include <concepts>
+//@end_non_modules
 
 //own
 #include "../util/iterators.h"
 #include "../util/typeTraits.h"
 
-//interface
+//@export
 namespace natl {
 	template<typename Contanier>
 	concept HasBeginIterator = requires(Contanier container) {
@@ -103,8 +105,7 @@ namespace natl {
 			for (--last; first < last; (void)++first, --last) {
 				iterSwap<BidirectionalIter, BidirectionalIter>(first, last);
 			}
-		}
-		else {
+		} else {
 			while (first != last && first != --last) {
 				iterSwap<BidirectionalIter, BidirectionalIter>(first++, last);
 			}

@@ -1,8 +1,10 @@
 #pragma once
 
+//@begin_non_modules
 //std
 #include <atomic>
 #include <memory>
+//@end_non_modules
 
 //own
 #include "../util/basicTypes.h"
@@ -10,7 +12,7 @@
 #include "../util/dataMovement.h"
 #include "../util/typeTraits.h"
 
-//interface 
+//@export
 namespace natl {
 	enum struct MemoryOrder {
 		relaxed, consume, acquire, release, acq_rel, seq_cst

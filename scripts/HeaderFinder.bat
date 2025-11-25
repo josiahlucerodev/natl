@@ -1,1 +1,0 @@
-python.exe ../externals/nactemplate/scripts/HeaderFinder.py %cd%/../natl

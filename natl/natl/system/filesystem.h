@@ -1,7 +1,11 @@
 #pragma once 
 
+//@begin_non_modules
 //own
 #include "../util/compilerDependent.h"
+//@end_non_modules
+
+//own
 #include "../util/allocator.h"
 #include "../util/typeTraits.h"
 #include "../util/characterTest.h"
@@ -11,11 +15,11 @@
 #include "../container/string.h"
 #include "../container/stringView.h"
 #include "../container/arrayView.h"
-#include "../fundamental/strongType.h"
-#include "../fundamental/option.h"
-#include "../fundamental/expect.h"
+#include "../util/strongType.h"
+#include "../util/option.h"
+#include "../util/expect.h"
 
-//interface
+//@export 
 namespace natl {
 	consteval Ascii getPlatformPreferredPathSeparator() noexcept {
 		if constexpr (getPlatformType() == ProgramPlatformType::unixPlatform) {
@@ -422,7 +426,7 @@ namespace natl {
 			constexpr const_path_view_type parentPath() const noexcept {
 				if (isEmpty()) { return{}; }
 				const_path_view_type filenamePathView = filename();
-				return const_path_view_type(pathStringView.substr(pathStringView.size() - filenamePathView.size()));
+				return const_path_view_type(pathStringView.substr(0, pathStringView.size() - filenamePathView.size()));
 			}
 
 			constexpr const_path_view_type filename() const noexcept {
@@ -523,7 +527,7 @@ namespace natl {
 		standard = genericFormat,
 	};
 
-	template<Size BufferSize = (128 - sizeof(BaseStringBaseMembersRef<Ascii>)), typename Alloc = DefaultAllocator>
+	template<Size BufferSize = (128 - sizeof(BaseStringBaseMembersRef)), typename Alloc = DefaultAllocator>
 		requires(IsAllocatorC<Alloc>)
 	struct BasePath {
 	public:
@@ -937,13 +941,14 @@ namespace natl {
 
 	template<Size ByteSize, typename Alloc = DefaultAllocator>
 		requires(ByteSize >= 32 && IsAllocatorC<Alloc>)
-	using PathByteSize = BasePath<ByteSize - sizeof(BaseStringBaseMembersRef<Ascii>), Alloc>;
+	using PathByteSize = BasePath<ByteSize - sizeof(BaseStringBaseMembersRef), Alloc>;
 
 	using Path = PathByteSize<128>;
 	using Path128 = PathByteSize<128>;
 	using Path256 = PathByteSize<256>;
 	using Path512 = PathByteSize<512>;
 
+	//@export
 	namespace literals {
 		constexpr Path128 operator ""_natl_path(const char* str, StdSize len) noexcept {
 			return Path128(ConstStringView{ str, static_cast<Size>(len) });
@@ -1110,7 +1115,7 @@ namespace natl {
 
 	template<typename PathLike>
 		requires(IsDynamicArrayLike<PathLike, Ascii>)
-	PathLike getWorkingDirectoryIn() noexcept {
+	PathLike getWorkingDirectoryAs() noexcept {
 		Option<Size> workingDirectorySize = getWorkingDirectorySize();
 
 		if (workingDirectorySize.doesNotHaveValue()) {

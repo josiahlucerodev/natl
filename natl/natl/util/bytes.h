@@ -6,7 +6,7 @@
 #include "../container/array.h"
 #include "../container/arrayView.h"
 
-//interface 
+//@export 
 namespace natl {
 	//int in bytes check 
 	constexpr Bool i8InBytesCheck(const Size size) noexcept {

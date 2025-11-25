@@ -1,16 +1,20 @@
 #pragma once 
 
+//@begin_non_modules
+//own
+#include "../util/compilerDependent.h"
+//@end_non_modules
+
 //own
 #include "../util/basicTypes.h"
-#include "../util/compilerDependent.h"
 #include "../util/dataMovement.h"
 #include "../util/typeTraits.h"
 #include "../util/pointer.h"
-#include "../fundamental/strongType.h"
-#include "../fundamental/tuple.h"
+#include "../util/strongType.h"
+#include "../util/tuple.h"
 #include "../units/standard.h"
 
-//interface
+//@export
 namespace natl {
 	namespace impl {
 		struct ThreadIdTag {};

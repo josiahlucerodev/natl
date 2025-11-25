@@ -1,17 +1,17 @@
 #pragma once
 
 //own
-#include "../fundamental/tuple.h"
+#include "../util/tuple.h"
 #include "basicTypes.h"
 #include "typeTraits.h"
 #include "dataMovement.h"
 
-//interface
+//@export
 namespace natl {
     struct RepeatIterator {
     public:
-        using iterator_concept = std::contiguous_iterator_tag;
-        using iterator_category = std::random_access_iterator_tag;
+        using iterator_concept = RandomAccessIteratorTag;
+        using iterator_category = RandomAccessIteratorTag;
         using value_type = Size;
         using difference_type = PtrDiff;
         using pointer = Size*;
@@ -89,85 +89,100 @@ namespace natl {
         }
     };
 
-    struct Repeat {
-    public:
-        using value_type = Size;
-        using reference = Size&;
-        using const_reference = const Size&;
-        using pointer = Size*;
-        using const_pointer = const Size*;
-        using difference_type = PtrDiff;
-        using size_type = Size;
+    namespace impl {
+        template<typename RepeatType>
+        struct RepeatBase {
+        public:
+            using value_type = Size;
+            using reference = Size&;
+            using const_reference = const Size&;
+            using pointer = Size*;
+            using const_pointer = const Size*;
+            using difference_type = PtrDiff;
+            using size_type = Size;
 
-        using iterator = RepeatIterator;
-        using const_iterator = RepeatIterator;
-        using reverse_iterator = RepeatIterator;
-        using const_reverse_iterator = RepeatIterator;
+            using iterator = RepeatIterator;
+            using const_iterator = RepeatIterator;
+            using reverse_iterator = RepeatIterator;
+            using const_reverse_iterator = RepeatIterator;
+
+        public:
+            //constructor/destructor
+            constexpr RepeatBase() noexcept = default;
+            constexpr ~RepeatBase() noexcept = default;
+
+            //util
+            constexpr RepeatType& base() noexcept {
+                return static_cast<RepeatType&>(*this);
+            }
+            constexpr const RepeatType& base() const noexcept {
+                return static_cast<const RepeatType&>(*this);
+            }
+
+            //iterators 
+            constexpr const_iterator begin() const noexcept { return const_iterator(base().beginIndex()); }
+            constexpr const_iterator cbegin() const noexcept { return const_iterator(base().beginIndex()); }
+            constexpr const_iterator end() const noexcept { return const_iterator(base().endIndex()); }
+            constexpr const_iterator cend() const noexcept { return const_iterator(base().endIndex()); }
+            constexpr const_reverse_iterator rbegin() const noexcept { return const_reverse_iterator(end()); }
+            constexpr const_reverse_iterator crbegin() const noexcept { return const_reverse_iterator(end()); }
+            constexpr const_reverse_iterator rend() const noexcept { return const_reverse_iterator(begin()); }
+            constexpr const_reverse_iterator crend() const noexcept { return const_reverse_iterator(begin()); }
+        };
+    }
+
+    struct Repeat : public impl::RepeatBase<Repeat> {
     private:
         Size repeatCount;
     public:
-        //constructor
         constexpr Repeat() noexcept : repeatCount(0) {}
         constexpr Repeat(const Size count) noexcept : repeatCount(count) {}
-
-        //destructor
         constexpr ~Repeat() noexcept = default;
 
-        //capacity 
         constexpr Size size() const noexcept { return repeatCount; }
         constexpr size_type beginIndex() const noexcept { return 0; };
         constexpr size_type endIndex() const noexcept { return repeatCount; };
-
-        //iterators 
-        constexpr const_iterator begin() const noexcept { return const_iterator(beginIndex()); }
-        constexpr const_iterator cbegin() const noexcept { return const_iterator(beginIndex()); }
-        constexpr const_iterator end() const noexcept { return const_iterator(endIndex()); }
-        constexpr const_iterator cend() const noexcept { return const_iterator(endIndex()); }
-        constexpr const_reverse_iterator rbegin() const noexcept { return const_reverse_iterator(end()); }
-        constexpr const_reverse_iterator crbegin() const noexcept { return const_reverse_iterator(end()); }
-        constexpr const_reverse_iterator rend() const noexcept { return const_reverse_iterator(begin()); }
-        constexpr const_reverse_iterator crend() const noexcept { return const_reverse_iterator(begin()); }
     };
 
-    struct RepeatFromTo {
+    struct RepeatTo : public impl::RepeatBase<RepeatTo> {
+    private:
+        Size repeatCount;
     public:
-        using value_type = Size;
-        using reference = Size&;
-        using const_reference = const Size&;
-        using pointer = Size*;
-        using const_pointer = const Size*;
-        using difference_type = PtrDiff;
-        using size_type = Size;
+        constexpr RepeatTo() noexcept : repeatCount(0) {}
+        constexpr RepeatTo(const Size count) noexcept : repeatCount(count) {}
+        constexpr ~RepeatTo() noexcept = default;
 
-        using iterator = RepeatIterator;
-        using const_iterator = RepeatIterator;
-        using const_reverse_iterator = RepeatIterator;
+        constexpr Size size() const noexcept { return repeatCount; }
+        constexpr size_type beginIndex() const noexcept { return 0; };
+        constexpr size_type endIndex() const noexcept { return repeatCount + 1; };
+    };
+
+    struct RepeatFrom : public impl::RepeatBase<RepeatFrom> {
     private:
         Size repeatFrom;
         Size repeatTo;
     public:
-        //constructor
+        constexpr RepeatFrom() noexcept : repeatFrom(0), repeatTo(0) {}
+        constexpr RepeatFrom(const Size repeatFromIn, const Size repeatToIn) noexcept : repeatFrom(repeatFromIn), repeatTo(repeatToIn) {}
+        constexpr ~RepeatFrom() noexcept = default;
+        
+        constexpr Size size() const noexcept { return repeatTo - repeatFrom; }
+        constexpr size_type beginIndex() const noexcept { return repeatFrom; };
+        constexpr size_type endIndex() const noexcept { return repeatTo; };
+    };
+
+    struct RepeatFromTo : public impl::RepeatBase<RepeatFromTo> {
+    private:
+        Size repeatFrom;
+        Size repeatTo;
+    public:
         constexpr RepeatFromTo() noexcept : repeatFrom(0), repeatTo(0) {}
         constexpr RepeatFromTo(const Size repeatFromIn, const Size repeatToIn) noexcept : repeatFrom(repeatFromIn), repeatTo(repeatToIn) {}
-        constexpr RepeatFromTo(const Size count) noexcept : repeatFrom(0), repeatTo(count) {}
-
-        //destructor 
         constexpr ~RepeatFromTo() noexcept = default;
 
-        //capacity 
         constexpr Size size() const noexcept { return repeatTo - repeatFrom; }
         constexpr size_type beginIndex() const noexcept { return repeatFrom; };
         constexpr size_type endIndex() const noexcept { return repeatTo + 1; };
-
-        //iterators 
-        constexpr const_iterator begin() const noexcept { return const_iterator(beginIndex()); }
-        constexpr const_iterator cbegin() const noexcept { return const_iterator(beginIndex()); }
-        constexpr const_iterator end() const noexcept { return const_iterator(endIndex()); }
-        constexpr const_iterator cend() const noexcept { return const_iterator(endIndex()); }
-        constexpr const_reverse_iterator rbegin() const noexcept { return const_reverse_iterator(end()); }
-        constexpr const_reverse_iterator crbegin() const noexcept { return const_reverse_iterator(end()); }
-        constexpr const_reverse_iterator rend() const noexcept { return const_reverse_iterator(begin()); }
-        constexpr const_reverse_iterator crend() const noexcept { return const_reverse_iterator(begin()); }
     };
 
     namespace impl {
@@ -259,119 +274,6 @@ namespace natl {
         }
     };
 
-    namespace impl {
-        template<typename IterationRange>
-        using CombindedIterationIterationRangeStorageType =
-            Conditional<!IsLValueReference<IterationRange>,
-                RemoveReference<IterationRange>,
-                RemoveReference<IterationRange>&
-        >;
-        template<typename IterationRange> 
-        struct IteratorAccessBegin {
-            constexpr typename IterationRange::iterator operator()(RemoveReference<IterationRange>& iterationRange) noexcept {
-                return iterationRange.begin();
-            }
-        };
-        template<typename IterationRange>
-        struct IteratorAccessEnd {
-            constexpr typename IterationRange::iterator operator()(RemoveReference<IterationRange>& iterationRange) noexcept {
-                return iterationRange.end();
-            }
-        };
-        template<template<typename IterationRange> typename IteratorAccess, typename... IterationRanges>
-        struct IterationRangesToIteratorsStructFunc {
-            constexpr Tuple<typename IterationRanges::iterator...> operator()(RemoveReference<IterationRanges>... iterationRanges) noexcept {
-                using iterator_storage = Tuple<typename IterationRanges::iterator...>;
-                return iterator_storage(IteratorAccess<IterationRanges>{}(iterationRanges)...);
-            }
-        };
-    }
-    
-    template<typename... Types>
-    struct CombinedIteration {};
-
-    template<typename... DataTypes, typename... IterationRanges>
-        requires((sizeof...(DataTypes) == sizeof...(IterationRanges)) && (IsConvertible<DataTypes, IterationRanges> && ...))
-    struct CombinedIteration<TypePack<DataTypes...>, TypePack<IterationRanges...>> {
-    public:
-        //using value_type = Tuple<typename IterationRanges::iterator::value_type...>;
-        using value_type = Tuple<DataTypes...>;
-        using reference = value_type&;
-        using const_reference = const value_type&;
-        using pointer = value_type*;
-        using const_pointer = const value_type*;
-        using difference_type = PtrDiff;
-        using size_type = Size;
-
-        using iterator = CombinedIterationIterator<TypePack<DataTypes...>, TypePack<IterationRanges...>>;
-        using const_iterator = CombinedIterationIterator<TypePack<const DataTypes...>, TypePack<const IterationRanges...>>;
-    private:
-        Tuple<impl::CombindedIterationIterationRangeStorageType<IterationRanges>...> iterationRanges;
-    public:
-        //constructor 
-        constexpr CombinedIteration() noexcept = default;
-        constexpr CombinedIteration(impl::CombindedIterationIterationRangeStorageType<IterationRanges>... iterationRangesIn) noexcept : iterationRanges(iterationRangesIn...) {}
-
-        //destructor 
-        constexpr ~CombinedIteration() noexcept = default;
-
-        //iterators 
-        constexpr iterator begin() noexcept {
-            return iterator(
-                callFunctionWithTuple(
-                    impl::IterationRangesToIteratorsStructFunc<impl::IteratorAccessBegin, IterationRanges...>{}, 
-                    iterationRanges)
-            );
-        }
-        constexpr const_iterator begin() const noexcept {
-            return const_iterator(
-                callFunctionWithTuple(
-                    impl::IterationRangesToIteratorsStructFunc<impl::IteratorAccessBegin, IterationRanges...>{},
-                    iterationRanges)
-            );
-        }
-        constexpr const_iterator cbegin() const noexcept {
-            return begin();
-        }
-        constexpr iterator end() noexcept {
-            return iterator(
-                callFunctionWithTuple(
-                    impl::IterationRangesToIteratorsStructFunc<impl::IteratorAccessEnd, IterationRanges...>{}, 
-                    iterationRanges)
-            );
-        }
-        constexpr const_iterator end() const noexcept {
-            return const_iterator(
-                callFunctionWithTuple(
-                    impl::IterationRangesToIteratorsStructFunc<impl::IteratorAccessEnd, IterationRanges...>{},
-                    iterationRanges)
-            );
-        }
-        constexpr const_iterator cend() const noexcept {
-            return end();
-        }
-
-        /*
-        constexpr const_iterator begin() const noexcept { return const_iterator(beginIndex()); }
-        constexpr const_iterator cbegin() const noexcept { return const_iterator(beginIndex()); }
-        constexpr iterator end() const noexcept { return const_iterator(endIndex()); }
-        constexpr const_iterator end() const noexcept { return const_iterator(endIndex()); }
-        constexpr const_iterator cend() const noexcept { return const_iterator(endIndex()); }
-        constexpr iterator rbegin() noexcept { return const_reverse_iterator(end()); }
-        constexpr const_reverse_iterator rbegin() const noexcept { return const_reverse_iterator(end()); }
-        constexpr const_reverse_iterator crbegin() const noexcept { return const_reverse_iterator(end()); }
-        constexpr iterator rend() noexcept { return const_reverse_iterator(begin()); }
-        constexpr const_reverse_iterator rend() const noexcept { return const_reverse_iterator(begin()); }
-        constexpr const_reverse_iterator crend() const noexcept { return const_reverse_iterator(begin()); }
-        */
-    };
-
-    template<typename... DataTypes>
-    constexpr auto makeCombindedIteration(auto... iterationRanges) noexcept {
-        using combined_iteration_type = CombinedIteration<TypePack<DataTypes...>, TypePack<decltype(iterationRanges)...>>;
-        return combined_iteration_type(iterationRanges...);
-    }
-
     template<typename IterationRange> 
     struct ReverseIteration {
     public:
@@ -430,7 +332,7 @@ namespace natl {
         using difference_type = typename typed_allocator_type::difference_type;
         using size_type = typename typed_allocator_type::size_type;
 
-        using iterator_category = std::output_iterator_tag;
+        using iterator_category = OutputIteratorTag;
     private:
         Container* container;
     public:
@@ -602,7 +504,7 @@ namespace natl {
         using difference_type = PtrDiff;
         using size_type = Size;
 
-        using iterator_category = std::output_iterator_tag;
+        using iterator_category = OutputIteratorTag;
 
         using iterator_data = impl::TypeErasedBackInsertIteratorData<DataType>;
         using iterator_data_constexpr_polymorphic = impl::TypeErasedBackInsertIteratorDataConstexprPolymorphic<DataType>;

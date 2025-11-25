@@ -3,7 +3,7 @@
 //own
 #include "../util/basicTypes.h"
 
-//interface 
+//@export 
 namespace natl::math {
 	constexpr f64 pi = 3.141592653589793;
 	constexpr f64 twoPi = pi * 2.0;

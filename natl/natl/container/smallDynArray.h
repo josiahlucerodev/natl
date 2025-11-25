@@ -1,5 +1,10 @@
 #pragma once 
 
+//@begin_non_modules
+//own
+#include <initializer_list>
+//@end_non_modules
+
 //own
 #include "../util/allocator.h"
 #include "../util/iterators.h"
@@ -7,7 +12,7 @@
 #include "container.h"
 #include "arrayView.h"
 
-//interface 
+//@export
 namespace natl {
 	template<typename DataType, Size bufferSize, typename Alloc = DefaultAllocator>
 		requires(IsAllocatorC<Alloc>)
@@ -27,10 +32,10 @@ namespace natl {
 		using optional_pointer = Option<pointer>;
 		using optional_const_pointer = Option<const_pointer>;
 
-		using iterator = RandomAccessIteratorAlloc<value_type, allocator_type>;
-		using const_iterator = ConstRandomAccessIteratorAlloc<value_type, allocator_type>;
-		using reverse_iterator = ReverseRandomAccessIteratorAlloc<value_type, allocator_type>;
-		using const_reverse_iterator = ReverseConstRandomAccessIteratorAlloc<value_type, allocator_type>;
+		using iterator = ContiguousIteratorAlloc<value_type, allocator_type>;
+		using const_iterator = ConstContiguousIteratorAlloc<value_type, allocator_type>;
+		using reverse_iterator = ReverseContiguousIteratorAlloc<value_type, allocator_type>;
+		using const_reverse_iterator = ReverseConstContiguousIteratorAlloc<value_type, allocator_type>;
 
 		using allocation_move_adapater = AllocationMoveAdapater<value_type, allocator_type>;
 
@@ -144,6 +149,7 @@ namespace natl {
 			construct(other.data(), other.size());
 		}
 		constexpr SmallDynArray(SmallDynArray&& other) noexcept {
+			baseConstructorInit();
 			construct(forward<SmallDynArray>(other));
 		}
 		constexpr SmallDynArray(const size_type count, const value_type& value = value_type()) noexcept {
@@ -406,7 +412,7 @@ namespace natl {
 		template<typename Iter>
 			requires(IsIterPtr<Iter>&& IsSameC<typename IteratorTraits<Iter>::value_type, value_type>)
 		constexpr SmallDynArray& assign(Iter first, Iter last) noexcept {
-			if constexpr (std::contiguous_iterator<Iter>) {
+			if constexpr (IsContiguousIteratorC<Iter>) {
 				const size_type count = iterDistance<Iter>(first, last);
 				const_pointer firstPtr = iteratorToAddress<Iter>(first);
 				return assign(firstPtr, count);
@@ -690,18 +696,18 @@ namespace natl {
 		constexpr pointer endPtr() noexcept { return data() + size(); }
 		constexpr const_pointer endPtr() const noexcept { return data() + size(); }
 
-		constexpr iterator begin() noexcept { return iterator(beginPtr()); }
-		constexpr const_iterator begin() const noexcept { return const_iterator(beginPtr()); }
-		constexpr const_iterator cbegin() const noexcept { return const_iterator(beginPtr()); }
-		constexpr iterator end() noexcept { return iterator(endPtr()); }
-		constexpr const_iterator end() const noexcept { return const_iterator(endPtr()); }
-		constexpr const_iterator cend() const noexcept { return const_iterator(endPtr()); }
-		constexpr reverse_iterator rbegin() noexcept { return reverse_iterator(endPtr()); }
-		constexpr const_reverse_iterator rbegin() const noexcept { return const_reverse_iterator(endPtr()); }
-		constexpr const_reverse_iterator crbegin() const noexcept { return const_reverse_iterator(endPtr()); }
-		constexpr reverse_iterator rend() noexcept { return reverse_iterator(beginPtr()); }
-		constexpr const_reverse_iterator rend() const noexcept { return const_reverse_iterator(beginPtr()); }
-		constexpr const_reverse_iterator crend() const noexcept { return const_reverse_iterator(beginPtr()); }
+		constexpr iterator begin() noexcept { return iterator(beginPtr(), beginPtr(), endPtr()); }
+		constexpr const_iterator begin() const noexcept { return const_iterator(beginPtr(), beginPtr(), endPtr()); }
+		constexpr const_iterator cbegin() const noexcept { return const_iterator(beginPtr(), beginPtr(), endPtr()); }
+		constexpr iterator end() noexcept { return iterator(endPtr(), beginPtr(), endPtr()); }
+		constexpr const_iterator end() const noexcept { return const_iterator(endPtr(), beginPtr(), endPtr()); }
+		constexpr const_iterator cend() const noexcept { return const_iterator(endPtr(), beginPtr(), endPtr()); }
+		constexpr reverse_iterator rbegin() noexcept { return reverse_iterator(end()); }
+		constexpr const_reverse_iterator rbegin() const noexcept { return const_reverse_iterator(end()); }
+		constexpr const_reverse_iterator crbegin() const noexcept { return const_reverse_iterator(end()); }
+		constexpr reverse_iterator rend() noexcept { return reverse_iterator(begin()); }
+		constexpr const_reverse_iterator rend() const noexcept { return const_reverse_iterator(begin()); }
+		constexpr const_reverse_iterator crend() const noexcept { return const_reverse_iterator(begin()); }
 
 		//capacity 
 	public:
@@ -712,7 +718,7 @@ namespace natl {
 		//modifiers
 	private:
 		constexpr iterator constIteratorToIterator(const_iterator pos) {
-			return iterator(data() + iterDistance<typename const_iterator::pointer>(&*cbegin(), &*pos));
+			return iterator(data() + iterDistance<typename const_iterator::pointer>(&*cbegin(), &*pos), beginPtr(), endPtr());
 		}
 		constexpr size_type shiftRelocateLeft(const size_type index, const size_type count) noexcept {
 			const size_type relocateCount = size() - index;
@@ -753,7 +759,7 @@ namespace natl {
 			set(index, value);
 
 			setSize(newSize);
-			return iterator(data() + index);
+			return begin() + index;
 
 		}
 		constexpr iterator insert(const_iterator pos, value_type&& value) noexcept {
@@ -766,7 +772,7 @@ namespace natl {
 			set(index, forward<value_type>(value));
 
 			setSize(newSize);
-			return iterator(data() + index);
+			return begin() + index;
 		}
 		constexpr iterator insert(const_iterator pos, const_pointer srcPtr, const size_type count) noexcept {
 			if (count == 0) { return constIteratorToIterator(pos); }
@@ -784,7 +790,7 @@ namespace natl {
 					internalCopyNoOverlap(insertSrcPtrFirst, insertSrcPtrLast, insertDstPtr);
 
 					setSize(newSize);
-					return iterator(data() + index);
+					return begin() + index;
 				}
 			}
 
@@ -801,7 +807,7 @@ namespace natl {
 			natl::uninitializedCopyNoOverlap<const_pointer, pointer>(insertUninilizedSrcPtrFirst, insertUninilizedSrcPtrLast, insertUninilizedDstPtr);
 
 			setSize(newSize);
-			return iterator(data() + index);
+			return begin() + index;
 		}
 		constexpr iterator insert(const_iterator pos, const size_type count, const value_type& value) {
 			if (count == 0) { return constIteratorToIterator(pos); }
@@ -818,7 +824,7 @@ namespace natl {
 					internalFill(fillDstPtrFirst, fillDstPtrLast, value);
 
 					setSize(newSize);
-					return iterator(data() + index);
+					return begin() + index;
 				}
 			}
 
@@ -833,7 +839,7 @@ namespace natl {
 			natl::uninitializedFill<pointer, value_type>(fillUninilizedDstPtrFirst, fillUninilizedDrcPtrLast, value);
 
 			setSize(newSize);
-			return iterator(data() + index);
+			return begin() + index;
 		}
 		template<typename Iter>
 			requires(IsIterPtr<Iter>&& IsSameC<typename IteratorTraits<Iter>::value_type, value_type>)
@@ -857,7 +863,7 @@ namespace natl {
 					internalCopyNoOverlap<Iter>(first, last, insertDstPtr);
 
 					setSize(newSize);
-					return iterator(data() + index);
+					return begin() + index;
 				}
 			}
 
@@ -873,7 +879,7 @@ namespace natl {
 			}
 
 			setSize(newSize);
-			return iterator(data() + index);
+			return begin() + index;
 		}
 		template<typename ArrayViewLike>
 			requires(IsArrayViewLike<ArrayViewLike, const value_type>)
@@ -895,7 +901,7 @@ namespace natl {
 			natl::construct<value_type, Args...>(&*pos, natl::forward<Args>(args)...);
 
 			setSize(newSize);
-			return iterator(data() + index);
+			return begin() + index;
 		}
 
 		constexpr iterator erase(const_iterator pos) noexcept {
@@ -913,7 +919,7 @@ namespace natl {
 			}
 
 			setSize(newSize);
-			return iterator(data() + index);
+			return begin() + index;
 		}
 		constexpr iterator erase(const_iterator first, const_iterator last) noexcept {
 			const size_type index = iterDistance<typename const_iterator::pointer>(&*cbegin(), &*first);
@@ -930,7 +936,7 @@ namespace natl {
 			}
 
 			setSize(newSize);
-			return iterator(data() + index);
+			return begin() + index;
 		}
 
 		constexpr iterator eraseAtIndex(const Size index) noexcept {

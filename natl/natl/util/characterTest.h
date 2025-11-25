@@ -3,7 +3,7 @@
 //own
 #include "basicTypes.h"
 
-//interface 
+//@export
 namespace natl {
 	constexpr Bool isDigit(const Ascii character) noexcept {
 		return character >= '0' && character <= '9';

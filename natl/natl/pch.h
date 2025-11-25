@@ -1,5 +1,7 @@
 #pragma once
 
+#if 0
+
 //C
 #include <assert.h>
 #include <ctype.h>
@@ -161,3 +163,5 @@
 #undef NATL_CXX_14 
 #undef NATL_CXX_20 
 #undef NATL_CXX_23 
+
+#endif

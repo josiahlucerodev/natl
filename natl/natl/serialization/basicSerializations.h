@@ -4,7 +4,7 @@
 #include "base.h"
 #include "basicCompatibility.h"
 
-//interface 
+//@export
 namespace natl {
 	//serialize specialization
 	template<> struct Serialize<i8> {

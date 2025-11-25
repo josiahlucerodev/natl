@@ -9,7 +9,7 @@
 #include "../container/dynArray.h"
 #include "../container/smallDynArray.h"
 
-//interface 
+//@export
 namespace natl {
 	template<typename CharType, Size bufferSize, typename Alloc,
 		Bool EnableDynAllocation, Bool EnableIncreasedSmallBufferSize>

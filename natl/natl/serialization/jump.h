@@ -1,10 +1,17 @@
 #pragma once 
 
+//@begin_non_modules
+//natl
+#include "../util/compilerDependent.h"
+//@end_non_modules
+
 //own
 #include "base.h"
+#include "../util/strongType.h"
 #include "../container/string.h"
+#include "../container/smallDynArray.h"
 
-//interface 
+//@export
 namespace natl {
 	template<typename IdNumberType>
 		requires(IsBuiltInUnsignedIntegerC<IdNumberType>)

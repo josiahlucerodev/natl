@@ -1,7 +1,9 @@
 #pragma once 
 
-//std
-#include <string_view>
+//@begin_non_modules
+//own
+#include <initializer_list>
+//@end_non_modules
 
 //own
 #include "../util/stringOperations.h"
@@ -9,9 +11,9 @@
 #include "../util/algorithm.h"
 #include "../util/dataMovement.h"
 #include "../util/compare.h"
-#include "../fundamental/option.h"
+#include "../util/option.h"
 
-//interface
+//@export
 namespace natl {
 	template<typename CharType>
 	struct BaseStringView {
@@ -26,10 +28,10 @@ namespace natl {
 		using difference_type = PtrDiff;
 		using size_type = Size;
 
-		using iterator = RandomAccessIterator<value_type>;
-		using const_iterator = RandomAccessIterator<const value_type>;
-		using reverse_iterator = ReverseRandomAccessIterator<value_type>;
-		using const_reverse_iterator = ReverseRandomAccessIterator<const value_type>;
+		using iterator = ContiguousIterator<value_type>;
+		using const_iterator = ConstContiguousIterator<value_type>;
+		using reverse_iterator = ReverseContiguousIterator<value_type>;
+		using const_reverse_iterator = ReverseConstContiguousIterator<const value_type>;
 
 		static constexpr size_type npos = size_type(-1);
 
@@ -43,8 +45,8 @@ namespace natl {
 		constexpr BaseStringView(const BaseStringView& str) noexcept = default;
 		constexpr BaseStringView(CharType* stringPtr, const size_type length) noexcept : _dataPtr(stringPtr), _stringLength(length) {}
 		constexpr BaseStringView(CharType* str) noexcept : _dataPtr(str), _stringLength(cstringLength(str)) {}
-		template<Size StrArraySize> 
-		constexpr BaseStringView(const CharType(&str)[StrArraySize]) noexcept : _dataPtr(str), _stringLength(cstringLength(str)) {}
+		//template<Size StrArraySize> 
+		//constexpr BaseStringView(const CharType(&str)[StrArraySize]) noexcept : _dataPtr(str), _stringLength(cstringLength(str)) {}
 
 
 		template<typename StringViewLike>
@@ -70,19 +72,19 @@ namespace natl {
 		constexpr pointer endPtr() requires(IsNotConst<CharType>) { return _dataPtr + _stringLength; }
 		constexpr const_pointer endPtr() const noexcept { return _dataPtr + _stringLength; }
 
-		constexpr iterator begin() noexcept requires(IsNotConst<CharType>) { return iterator(beginPtr()); }
-		constexpr const_iterator begin() const noexcept { return const_iterator(beginPtr()); }
-		constexpr const_iterator cbegin() const noexcept { return const_iterator(beginPtr()); }
-		constexpr iterator end() noexcept requires(IsNotConst<CharType>) { return iterator(endPtr()); }
-		constexpr const_iterator end() const noexcept { return const_iterator(endPtr()); }
-		constexpr const_iterator cend() const noexcept { return const_iterator(endPtr()); }
+		constexpr iterator begin() noexcept requires(IsNotConst<CharType>) { return iterator(beginPtr(), beginPtr(), endPtr()); }
+		constexpr const_iterator begin() const noexcept { return const_iterator(beginPtr(), beginPtr(), endPtr()); }
+		constexpr const_iterator cbegin() const noexcept { return const_iterator(beginPtr(), beginPtr(), endPtr()); }
+		constexpr iterator end() noexcept requires(IsNotConst<CharType>) { return iterator(endPtr(), beginPtr(), endPtr()); }
+		constexpr const_iterator end() const noexcept { return const_iterator(endPtr(), beginPtr(), endPtr()); }
+		constexpr const_iterator cend() const noexcept { return const_iterator(endPtr(), beginPtr(), endPtr()); }
 
-		constexpr reverse_iterator rbegin() noexcept requires(IsNotConst<CharType>) { return reverse_iterator(endPtr()); }
-		constexpr const_reverse_iterator rbegin() const noexcept { return const_reverse_iterator(endPtr()); }
-		constexpr const_reverse_iterator crbegin() const noexcept { return const_reverse_iterator(endPtr()); }
-		constexpr reverse_iterator rend() noexcept requires(IsNotConst<CharType>) { return reverse_iterator(beginPtr()); }
-		constexpr const_reverse_iterator rend() const noexcept { return const_reverse_iterator(beginPtr()); }
-		constexpr const_reverse_iterator crend() const noexcept { return const_reverse_iterator(beginPtr()); }
+		constexpr reverse_iterator rbegin() noexcept requires(IsNotConst<CharType>) { return reverse_iterator(end()); }
+		constexpr const_reverse_iterator rbegin() const noexcept { return const_reverse_iterator(end()); }
+		constexpr const_reverse_iterator crbegin() const noexcept { return const_reverse_iterator(end()); }
+		constexpr reverse_iterator rend() noexcept requires(IsNotConst<CharType>) { return reverse_iterator(begin()); }
+		constexpr const_reverse_iterator rend() const noexcept { return const_reverse_iterator(begin()); }
+		constexpr const_reverse_iterator crend() const noexcept { return const_reverse_iterator(begin()); }
 
 		//element access
 		constexpr reference operator[] (const size_type index) requires(IsNotConst<CharType>) { return at(index); }
@@ -185,24 +187,24 @@ namespace natl {
 			return substr(pos1, count1).compare(BaseStringView(s, count2));
 		}
 
-		constexpr Bool starts_with(const BaseStringView& sv) const noexcept {
+		constexpr Bool startsWith(const BaseStringView& sv) const noexcept {
 			return BaseStringView(data(), min<size_type>(size(), sv.size())) == sv;
 		}
-		constexpr Bool starts_with(const CharType ch) const noexcept {
+		constexpr Bool startsWith(const CharType ch) const noexcept {
 			return !empty() && front() == ch;
 		}
-		constexpr Bool starts_with(const CharType* s) const noexcept {
-			return starts_with(BaseStringView(s));
+		constexpr Bool startsWith(const CharType* s) const noexcept {
+			return startsWith(BaseStringView(s));
 		}
 
-		constexpr Bool ends_with(const BaseStringView& sv) const noexcept {
+		constexpr Bool endsWith(const BaseStringView& sv) const noexcept {
 			return size() >= sv.size() && compare(size() - sv.size(), npos, sv) == 0;
 		}
-		constexpr Bool ends_with(const CharType ch) const noexcept {
+		constexpr Bool endsWith(const CharType ch) const noexcept {
 			return !empty() && back() == ch;
 		}
-		constexpr Bool ends_with(const CharType* s) const noexcept {
-			return ends_with(BaseStringView(s));
+		constexpr Bool endsWith(const CharType* s) const noexcept {
+			return endsWith(BaseStringView(s));
 		}
 
 		constexpr Bool contains(const BaseStringView sv) const noexcept {
@@ -858,12 +860,6 @@ namespace natl {
 		constexpr static size_type staticHash(const BaseStringView& stringView) noexcept {
 			return fnv1aHash(stringView.data(), stringView.size());
 		}
-
-		//stream
-		friend std::ostream& operator<<(std::ostream& os, const BaseStringView& str) {
-			os << std::string_view(str.data(), static_cast<Size>(str.size()));
-			return os;
-		}
 	};
 
 	template<typename CharType>
@@ -901,6 +897,7 @@ namespace natl {
 	using Utf32StringView = BaseStringView<Utf32>;
 	using ConstUtf32StringView = BaseStringView<const Utf32>;
 
+	//@export
 	namespace literals {
 		constexpr ConstStringView operator ""_natl_sv(const char* str, StdSize len) noexcept {
 			return ConstStringView{ str, static_cast<Size>(len) };
@@ -949,7 +946,7 @@ namespace natl {
 	};
 
 	template<typename StringLike, typename CharType = Ascii>
-	constexpr static inline Bool IsDynSizedString = IsDynSizedStringC<StringLike, CharType>
+	constexpr inline Bool IsDynSizedString = IsDynSizedStringC<StringLike, CharType>
 	template<typename StringLike, typename CharType = Ascii>
 	struct IsDynSizedStringV = BoolConstant<IsDynSizedStringC<StringLike, CharType>> {};
 

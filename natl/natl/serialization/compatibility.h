@@ -10,7 +10,7 @@
 #include "../container/dynArray.h"
 #include "../container/smallDynArray.h"
 
-//interface 
+//@export
 namespace natl {
 	//can serialize 
 	template<typename Serializer>

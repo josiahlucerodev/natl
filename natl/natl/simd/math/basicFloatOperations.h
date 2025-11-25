@@ -1,128 +1,133 @@
 #pragma once 
 
+//@begin_non_modules
+//own
+#include "../../util/compilerDependent.h"
+//@end_non_modules
+
 //own
 #include "../simdOf.h"
 #include "../simdClass.h"
 
-//interface 
+//@export 
 namespace natl::math {
 	//relatively close
 	template<typename FloatType, typename SimdArchType>
-		requires(natl::IsBuiltInFloatingPointC<FloatType> && nasimd::IsSimdArch<SimdArchType>)
-	NATL_FORCE_INLINE constexpr nasimd::SimdMask<FloatType, SimdArchType> isRelativelyClose(
-		nasimd::SimdRegister<FloatType, SimdArchType> lhs,
-		nasimd::SimdRegister<FloatType, SimdArchType> rhs,
+		requires(natl::IsBuiltInFloatingPointC<FloatType> && natl::simd::IsSimdArch<SimdArchType>)
+	NATL_FORCE_INLINE constexpr natl::simd::SimdMask<FloatType, SimdArchType> isRelativelyClose(
+		natl::simd::SimdRegister<FloatType, SimdArchType> lhs,
+		natl::simd::SimdRegister<FloatType, SimdArchType> rhs,
 		FloatType tolerance) noexcept {
-		nasimd::SimdRegister<FloatType, SimdArchType> lhsAbs = nasimd::simd_abs<FloatType, SimdArchType>(lhs);
-		nasimd::SimdRegister<FloatType, SimdArchType> rhsAbs = nasimd::simd_abs<FloatType, SimdArchType>(rhs);
-		nasimd::SimdRegister<FloatType, SimdArchType> larger = nasimd::simd_max<FloatType, SimdArchType>(lhsAbs, rhsAbs);
+		natl::simd::SimdRegister<FloatType, SimdArchType> lhsAbs = natl::simd::simd_abs<FloatType, SimdArchType>(lhs);
+		natl::simd::SimdRegister<FloatType, SimdArchType> rhsAbs = natl::simd::simd_abs<FloatType, SimdArchType>(rhs);
+		natl::simd::SimdRegister<FloatType, SimdArchType> larger = natl::simd::simd_max<FloatType, SimdArchType>(lhsAbs, rhsAbs);
 
-		nasimd::SimdRegister<FloatType, SimdArchType> difference = nasimd::simd_sub<FloatType, SimdArchType>(lhs, rhs);
-		nasimd::SimdRegister<FloatType, SimdArchType> absDifference = nasimd::simd_abs<FloatType, SimdArchType>(difference);
+		natl::simd::SimdRegister<FloatType, SimdArchType> difference = natl::simd::simd_sub<FloatType, SimdArchType>(lhs, rhs);
+		natl::simd::SimdRegister<FloatType, SimdArchType> absDifference = natl::simd::simd_abs<FloatType, SimdArchType>(difference);
 
-		nasimd::SimdRegister<FloatType, SimdArchType> relativeDifference = nasimd::simd_div<FloatType, SimdArchType>(absDifference, larger);
+		natl::simd::SimdRegister<FloatType, SimdArchType> relativeDifference = natl::simd::simd_div<FloatType, SimdArchType>(absDifference, larger);
 
-		nasimd::SimdRegister<FloatType, SimdArchType> toleranceR = nasimd::simd_set<FloatType, SimdArchType>(tolerance);
-		nasimd::SimdMask<FloatType, SimdArchType> toleranceMask = nasimd::simd_compare_less_than_or_equal<FloatType, SimdArchType>(relativeDifference, toleranceR);
+		natl::simd::SimdRegister<FloatType, SimdArchType> toleranceR = natl::simd::simd_set<FloatType, SimdArchType>(tolerance);
+		natl::simd::SimdMask<FloatType, SimdArchType> toleranceMask = natl::simd::simd_compare_less_than_or_equal<FloatType, SimdArchType>(relativeDifference, toleranceR);
 		return toleranceMask;
 	}
 
 	template<typename SimdArchType>
-		requires(nasimd::IsSimdArch<SimdArchType>)
-	NATL_FORCE_INLINE constexpr nasimd::SimdMaskF32<SimdArchType> isRelativelyCloseF32(
-		nasimd::SimdRegisterF32<SimdArchType> lhs, 
-		nasimd::SimdRegisterF32<SimdArchType> rhs, const f32 tolerance) noexcept {
+		requires(natl::simd::IsSimdArch<SimdArchType>)
+	NATL_FORCE_INLINE constexpr natl::simd::SimdMaskF32<SimdArchType> isRelativelyCloseF32(
+		natl::simd::SimdRegisterF32<SimdArchType> lhs, 
+		natl::simd::SimdRegisterF32<SimdArchType> rhs, const f32 tolerance) noexcept {
 		return isRelativelyClose<f32, SimdArchType>(lhs, rhs, tolerance);
 	}
 
 	template<typename SimdArchType>
-		requires(nasimd::IsSimdArch<SimdArchType>)
-	NATL_FORCE_INLINE constexpr nasimd::SimdMaskF64<SimdArchType> isRelativelyCloseF64(
-		nasimd::SimdRegisterF64<SimdArchType> lhs,
-		nasimd::SimdRegisterF64<SimdArchType> rhs, const f64 tolerance) noexcept {
+		requires(natl::simd::IsSimdArch<SimdArchType>)
+	NATL_FORCE_INLINE constexpr natl::simd::SimdMaskF64<SimdArchType> isRelativelyCloseF64(
+		natl::simd::SimdRegisterF64<SimdArchType> lhs,
+		natl::simd::SimdRegisterF64<SimdArchType> rhs, const f64 tolerance) noexcept {
 		return isRelativelyClose<f64, SimdArchType>(lhs, rhs, tolerance);
 	}
 
 	template<typename FloatType, typename SimdArchType>
-		requires(natl::IsBuiltInFloatingPointC<FloatType> && nasimd::IsSimdArch<SimdArchType>)
-	NATL_FORCE_INLINE constexpr nasimd::SimdMMaskstruct<FloatType, SimdArchType> isRelativelyClose(
-		nasimd::SimdRegisterstruct<FloatType, SimdArchType> lhs,
-		nasimd::SimdRegisterstruct<FloatType, SimdArchType> rhs,
+		requires(natl::IsBuiltInFloatingPointC<FloatType> && natl::simd::IsSimdArch<SimdArchType>)
+	NATL_FORCE_INLINE constexpr natl::simd::SimdMMaskstruct<FloatType, SimdArchType> isRelativelyClose(
+		natl::simd::SimdRegisterstruct<FloatType, SimdArchType> lhs,
+		natl::simd::SimdRegisterstruct<FloatType, SimdArchType> rhs,
 		FloatType tolerance) noexcept {
 		return isRelativelyClose<FloatType, SimdArchType>(lhs.getRegister(), rhs.getRegister(), tolerance);
 	}
 
 	template<typename SimdArchType>
-		requires(nasimd::IsSimdArch<SimdArchType>)
-	NATL_FORCE_INLINE constexpr nasimd::SimdMMaskstructF32<SimdArchType> isRelativelyCloseF32(
-		nasimd::SimdRegisterstructF32<SimdArchType> lhs,
-		nasimd::SimdRegisterstructF32<SimdArchType> rhs, const f32 tolerance) noexcept {
+		requires(natl::simd::IsSimdArch<SimdArchType>)
+	NATL_FORCE_INLINE constexpr natl::simd::SimdMMaskstructF32<SimdArchType> isRelativelyCloseF32(
+		natl::simd::SimdRegisterstructF32<SimdArchType> lhs,
+		natl::simd::SimdRegisterstructF32<SimdArchType> rhs, const f32 tolerance) noexcept {
 		return isRelativelyClose<f32, SimdArchType>(lhs.getRegister(), rhs.getRegister(), tolerance);
 	}
 
 	template<typename SimdArchType>
-		requires(nasimd::IsSimdArch<SimdArchType>)
-	NATL_FORCE_INLINE constexpr nasimd::SimdMMaskstructF64<SimdArchType> isRelativelyCloseF64(
-		nasimd::SimdRegisterstructF64<SimdArchType> lhs,
-		nasimd::SimdRegisterstructF64<SimdArchType> rhs, const f64 tolerance) noexcept {
+		requires(natl::simd::IsSimdArch<SimdArchType>)
+	NATL_FORCE_INLINE constexpr natl::simd::SimdMMaskstructF64<SimdArchType> isRelativelyCloseF64(
+		natl::simd::SimdRegisterstructF64<SimdArchType> lhs,
+		natl::simd::SimdRegisterstructF64<SimdArchType> rhs, const f64 tolerance) noexcept {
 		return isRelativelyClose<f64, SimdArchType>(lhs.getRegister(), rhs.getRegister(), tolerance);
 	}
 
 	//roughtly equal
 	template<typename FloatType, typename SimdArchType>
-		requires(natl::IsBuiltInFloatingPointC<FloatType> && nasimd::IsSimdArch<SimdArchType>)
-	NATL_FORCE_INLINE constexpr nasimd::SimdMask<FloatType, SimdArchType> isRoughtlyEqual(
-		nasimd::SimdRegister<FloatType, SimdArchType> lhs,
-		nasimd::SimdRegister<FloatType, SimdArchType> rhs,
+		requires(natl::IsBuiltInFloatingPointC<FloatType> && natl::simd::IsSimdArch<SimdArchType>)
+	NATL_FORCE_INLINE constexpr natl::simd::SimdMask<FloatType, SimdArchType> isRoughtlyEqual(
+		natl::simd::SimdRegister<FloatType, SimdArchType> lhs,
+		natl::simd::SimdRegister<FloatType, SimdArchType> rhs,
 		FloatType tolerance) noexcept {
 
-		nasimd::SimdRegister<FloatType, SimdArchType> difference = nasimd::simd_sub<FloatType, SimdArchType>(lhs, rhs);
-		nasimd::SimdRegister<FloatType, SimdArchType> absDifference = nasimd::simd_abs<FloatType, SimdArchType>(difference);
-		nasimd::SimdRegister<FloatType, SimdArchType> toleranceR = nasimd::simd_set<FloatType, SimdArchType>(tolerance);
+		natl::simd::SimdRegister<FloatType, SimdArchType> difference = natl::simd::simd_sub<FloatType, SimdArchType>(lhs, rhs);
+		natl::simd::SimdRegister<FloatType, SimdArchType> absDifference = natl::simd::simd_abs<FloatType, SimdArchType>(difference);
+		natl::simd::SimdRegister<FloatType, SimdArchType> toleranceR = natl::simd::simd_set<FloatType, SimdArchType>(tolerance);
 
-		nasimd::SimdMask<FloatType, SimdArchType> toleranceMask = nasimd::simd_compare_less_than_or_equal<FloatType, SimdArchType>(absDifference, toleranceR);
-		nasimd::SimdMask<FloatType, SimdArchType> equalMask = nasimd::simd_compare_equal<FloatType, SimdArchType>(lhs, rhs);
-		return nasimd::simd_mask_bitwise_or<FloatType, SimdArchType>(toleranceMask, equalMask);
+		natl::simd::SimdMask<FloatType, SimdArchType> toleranceMask = natl::simd::simd_compare_less_than_or_equal<FloatType, SimdArchType>(absDifference, toleranceR);
+		natl::simd::SimdMask<FloatType, SimdArchType> equalMask = natl::simd::simd_compare_equal<FloatType, SimdArchType>(lhs, rhs);
+		return natl::simd::simd_mask_bitwise_or<FloatType, SimdArchType>(toleranceMask, equalMask);
 	}
 
 	template<typename SimdArchType>
-		requires(nasimd::IsSimdArch<SimdArchType>)
-	NATL_FORCE_INLINE constexpr nasimd::SimdMaskF32<SimdArchType> isRoughtlyEqualF32(
-		nasimd::SimdRegisterF32<SimdArchType> lhs,
-		nasimd::SimdRegisterF32<SimdArchType> rhs, const f32 tolerance) noexcept {
+		requires(natl::simd::IsSimdArch<SimdArchType>)
+	NATL_FORCE_INLINE constexpr natl::simd::SimdMaskF32<SimdArchType> isRoughtlyEqualF32(
+		natl::simd::SimdRegisterF32<SimdArchType> lhs,
+		natl::simd::SimdRegisterF32<SimdArchType> rhs, const f32 tolerance) noexcept {
 		return isRoughtlyEqual<f32, SimdArchType>(lhs, rhs, tolerance);
 	}
 
 	template<typename SimdArchType>
-		requires(nasimd::IsSimdArch<SimdArchType>)
-	NATL_FORCE_INLINE constexpr nasimd::SimdMaskF64<SimdArchType> isRoughtlyEqualF64(
-		nasimd::SimdRegisterF64<SimdArchType> lhs,
-		nasimd::SimdRegisterF64<SimdArchType> rhs, const f64 tolerance) noexcept {
+		requires(natl::simd::IsSimdArch<SimdArchType>)
+	NATL_FORCE_INLINE constexpr natl::simd::SimdMaskF64<SimdArchType> isRoughtlyEqualF64(
+		natl::simd::SimdRegisterF64<SimdArchType> lhs,
+		natl::simd::SimdRegisterF64<SimdArchType> rhs, const f64 tolerance) noexcept {
 		return isRoughtlyEqual<f64, SimdArchType>(lhs, rhs, tolerance);
 	}
 
 	template<typename FloatType, typename SimdArchType>
-		requires(natl::IsBuiltInFloatingPointC<FloatType>&& nasimd::IsSimdArch<SimdArchType>)
-	NATL_FORCE_INLINE constexpr nasimd::SimdMMaskstruct<FloatType, SimdArchType> isRoughtlyEqual(
-		nasimd::SimdRegisterstruct<FloatType, SimdArchType> lhs,
-		nasimd::SimdRegisterstruct<FloatType, SimdArchType> rhs,
+		requires(natl::IsBuiltInFloatingPointC<FloatType>&& natl::simd::IsSimdArch<SimdArchType>)
+	NATL_FORCE_INLINE constexpr natl::simd::SimdMMaskstruct<FloatType, SimdArchType> isRoughtlyEqual(
+		natl::simd::SimdRegisterstruct<FloatType, SimdArchType> lhs,
+		natl::simd::SimdRegisterstruct<FloatType, SimdArchType> rhs,
 		FloatType tolerance) noexcept {
 		return isRoughtlyEqual<FloatType, SimdArchType>(lhs.getRegister(), rhs.getRegister(), tolerance);
 	}
 
 	template<typename SimdArchType>
-		requires(nasimd::IsSimdArch<SimdArchType>)
-	NATL_FORCE_INLINE constexpr nasimd::SimdMMaskstructF32<SimdArchType> isRoughtlyEqualF32(
-		nasimd::SimdRegisterstructF32<SimdArchType> lhs,
-		nasimd::SimdRegisterstructF32<SimdArchType> rhs, const f32 tolerance) noexcept {
+		requires(natl::simd::IsSimdArch<SimdArchType>)
+	NATL_FORCE_INLINE constexpr natl::simd::SimdMMaskstructF32<SimdArchType> isRoughtlyEqualF32(
+		natl::simd::SimdRegisterstructF32<SimdArchType> lhs,
+		natl::simd::SimdRegisterstructF32<SimdArchType> rhs, const f32 tolerance) noexcept {
 		return isRoughtlyEqual<f32, SimdArchType>(lhs.getRegister(), rhs.getRegister(), tolerance);
 	}
 
 	template<typename SimdArchType>
-		requires(nasimd::IsSimdArch<SimdArchType>)
-	NATL_FORCE_INLINE constexpr nasimd::SimdMMaskstructF64<SimdArchType> isRoughtlyEqualF64(
-		nasimd::SimdRegisterstructF64<SimdArchType> lhs,
-		nasimd::SimdRegisterstructF64<SimdArchType> rhs, const f64 tolerance) noexcept {
+		requires(natl::simd::IsSimdArch<SimdArchType>)
+	NATL_FORCE_INLINE constexpr natl::simd::SimdMMaskstructF64<SimdArchType> isRoughtlyEqualF64(
+		natl::simd::SimdRegisterstructF64<SimdArchType> lhs,
+		natl::simd::SimdRegisterstructF64<SimdArchType> rhs, const f64 tolerance) noexcept {
 		return isRoughtlyEqual<f64, SimdArchType>(lhs.getRegister(), rhs.getRegister(), tolerance);
 	}
 }

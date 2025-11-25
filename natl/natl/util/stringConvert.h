@@ -2,15 +2,14 @@
 
 //own
 #include "basicTypes.h"
-#include "string.h"
 #include "limits.h"
-#include "../util/characterTest.h"
+#include "expect.h"
+#include "characterTest.h"
 #include "../container/stringView.h"
 #include "../container/string.h"
-#include "../fundamental/expect.h"
 #include "../math/satruatedArithmetic.h"
 
-//interface
+//@export
 namespace natl {
 	struct NumericConvertError {
 	public:
@@ -330,7 +329,6 @@ namespace natl {
 			} else {
 				return unexpected(NumericConvertError(
 					NumericConvertError::Flag::expectedNumericCharacter, index));
-				return 0;
 			}
 		}
 

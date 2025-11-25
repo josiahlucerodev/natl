@@ -7,7 +7,7 @@
 #include "algorithm.h"
 #include "compare.h"
 
-//interface 
+//@export
 namespace natl {
 	template<typename LhsIter, typename RhsIter>
 		requires(IsIterPtr<LhsIter>&& IsIterPtr<RhsIter>&& IsConvertibleC<typename IteratorTraits<LhsIter>::value_type, typename IteratorTraits<RhsIter>::value_type>)

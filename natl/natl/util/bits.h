@@ -1,26 +1,30 @@
 #pragma once 
 
-//std
-#include <bit>
-
+//@begin_non_modules
 //own
 #include "compilerDependent.h"
-#include "typeTraits.h"
-#include "limits.h"
 
 //intrinsics 
-#if defined(NATL_COMPILER_GCC) 
+#ifdef NATL_COMPILER_MSVC
+#include <intrin.h>
+#endif //NATL_COMPILER_MSVC
 
+#if defined(NATL_COMPILER_GCC) 
 #ifdef NATL_ARCHITECTURE_X86_64
 #include <x86intrin.h> 
 #else
 static_assert(false, "natl: unknown architecture");
 #endif
-
 #endif 
+//@end_non_modules
+
+//own
+#include "typeTraits.h"
+#include "limits.h"
+#include "utility.h"
 
 
-//interface 
+//@export 
 namespace natl {
     template<typename Integer>
         requires(IsBuiltInUnsignedIntegerC<Integer>)

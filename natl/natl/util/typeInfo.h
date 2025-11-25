@@ -1,18 +1,41 @@
 #pragma once 
 
+//@begin_non_modules
+//own
+#include "compilerDependent.h"
+//@end_non_modules
+
 //own
 #include "stringLiteral.h"
 #include "rawTypeInfo.h"
 #include "../container/stringView.h"
 #include "../container/stringView.h"
 
-//interface 
+//@export
 namespace natl {
 	template<typename Type>
 	consteval auto getNameOfType() noexcept {
 		TypeNameStr name = getTypeNameStrOfType<Type>();
 		return ConstAsciiStringView(name.data(), name.length());
 	}
+
+	template<typename Type>
+		requires(IsStructC<Type>)
+	consteval auto getNameOfStruct() noexcept {
+		ConstAsciiStringView name = getNameOfType<Type>();
+
+#if defined(NATL_COMPILER_MSVC)
+		//prefix: "class " | "struct "
+		if (name.startsWith("c")) {
+			return name.substr(6);
+		} else {
+			return name.substr(7);
+		}
+#else
+		static_assert("natl: natl::getNameOfStruct() not supported");
+#endif
+	}
+
 
 	constexpr natl::Size getHashCodeFromNameOfType(const ConstAsciiStringView nameOfType) noexcept {
 		return getHashCodeOfTypeName(nameOfType.c_str(), nameOfType.size());

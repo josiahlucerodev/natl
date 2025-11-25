@@ -1,14 +1,18 @@
 #pragma once 
 
+//@begin_non_modules
+//own
+#include "../util/compilerDependent.h"
+//@end_non_modules
+
 //own
 #include "../util/basicTypes.h"
-#include "../util/compilerDependent.h"
 #include "../util/limits.h"
 #include "../util/bits.h"
 #include "../util/algorithm.h"
 #include "constants.h"
 
-//interface 
+//@export
 namespace natl::math {
 	//getExponentBits
 	NATL_FORCE_INLINE constexpr ui32 getExponentBitsF32(const f32 value) noexcept {

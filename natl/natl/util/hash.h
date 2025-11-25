@@ -1,12 +1,17 @@
 #pragma once
 
+//@begin_non_modules
+//std
+#include <utility>
+//@end_non_modules
+
+
 //own
 #include "basicTypes.h"
 #include "typeTraits.h"
-#include "compilerDependent.h"
 #include "bits.h"
 
-//interface 
+//@export
 namespace natl {
 	//fnv1a
 	constexpr inline Size fnv1aOffsetBasis = Size(14695981039346656037ULL);

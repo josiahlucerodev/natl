@@ -1,13 +1,19 @@
 #pragma once 
 
+//@begin_non_modules
+//own
+#include "preprocessor.h"
+//@end_non_modules
+
 //own
 #include "basicTypes.h"
-#include "preprocessor.h"
-#include "../fundamental/tuple.h"
+#include "tuple.h"
+#include "../container/stringView.h"
+#include "../container/array.h"
 
-//interface 
+//@export
 namespace natl {
-	constexpr static inline Size MaxStructMemberNumberEvaluated = 20;
+	constexpr inline Size MaxStructMemberNumberEvaluated = 20;
 
 	namespace impl {
 
@@ -767,10 +773,3 @@ namespace natl {
 	}	
 }
 
-#define NATL_ENABLE_PRIVATE_STRUCT_REFLECTION \
-	template<natl::Size, natl::Size> \
-	friend struct natl::impl::GetStructMemberAggregate; \
-	template<natl::Size> \
-	friend struct natl::impl::GetStructMembers; \
-	template<typename> \
-	friend struct natl::StructMemberCountV;

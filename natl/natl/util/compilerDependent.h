@@ -1,5 +1,9 @@
 #pragma once
 
+//std
+#include <compare>
+#include <coroutine>
+
 //compiler 
 #if defined(__EMSCRIPTEN__)
 #define NATL_COMPILER_EMSCRIPTEN
@@ -104,126 +108,6 @@ static_assert(false, "natl: unknown architecture");
 static_cast(false, "natl: architecture for compiler not implemented");
 #endif
 
-//c
-#include  <stdlib.h>
-
-//own
-#include "utility.h"
-
-//interface 
-namespace natl {
-    enum struct ProgramPlatformType : int {
-        unknownPlatform,
-        unixPlatform, 
-        windowsPlatform,
-        webPlatform
-    };
-
-    consteval ProgramPlatformType getPlatformType() noexcept {
-#if defined(NATL_UNIX_PLATFORM)
-        return ProgramPlatformType::unixPlatform;
-#elif defined(NATL_WINDOWS_PLATFORM)
-        return ProgramPlatformType::windowsPlatform;
-#elif defined(NATL_WEB_PLATFORM)
-        return ProgramPlatformType::webPlatform;
-#else
-        static_cast("natl: get platform type not implemented");
-#endif
-    }
-
-    consteval bool natlInDebug() noexcept {
-#ifdef NATL_IN_DEBUG
-        return true;
-#else
-        return false;
-#endif
-    }
-
-    NATL_FORCE_INLINE constexpr void constantEvaluatedError() noexcept {
-        if (isConstantEvaluated()) {
-            int* ptr = nullptr;
-            *ptr = 0;
-        }
-    }
-
-
-    NATL_FORCE_INLINE constexpr void debugBreak() noexcept {
-#ifdef NATL_IN_DEBUG
-        if (isConstantEvaluated()) {
-            constantEvaluatedError();
-        } else {
-
-
-#if defined(NATL_COMPILER_EMSCRIPTEN) 
-            emscripten_debugger();
-#elif defined(NATL_COMPILER_CLANG)
-            __builtin_debugtrap();
-#elif defined(NATL_COMPILER_GCC)
-            __builtin_trap();
-#elif defined(NATL_COMPILER_MSVC)
-            __debugbreak();
-#else 
-            static_cast(false, "natl: debug break not implemented");
-#endif 
-
-        }
-#endif
-    }
-
-    [[noreturn]] NATL_FORCE_INLINE constexpr void terminate() noexcept {
-        if (isConstantEvaluated()) {
-            constantEvaluatedError();
-
-#ifdef NATL_COMPILER_GCC
-            abort();
-#endif // NATL_COMPILER_GCC
-
-        } else {
-#ifdef NATL_IN_DEBUG
-            debugBreak();
-#endif // NATL_IN_DEBUG
-            abort();
-        }
-    }
-
-	[[noreturn]] inline void unreachable() noexcept {
-        if constexpr (natlInDebug()) {
-            debugBreak();
-        }
-
-#if defined(NATL_COMPILER_EMSCRIPTEN) 
-        __builtin_unreachable();
-#elif defined(NATL_COMPILER_CLANG)
-        __builtin_unreachable();
-#elif defined(NATL_COMPILER_GCC)
-        __builtin_unreachable();
-#elif defined(NATL_COMPILER_MSVC)
-        __assume(false);
-#else 
-        static_cast(false, "natl: unreachable not implemented");
-#endif 
-	}
-
-    constexpr const char* platformTypeToString(const ProgramPlatformType platformType) noexcept {
-        switch (platformType) {
-        case ProgramPlatformType::unixPlatform:
-            return "unix";
-        case ProgramPlatformType::windowsPlatform:
-            return "windows";
-        case ProgramPlatformType::webPlatform:
-            return "web";
-        case ProgramPlatformType::unknownPlatform:
-            return "unknown";
-        default:
-            unreachable();
-        }
-    }
-
-    consteval const char* getPlatformName() noexcept {
-        return platformTypeToString(getPlatformType());
-    }
-}
-
 //counter 
 #if defined(NATL_COMPILER_EMSCRIPTEN) 
 #define NATL_COUNTER __COUNTER__
@@ -260,3 +144,36 @@ static_cast(false, "natl: counter for compiler not implemented");
 static_cast(false, "natl: disable warnings not implmeented");
 static_cast(false, "natl: enable warnings not implmeented");
 #endif
+
+#if __cplusplus >= 199711L
+#define  NATL_PCH_CXX_98 
+#endif
+
+#if __cplusplus >= 201103L
+#define  NATL_PCH_CXX_11 
+#endif
+
+#if __cplusplus >= 201703L
+#define  NATL_PCH_CXX_17 
+#endif
+
+#if __cplusplus >= 201402L
+#define  NATL_PCH_CXX_14 
+#endif
+
+#if __cplusplus >= 202002L
+#define  NATL_PCH_CXX_20 
+#endif
+
+#if __cplusplus >= 1000000L
+#define  NATL_PCH_CXX_23 
+#endif
+
+//reflection
+#define NATL_ENABLE_PRIVATE_STRUCT_REFLECTION \
+	template<natl::Size, natl::Size> \
+	friend struct natl::impl::GetStructMemberAggregate; \
+	template<natl::Size> \
+	friend struct natl::impl::GetStructMembers; \
+	template<typename> \
+	friend struct natl::StructMemberCountV;

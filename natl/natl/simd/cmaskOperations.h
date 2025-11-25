@@ -1,9 +1,14 @@
 #pragma once 
 
+//@begin_non_modules
+//own
+#include "../util/compilerDependent.h"
+//@end_non_modules
+
 //own
 #include "simdOf.h"
 
-//interface
+//@export
 namespace natl::simd {
 	template<typename DataType, typename Arch>
 		requires(IsBuiltInNumericC<DataType>&& IsSimdArch<Arch>)

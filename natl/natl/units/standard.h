@@ -3,7 +3,7 @@
 //own
 #include "base.h"
 
-//interface
+//@export
 namespace natl {
     //time
     enum struct StandardTimeType {
@@ -37,8 +37,8 @@ namespace natl {
         };
 
         struct StandardTimeTag {
-            using system_generic_category = impl::StandardTimeTagGroup;
-            using tag_group = impl::StandardTimeTagGroup;
+            using system_generic_category = StandardTimeTagGroup;
+            using tag_group = StandardTimeTagGroup;
         };
 
         enum struct StandardTimeUnitWeight : i64 {
@@ -361,8 +361,8 @@ namespace natl {
         };
 
         struct StandardDataTag {
-            using system_generic_category = impl::StandardDataTagGroup;
-            using tag_group = impl::StandardDataTagGroup;
+            using system_generic_category = StandardDataTagGroup;
+            using tag_group = StandardDataTagGroup;
         };
 
         enum struct StandardDataUnitWeight : i64 {

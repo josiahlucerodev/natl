@@ -1,12 +1,16 @@
 #pragma once 
 
+//@begin_non_modules
+//own
+#include "../util/compilerDependent.h"
+//@end_non_modules
+
 //own
 #include "../container/array.h"
-#include "../fundamental/option.h"
-#include "../util/compilerDependent.h"
+#include "../util/option.h"
 #include "thread.h"
 
-//interface
+//@export
 namespace natl {
 
 #ifdef NATL_WINDOWS_PLATFORM

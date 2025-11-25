@@ -3,9 +3,10 @@
 //own
 #include "base.h"
 #include "jump.h"
+#include "../processing/format.h"
 #include "../container/smallDynArray.h"
 
-//interface 
+//@export
 namespace natl {
 	template<Size SmallBufferSize>
 	struct FullDeserializeErrorHandler {

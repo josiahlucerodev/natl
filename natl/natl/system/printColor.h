@@ -2,11 +2,11 @@
 
 //own 
 #include "../util/stringLiteral.h"
-#include "../fundamental/strongType.h"
+#include "../util/strongType.h"
 #include "../container/array.h"
 #include "../processing/format.h"
 
-//interface 
+//@export
 namespace natl {
 	Bool enablePrintExtendedColor() noexcept;
 	

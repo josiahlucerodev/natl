@@ -5,7 +5,7 @@
 #include "../util/bits.h"
 #include "stringView.h"
 
-//interface
+//@export
 namespace natl {
 
 	struct BitIndex {
@@ -176,7 +176,7 @@ namespace natl {
 		constexpr Size count() const noexcept {
 			Size countAccumulater = 0;
 			for (Size i = 0; i < wordCount; i++) {
-				countAccumulater = std::popcount<BitStorageType>(bitsArray[i]);
+				countAccumulater = popcount<BitStorageType>(bitsArray[i]);
 			}
 			return countAccumulater;
 		}

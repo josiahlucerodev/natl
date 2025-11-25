@@ -1,6 +1,5 @@
 #pragma once 
 
-//own
 #include "compilerDependent.h"
 
 #define NATL_IMPL_CONCAT_IMPL(x, y) x##y

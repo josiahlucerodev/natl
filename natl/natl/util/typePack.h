@@ -5,7 +5,7 @@
 #include "typeTraits.h"
 #include "limits.h"
 
-//interface 
+//@export 
 namespace natl {
     template <typename T>
     constexpr T multiplyAll(T value) noexcept {
@@ -461,7 +461,7 @@ namespace natl {
 
     template<template<typename, typename> typename TypeCompare, typename FindType, typename TypePackArg>
         requires(IsTypePackC<TypePackArg>)
-    constexpr static Size TypePackFindIndexOfTypeCompareValue = impl::TypePackFindIndexOfTypeCompareImpl<TypeCompare, FindType, TypePackArg>::value;
+    constexpr inline Size TypePackFindIndexOfTypeCompareValue = impl::TypePackFindIndexOfTypeCompareImpl<TypeCompare, FindType, TypePackArg>::value;
 
     namespace impl {
         template<Size Index, typename... TypePackElements>
@@ -505,7 +505,7 @@ namespace natl {
         template<DataType, DataType> typename OpPredicate,
         typename TypePackArg>
         requires(IsTypePackC<TypePackArg>)
-    constexpr static DataType TypePackOpFoldWithIndexValue = impl::TypePackOpFoldWithIndexImpl<DataType, ValuePredicate, OpPredicate, TypePackArg>::value;
+    constexpr inline DataType TypePackOpFoldWithIndexValue = impl::TypePackOpFoldWithIndexImpl<DataType, ValuePredicate, OpPredicate, TypePackArg>::value;
 
     namespace impl {
         template<typename DataType, typename ValuePredicateArg,
@@ -536,7 +536,7 @@ namespace natl {
         template<DataType, DataType> typename OpPredicate,
         typename TypePackArg>
         requires(IsTypePackC<TypePackArg>)
-    constexpr static DataType TypePackOpFoldWithIndexAndArgValue = impl::TypePackOpFoldWithIndexAndArgImpl<DataType, ValuePredicateArg, ValuePredicate, OpPredicate, TypePackArg>::value;
+    constexpr inline DataType TypePackOpFoldWithIndexAndArgValue = impl::TypePackOpFoldWithIndexAndArgImpl<DataType, ValuePredicateArg, ValuePredicate, OpPredicate, TypePackArg>::value;
 
     namespace impl {
         template<typename... TypePacks>
@@ -729,6 +729,6 @@ namespace natl {
     template<template<typename> typename Predicate, typename TypePackArg>
     concept TypePackElementsAreC = TypePackElementsAreV<Predicate, TypePackArg>::value;
     template<template<typename> typename Predicate, typename TypePackArg>
-    constexpr static inline Bool TypePackElementsAre = TypePackElementsAreV<Predicate, TypePackArg>::value;
+    constexpr inline Bool TypePackElementsAre = TypePackElementsAreV<Predicate, TypePackArg>::value;
 
 }

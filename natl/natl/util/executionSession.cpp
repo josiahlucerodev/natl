@@ -1,10 +1,16 @@
-//interface
+//@interface
 #include "executionSession.h"
+
+//@begin_non_modules
+//std
+#include <csetjmp>
+//@end_non_modules
+
+//own
 #include "allocator.h"
 #include "iteration.h"
 #include "../container/persistentHashMap.h"
 
-//interface 
 namespace natl {
 	//execution session 
 	struct ExecutionSession {

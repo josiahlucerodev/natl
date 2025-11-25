@@ -1,12 +1,17 @@
 #pragma once 
 
+//@begin_non_modules
+//natl
+#include "../util/compilerDependent.h"
+//@end_non_modules
+
 //own
 #include "../container/functional.h"
 #include "../util/uninitialized.h"
 #include "thread.h"
 #include "atomic.h"
 
-//interface 
+//@export
 namespace natl {
 	struct ThreadStopData {
 		using destory_function_type = void(*)(void*) noexcept;
@@ -188,7 +193,7 @@ namespace natl {
 				);
 
 				deconstruct(storageTuple.template get<0>().valueAsPtr());
-				(deconstruct(storageTuple.template get<Indices + 1>().valueAsRef()), ...);
+				(deconstruct(&storageTuple.template get<Indices + 1>().valueAsRef()), ...);
 			}
 
 			constexpr void operator()(StorageTuple* storageTuple) const noexcept {
@@ -270,6 +275,7 @@ namespace natl {
 		SmartThread& operator=(const SmartThread& other) noexcept = delete;
 		SmartThread& operator=(SmartThread&& other) noexcept {
 			natl::swap<Thread>(thread, other.thread);
+			natl::swap<ThreadStopData*>(threadStopData, other.threadStopData);
 			return self();
 		}
 
@@ -282,11 +288,11 @@ namespace natl {
 		//operations
 	private:
 		void internalJoinOperation() noexcept {
+			thread.join();
 			ThreadStopData::destory_function_type destoryFunction = threadStopData->getDestoryFunction();
 			void* storagePtr = threadStopData->getStoragePtr();
 			deconstruct<ThreadStopData>(threadStopData);
 			destoryFunction(storagePtr);
-			thread.join();
 		}
 	public:
 		void join() noexcept {

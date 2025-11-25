@@ -1,8 +1,10 @@
 ﻿#VERSION
-cmake_minimum_required (VERSION 3.9)
+cmake_minimum_required (VERSION 3.28)
 
 #PROJECT 
 project(natl)
+
+option(ENABLE_CODE_COVERAGE "Enable coverage reporting" OFF)
 
 #DEPENDENCIES
 if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR) #IS ROOT
@@ -24,5 +26,8 @@ add_subdirectory(natl)
 #TEST
 if(NATL_IS_ROOT)
 	message("natl: tests")
+	enable_testing()
+	include(CTest)
+	configure_parallel_testing()
 	add_subdirectory(tests)
 endif()

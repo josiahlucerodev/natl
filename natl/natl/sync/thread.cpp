@@ -1,5 +1,8 @@
-//interface
+//@interface
 #include "thread.h"
+
+//@begin_non_modules
+#include "../util/compilerDependent.h"
 
 //system 
 #ifdef NATL_WINDOWS_PLATFORM
@@ -11,8 +14,8 @@
 #include <pthread.h>
 #include <unistd.h>
 #endif // NATL_UNIX_PLATFORM || NATL_WEB_PLATFORM
+//@end_non_modules
 
-//implementation
 namespace natl {
 #ifdef NATL_WINDOWS_PLATFORM
 

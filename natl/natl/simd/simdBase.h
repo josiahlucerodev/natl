@@ -6,7 +6,7 @@
 #include "../util/bits.h"
 #include "../container/stringView.h"
 
-//interface
+//@export
 namespace natl::simd {
 	template<typename Type>
 	concept IsSimdDataType = IsBuiltInNumericC<Type>;

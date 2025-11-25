@@ -5,10 +5,16 @@
 #include "../system/printFormatted.h"
 #include "utility.h"
 
-//interface 
-#define NATL_ASSERT(condition, ...) \
-    if (!(condition)) { \
-		if (natl::isConstantEvaluated()) { natl::constantEvaluatedError(); } \
-        natl::printlnf("natl: ", " Assertion failed: ", __VA_ARGS__); \
-        natl::terminate(); \
+//@export
+namespace natl {
+    template<typename... ArgTypes>
+    constexpr void cassertPre(const natl::Bool condition, ArgTypes&&... args) noexcept {
+        if (!condition) {
+            if (natl::isConstantEvaluated()) { 
+                natl::constantEvaluatedError(); 
+            } 
+            natl::printlnf("natl: ", " Assertion failed: ", natl::forward<ArgTypes>(args)...);
+            natl::terminate();
+        }
     }
+}

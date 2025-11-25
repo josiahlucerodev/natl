@@ -1,6 +1,9 @@
 #pragma once
 
-//compiler dependent 
+//@begin_non_modules
+//own
+#include "compilerDependent.h"
+
 #ifdef _MSC_VER
 #include <intrin.h>
 #endif
@@ -8,16 +11,13 @@
 #ifdef __EMSCRIPTEN__ 
 #include <emscripten.h>
 #endif
-
-//std
-#include <iostream>
+//@end_non_modules
 
 //own
 #include "../container/stringView.h"
-#include "compilerDependent.h"
 #include "../system/print.h"
 
-//interface
+//@export
 namespace natl {
     constexpr void fatalError(const ConstStringView message) noexcept {
         if (isConstantEvaluated()) {

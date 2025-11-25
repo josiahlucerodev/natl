@@ -1,18 +1,22 @@
 #pragma once
 
+//@begin_non_modules
 //std
-#include <cstdlib>
+#include <memory>
+
+//own
+#include "compilerDependent.h"
+//@end_non_modules
 
 //own
 #include "basicTypes.h"
-#include "compilerDependent.h"
 #include "typeTraits.h"
 #include "bits.h"
 #include "rawTypeInfo.h"
-#include "../fundamental/observerPtr.h"
-#include "../fundamental/optionPtr.h"
+#include "observerPtr.h"
+#include "optionPtr.h"
 
-//interface
+//@export
 namespace natl {
 
 	namespace impl {
@@ -121,7 +125,7 @@ namespace natl {
 			{ Alloc::deallocate(natl::declval<typename Alloc::pointer>(), natl::declval<typename Alloc::size_type>()) };
 			{ typename Alloc::value_type{} } -> IsSameC<natl::Byte>;
 	};
-	template<typename Type> constexpr static Bool IsAllocator = IsAllocatorC<Type>;
+	template<typename Type> constexpr inline Bool IsAllocator = IsAllocatorC<Type>;
 	template<typename Type> struct IsAllocatorV : BoolConstant<IsAllocatorC<Type>> {};
 
 	template<typename Alloc>
