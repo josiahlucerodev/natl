@@ -193,4 +193,52 @@ namespace natl {
 		natl::Seconds<natl::f64> getSecondsFloat() const noexcept { return timer.getSecondsFloat(); }
 		NamedTimeInfo getTimeInfo() const noexcept { return NamedTimeInfo(getNanosecondsInt(), timerName); }
 	};
+
+
+	struct TimeoutTraker {
+	private:
+		Timer mTimer;
+		natl::Microseconds<natl::ui64> mTimeout;
+	
+	public:
+		void start(const natl::Microseconds<natl::ui64> timeout) noexcept {
+			mTimeout = timeout;
+			mTimer.start();
+		}
+		Bool isTimedOut() const noexcept {
+			return mTimer.getMicrosecondsInt().asInt<natl::ui64>() >= mTimeout;
+		}
+		natl::Microseconds<natl::ui64> remainingTime() const noexcept {
+			natl::Microseconds<natl::i64> remainingTime = mTimeout.asInt<natl::i64>() - mTimer.getMicrosecondsInt();
+			if (remainingTime <= natl::Microseconds<natl::i64>(0)) {
+				return natl::Microseconds<natl::ui64>(0);
+			} else {
+				return remainingTime.asInt<natl::ui64>();
+			}
+		}
+		natl::Microseconds<natl::ui64> elapsedTime() const noexcept {
+			return mTimer.getMicrosecondsInt().asInt<natl::ui64>();
+		}
+		f64 remaining() const noexcept {
+			natl::Microseconds<natl::ui64> rTime = remainingTime();
+			if (rTime.value() == 0) {
+				return 0;
+			} else {
+				return rTime.value() / mTimeout.value();
+			}
+		}
+		f64 elapsed() const noexcept {
+			if (isTimedOut()) {
+				return 1;
+			} else {
+				return elapsedTime().value() / mTimeout.value();
+			}
+		}
+		f64 remainingPercent() const noexcept {
+			return remaining() * 100;
+		}
+		f64 elapsedPercent() const noexcept {
+			return elapsed() * 100;
+		}
+	};
 }

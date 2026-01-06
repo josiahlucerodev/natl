@@ -4,6 +4,7 @@
 //subfiles
 #include "algorithm.h"
 #include "allocator.h"
+#include "allocParts.h"
 #include "assert.h"
 #include "basicTypes.h"
 #include "bits.h"

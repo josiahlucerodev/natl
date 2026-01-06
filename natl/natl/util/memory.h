@@ -8,12 +8,19 @@
 //own
 #include "expect.h"
 #include "basicTypes.h"
-#include "numerics.h"
 #include "error.h"
 #include "bits.h"
+#include "numerics.h"
 
 //@export
 namespace natl {
+	//Constants
+	constexpr inline Size cacheLine = 128;
+	constexpr inline Size pageSize = 4096;
+	constexpr inline Size pageSize64k = 65536;
+	constexpr inline Size pagePrefixSize = 12;
+
+	//Ptr
 	template<typename DataType>
 	void* castToVoidPtr(DataType* ptr) noexcept {
 		return reinterpret_cast<void*>(ptr);
@@ -23,6 +30,18 @@ namespace natl {
 		return reinterpret_cast<const void*>(ptr);
 	}
 
+	constexpr Size ptrDistance(const Byte* first, const Byte* last) noexcept {
+		return bitCast<Size>(last - first);
+	}
+
+	consteval Size virtualAddressBitsCount() noexcept {
+		return 64 - pagePrefixSize;
+	}
+	consteval Size virtualAddressMask() noexcept {
+		return (1 << virtualAddressBitsCount()) - 1;
+	}
+
+	//Lifetime
 	template<typename DataType>
 	DataType* startLifetimeAs(void* ptr) noexcept {
 		return std::launder(static_cast<DataType*>(std::memmove(ptr, ptr, sizeof(DataType))));
@@ -40,18 +59,62 @@ namespace natl {
 		return std::launder(static_cast<const DataType*>(std::memmove(const_cast<DataType*>(ptr), ptr, sizeof(DataType) * number)));
 	}
 
+	//Buffers
+
+	inline Bool buffersOverlap(const Byte* a, Size alen, const Byte* b, Size blen) noexcept {
+		const Size aStart = reinterpret_cast<Size>(a);
+		const Size aEnd = aStart + alen;
+		const Size bStart = reinterpret_cast<Size>(b);
+		const Size bEnd = bStart + blen;
+		return (aStart < bEnd) && (bStart < aEnd);
+	}
+
+	inline Bool buffersOverlapRange(const Byte* aStart, const Byte* aEnd, const Byte* bStart, const Byte* bEnd) noexcept {
+		return (aStart < bEnd) && (bStart < aEnd);
+	}
+
+	inline Bool buffersOverlapIndex(const Size a, Size alen, const Size b, Size blen) noexcept {
+		const Size aStart = a;
+		const Size aEnd = aStart + alen;
+		const Size bStart = b;
+		const Size bEnd = bStart + blen;
+		return (aStart < bEnd) && (bStart < aEnd);
+	}
+
+	inline Bool buffersOverlapIndexRange(const Size aStart, const Size aEnd, const Size bStart, const Size bEnd) noexcept {
+		return (aStart < bEnd) && (bStart < aEnd);
+	}
+
+	//Alignment 
+
+	inline Byte* alignToPage(Byte* ptr, Size pageSize) noexcept {
+		Size p = bitCast<Size>(ptr);
+		Size aligned = (p + pageSize - 1) & ~(pageSize - 1);
+		return bitCast<Byte*>(aligned);
+	}
+
+	constexpr Byte* alignDown(Byte* ptr, Size alignment) noexcept {
+		Size p = bitCast<Size>(ptr);
+		p &= ~(alignment - 1);
+		return bitCast<Byte*>(p);
+	}
+
+	constexpr Size maxAlignment(Size blockSize) noexcept {
+		return blockSize & (~blockSize + 1);
+	}
+
 	enum struct AlignPtrError {
 		invalidAlignment,  
 		outOfSpace,  
 	};
 
 	struct AlignPtrInfo {
-		void* alignedPtr;
-		void* nextPtr;
+		Byte* alignedPtr;
+		Byte* nextPtr;
 		natl::Size remainingSpace;
 	};
 
-	constexpr AlignPtrInfo createAlignPtrInfo(void* ptr, const natl::Size space) noexcept {
+	constexpr AlignPtrInfo createAlignPtrInfo(Byte* ptr, const natl::Size space) noexcept {
 		AlignPtrInfo alignPtrInfo;
 		alignPtrInfo.alignedPtr = nullptr;
 		alignPtrInfo.nextPtr = ptr;
@@ -62,7 +125,7 @@ namespace natl {
 
 	constexpr AlignPtrExpect alignPtr(
 		const natl::Size alignment, const natl::Size size, 
-		void* ptr, const natl::Size space) noexcept {
+		Byte* ptr, const natl::Size space) noexcept {
 		AlignPtrInfo alignPtrInfo{};
 
 		if (!isPowerOfTwo<natl::Size>(alignment)) {
@@ -77,20 +140,20 @@ namespace natl {
 			return natl::unexpected(AlignPtrError::outOfSpace);
 		}
 
-		alignPtrInfo.alignedPtr = reinterpret_cast<natl::Byte*>(ptr) + adjustment;
-		alignPtrInfo.nextPtr = reinterpret_cast<natl::Byte*>(alignPtrInfo.alignedPtr) + size;
+		alignPtrInfo.alignedPtr = ptr + adjustment;
+		alignPtrInfo.nextPtr = alignPtrInfo.alignedPtr + size;
 		alignPtrInfo.remainingSpace = space - (adjustment + size);
 
 		return alignPtrInfo;
 	}
 
 	template<typename DataType>
-	constexpr AlignPtrExpect alignPtrWithArray(const natl::Size number, void* ptr, const natl::Size space) noexcept {
+	constexpr AlignPtrExpect alignPtrWithArray(const natl::Size number, Byte* ptr, const natl::Size space) noexcept {
 		return alignPtr(alignof(DataType), sizeof(DataType) * number, ptr, space);
 	}
 
 	template<typename DataType>
-	constexpr AlignPtrExpect alignPtrWithType(void* ptr, const natl::Size space) noexcept {
+	constexpr AlignPtrExpect alignPtrWithType(Byte* ptr, const natl::Size space) noexcept {
 		return alignPtr(alignof(DataType), sizeof(DataType), ptr, space);
 	}
 
@@ -122,9 +185,10 @@ namespace natl {
 			default:
 				unreachable();
 			}
-	}
+		}
 	}
 
+	//Offset
 	constexpr Size memberOffset(const Size sizeA, const Size alignmentB) noexcept {
 		return (sizeA + (alignmentB - 1)) & ~(alignmentB - 1);
 	}
@@ -141,11 +205,51 @@ namespace natl {
 		return memberToMemberOffset(sizeof(LhsMemberType), alignof(RhsMemberType));
 	}
 
-	inline void* memcpy(void* dest, const void* src, Size count) noexcept {
-		Byte* d = reinterpret_cast<Byte*>(dest); 
-		const Byte* s = reinterpret_cast<const Byte*>(src);
+	//Memory
+	template<typename Type>
+	constexpr Type* constexprAllocate(const Size count) noexcept {
+		return std::allocator<Type>().allocate(static_cast<StdSize>(count));
+	}
+	template<typename Type>
+	constexpr void constexprDeallocate(Type* ptr, Size size) noexcept {
+		std::allocator<Type>().deallocate(ptr, size);
+	}
+
+	inline Size roundSizeToPage(Size size, Size pageSize) noexcept {
+		return ((size + pageSize - 1) / pageSize) * pageSize;
+	}
+
+	inline Byte* memcpy(Byte* dest, const Byte* src, Size count) noexcept {
+		Byte* d = dest; 
+		const Byte* s = src;
 		for (Size i = 0; i < count; i++, d++, s++) {
 			*d = *s;
 		}
+		return dest;
 	}
+
+	constexpr void zeroMemory(Byte* ptr, Size size) noexcept {
+		for (Size i = 0; i < size; i++) {
+			ptr[i] = Byte(0);
+		}
+	}
+	constexpr void zeroMemory(ByteAllocResult allocResult) noexcept {
+		zeroMemory(allocResult.mPtr, allocResult.mSize);
+	}
+
+	//os
+	Bool osIsValidPageSize(Size pageSize) noexcept;
+	ByteAllocResult osMemoryAllocate(Size alignment, Size size, AllocateFlags flags, Size pageSize) noexcept;
+	Bool osMemoryDeallocate(Byte* ptr) noexcept;
+
+	//makes memory read only 
+	Bool osMemoryRemapProtect(Byte* donorPtr, Size size) noexcept;
+
+	//makes memory read and write 
+	Bool osMemoryRemapUnprotect(Byte* donorPtr, Size size) noexcept;
+
+	//Decommits donorPtr physical memory and remaps its virtual address space to the physcial memory of targetPtr
+	Bool osMemoryRemap(Byte* targetPtr, Byte* donorPtr, Size size) noexcept;
+
+
 }

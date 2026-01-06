@@ -77,6 +77,7 @@ natl/units/standard.h
 natl/util/algorithm.h
 natl/util/all.h
 natl/util/allocator.h
+natl/util/allocParts.h
 natl/util/assert.h
 natl/util/basicTypes.h
 natl/util/bits.h
@@ -134,6 +135,7 @@ natl/system/printColor.cpp
 natl/system/timer.cpp
 natl/util/allocator.cpp
 natl/util/executionSession.cpp
+natl/util/memory.cpp
 natl/util/test.cpp)
 
 set(CPP_MODULE_INTERFACE_FILES
@@ -215,6 +217,7 @@ modules/natl/units/standard.ixx
 modules/natl/util/algorithm.ixx
 modules/natl/util/all.ixx
 modules/natl/util/allocator.ixx
+modules/natl/util/allocParts.ixx
 modules/natl/util/assert.ixx
 modules/natl/util/basicTypes.ixx
 modules/natl/util/bits.ixx
@@ -272,5 +275,6 @@ modules/natl/system/printColor.cppm
 modules/natl/system/timer.cppm
 modules/natl/util/allocator.cppm
 modules/natl/util/executionSession.cppm
+modules/natl/util/memory.cppm
 modules/natl/util/test.cppm)
 

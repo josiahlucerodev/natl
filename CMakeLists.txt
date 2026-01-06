@@ -17,6 +17,8 @@ else()
 	endif()
 endif()
 
+SET(NATL_NO_MODULES TRUE)
+
 #IS ROOT
 CHECK_IF_IS_ROOT(NATL_IS_ROOT)
 

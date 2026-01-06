@@ -956,4 +956,79 @@ namespace natl {
 			requires(!natl::SameAs<Type, RestrictedTypes> && ...)
 		constexpr operator Type && () const noexcept;
 	};
+
+	//@export
+	namespace impl {
+		template<typename SwitchElementType>
+		concept IsSwitchDefaultC = requires() {
+			typename SwitchElementType::natl_is_switch_default;
+		};
+
+		template<typename SwitchElementType>
+		concept IsSwitchElementC = requires() {
+			typename SwitchElementType::natl_is_switch_element;
+		} || IsSwitchDefaultC<SwitchElementType>;
+
+		template<typename Functor>
+		concept IsSwitchFunctorC = requires(Functor && functor) {
+			{ forward<Functor>(functor)() };
+		};
+	}
+
+	template<auto vValue, typename Functor>
+		requires(impl::IsSwitchFunctorC<Decay<Functor>>)
+	struct SwitchElement {
+	public:
+		using natl_is_switch_element = int;
+		constexpr static inline auto value = vValue;
+		using functor_type = Functor;
+		Functor mFunctor;
+		constexpr SwitchElement(Functor&& functorIn) noexcept : mFunctor(forward<Functor>(functorIn)) {};
+		constexpr Functor&& functor() noexcept { return move(mFunctor); }
+	};
+
+	template<typename Functor>
+		requires(impl::IsSwitchFunctorC<Decay<Functor>>)
+	struct SwitchDefault {
+	public:
+		using natl_is_switch_default = int;
+		using functor_type = Functor;
+		Functor mFunctor;
+		constexpr SwitchDefault(Functor&& functorIn) noexcept : mFunctor(forward<Functor>(functorIn)) {};
+		constexpr Functor&& functor() noexcept { return move(mFunctor); }
+	};
+
+	template<typename ConditionValueType, typename SwitchDefault>
+		requires(impl::IsSwitchDefaultC<Decay<SwitchDefault>>)
+	constexpr void cswitch(ConditionValueType value, SwitchDefault&& switchDefault) noexcept {
+		switchDefault.functor()();
+	}
+
+	template<typename ConditionValueType, typename SwitchElement, typename... SwitchElements>
+		requires(impl::IsSwitchElementC<SwitchElement> && (impl::IsSwitchElementC<SwitchElements> && ...))
+	constexpr void cswitch(ConditionValueType value, SwitchElement&& element, SwitchElements&&... rest) noexcept {
+		if (SwitchElement::value == value) {
+			element.functor()();
+		} else {
+			cswitch(value, forward<SwitchElements>(rest)...);
+		}
+	}
+
+	template<typename Type, Size vAlignment>
+		requires(vAlignment != 0 && (vAlignment & (vAlignment - 1)) == 0)
+	struct alignas(vAlignment) AlignedValue {
+	public:
+		using value_type = Type;
+	
+	public:
+		Type mData;
+
+	public:
+		constexpr value_type& value() noexcept {
+			return mData;
+		}
+		constexpr const value_type& value() const noexcept {
+			return mData;
+		}
+	};
 }

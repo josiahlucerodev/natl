@@ -32,8 +32,17 @@ namespace natl {
 		constexpr Size random() noexcept {
 			return rg.random();
 		}
+		constexpr Size random(Size max) noexcept {
+			return rg.random() % max;
+		}
+		constexpr Bool oneIn(Size size) noexcept {
+			return random(size) == 0;
+		}
 		constexpr Size randomUI64() noexcept {
 			return rg.random();
+		};
+		constexpr Size randomUI64(Size max) noexcept {
+			return random(max);
 		};
 		constexpr Size randomUI64(Size min, Size max) noexcept {
 			f64 unit = static_cast<f64>(rg.random()) / static_cast<f64>(Limits<ui64>::max());
@@ -140,6 +149,7 @@ namespace natl {
 	using StandardRNG = UtilRandomGenerator<Xoshiro256ss<SplitMix64>>;
 
 	// defined in timer.cpp
+	StandardRNG getThreadLocalStdRng() noexcept;
 	Size rand() noexcept;
 
 	using RandomFunctionType = Size(&)(void);
@@ -190,4 +200,10 @@ namespace natl {
 	constexpr RandomGeneratorRef<RandomGenerator> randomGeneratorRef(RandomGenerator& rg) noexcept {
 		return RandomGeneratorRef<RandomGenerator>(rg);
 	};
+
+	template<typename RandomGenerator>
+		requires(IsRandomGenerator<Decay<RandomGenerator>>)
+	constexpr UtilRandomGenerator<Decay<RandomGenerator>> utilGeneratorRef(RandomGenerator& rg) noexcept {
+		return UtilRandomGenerator<Decay<RandomGenerator>>(randomGeneratorRef<RandomGenerator>(rg));
+	}
 }

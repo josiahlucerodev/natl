@@ -367,7 +367,7 @@ namespace natl {
 
 				Byte* byteStorage = byte_allocator_type::allocate(storageByteSize);
 
-				AlignPtrInfo alignInfo = createAlignPtrInfo(castToVoidPtr<Byte>(byteStorage), storageByteSize);
+				AlignPtrInfo alignInfo = createAlignPtrInfo(byteStorage, storageByteSize);
 				AlignPtrExpect colonyBlockAlignPtr = alignPtrWithType<colony_block>(alignInfo);
 
 				if (colonyBlockAlignPtr.hasValue()) {

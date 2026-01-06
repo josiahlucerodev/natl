@@ -82,6 +82,7 @@ namespace natl {
 	Bool isExecutionSessionErrorHandling() noexcept;
 
 	struct GlobalTracker;
+
 	struct TopGlobalTracker {
 	public:
 		OptionPtr<GlobalTracker> globalTracker;

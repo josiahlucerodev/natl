@@ -31,4 +31,10 @@ namespace natl::math {
 			return value;
 		}
 	}
+
+	template<typename UnsignedInteger>
+		requires(IsBuiltInUnsignedIntegerC<UnsignedInteger>)
+	constexpr UnsignedInteger divCeil(UnsignedInteger value, UnsignedInteger divisor) noexcept {
+		return value / divisor + UnsignedInteger(value % divisor != UnsignedInteger(0));
+	}
 }

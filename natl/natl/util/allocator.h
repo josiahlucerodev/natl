@@ -18,25 +18,7 @@
 
 //@export
 namespace natl {
-
-	namespace impl {
-		inline void* alignedAllocate(Size byteSize, Size alignment) noexcept {
-#if defined(NATL_COMPILER_MSVC)
-			return _aligned_malloc(byteSize, alignment);
-#else
-			return std::aligned_alloc(byteSize, alignment);
-#endif
-		}
-
-		inline void alignedFree(void* ptr) noexcept {
-#if defined(NATL_COMPILER_MSVC)
-			_aligned_free(ptr);
-#else
-			std::free(ptr);
-#endif
-		}
-	}
-
+	constexpr inline Size defaultAllocateAlignment = 8;
 	struct TrackedAllocator;
 	using TrackedAllocatorId = Id;
 
@@ -105,6 +87,24 @@ namespace natl {
 	TrackAllocationError trackAllocation(ObserverPtr<TrackedAllocator> trackedAllocator, const void* ptr, const Size size) noexcept;
 	UntrackAllocationError untrackAllocation(ObserverPtr<TrackedAllocator> trackedAllocator, const void* ptr, const Size size) noexcept;
 
+	enum struct AllocateFlags {
+		none = 0,
+		zeroed = 1 << 1,
+		remappable = 1 << 2,
+		largePages = 1 << 3,
+	};
+	NATL_ADD_BIT_FLAG_OPERATIONS(AllocateFlags);
+
+	template<typename Type>
+	struct AllocResult {
+	public:
+		using value_type = Type;
+	public:
+		Type* mPtr;
+		Size mSize;
+	};
+	using ByteAllocResult = AllocResult<Byte>;
+
 #ifdef NATL_COMPILER_MSVC
 #pragma warning(push)
 #pragma warning(disable : 4180)
@@ -119,36 +119,38 @@ namespace natl {
 			typename Alloc::const_reference;
 			typename Alloc::size_type;
 			typename Alloc::difference_type;
+			typename Alloc::alloc_result;
 
 			// Allocate and deallocate memory
-			{ Alloc::allocate(natl::declval<typename Alloc::size_type>()) } -> natl::SameAs<typename Alloc::pointer>;
+			//{ Alloc::allocate(natl::declval<typename Alloc::size_type>()) } -> natl::SameAs<typename Alloc::alloc_result>;
+			//{ Alloc::allocate(natl::declval<typename Alloc::size_type>()) } -> natl::SameAs<typename Alloc::pointer>;
 			{ Alloc::deallocate(natl::declval<typename Alloc::pointer>(), natl::declval<typename Alloc::size_type>()) };
+			{ Alloc::deallocate(natl::declval<typename Alloc::pointer>()) };
 			{ typename Alloc::value_type{} } -> IsSameC<natl::Byte>;
 	};
 	template<typename Type> constexpr inline Bool IsAllocator = IsAllocatorC<Type>;
 	template<typename Type> struct IsAllocatorV : BoolConstant<IsAllocatorC<Type>> {};
 
-	template<typename Alloc>
+	template<typename Alloc, typename Type>
 	struct AllocatorTraits {
 		using allocator_type = Alloc;
 
-		using value_type = typename Alloc::value_type;
-		using reference = typename Alloc::reference;
-		using const_reference = typename Alloc::const_reference;
-		using pointer = typename Alloc::pointer;
-		using const_pointer = typename Alloc::const_pointer;
-		using difference_type = typename Alloc::difference_type;
-		using size_type = typename Alloc::size_type;
+		using value_type = Type;
+		using reference = Type&;
+		using const_reference = const Type&;
+		using pointer = Type*;
+		using const_pointer = const Type*;
+		using difference_type = PtrDiff;
+		using size_type = Size;
 
-		using void_pointer = typename Alloc::void_pointer;
-		using const_void_pointer = typename Alloc::const_void_pointer;
+		using void_pointer = void*;
+		using const_void_pointer = const void*;
 
-		template <typename Other>
-		using rebind = typename Alloc:: template rebind<Other>;
-
-		template <typename Other>
-		using rebind_traits = AllocatorTraits<rebind<Other>>;
+		using alloc_result = AllocResult<Type>;
 	};
+
+	Byte* stdAlignedAllocate(Size alignment, Size size) noexcept;
+	void stdAlignedDeallocate(Byte* ptr) noexcept;
 
 	using AllocatorDefaultType = natl::Byte;
 	template<typename DataType = AllocatorDefaultType>
@@ -161,6 +163,7 @@ namespace natl {
 		using const_pointer = const DataType*;
 		using difference_type = PtrDiff;
 		using size_type = Size;
+		using alloc_result = AllocResult<DataType>;
 
 		template <typename Other>
 		using rebind = UntrackedStandardAllocator<Other>;
@@ -172,7 +175,7 @@ namespace natl {
 			if (isConstantEvaluated()) {
 				ptr = std::allocator<DataType>().allocate(static_cast<StdSize>(number));
 			} else {
-				ptr = reinterpret_cast<pointer>(impl::alignedAllocate(sizeof(DataType) * number, alignof(DataType)));
+				ptr = reinterpret_cast<pointer>(stdAlignedAllocate(alignof(DataType), sizeof(DataType) * number));
 			}
 			return ptr;
 		}
@@ -185,7 +188,7 @@ namespace natl {
 			if (isConstantEvaluated()) {
 				ptr = std::allocator<DataType>().allocate(static_cast<StdSize>(number));
 			} else {
-				ptr = reinterpret_cast<pointer>(impl::alignedAllocate(sizeof(DataType) * number, maxFunc(alignof(DataType), alignment)));
+				ptr = reinterpret_cast<pointer>(stdAlignedAllocate(maxFunc(alignof(DataType), alignment), sizeof(DataType) * number));
 			}
 			return ptr;
 		}
@@ -195,8 +198,12 @@ namespace natl {
 			if (isConstantEvaluated()) {
 				std::allocator<DataType>().deallocate(ptr, static_cast<StdSize>(number));
 			} else {
-				impl::alignedFree(reinterpret_cast<void*>(ptr));
+				stdAlignedDeallocate(reinterpret_cast<Byte*>(ptr));
 			}
+		}
+		void static deallocate(pointer ptr) noexcept {
+			if (!ptr) { return; }
+			stdAlignedDeallocate(reinterpret_cast<Byte*>(ptr));
 		}
 	};
 
@@ -206,7 +213,7 @@ namespace natl {
 
 	namespace impl {
 		void standardAllocatorTrack(void* ptr, const Size size) noexcept;
-		void standardAllocatorUntrack(void* ptr, const Size size) noexcept;
+		void standardAllocatorUntrack(void* ptr) noexcept;
 	}
 	Bool isStandardAllocatorTrackingEnabled() noexcept;
 	Bool enableStadardAllocatorTracking() noexcept;
@@ -214,34 +221,35 @@ namespace natl {
 	template<typename DataType = AllocatorDefaultType>
 	struct StandardAllocator {
 	public:
-		using fallback_allocator = UntrackedStandardAllocator<Byte>;
-		using typed_fallback_allocator = UntrackedStandardAllocator<DataType>;
 		using support_allocator = UntrackedStandardAllocator<Byte>;
 		using typed_support_allocator = UntrackedStandardAllocator<DataType>;
 
-		using value_type = typed_fallback_allocator::value_type;
-		using reference = typed_fallback_allocator::reference;
-		using const_reference = typed_fallback_allocator::const_reference;
-		using pointer = typed_fallback_allocator::pointer;
-		using const_pointer = typed_fallback_allocator::const_pointer;
-		using difference_type = typed_fallback_allocator::difference_type;
-		using size_type = typed_fallback_allocator::size_type;
+		using value_type = typed_support_allocator::value_type;
+		using reference = typed_support_allocator::reference;
+		using const_reference = typed_support_allocator::const_reference;
+		using pointer = typed_support_allocator::pointer;
+		using const_pointer = typed_support_allocator::const_pointer;
+		using difference_type = typed_support_allocator::difference_type;
+		using size_type = typed_support_allocator::size_type;
+		using alloc_result = AllocResult<DataType>;
 
 		template <typename Other>
 		using rebind = StandardAllocator<Other>;
 		using allocator_type = StandardAllocator<Byte>;
 		using typed_allocator_type = StandardAllocator<DataType>;
 
+		constexpr static inline Bool isMeshable = false;
+
 	public:
 		[[nodiscard]] constexpr static pointer allocate(const Size number) noexcept {
-			pointer ptr = typed_fallback_allocator::allocate(number);
+			pointer ptr = typed_support_allocator::allocate(number);
 			if (!isConstantEvaluated()) {
 				impl::standardAllocatorTrack(reinterpret_cast<void*>(ptr), number * sizeof(value_type));
 			}
 			return ptr;
 		}
 		[[nodiscard]] constexpr static pointer allocateAligned(const Size number, const Size alignment) noexcept {
-			pointer ptr = typed_fallback_allocator::allocateAligned(number, alignment);
+			pointer ptr = typed_support_allocator::allocateAligned(number, alignment);
 			if (!isConstantEvaluated()) {
 				impl::standardAllocatorTrack(reinterpret_cast<void*>(ptr), number * sizeof(value_type));
 			}
@@ -253,9 +261,16 @@ namespace natl {
 				return; 
 			}
 			if (!isConstantEvaluated()) {
-				impl::standardAllocatorUntrack(reinterpret_cast<void*>(ptr), number * sizeof(value_type));
+				impl::standardAllocatorUntrack(reinterpret_cast<void*>(ptr));
 			}
-			typed_fallback_allocator::deallocate(ptr, number);
+			typed_support_allocator::deallocate(ptr, number);
+		}
+		void static deallocate(pointer ptr) noexcept {
+			if (!ptr) {
+				return;
+			}
+			impl::standardAllocatorUntrack(reinterpret_cast<void*>(ptr));
+			typed_support_allocator::deallocate(ptr);
 		}
 	};
 
@@ -270,8 +285,6 @@ namespace natl {
 		requires(IsAllocatorC<Alloc>)
 	struct MinAlignmentAllocator {
 	public:
-		using fallback_allocator = Alloc;
-		using typed_fallback_allocator = Alloc::template rebind<DataType>;
 		using support_allocator = Alloc;
 		using typed_support_allocator = Alloc::template rebind<DataType>;
 
@@ -282,6 +295,7 @@ namespace natl {
 		using const_pointer = typed_support_allocator::const_pointer;
 		using difference_type = typed_support_allocator::difference_type;
 		using size_type = typed_support_allocator::size_type;
+		using alloc_result = AllocResult<DataType>;
 
 		template <typename Other>
 		using rebind = MinAlignmentAllocator<Other, MinAlignment, Alloc>;
@@ -310,4 +324,24 @@ namespace natl {
 #pragma warning(pop)
 #endif // NATL_COMPILER_MSVC
 
+
+	template<typename Type, typename Alloc, typename... ConstructArgs>
+	constexpr Type* make(ConstructArgs&&... constructArgs) noexcept {
+		Type* ptr = Alloc::template rebind<Type>::allocate(1);
+		if (ptr == nullptr) {
+			return ptr;
+		}
+		construct<Type, ConstructArgs...>(ptr, forward<ConstructArgs>(constructArgs)...);
+		return ptr;
+	}
+
+	template<typename Type, typename Alloc>
+	constexpr void destory(Type* ptr) noexcept {
+		if (ptr == nullptr) {
+			return;
+		}
+
+		deconstruct<Type>(ptr);
+		Alloc::deallocate(ptr, 1);
+	}
 }

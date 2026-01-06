@@ -51,8 +51,12 @@ namespace natl {
 	}
 #endif
 
+	StandardRNG getThreadLocalStdRng() noexcept {
+		thread_local StandardRNG rng = StandardRNG(highResolutionNow().value());
+		return rng;
+	}
+
 	Size rand() noexcept {
-		static StandardRNG rng = StandardRNG(highResolutionNow().value());
-		return rng.random();
+		return getThreadLocalStdRng().random();
 	}
 }

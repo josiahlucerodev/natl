@@ -559,7 +559,7 @@ namespace natl {
     }
     template<typename FloatType>
         requires(IsBuiltInFloatingPointC<FloatType>)
-    NATL_FORCE_INLINE constexpr Bool bitscanForward(const FloatType& value, UIntOfByteSize<sizeof(FloatType)> indexDst) noexcept {
+    NATL_FORCE_INLINE constexpr Bool bitscanForward(const FloatType& value, UIntOfByteSize<sizeof(FloatType)>& indexDst) noexcept {
         return bitscanForward(bitCast<UIntOfByteSize<sizeof(FloatType)>, FloatType>(value), indexDst);
     }
 
@@ -1073,7 +1073,7 @@ namespace natl {
         }
     }
 
-    //is power of tywo 
+    //is power of two 
     template<typename IntegerType>
         requires(IsBuiltInIntegerC<IntegerType>)
     NATL_FORCE_INLINE constexpr Bool isPowerOf2(const IntegerType value) noexcept {
@@ -1086,5 +1086,15 @@ namespace natl {
         } else {
             return popcount(value) == 1;
         }
+    }
+
+    template<typename IntegerType>
+        requires(IsBuiltInIntegerC<IntegerType>)
+    NATL_FORCE_INLINE constexpr IntegerType pow2(const IntegerType value) noexcept {
+        return IntegerType(1) << value;
+    }
+
+    constexpr Size asNumber(Bool value) noexcept {
+        return value ? 1 : 0;
     }
 }

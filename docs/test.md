@@ -3,6 +3,15 @@
 ## Example
 
 ```cpp
+//@file_not_module
+
+//@begin_non_modules
+//natl
+#include <natl/util/testMacros.h>
+//@end_non_modules
+
+//natl
+#include <natl/util/test.h>
 
 struct ExampleTestSuite : public natl::TestSuite<ExampleTestSuite> {};
 

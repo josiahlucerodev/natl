@@ -1,6 +1,20 @@
 //@interface
 #include "allocator.h"
 
+//@begin_non_modules
+//own
+#include "../util/compilerDependent.h"
+
+//system
+#ifdef NATL_WINDOWS_PLATFORM
+#define NOMINMAX
+#include <Windows.h>
+#endif // NATL_WINDOWS_PLATFORM 
+
+//std
+#include <memory>
+//@end_non_modules
+
 //own
 #include "executionSession.h"
 #include "../container/flatHashSet.h"
@@ -8,6 +22,17 @@
 #include "../container/persistentHashMap.h"
 
 namespace natl {
+#if defined(NATL_WINDOWS_PLATFORM)
+	Byte* stdAlignedAllocate(Size alignment, Size size) noexcept {
+		return reinterpret_cast<Byte*>(_aligned_malloc(size, alignment));
+	}
+	void stdAlignedDeallocate(Byte* ptr) noexcept {
+		_aligned_free(ptr);
+	}
+#else
+	static_assert(false, "natl alignedAllocate not implemented for platform");
+#endif
+
 	struct AllocationInfo {
 		void* ptr;
 		Size size;
@@ -27,6 +52,8 @@ namespace natl {
 	struct TrackedAllocator {
 	public:
 		using allocation_set = FlatHashSetAlloc<AllocationInfo, ExecutionSessionAlloc>;
+
+	public:
 		TrackedAllocatorId id;
 		TrackedAllocatorDeallocateFunc deallocateFunc;
 		OptionPtr<TopTrackedAllocator> top;
@@ -96,13 +123,11 @@ namespace natl {
 					return;
 				}
 				AllocationTrakerStorage& allocationTrakerStorage = storageOption.value();
-
 				for (auto [id, trackedAllocator] : allocationTrakerStorage.allocatorMap) {
 					if (trackedAllocator.top) {
 						trackedAllocator.top.get()->setTrackedAllocator(&trackedAllocator);
 					}
 				}
-
 			}
 		);
 	}
@@ -111,7 +136,7 @@ namespace natl {
 		const ConstAsciiStringView& name, OptionPtr<TopGlobalTracker> top) noexcept {
 		GlobalTracker gt = createAllocationGlobalTraker();
 		gt.top = top;
-		Expect<ObserverPtr<GlobalTracker>, RegisterGlobalTrakerError>  registrationResult = registerGlobalTraker(name, move(gt));
+		Expect<ObserverPtr<GlobalTracker>, RegisterGlobalTrakerError> registrationResult = registerGlobalTraker(name, move(gt));
 		if (registrationResult.hasError()) {
 			gt.destroyFunc(gt);
 		}
@@ -206,12 +231,12 @@ namespace natl {
 		return TrackAllocationError::none;
 	}
 
-	UntrackAllocationError untrackAllocation(ObserverPtr<TrackedAllocator> trackedAllocator, void* ptr, const Size size) noexcept {
+	UntrackAllocationError untrackAllocation(ObserverPtr<TrackedAllocator> trackedAllocator, void* ptr) noexcept {
 		if (trackedAllocator == nullptr) {
 			return UntrackAllocationError::nullTrackedAllocator;
 		}
 
-		auto findAllocation = trackedAllocator->allocationSet.findIter(AllocationInfo{ ptr, size });
+		auto findAllocation = trackedAllocator->allocationSet.findIter(AllocationInfo{ ptr, 0 });
 		if (findAllocation == trackedAllocator->allocationSet.end()) {
 			return UntrackAllocationError::notFound;
 		}
@@ -262,9 +287,9 @@ namespace natl {
 				trackAllocation(makeObserver(standardAllocatorTrackerTop.getTrackedAllocator().get()), ptr, size);
 			}
 		}
-		void standardAllocatorUntrack(void* ptr, const Size size) noexcept {
+		void standardAllocatorUntrack(void* ptr) noexcept {
 			if (isStandardAllocatorTrackingEnabled()) {
-				untrackAllocation(makeObserver(standardAllocatorTrackerTop.getTrackedAllocator().get()), ptr, size);
+				untrackAllocation(makeObserver(standardAllocatorTrackerTop.getTrackedAllocator().get()), ptr);
 			}
 		}
 	}

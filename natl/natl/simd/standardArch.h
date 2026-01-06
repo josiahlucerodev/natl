@@ -8318,7 +8318,7 @@ namespace natl::simd {
 					}
 				}
 			} else {
-				natl::memcpy(output.values.data(), value.values.data(), sizeof(Src));
+				natl::memcpy(reinterpret_cast<Byte*>(output.values.data()), reinterpret_cast<Byte*>(value.values.data()), sizeof(Src));
 			}
 			return output;
 		}
@@ -8377,7 +8377,7 @@ namespace natl::simd {
 				return output;
 			} else {
 				Src output;
-				natl::memcpy(output.values.data(), src.values.data(), sizeof(Src));
+				natl::memcpy(reinterpret_cast<Byte*>(output.values.data()), reinterpret_cast<const Byte*>(src.values.data()), sizeof(Src));
 				return output;
 			}
 		}

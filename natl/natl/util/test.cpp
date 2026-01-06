@@ -219,6 +219,16 @@ namespace natl {
 			"(", testingData.assertCount - testingData.assertFailCount, "/", testingData.assertCount, ") asserts passed"
 		);
 
+		auto timeNS = testingData.time.asFloat<natl::f64>();
+		auto timeS = timeNS.convertTo<natl::abbrt::s>();
+		auto timeMs = timeNS.convertTo<natl::abbrt::ms>();
+		auto timeMus = timeNS.convertTo<natl::abbrt::mus>();
+		natl::printlnf("natl_tests: test time (", 
+			natl::formatArgText<"p: 2">(timeS.value()), timeS.units(), " or ",
+			natl::formatArgText<"p: 2">(timeMs.value()), timeMs.units(), " or ",
+			natl::formatArgText<"p: 2">(timeMus.value()), timeMus.units(), " or ",
+			natl::formatArgText<"p: 2">(timeNS.value()), timeNS.units(), ")");
+
 		if (reportType == ReportType::none) {
 			return;
 		}
@@ -303,6 +313,9 @@ namespace natl {
 			return false;
 		}
 
+		Timer timer;
+		timer.start();
+
 		testSuite = suiteInfo.createFunc();
 
 		if (!testSuite->suiteSetup()) {
@@ -346,6 +359,8 @@ namespace natl {
 		suiteInfo.destoryFunc(testSuite);
 
 		natl::popExecutionSession(sessionName);
+		testingData.time = timer.getNanosecondsInt().asInt<natl::Size>();
+		
 		return true;
 	}
 

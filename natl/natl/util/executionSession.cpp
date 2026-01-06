@@ -3,7 +3,10 @@
 
 //@begin_non_modules
 //std
-#include <csetjmp>
+#include <setjmp.h>
+
+//own
+#include "../util/compilerDependent.h"
 //@end_non_modules
 
 //own
@@ -288,7 +291,6 @@ namespace natl {
 			return RegisterGlobalTrakerError::noExecutionSession;
 		}
 
-
 		if (!allExecutionSessionsDontHaveGlobalTraker(name)) {
 			return RegisterGlobalTrakerError::nameConflict;
 		}
@@ -332,7 +334,6 @@ namespace natl {
 		if (globalTraker == nullptr) {
 			return false;
 		}
-
 		return name == globalTraker->name;
 	}
 }

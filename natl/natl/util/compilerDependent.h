@@ -177,3 +177,14 @@ static_cast(false, "natl: enable warnings not implmeented");
 	friend struct natl::impl::GetStructMembers; \
 	template<typename> \
 	friend struct natl::StructMemberCountV;
+
+//enum
+#define NATL_ADD_BIT_FLAG_OPERATIONS(EnumName) \
+constexpr inline EnumName operator|(const EnumName lhs, const EnumName rhs) noexcept { \
+	using underlying_type = natl::UnderlyingType<EnumName>; \
+	return static_cast<EnumName>(static_cast<underlying_type>(lhs) | static_cast<underlying_type>(rhs)); \
+} \
+constexpr inline EnumName operator&(const EnumName lhs, const EnumName rhs) noexcept { \
+	using underlying_type = natl::UnderlyingType<EnumName>; \
+	return static_cast<EnumName>(static_cast<underlying_type>(lhs) & static_cast<underlying_type>(rhs)); \
+} 

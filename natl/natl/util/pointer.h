@@ -44,6 +44,30 @@ namespace natl {
 	};
 
 	template<typename DataType>
+	struct ArrayPtr {
+	public:
+		using value_type = DataType;
+		using reference = DataType&;
+		using const_reference = const DataType&;
+		using pointer = DataType*;
+		using const_pointer = const DataType*;
+	private:
+		DataType* dataPtr;
+	public:
+		//constructor 
+		constexpr ArrayPtr() noexcept : dataPtr(nullptr) {}
+		constexpr ArrayPtr(DataType* data) noexcept requires(IsNotConst<DataType>) : dataPtr(&data) {};
+		constexpr ArrayPtr(const DataType* data) noexcept requires(IsConst<DataType>) : dataPtr(data) {};
+
+		//destructor
+		constexpr ~ArrayPtr() noexcept = default;
+
+		//access
+		constexpr reference operator[](Size index) noexcept requires(IsNotConst<DataType>) { return dataPtr[index]; };
+		constexpr const_reference operator[](Size index) const noexcept { return dataPtr[index]; };
+	};
+
+	template<typename DataType>
 	struct IsTriviallyCompareableV<Ptr<DataType>>
 		: TrueType {};
 

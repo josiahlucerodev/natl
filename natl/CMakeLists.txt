@@ -41,6 +41,7 @@ endforeach()
 
 # -- NATL MODULES --
 if(NOT NACTEMPLATE_NO_MODULES AND NOT NATL_NO_MODULES)
+	message("natl: modules")
 	#LIBARY
 	set(NATL_MODULES_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/modules" CACHE PATH INTERNAL)
 	add_library(natlModules)

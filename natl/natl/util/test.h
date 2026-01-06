@@ -14,6 +14,7 @@
 #include "../system/printFormatted.h"
 #include "../system/printColor.h"
 #include "../system/filesystem.h"
+#include "../system/timer.h"
 
 //@export
 namespace natl {
@@ -382,6 +383,7 @@ namespace natl {
 		ConstAsciiStringView suiteName = "";
 		natl::SmallFlatHashSet<TestAssertData, 128> assertDataSet{};
 		natl::SmallFlatHashSet<TestFailData, 16> failDataSet{};
+		natl::Nanoseconds<natl::Size> time;
 	};
 
 	struct TestSuiteBase {
