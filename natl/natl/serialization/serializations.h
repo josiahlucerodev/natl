@@ -289,11 +289,11 @@ namespace natl {
 		}
 	};
 
-	template<template<typename> typename DynamicArrayType, typename KeyType, typename ValueType, typename Hash, typename Compare>
+	template<template<typename> typename DynArrayType, typename KeyType, typename ValueType, typename Hash, typename Compare>
 		requires(IsSerializableC<Decay<KeyType>>&& IsSerializableC<Decay<ValueType>>)
-	struct Serialize<impl::BaseFlatHashMap<DynamicArrayType, KeyType, ValueType, Hash, Compare>> {
+	struct Serialize<impl::BaseFlatHashMap<DynArrayType, KeyType, ValueType, Hash, Compare>> {
 		using as_type = SerializeDic<KeyType, ValueType>;
-		using type = impl::BaseFlatHashMap<DynamicArrayType, KeyType, ValueType, Hash, Compare>;
+		using type = impl::BaseFlatHashMap<DynArrayType, KeyType, ValueType, Hash, Compare>;
 		template<typename Serializer> using error_type = StandardSerializeError<Serializer>;
 		constexpr static ConstAsciiStringView sourceName = "natl::Serialize<natl::BaseFlatHashMap<...>>::write";
 
@@ -349,10 +349,10 @@ namespace natl {
 	};
 
 
-	template<template<typename> typename DynamicArrayType, typename KeyType, typename ValueType, typename Hash, typename Compare>
+	template<template<typename> typename DynArrayType, typename KeyType, typename ValueType, typename Hash, typename Compare>
 		requires(IsSerializableC<Decay<KeyType>>&& IsSerializableC<Decay<ValueType>>)
-	struct Deserialize<impl::BaseFlatHashMap<DynamicArrayType, KeyType, ValueType, Hash, Compare>> {
-		using type = impl::BaseFlatHashMap<DynamicArrayType, KeyType, ValueType, Hash, Compare>;
+	struct Deserialize<impl::BaseFlatHashMap<DynArrayType, KeyType, ValueType, Hash, Compare>> {
+		using type = impl::BaseFlatHashMap<DynArrayType, KeyType, ValueType, Hash, Compare>;
 		using as_type = SerializeTypeOf<type>;
 		constexpr static ConstAsciiStringView sourceName = "natl::Deserialize<natl::BaseFlatHashMap<...>>::read";
 		template<typename Deserializer> using error_type = StandardDeserializeError<Deserializer>;

@@ -107,6 +107,9 @@ namespace natl {
 		constexpr CharType* c_str() noexcept requires(IsNotConst<CharType>) { return _dataPtr; }
 		constexpr const CharType* c_str() const noexcept { return _dataPtr; }
 
+		constexpr CharType* cStr() noexcept requires(IsNotConst<CharType>) { return _dataPtr; }
+		constexpr const CharType* cStr() const noexcept { return _dataPtr; }
+
 		//capacity 
 		constexpr size_type size() const noexcept { return _stringLength; }
 		constexpr size_type length() const noexcept { return _stringLength; }

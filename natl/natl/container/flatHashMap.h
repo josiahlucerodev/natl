@@ -348,7 +348,7 @@ namespace natl {
 		};
 
 		template<
-			template<typename> typename DynamicArrayType,
+			template<typename> typename DynArrayType,
 			typename KeyType, typename ValueType,
 			typename Hash = Hash<KeyType>,
 			typename Compare = CompareEqual<KeyType>
@@ -359,7 +359,7 @@ namespace natl {
 			using mapped_type = ValueType;
 
 			using key_value_unit = FlatMapHashKeyValueUnit<key_type, mapped_type>;
-			using storage_array = DynamicArrayType<key_value_unit>;
+			using storage_array = DynArrayType<key_value_unit>;
 
 			using allocator_type = storage_array::allocator_type;
 			using typed_allocator_type = storage_array::typed_allocator_type;
@@ -862,16 +862,16 @@ namespace natl {
 	}
 
 	template<
-		template<typename> typename DynamicArrayType,
+		template<typename> typename DynArrayType,
 		typename Key, typename Value,
 		typename Hash, typename Compare,
 		typename CharType>
-	struct Formatter<impl::BaseFlatHashMap<DynamicArrayType, Key, Value, Hash, Compare>, CharType>
+	struct Formatter<impl::BaseFlatHashMap<DynArrayType, Key, Value, Hash, Compare>, CharType>
 		: impl::MapBaseFormatImpl<
-			impl::BaseFlatHashMap<DynamicArrayType, Key, Value, Hash, Compare>,
+			impl::BaseFlatHashMap<DynArrayType, Key, Value, Hash, Compare>,
 				MakeFormatter<Key, CharType>,
 				MakeFormatter<Value, CharType>> {
-		using mapped_type = impl::BaseFlatHashMap<DynamicArrayType, Key, Value, Hash, Compare>;
+		using mapped_type = impl::BaseFlatHashMap<DynArrayType, Key, Value, Hash, Compare>;
 		using hash_map_type = mapped_type;
 
 		template<typename... TemplateFlags>

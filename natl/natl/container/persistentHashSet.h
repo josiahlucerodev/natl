@@ -92,7 +92,7 @@ namespace natl {
 
 		template<
 			template<typename> typename PoolType
-			, template<typename> typename DynamicArrayType
+			, template<typename> typename DynArrayType
 			, typename DataType
 			, typename Hash = Hash<DataType>
 			, typename Compare = CompareEqual<DataType>
@@ -114,7 +114,7 @@ namespace natl {
 			};
 
 			using storage_pool = PoolType<DataType>;
-			using storage_set = impl::BaseFlatHashSet<DynamicArrayType, value_type*, ValueHash, ValueCompare>;
+			using storage_set = impl::BaseFlatHashSet<DynArrayType, value_type*, ValueHash, ValueCompare>;
 			using storage_array = storage_set::storage_array;
 
 			using allocator_type = storage_set::allocator_type;
@@ -347,14 +347,14 @@ namespace natl {
 
 	template<
 		template<typename> typename PoolType
-		, template<typename> typename DynamicArrayType
+		, template<typename> typename DynArrayType
 		, typename DataType, typename Hash, typename Compare
 		, typename CharType
-	> struct Formatter<impl::BasePersistentHashSet<PoolType, DynamicArrayType, DataType, Hash, Compare>, CharType>
+	> struct Formatter<impl::BasePersistentHashSet<PoolType, DynArrayType, DataType, Hash, Compare>, CharType>
 		: impl::SetBaseFormatImpl<
-		impl::BasePersistentHashSet<PoolType, DynamicArrayType, DataType, Hash, Compare>,
+		impl::BasePersistentHashSet<PoolType, DynArrayType, DataType, Hash, Compare>,
 		MakeFormatter<DataType, DataType>> {
-		using hash_set_type = impl::BasePersistentHashSet<PoolType, DynamicArrayType, DataType, Hash, Compare>;
+		using hash_set_type = impl::BasePersistentHashSet<PoolType, DynArrayType, DataType, Hash, Compare>;
 
 		template<typename... TemplateFlags>
 		struct WithTemplateFlagsImplT {

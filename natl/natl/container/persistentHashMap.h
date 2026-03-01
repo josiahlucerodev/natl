@@ -105,14 +105,14 @@ namespace natl {
 
 		template<
 			template<typename> typename PoolType
-			, template<typename> typename DynamicArrayType
+			, template<typename> typename DynArrayType
 			, typename KeyType, typename ValueType
 			, typename Hash = Hash<KeyType>
 			, typename Compare = CompareEqual<KeyType>
 		> struct BasePersistentHashMap {
 		public:
 			using storage_pool = PoolType<ValueType>;
-			using storage_map = impl::BaseFlatHashMap<DynamicArrayType, KeyType, ValueType*, Hash, Compare>;
+			using storage_map = impl::BaseFlatHashMap<DynArrayType, KeyType, ValueType*, Hash, Compare>;
 			using storage_array = storage_map::storage_array;
 
 			using key_type = KeyType;
@@ -364,16 +364,16 @@ namespace natl {
 
 	template<
 		template<typename> typename PoolType
-		, template<typename> typename DynamicArrayType
+		, template<typename> typename DynArrayType
 		, typename KeyType, typename ValueType
 		, typename Hash, typename Compare
 		, typename CharType
-	> struct Formatter<impl::BasePersistentHashMap<PoolType, DynamicArrayType, KeyType, ValueType, Hash, Compare>, CharType>
+	> struct Formatter<impl::BasePersistentHashMap<PoolType, DynArrayType, KeyType, ValueType, Hash, Compare>, CharType>
 		: impl::MapBaseFormatImpl<
-			impl::BasePersistentHashMap<PoolType, DynamicArrayType, KeyType, ValueType, Hash, Compare>,
+			impl::BasePersistentHashMap<PoolType, DynArrayType, KeyType, ValueType, Hash, Compare>,
 			MakeFormatter<KeyType, CharType>,
 			MakeFormatter<ValueType, CharType>> {
-		using hash_map_type = impl::BasePersistentHashMap<PoolType, DynamicArrayType, KeyType, ValueType, Hash, Compare>;
+		using hash_map_type = impl::BasePersistentHashMap<PoolType, DynArrayType, KeyType, ValueType, Hash, Compare>;
 
 		template<typename... TemplateFlags>
 		struct WithTemplateFlagsFunctionImplT {

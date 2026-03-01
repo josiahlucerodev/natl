@@ -1114,7 +1114,7 @@ namespace natl {
 	Bool getWorkingDirectory(Ascii* dst, const Size dstSize) noexcept;
 
 	template<typename PathLike>
-		requires(IsDynamicArrayLike<PathLike, Ascii>)
+		requires(IsDynArrayLike<PathLike, Ascii>)
 	PathLike getWorkingDirectoryAs() noexcept {
 		Option<Size> workingDirectorySize = getWorkingDirectorySize();
 
@@ -1229,7 +1229,7 @@ namespace natl {
 	}
 
 	template<typename DynArrayLike>
-		requires(IsByteDynamicArrayLike<DynArrayLike>)
+		requires(IsByteDynArrayLike<DynArrayLike>)
 	[[nodiscard]] inline LoadAllFileContentError loadAllFileContent(File& file, DynArrayLike& dstArray) noexcept {
 		if (file.isNotOpen()) { return LoadAllFileContentError::fileNotOpen; }
 

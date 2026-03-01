@@ -124,7 +124,7 @@ namespace natl {
 		};
 
 		template<
-			template<typename> typename DynamicArrayType,
+			template<typename> typename DynArrayType,
 			typename DataType,
 			typename Hash = Hash<DataType>,
 			typename Compare = CompareEqual<DataType>
@@ -133,7 +133,7 @@ namespace natl {
 			using key_type = DataType;
 
 			using unit_type = Option<key_type>;
-			using storage_array = DynamicArrayType<unit_type>;
+			using storage_array = DynArrayType<unit_type>;
 			using allocator_type = storage_array::allocator_type;
 			using typed_allocator_type = allocator_type::template rebind<DataType>;
 
@@ -557,14 +557,14 @@ namespace natl {
 	}
 
 	template<
-		template<typename> typename DynamicArrayType,
+		template<typename> typename DynArrayType,
 		typename DataType, typename Hash, typename Compare,
 		typename CharType
-	> struct Formatter<impl::BaseFlatHashSet<DynamicArrayType, DataType, Hash, Compare>, CharType>
+	> struct Formatter<impl::BaseFlatHashSet<DynArrayType, DataType, Hash, Compare>, CharType>
 		: impl::SetBaseFormatImpl<
-			impl::BaseFlatHashSet<DynamicArrayType, DataType, Hash, Compare>,
+			impl::BaseFlatHashSet<DynArrayType, DataType, Hash, Compare>,
 			MakeFormatter<DataType, DataType>> {
-		using hash_set_type = impl::BaseFlatHashSet<DynamicArrayType, DataType, Hash, Compare>;
+		using hash_set_type = impl::BaseFlatHashSet<DynArrayType, DataType, Hash, Compare>;
 
 		template<typename... TemplateFlags>
 		struct WithTemplateFlagsImplT {

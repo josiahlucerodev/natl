@@ -14,14 +14,14 @@
 //@export
 namespace natl {
 	template<typename DynArrayLike, typename DataType>
-	concept IsDynamicArrayLike = HasBeginIterator<DynArrayLike> && HasEndIterator<DynArrayLike> && 
+	concept IsDynArrayLike = HasBeginIterator<DynArrayLike> && HasEndIterator<DynArrayLike> && 
 		requires(DynArrayLike & dynArray, const Size newSize) {
 		{ dynArray.reserve(newSize) };
 		{ dynArray.resize(newSize) };
 		{ dynArray.data() } -> ConvertibleTo<DataType*>;
 	};
 	template<typename DynArrayLike, typename DataType>
-	concept IsCloselyDynamicArrayLike =
+	concept IsCloselyDynArrayLike =
 		HasBeginIterator<DynArrayLike> &&
 		HasEndIterator<DynArrayLike> &&
 		(sizeof(typename DynArrayLike::value_type) == sizeof(DataType)) &&
@@ -31,7 +31,7 @@ namespace natl {
 			{ dynArray.data() };
 	};
 	template<typename DynArrayLike>
-	concept IsByteDynamicArrayLike = IsCloselyDynamicArrayLike<DynArrayLike, Byte>;
+	concept IsByteDynArrayLike = IsCloselyDynArrayLike<DynArrayLike, Byte>;
 
 	template<typename DataType, typename Alloc = DefaultAllocator>
 		requires(IsAllocatorC<Alloc> && IsCopyConstructibleC<DataType>)
