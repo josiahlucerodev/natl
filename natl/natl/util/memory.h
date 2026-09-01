@@ -1,4 +1,4 @@
-#pragma once 
+#pragma once
 
 //@begin_non_modules
 //std
@@ -85,7 +85,7 @@ namespace natl {
 		return (aStart < bEnd) && (bStart < aEnd);
 	}
 
-	//Alignment 
+	//Alignment
 
 	inline Byte* alignToPage(Byte* ptr, Size pageSize) noexcept {
 		Size p = bitCast<Size>(ptr);
@@ -104,8 +104,8 @@ namespace natl {
 	}
 
 	enum struct AlignPtrError {
-		invalidAlignment,  
-		outOfSpace,  
+		invalidAlignment,
+		outOfSpace,
 	};
 
 	struct AlignPtrInfo {
@@ -124,12 +124,12 @@ namespace natl {
 	using AlignPtrExpect = natl::Expect<AlignPtrInfo, AlignPtrError>;
 
 	constexpr AlignPtrExpect alignPtr(
-		const natl::Size alignment, const natl::Size size, 
+		const natl::Size alignment, const natl::Size size,
 		Byte* ptr, const natl::Size space) noexcept {
 		AlignPtrInfo alignPtrInfo{};
 
 		if (!isPowerOfTwo<natl::Size>(alignment)) {
-			return natl::unexpected(AlignPtrError::invalidAlignment); 
+			return natl::unexpected(AlignPtrError::invalidAlignment);
 		}
 
 		natl::Size misalignment = static_cast<natl::Size>(natl::bitCast<UIntPtrSized>(ptr)) % alignment;
@@ -158,7 +158,7 @@ namespace natl {
 	}
 
 	constexpr AlignPtrExpect alignPtr(
-		const natl::Size alignment, const natl::Size size, 
+		const natl::Size alignment, const natl::Size size,
 		const AlignPtrInfo& alignPtrInfo) noexcept {
 		return alignPtr(alignment, size, alignPtrInfo.nextPtr, alignPtrInfo.remainingSpace);
 	}
@@ -192,7 +192,7 @@ namespace natl {
 	constexpr Size memberOffset(const Size sizeA, const Size alignmentB) noexcept {
 		return (sizeA + (alignmentB - 1)) & ~(alignmentB - 1);
 	}
-	template<typename LhsMemberType, typename RhsMemberType> 
+	template<typename LhsMemberType, typename RhsMemberType>
 	consteval Size memberOffset() noexcept {
 		return memberOffset(sizeof(LhsMemberType), alignof(RhsMemberType));
 	}
@@ -220,7 +220,7 @@ namespace natl {
 	}
 
 	inline Byte* memcpy(Byte* dest, const Byte* src, Size count) noexcept {
-		Byte* d = dest; 
+		Byte* d = dest;
 		const Byte* s = src;
 		for (Size i = 0; i < count; i++, d++, s++) {
 			*d = *s;
@@ -242,10 +242,10 @@ namespace natl {
 	ByteAllocResult osMemoryAllocate(Size alignment, Size size, AllocateFlags flags, Size pageSize) noexcept;
 	Bool osMemoryDeallocate(Byte* ptr) noexcept;
 
-	//makes memory read only 
+	//makes memory read only
 	Bool osMemoryRemapProtect(Byte* donorPtr, Size size) noexcept;
 
-	//makes memory read and write 
+	//makes memory read and write
 	Bool osMemoryRemapUnprotect(Byte* donorPtr, Size size) noexcept;
 
 	//Decommits donorPtr physical memory and remaps its virtual address space to the physcial memory of targetPtr

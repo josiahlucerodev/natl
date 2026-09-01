@@ -15,6 +15,7 @@
 #include "functional.h"
 #include "functionCache.h"
 #include "heapArray.h"
+#include "pagedSparseArray.h"
 #include "partitioner.h"
 #include "persistentHashMap.h"
 #include "persistentHashSet.h"

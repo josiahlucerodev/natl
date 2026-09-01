@@ -1,4 +1,4 @@
-#pragma once 
+#pragma once
 
 //@begin_non_modules
 //natl
@@ -17,26 +17,26 @@ namespace natl {
         using value_type = DataType;
         value_type internalValueStorage;
     public:
-        //constructor 
+        //constructor
         constexpr StrongType() noexcept = default;
         explicit constexpr StrongType(const value_type& valueIn) noexcept : internalValueStorage(valueIn) {};
 
-        //destructor 
+        //destructor
         constexpr ~StrongType() noexcept = default;
 
-        //element access 
+        //element access
         constexpr value_type& value() & noexcept { return internalValueStorage; }
         constexpr const value_type& value() const& noexcept { return internalValueStorage; }
         constexpr value_type&& value() && noexcept { return natl::move(internalValueStorage); }
         constexpr const value_type&& value() const&& noexcept { return natl::move(internalValueStorage); }
 
-        //convert 
+        //convert
         explicit constexpr operator value_type&() & noexcept { return internalValueStorage; }
         explicit constexpr operator const value_type&() const& noexcept { return internalValueStorage; }
         explicit constexpr operator value_type&&() && noexcept { return natl::move(internalValueStorage); }
         explicit constexpr operator const value_type&&() const&& noexcept { return natl::move(internalValueStorage); }
 
-        //modifiers 
+        //modifiers
         constexpr void setValue(const value_type& valueIn) noexcept { internalValueStorage = valueIn; }
         constexpr void setValue(value_type&& valueIn) noexcept { internalValueStorage = natl::move(valueIn); }
 

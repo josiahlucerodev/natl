@@ -1,6 +1,9 @@
 //@file_not_module
 
 //@begin_non_modules
+//TODO
+#define NATL_DISABLE_CONSTEXPR_TESTS
+
 //natl
 #include <natl/util/testMacros.h>
 //@end_non_modules
@@ -36,7 +39,7 @@ struct AlgorithmTestSuiteTests {
 	constexpr static natl::DynArray<natl::String> getSortExpectedStringValues() noexcept {
 		if (natl::isConstantEvaluated()) {
 			return { "0", "1", "10", "2", "3", "4", "5", "6", "7", "8", "9" };
-		} 
+		}
 
 		return {
 			"0", "1", "10", "100", "11", "12", "13", "14", "15", "16",

@@ -1,4 +1,4 @@
-#pragma once 
+#pragma once
 
 //@begin_non_modules
 //std
@@ -18,6 +18,7 @@
 //@export
 namespace natl {
 	template<typename DataType, Size Number>
+		requires(Number > 0)
 	struct Array {
 	public:
 		using value_type = DataType;
@@ -36,7 +37,7 @@ namespace natl {
 		using const_reverse_iterator = ReverseConstContiguousIterator<DataType>;
 
 		constexpr static natl::Size number = Number;
-	public:	
+	public:
 		DataType dataStorage[Number];
 
 	public:
@@ -54,7 +55,7 @@ namespace natl {
 		constexpr Array& self() noexcept { return *this; }
 		constexpr const Array& self() const noexcept { return *this; }
 
-		//assignment 
+		//assignment
 		constexpr Array& operator=(const Array&) noexcept = default;
 		constexpr Array& operator=(Array&&) noexcept = default;
 		constexpr Array& operator=(std::initializer_list<DataType> ilist) noexcept {
@@ -78,10 +79,10 @@ namespace natl {
 		constexpr reference back() noexcept { return at(backIndex()); }
 		constexpr const_reference back() const noexcept { return at(backIndex()); }
 
-		constexpr pointer data() noexcept { 
-			return dataStorage; 
+		constexpr pointer data() noexcept {
+			return dataStorage;
 		}
-		constexpr const_pointer data() const noexcept { 
+		constexpr const_pointer data() const noexcept {
 			return dataStorage;
 		};
 
@@ -183,7 +184,7 @@ namespace natl {
 		constexpr MDArray(const MDArray&) noexcept = default;
 		constexpr MDArray(MDArray&&) noexcept = default;
 		constexpr MDArray(std::initializer_list<DataType> ilist) noexcept requires(IsConst<DataType>) : dataArray(ilist) {};
-	
+
 		//util
 		constexpr MDArray& self() noexcept { return *this; }
 		constexpr const MDArray& self() const noexcept { return *this; }
@@ -191,7 +192,7 @@ namespace natl {
 		constexpr BaseArray& asArray() noexcept { return dataArray; }
 		constexpr const BaseArray& asArray() const noexcept { dataArray; }
 
-		//assignment 
+		//assignment
 		constexpr MDArray& operator=(const MDArray&) noexcept = default;
 		constexpr MDArray& operator=(MDArray&&) noexcept = default;
 		constexpr MDArray& operator=(std::initializer_list<DataType> ilist) noexcept {
@@ -237,7 +238,7 @@ namespace natl {
 		constexpr pointer data() noexcept { return asArray().data(); }
 		constexpr const_pointer data() const noexcept {  return asArray().data(); };
 
-		//capacity 
+		//capacity
 		constexpr Bool isEmpty() const noexcept { return !Bool(BaseArray::size()); }
 		constexpr Bool isNotEmpty() const noexcept { return !isEmpty(); }
 		constexpr operator Bool() const noexcept { return isNotEmpty(); }

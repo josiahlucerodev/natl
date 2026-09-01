@@ -2,14 +2,14 @@
 set(RESOURCE_PATH ${CMAKE_CURRENT_SOURCE_DIR})
 
 function(natl_add_test TestName TestFile)
-    get_filename_component(TestFileDir "${TestFile}" DIRECTORY)    
+    get_filename_component(TestFileDir "${TestFile}" DIRECTORY)
     set(TEST_ARGS "--timeout" "5" "--resource-path" "${CMAKE_CURRENT_SOURCE_DIR}/${TestFileDir}")
     # -- STD --
 
     #EXE
 	add_executable(${TestName} ${TestFile})
 	exe_emscripten_setup(${TestName} TRUE)
-    nact_add_test(${TestName} ${TEST_ARGS})  
+    nact_add_test(${TestName} ${TEST_ARGS})
 
 	#OPTION
 	set_target_properties(${TestName} PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin/test")
@@ -24,21 +24,21 @@ function(natl_add_test TestName TestFile)
 	if(NACTEMPLATE_WARNINGS)
 		ENABLE_WARNINGS(${TestName} TRUE)
 	endif()
-    
+
     SET_STANDARD_OUTPUT_SUB(${TestName} "tests/${TestFileDir}")
 
 	#LINK
-	target_link_libraries(${TestName}  
+	target_link_libraries(${TestName}
 		natl)
 
-    target_include_directories(${TestName}  
-        PUBLIC 
+    target_include_directories(${TestName}
+        PUBLIC
         "$CACHE{NATL_INCLUDE_DIR}"
         $<BUILD_INTERFACE:$CACHE{NATL_INCLUDE_DIR}>)
 
     #SOURCES
     foreach(target_header IN LISTS ARGN)
-		target_sources(natl 
+		target_sources(natl
 			PRIVATE
 				$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/${target_header}>
 				$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/${target_header}>)
@@ -50,7 +50,7 @@ function(natl_add_test TestName TestFile)
         set(TestNameModules "${TestName}_Modules")
         add_executable(${TestNameModules} "modules/tests/${TestFile}m")
         exe_emscripten_setup(${TestNameModules} TRUE)
-        nact_add_test(${TestNameModules} ${TEST_ARGS}) 
+        nact_add_test(${TestNameModules} ${TEST_ARGS})
 
         #OPTION
         set_target_properties(${TestNameModules} PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin/test/modules")
@@ -65,15 +65,15 @@ function(natl_add_test TestName TestFile)
         if(NACTEMPLATE_WARNINGS)
             ENABLE_WARNINGS(${TestNameModules} TRUE)
         endif()
-        
+
         SET_STANDARD_OUTPUT_SUB(${TestNameModules} "tests/modules/${TestFileDir}")
 
         #LINK
-	    target_link_libraries(${TestNameModules}  
+	    target_link_libraries(${TestNameModules}
 		    natlModules)
 
-        target_include_directories(${TestNameModules}  
-            PUBLIC 
+        target_include_directories(${TestNameModules}
+            PUBLIC
             "$CACHE{NATL_MODULES_INCLUDE_DIR}"
             $<BUILD_INTERFACE:$CACHE{NATL_MODULES_INCLUDE_DIR}>)
 
@@ -83,9 +83,9 @@ function(natl_add_test TestName TestFile)
             get_filename_component(argDir ${arg} DIRECTORY)
             set(moduleArg "modules/tests/${argDir}/${argName}.ixx")
 
-            target_sources(${TestNameModules} 
+            target_sources(${TestNameModules}
 		        PUBLIC
-			        FILE_SET CXX_MODULES FILES		
+			        FILE_SET CXX_MODULES FILES
 				    ${moduleArg})
         endforeach()
     endif()
@@ -95,12 +95,14 @@ endfunction()
 NATL_ADD_TEST(NatlAnyUT container/any_utest.cpp)
 NATL_ADD_TEST(NatlArrayUT container/array_utest.cpp)
 NATL_ADD_TEST(NatlBatchPoolUT container/batchPool_utest.cpp)
+NATL_ADD_TEST(NatlBitArrayUT container/bitArray_utest.cpp)
 NATL_ADD_TEST(NatlColonyUT container/colony_utest.cpp)
 NATL_ADD_TEST(NatlDynArrayUT container/dynArray_utest.cpp)
 NATL_ADD_TEST(NatlFlatHashMapUT container/flatHashMap_utest.cpp container/hashMapTests.h)
 NATL_ADD_TEST(NatlFlatHashSetUT container/flatHashSet_utest.cpp container/hashSetTests.h)
 NATL_ADD_TEST(NatlFunctionalUT container/functional_utest.cpp)
 NATL_ADD_TEST(NatlHeapArrayUT container/heapArray_utest.cpp)
+NATL_ADD_TEST(NatlPagedSparseArrayUT container/pagedSparseArray_utest.cpp)
 NATL_ADD_TEST(NatlPersistentHashMapUT container/persistentHashMap_utest.cpp container/hashMapTests.h)
 NATL_ADD_TEST(NatlPersistentHashSetUT container/persistentHashSet_utest.cpp container/hashSetTests.h)
 NATL_ADD_TEST(NatlPriorityQueueUT container/priorityQueue_utest.cpp)

@@ -13,6 +13,7 @@ natl/container/flatHashSet.h
 natl/container/functional.h
 natl/container/functionCache.h
 natl/container/heapArray.h
+natl/container/pagedSparseArray.h
 natl/container/partitioner.h
 natl/container/persistentHashMap.h
 natl/container/persistentHashSet.h
@@ -153,6 +154,7 @@ modules/natl/container/flatHashSet.ixx
 modules/natl/container/functional.ixx
 modules/natl/container/functionCache.ixx
 modules/natl/container/heapArray.ixx
+modules/natl/container/pagedSparseArray.ixx
 modules/natl/container/partitioner.ixx
 modules/natl/container/persistentHashMap.ixx
 modules/natl/container/persistentHashSet.ixx

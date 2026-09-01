@@ -1,21 +1,21 @@
-#pragma once 
+#pragma once
 
 //@begin_non_modules
 //own
 #include "compilerDependent.h"
 
-//intrinsics 
+//intrinsics
 #ifdef NATL_COMPILER_MSVC
 #include <intrin.h>
 #endif //NATL_COMPILER_MSVC
 
-#if defined(NATL_COMPILER_GCC) 
+#if defined(NATL_COMPILER_GCC)
 #ifdef NATL_ARCHITECTURE_X86_64
-#include <x86intrin.h> 
+#include <x86intrin.h>
 #else
 static_assert(false, "natl: unknown architecture");
 #endif
-#endif 
+#endif
 //@end_non_modules
 
 //own
@@ -24,7 +24,7 @@ static_assert(false, "natl: unknown architecture");
 #include "utility.h"
 
 
-//@export 
+//@export
 namespace natl {
     template<typename Integer>
         requires(IsBuiltInUnsignedIntegerC<Integer>)
@@ -91,10 +91,10 @@ namespace natl {
         return __builtin_bit_cast(To, from);
 #else
         static_assert(false, "natl: bitCast not implemented for compiler");
-#endif 
+#endif
     }
 
-    //popcount 
+    //popcount
     namespace impl {
         NATL_FORCE_INLINE constexpr ui8 popcountImplS(const ui8 value) noexcept {
             using namespace natl::literals;
@@ -226,7 +226,7 @@ namespace natl {
         NATL_FORCE_INLINE i64 popcountImplD(const i64 value) noexcept {
             return static_cast<i64>(popcountImplD(bitCast<ui64, i64>(value)));
         }
-#else 
+#else
         static_assert(false, "natl: no implemenation of dependent popcount");
 #endif
 
@@ -295,7 +295,7 @@ namespace natl {
         return popcount(bitCast<UIntOfByteSize<sizeof(FloatType)>, FloatType>(value));
     }
 
-    //bitscan forward 
+    //bitscan forward
     namespace impl {
         NATL_FORCE_INLINE constexpr Bool bitscanForwardImplS(const ui8 value, ui8& indexDst) noexcept {
             using namespace natl::literals;
@@ -496,7 +496,7 @@ namespace natl {
             indexDst = static_cast<ui64>(altIndexDst);
             return result;
         }
-#else 
+#else
         static_assert(false, "natl: no implemenation of dependent bitscan forward");
 #endif
     }
@@ -563,8 +563,8 @@ namespace natl {
         return bitscanForward(bitCast<UIntOfByteSize<sizeof(FloatType)>, FloatType>(value), indexDst);
     }
 
-    template<typename NumericType> 
-        requires(IsBuiltInNumericC<NumericType>) 
+    template<typename NumericType>
+        requires(IsBuiltInNumericC<NumericType>)
     NATL_FORCE_INLINE constexpr NumericType bitscanForward(const NumericType value) noexcept {
         NumericType result = 0;
         bitscanForward(value, result);
@@ -888,7 +888,7 @@ namespace natl {
             indexDst = static_cast<ui64>(altIndexDst);
             return result;
         }
-#else 
+#else
         static_assert(false, "natl: no implemenation of dependent bitscan forward");
 #endif
     }
@@ -1027,7 +1027,7 @@ namespace natl {
         if constexpr (IsBuiltInFloatingPointC<NumericType>) {
             using unsigned_integer_type = UIntOfByteSize<sizeof(NumericType)>;
             return bitCast<NumericType, unsigned_integer_type>(
-                bitCast<unsigned_integer_type, NumericType>(lhs) 
+                bitCast<unsigned_integer_type, NumericType>(lhs)
                 & bitCast<unsigned_integer_type, NumericType>(rhs)
             );
         } else {
@@ -1073,7 +1073,7 @@ namespace natl {
         }
     }
 
-    //is power of two 
+    //is power of two
     template<typename IntegerType>
         requires(IsBuiltInIntegerC<IntegerType>)
     NATL_FORCE_INLINE constexpr Bool isPowerOf2(const IntegerType value) noexcept {
@@ -1087,6 +1087,15 @@ namespace natl {
             return popcount(value) == 1;
         }
     }
+
+    template<auto vInteger>
+    concept IsPowerOf2C = IsBuiltInIntegerC<decltype(vInteger)> && isPowerOf2<vInteger>();
+    template<auto vInteger>
+        requires(IsBuiltInIntegerC<decltype(vInteger)>)
+    constexpr inline natl::Bool IsPowerOf2 = IsPowerOf2<vInteger>;
+    template<auto vInteger>
+        requires(IsBuiltInIntegerC<decltype(vInteger)>)
+    struct IsPowerOf2V : natl::BoolConstant<IsPowerOf2<vInteger>> {};
 
     template<typename IntegerType>
         requires(IsBuiltInIntegerC<IntegerType>)

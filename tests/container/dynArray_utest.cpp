@@ -18,12 +18,13 @@ struct DynArrayTestSuiteTests {
 	constexpr static void tests(test_suite_type& ts) noexcept {
 		const natl::Size count = ts.compileOrRun(10, 1000);
 
-		natl::SmallDynArray<natl::Size, 5> smallDynArray;
+		natl::SmallDynArray<natl::Size, 1> smallDynArray;
+
 		for (natl::Size i : natl::Repeat(count)) {
 			smallDynArray.pushBack(i);
 		}
 		natl::DynArray<natl::Size> dynArray = smallDynArray.getAlloctionMoveAdapater();
-		
+
 		for (natl::Size i : natl::Repeat(count)) {
 			dynArray.pushBack(i);
 		}
@@ -36,6 +37,7 @@ struct DynArrayTestSuiteTests {
 			dynArray.pushBack(i);
 			ts.assertEqual(i, dynArray.at(count + i));
 		}
+
 	}
 	NATL_REGISTER_TEST_CONSTEXPR(tests);
 };

@@ -1,130 +1,196 @@
-#pragma once 
+#pragma once
 
-//own
+// own
 #include "../util/basicTypes.h"
 #include "../util/bits.h"
 #include "stringView.h"
 
+#include <type_traits>
+
 //@export
 namespace natl {
-
 	struct BitIndex {
-	public:
-		Size index;
-		constexpr BitIndex() = default;
-		constexpr ~BitIndex() = default;
-		constexpr BitIndex(const Size indexIn) : index(indexIn) {}
+		Size index = 0;
+
+		constexpr BitIndex() noexcept = default;
+		constexpr explicit BitIndex(const Size indexIn) noexcept
+			: index(indexIn) {
+		}
 	};
 
 	template<typename BitStorageType, Size bitCountT>
+		requires (bitCountT > 0)
 	struct BitArrayBase {
 	public:
-		constexpr static const Size bitCount = bitCountT;
-		constexpr static const Size wordCount = bitCount == 0 ? 0 : (sizeof(BitStorageType) * 8) % bitCount;
-		constexpr static const Size byteCount = sizeof(BitStorageType) * 8 * wordCount;
-		constexpr static const Size bitsPerWordCount = sizeof(BitStorageType) * 8;
-		BitStorageType bitsArray[wordCount];
+		using storage_type = BitStorageType;
+
+		static constexpr Size bitCount = bitCountT;
+		static constexpr Size bitsPerWordCount = sizeof(BitStorageType) * 8;
+
+		// ceil(bitCount / bitsPerWordCount)
+		static constexpr Size wordCount = (bitCount / bitsPerWordCount) + ((bitCount % bitsPerWordCount) != 0);
+
+		static constexpr Size byteCount = sizeof(BitStorageType) * wordCount;
+
+	private:
+		static constexpr Size lastWordIndex = wordCount - 1;
+		static constexpr Size lastWordBitCount =
+			bitCount % bitsPerWordCount;
+
+		 static constexpr BitStorageType allBitsSet() noexcept {
+			return ~BitStorageType{ 0 };
+		}
+
+		 static constexpr BitStorageType lastWordMask() noexcept {
+			 if constexpr (lastWordBitCount == 0) {
+				 return allBitsSet();
+			 } else {
+				 return static_cast<BitStorageType>((BitStorageType{ 1 } << lastWordBitCount) - 1);
+			 }
+		}
+
+		constexpr void clearUnusedBits() noexcept {
+			bitsArray[lastWordIndex] &= lastWordMask();
+		}
+
+		 static constexpr Size wordIndex(const Size bitIndex) noexcept {
+			return bitIndex / bitsPerWordCount;
+		}
+
+		 static constexpr BitStorageType bitMask(const Size bitIndex) noexcept {
+			return static_cast<BitStorageType>(BitStorageType{ 1 } << (bitIndex % bitsPerWordCount));
+		}
 
 	public:
-		struct reference {
-			BitArrayBase* bitArrayPtr;
-			Size index;
-		public:
-			constexpr reference() : bitArrayPtr(nullptr), index(0) {}
-			constexpr reference(BitArrayBase* const bitArrayPtrIn, const Size indexIn) noexcept : 
-				bitArrayPtr(bitArrayPtrIn), index(indexIn) {}
-			constexpr ~reference() = default;
+		BitStorageType bitsArray[wordCount]{};
 
-			constexpr reference& operator=(const Bool value) noexcept {
-				return bitArrayPtr->set(index, value);
-			}
-			constexpr reference& operator=(const reference& ref) noexcept {
-				bitArrayPtr->set(index, static_cast<Bool>(ref));
+
+		struct Reference {
+		private:
+			BitArrayBase* bitArrayPtr = nullptr;
+			Size index = 0;
+
+		public:
+			constexpr Reference() noexcept = default;
+
+			constexpr Reference(BitArrayBase* bitArrayPtrIn, const Size indexIn) noexcept
+				: bitArrayPtr(bitArrayPtrIn), index(indexIn) {}
+
+			constexpr Reference& operator=(const Bool value) noexcept {
+				bitArrayPtr->set(index, value);
 				return *this;
 			}
-			constexpr reference& flip() noexcept {
-				bitArrayPtr->flip(index);
-				return *this;
+			constexpr Reference& operator=(const Reference& other) noexcept {
+				return *this = static_cast<Bool>(other);
 			}
+
 			constexpr Bool operator~() const noexcept {
 				return !bitArrayPtr->test(index);
 			}
-
 			constexpr operator Bool() const noexcept {
 				return bitArrayPtr->test(index);
 			}
+
+			constexpr Reference& flip() noexcept {
+				bitArrayPtr->flip(index);
+				return *this;
+			}
 		};
-		
+
+		using reference = Reference;
+
+		struct ConstReference {
+		private:
+			const BitArrayBase* bitArrayPtr = nullptr;
+			Size index = 0;
+
+		public:
+			constexpr ConstReference() noexcept = default;
+
+			constexpr ConstReference(const BitArrayBase* bitArrayPtrIn, const Size indexIn) noexcept
+				: bitArrayPtr(bitArrayPtrIn), index(indexIn) {}
+
+			 constexpr Bool operator~() const noexcept {
+				return !bitArrayPtr->test(index);
+			}
+			 constexpr operator Bool() const noexcept {
+				return bitArrayPtr->test(index);
+			}
+		};
+
+		using const_reference = ConstReference;
+
+
+		// constructors
+		constexpr BitArrayBase() noexcept = default;
+
+		constexpr BitArrayBase(const BitIndex bitIndex) noexcept {
+			set(bitIndex.index);
+		}
+
+		constexpr BitArrayBase(const BitIndex bitIndex, const Bool value) noexcept {
+			set(bitIndex.index, value);
+		}
+		constexpr explicit BitArrayBase(const BitStorageType value) noexcept {
+			bitsArray[0] = value;
+			clearUnusedBits();
+		}
+
+		constexpr explicit BitArrayBase(const StringView value) noexcept {
+			const Size countToRead = value.size() < bitCount ? value.size() : bitCount;
+			for (Size i = 0; i < countToRead; ++i) {
+				if (value[i] == '1') {
+					set(i);
+				}
+			}
+		}
+
+		// util
+	private:
+		 constexpr BitArrayBase& self() noexcept {
+			return *this;
+		}
+		 constexpr const BitArrayBase& self() const noexcept {
+			return *this;
+		}
+
 	public:
-		//constructor
-		constexpr BitArrayBase() : bitsArray() {}
-		constexpr BitArrayBase(const BitIndex bitIndex) {
-			reset();
-			set(bitIndex, true);
-		}
-		constexpr BitArrayBase(const BitIndex bitIndex, const Bool value) {
-			reset();
-			set(bitIndex, value);
-		}
-		constexpr BitArrayBase(const BitStorageType value) noexcept {
-			if constexpr (wordCount != 0) {
-				bitsArray[0] = value;
-			}
-		};
-		constexpr BitArrayBase(const StringView value) noexcept {
-			if constexpr (wordCount != 0) {
-				bitsArray[0] = value;
-			} else {
-				for (Size bitIndex = 0; bitIndex < bitCount && bitIndex < value.size(); bitIndex++) {
-					if (value[bitIndex] == '1') {
-						set(bitIndex, true);
-					} else {
-						set(bitIndex, false);
-					}
-				}
-			}
-		};
+		// size
+		static constexpr Size size() noexcept { return bitCount; }
+		static constexpr Size bitSize() noexcept { return bitCount; }
+		static constexpr Size byteSize() noexcept { return byteCount; }
 
-		//deconstructor
-		constexpr ~BitArrayBase() = default;
 
-		//util
-		constexpr BitArrayBase& self() noexcept { return self(); }
-		constexpr const BitArrayBase& self() const noexcept { return self(); }
-
-		//size
-		constexpr static Size size() noexcept { return bitCount; }
-		constexpr static Size bitSize() noexcept { return bitCount; }
-		constexpr static Size byteSize() noexcept { return byteCount; }
-
-		//modifiers
+		// modifiers
 		constexpr BitArrayBase& set() noexcept {
-			if (isConstantEvaluated()) {
-				for (Size i = 0; i < wordCount; i++) {
-					bitsArray[i] = ~BitStorageType(0);
-				}
-			} else {
-				memset(&bitsArray, 0xFF, sizeof(bitsArray));
+			for (Size i = 0; i < wordCount; ++i) {
+				bitsArray[i] = allBitsSet();
 			}
-		}
 
-		constexpr BitStorageType& atWord(const Size index) noexcept {
-			return bitsArray[index / bitsPerWordCount];
-		}
-
-		constexpr BitArrayBase& set(const Size index, Bool value = true) noexcept {
-			BitStorageType& word = atWord(index);
-			const BitStorageType& bitMask = BitStorageType{1} << index % bitsPerWordCount;
-			if (value) {
-				word |= bitMask;
-			} else {
-				word &= ~bitMask;
-			}
+			clearUnusedBits();
 			return self();
 		}
+
+		constexpr BitArrayBase& set(const Size index, const Bool value = true) noexcept {
+			if (index >= bitCount) {
+				return self();
+			}
+
+			BitStorageType& word = bitsArray[wordIndex(index)];
+			const BitStorageType mask = bitMask(index);
+
+			if (value) {
+				word |= mask;
+			} else {
+				word &= static_cast<BitStorageType>(~mask);
+			}
+
+			return self();
+		}
+
 		constexpr BitArrayBase& reset() noexcept {
-			for (Size i = 0; i < wordCount; i++) {
-				bitsArray[i] = ~bitsArray[i];
+			for (Size i = 0; i < wordCount; ++i) {
+				bitsArray[i] = BitStorageType{ 0 };
 			}
 			return self();
 		}
@@ -134,118 +200,129 @@ namespace natl {
 		}
 
 		constexpr BitArrayBase& flip() noexcept {
-			for (Size i = 0; i < wordCount; i++) {
-				bitsArray[i] = ~bitsArray[i];
+			for (Size i = 0; i < wordCount; ++i) {
+				bitsArray[i] = static_cast<BitStorageType>(~bitsArray[i]);
 			}
+			clearUnusedBits();
 			return self();
 		}
-		
-		//accessors
-		constexpr Bool test(const Size index) const noexcept {
-			return (bitsArray[index / bitsPerWordCount] & (BitStorageType{1} << index % bitsPerWordCount)) != 0;
-		}
-		constexpr static Size endWordIndex() noexcept {
-			return bitCount == 0 ? 0 : wordCount - 1;
-		}
-		constexpr Bool all() const noexcept {
-			if constexpr (bitCount == 0) {
-				return true;
-			}
 
-			constexpr Bool padding = bitCount % bitsPerWordCount == 0;
-			for (Size i = 0; i < endWordIndex()  + padding; i++) {
-				if (bitsArray[i] != ~static_cast<BitStorageType>(0)) {
+		constexpr BitArrayBase& flip(const Size index) noexcept {
+			if (index >= bitCount) {
+				return self();
+			}
+			bitsArray[wordIndex(index)] ^= bitMask(index);
+			return self();
+		}
+
+		// accessors
+		constexpr Bool test(const Size index) const noexcept {
+			if (index >= bitCount) {
+				return false;
+			}
+			return (bitsArray[wordIndex(index)] & bitMask(index)) != 0;
+		}
+
+		constexpr Bool all() const noexcept {
+			for (Size i = 0; i + 1 < wordCount; ++i) {
+				if (bitsArray[i] != allBitsSet()) {
 					return false;
 				}
 			}
-
-			return padding || 
-				bitsArray[endWordIndex()] == (static_cast<BitStorageType>(1) << (bitCount % bitsPerWordCount)) - 1;
+			return (bitsArray[lastWordIndex] & lastWordMask()) == lastWordMask();
 		}
+
 		constexpr Bool any() const noexcept {
-			for (size_t i = 0; i < wordCount; i++) {
+			for (Size i = 0; i + 1 < wordCount; ++i) {
 				if (bitsArray[i] != 0) {
 					return true;
 				}
 			}
-			return false;
+			return (bitsArray[lastWordIndex] & lastWordMask()) != 0;
 		}
+
 		constexpr Bool none() const noexcept {
 			return !any();
 		}
+
 		constexpr Size count() const noexcept {
-			Size countAccumulater = 0;
-			for (Size i = 0; i < wordCount; i++) {
-				countAccumulater = popcount<BitStorageType>(bitsArray[i]);
+			Size accumulator = 0;
+			for (Size i = 0; i + 1 < wordCount; ++i) {
+				accumulator += popcount(bitsArray[i]);
 			}
-			return countAccumulater;
-		}
-		constexpr reference operator[] (const Size index) const noexcept {
-			return reference(&self(), index);
+			accumulator += popcount(static_cast<BitStorageType>(bitsArray[lastWordIndex] & lastWordMask()));
+			return accumulator;
 		}
 
-		//operators 
+		// indexing
+		constexpr reference operator[](const Size index) noexcept {
+			return reference(this, index);
+		}
+		constexpr const_reference operator[](const Size index) const noexcept {
+			return const_reference(this, index);
+		}
+
+
+		// operators
 		constexpr Bool operator==(const BitArrayBase& rhs) const noexcept {
-			if (isConstantEvaluated()) {
-				for (Size i = 0; i < wordCount; i++) {
-					if (bitsArray[i] != rhs.bitsArray[i]) {
-						return false;
-					}
+			for (Size i = 0; i + 1 < wordCount; ++i) {
+				if (bitsArray[i] != rhs.bitsArray[i]) {
+					return false;
 				}
-				return true;
-			} else {
-				return memcmp(&bitsArray, rhs.bitsArray, sizeof(bitsArray)) == 0;
 			}
+			return (bitsArray[lastWordIndex] & lastWordMask()) == (rhs.bitsArray[lastWordIndex] & lastWordMask());
 		}
 		constexpr Bool operator!=(const BitArrayBase& rhs) const noexcept {
 			return !(*this == rhs);
 		}
-		constexpr BitArrayBase& operator&=(const BitArrayBase& other) noexcept {
-			for (Size i = 0; i < wordCount; i++) {
-				bitsArray[i] &= other.bitsArray[i];
+		constexpr BitArrayBase& operator&=(const BitArrayBase& rhs) noexcept {
+			for (Size i = 0; i < wordCount; ++i) {
+				bitsArray[i] &= rhs.bitsArray[i];
 			}
+			clearUnusedBits();
+			return self();
 		}
-		constexpr BitArrayBase& operator|=(const BitArrayBase& other) noexcept {
-			for (Size i = 0; i < wordCount; i++) {
-				bitsArray[i] |= other.bitsArray[i];
+		constexpr BitArrayBase& operator|=(const BitArrayBase& rhs) noexcept {
+			for (Size i = 0; i < wordCount; ++i) {
+				bitsArray[i] |= rhs.bitsArray[i];
 			}
+			clearUnusedBits();
+			return self();
 		}
-		constexpr BitArrayBase& operator^=(const BitArrayBase& other) noexcept {
-			for (Size i = 0; i < wordCount; i++) {
-				bitsArray[i] ^= other.bitsArray[i];
+		constexpr BitArrayBase& operator^=(const BitArrayBase& rhs
+			) noexcept {
+			for (Size i = 0; i < wordCount; ++i) {
+				bitsArray[i] ^= rhs.bitsArray[i];
 			}
+			clearUnusedBits();
+			return self();
 		}
 		constexpr BitArrayBase operator~() const noexcept {
-			BitArrayBase temp = self();
-			temp.flip();
-			return temp;
+			BitArrayBase result = *this;
+			result.flip();
+			return result;
 		}
-		constexpr BitArrayBase operator&(BitArrayBase& rhs) noexcept { 
-			BitArrayBase temp;
-			for(Size i = 0; i < wordCount; i++) {
-				temp.bitsArray[i] = self().bitsArray[i] & rhs.bitsArray[i];
-			}
-			return temp;
+		constexpr BitArrayBase operator&(const BitArrayBase& rhs) const noexcept {
+			BitArrayBase result = *this;
+			result &= rhs;
+			return result;
 		}
-		constexpr BitArrayBase operator|(BitArrayBase& rhs) noexcept {
-			BitArrayBase temp;
-			for (Size i = 0; i < wordCount; i++) {
-				temp.bitsArray[i] = self().bitsArray[i] |  rhs.bitsArray[i];
-			}
-			return temp;
+		constexpr BitArrayBase operator|(const BitArrayBase& rhs) const noexcept {
+			BitArrayBase result = *this;
+			result |= rhs;
+			return result;
 		}
-		constexpr BitArrayBase operator^(BitArrayBase& rhs) noexcept {
-			BitArrayBase temp;
-			for (Size i = 0; i < wordCount; i++) {
-				temp.bitsArray[i] = self().bitsArray[i] ^ rhs.bitsArray[i];
-			}
-			return temp;
+		constexpr BitArrayBase operator^(const BitArrayBase& rhs) const noexcept {
+			BitArrayBase result = *this;
+			result ^= rhs;
+			return result;
 		}
-		constexpr operator Bool() const noexcept {
-			return any(); 
+		constexpr explicit operator Bool() const noexcept {
+			return any();
 		}
 	};
 
-	template<Size bitCount>	
+
+	template<Size bitCount>
 	using BitArray = BitArrayBase<ui32, bitCount>;
 }

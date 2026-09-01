@@ -14,7 +14,7 @@
 #include "allocator.h"
 #include "compare.h"
 
-//@export 
+//@export
 namespace natl {
 #ifdef NATL_COMPILER_MSVC
 #pragma warning(push)
@@ -76,7 +76,7 @@ namespace natl {
 	using IteratorCategory = typename IteratorTraits<Iter>::iterator_category;
 
 	template<typename Iter>
-	concept IsIterator = requires() { 
+	concept IsIterator = requires() {
 		typename Iter::iterator_category;
 	};
 
@@ -217,19 +217,34 @@ namespace natl {
 	concept IsContiguousIteratorC = IsIterPtr<Iter> && IsSame<IteratorCategory<Iter>, ContiguousIteratorTag>;
 	template <typename Iter> constexpr inline Bool IsContiguousIterator = IsContiguousIteratorC<Iter>;
 	template <typename Iter> struct IsContiguousIteratorV : BoolConstant<IsContiguousIteratorC<Iter>> {};
-	
+
 	template <typename Iter>
 	concept IsRandomAccessIteratorC = IsIterPtr<Iter> && (IsSame<IteratorCategory<Iter>, RandomAccessIteratorTag> || IsContiguousIteratorC<Iter>);
 	template <typename Iter> constexpr inline Bool IsRandomAccessIterator = IsRandomAccessIteratorC<Iter>;
 	template <typename Iter> struct IsRandomAccessIteratorV : BoolConstant<IsRandomAccessIteratorC<Iter>> {};
-	
+
 	template <typename Iter>
 	concept IsBidirectionalIteratorC = IsIterPtr<Iter> && IsSame<IteratorCategory<Iter>, BidirectionalIteratorTag>;
 	template <typename Iter> constexpr inline Bool IsBidirectionalIterator = IsBidirectionalIteratorC<Iter>;
 	template <typename Iter> struct IsBidirectionalIteratorV : BoolConstant<IsBidirectionalIteratorC<Iter>> {};
 
 	template <typename Iter>
-	constexpr typename IteratorCategory<Iter>::difference_type 
+	concept IsInputIteratorC = requires(Iter it) {
+		typename IteratorTraits<Iter>::value_type;
+		typename IteratorTraits<Iter>::difference_type;
+		typename IteratorTraits<Iter>::iterator_category;
+		{ *it };
+		{ ++it } -> SameAs<Iter&>;
+		{ it++ };
+		{ it == it } -> ConvertibleTo<bool>;
+		{ it != it } -> ConvertibleTo<bool>;
+	} && IsSameC<IteratorCategory<Iter>, InputIteratorTag> || IsContiguousIteratorC<Iter> || IsRandomAccessIteratorC<Iter> || IsBidirectionalIteratorC<Iter>;
+	template <typename Iter> constexpr inline Bool IsInputIterator = IsInputIteratorC<Iter>;
+	template <typename Iter> struct IsInputIteratorV : BoolConstant<IsInputIteratorC<Iter>> {};
+
+
+	template <typename Iter>
+	constexpr typename IteratorCategory<Iter>::difference_type
 		iterDistance(Iter first, Iter last) noexcept {
 		typename IteratorTraits<Iter>::difference_type distance = 0;
 		while (first != last) {
@@ -255,7 +270,7 @@ namespace natl {
 		return *iter;
 	}
 
-	template<typename Iter> 
+	template<typename Iter>
 		requires(IsIterator<Iter>)
 	struct ReverseIterator {
 	public:
@@ -271,29 +286,29 @@ namespace natl {
 	protected:
 		iterator_type iterStorage;
 	public:
-		//constructor 
+		//constructor
 		constexpr ReverseIterator() noexcept = default;
 		constexpr explicit ReverseIterator(const iterator_type& iter) noexcept : iterStorage(iter) {}
 		template<typename OtherIter>
 			requires(IsIterator<Iter> && ConvertibleTo<const OtherIter&, Iter>)
-		constexpr explicit ReverseIterator(const ReverseIterator<OtherIter>& other) : 
+		constexpr explicit ReverseIterator(const ReverseIterator<OtherIter>& other) :
 			iterStorage(static_cast<iterator_type>(other)) {}
 
 		//destructor
 		constexpr ~ReverseIterator() noexcept = default;
 
-		//util 
+		//util
 		constexpr ReverseIterator& self() noexcept { return *this; }
 		constexpr const ReverseIterator& self() const noexcept { return *this; }
 
-		//assignment 
+		//assignment
 		template<typename OtherIter>
 			requires(IsIterator<OtherIter> && AssignableFromC<Iter&, const OtherIter&>)
 		constexpr ReverseIterator& operator=(const ReverseIterator<OtherIter>& other) noexcept {
 			iterStorage = other;
 		}
 
-		//access 
+		//access
 		constexpr iterator_type base() const noexcept { return iterStorage; }
 		constexpr reference operator*() const { Iter temp = iterStorage; return *--temp; }
 		constexpr pointer operator->() const requires (IsPointer<Iter> || requires (const Iter iter) { iter.operator->(); }) {
@@ -481,7 +496,7 @@ namespace natl {
 					return self();
 				}
 			}
-			
+
 			dataPtr += offset;
 			return self();
 		}

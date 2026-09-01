@@ -1,4 +1,4 @@
-#pragma once 
+#pragma once
 
 //own
 #include "basicTypes.h"
@@ -12,7 +12,7 @@ namespace natl {
 	private:
 		DataType* dataPtr;
 	public:
-		//constructor 
+		//constructor
 		constexpr OptionPtr() noexcept : dataPtr(nullptr) {}
 		constexpr OptionPtr(const OptionPtr& other) noexcept : dataPtr(other.dataPtr) {}
 		constexpr OptionPtr(OptionPtr&& other) noexcept : dataPtr(other.dataPtr) {
@@ -22,14 +22,14 @@ namespace natl {
 		constexpr OptionPtr(NullptrType) noexcept : dataPtr(nullptr) {}
 		constexpr OptionPtr(OptionEmpty) noexcept : dataPtr(nullptr) {}
 
-		//destructor 
+		//destructor
 		constexpr ~OptionPtr() noexcept = default;
 
-		//util 
+		//util
 		constexpr OptionPtr& self() noexcept { return *this; }
 		constexpr const OptionPtr& self() const noexcept { return *this; }
 
-		//assignment 
+		//assignment
 		constexpr OptionPtr& operator=(const OptionPtr& other) noexcept {
 			dataPtr = other.dataPtr;
 			return self();
@@ -66,18 +66,15 @@ namespace natl {
 		constexpr const DataType* getPtr() const noexcept { return dataPtr; }
 		constexpr const DataType* operator->() const noexcept { return dataPtr; }
 		constexpr DataType* operator->() noexcept { return dataPtr; }
-		constexpr const DataType& operator*() const& noexcept { return *dataPtr; }
-		constexpr DataType& operator*() & noexcept { return *dataPtr; }
-		constexpr const DataType&& operator*() const&& noexcept { return *dataPtr; }
-		constexpr DataType&& operator*() && noexcept { return *dataPtr; }
+		constexpr const DataType& operator*() const noexcept { return *dataPtr; }
+		constexpr DataType& operator*() noexcept { return *dataPtr; }
 
-
-		//modifiers 
+		//modifiers
 		constexpr void reset() noexcept {
 			dataPtr = nullptr;
 		}
 
-		//compare 
+		//compare
 		constexpr Bool operator==(const OptionPtr other) const noexcept { return dataPtr == other.dataPtr; }
 		constexpr Bool operator!=(const OptionPtr other) const noexcept { return dataPtr != other.dataPtr; }
 		constexpr Bool operator<(const OptionPtr other) const noexcept { return dataPtr < other.dataPtr; }

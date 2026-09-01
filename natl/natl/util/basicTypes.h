@@ -8,8 +8,8 @@
 //@export
 namespace natl {
 	using GenericInt = int;
-	
-#if defined(NATL_COMPILER_EMSCRIPTEN) 
+
+#if defined(NATL_COMPILER_EMSCRIPTEN)
 	using Bool = bool;
 
 	using i8 = signed char;
@@ -69,7 +69,7 @@ namespace natl {
 	using StdSize = unsigned __int64;
 #else
 	static_assert("natl: basic types not implemented");
-#endif 
+#endif
 
 
 	template<Size>
@@ -140,7 +140,7 @@ namespace natl {
 
 	template<Size Alignment>
 	using AlignedByte = AlignedType<Byte, Alignment>;
-	
+
 	struct Dummy {};
 
 	struct IgnoreType {
@@ -167,21 +167,52 @@ namespace natl {
 	template<> struct IntOfByteSizeT<sizeof(i16)> { using type = i16; };
 	template<> struct IntOfByteSizeT<sizeof(i32)> { using type = i32; };
 	template<> struct IntOfByteSizeT<sizeof(i64)> { using type = i64; };
+	template<Size ByteSize> using IntOfByteSize = typename IntOfByteSizeT<ByteSize>::type;
 
 	template<Size ByteSize> struct UIntOfByteSizeT;
 	template<> struct UIntOfByteSizeT<sizeof(ui8)> { using type = ui8; };
 	template<> struct UIntOfByteSizeT<sizeof(ui16)> { using type = ui16; };
 	template<> struct UIntOfByteSizeT<sizeof(ui32)> { using type = ui32; };
 	template<> struct UIntOfByteSizeT<sizeof(ui64)> { using type = ui64; };
-
-	template<Size ByteSize> using IntOfByteSize = typename IntOfByteSizeT<ByteSize>::type;
 	template<Size ByteSize> using UIntOfByteSize = typename UIntOfByteSizeT<ByteSize>::type;
 
-	template<Size ByteSize> struct FloatOfByteSizeT; 
+	template<Size ByteSize> struct FloatOfByteSizeT;
 	template<> struct FloatOfByteSizeT<sizeof(f32)> { using type = f32; };
 	template<> struct FloatOfByteSizeT<sizeof(f64)> { using type = f64; };
-
 	template<Size ByteSize> using FloatOfByteSize = typename FloatOfByteSizeT<ByteSize>::type;
+
+	template<Size MaxN> struct MinUIntT {
+		using type = decltype([]() {
+				if constexpr (MaxN <= 0xFF) {
+					return ui8();
+				} else if constexpr (MaxN <= 0xFFFF) {
+					return ui16();
+				} else if constexpr (MaxN <= 0xFFFFFFFF) {
+					return ui32();
+				} else {
+					return ui64();
+				}
+			}()
+		);
+	};
+	template<Size MaxN> using MinUInt = typename MinUIntT<MaxN>::type;
+
+	template<i64 MaxN> struct MinIntT {
+		using type = decltype([]() {
+				if constexpr (MaxN <= 0x7F) {
+					return i8();
+				} else if constexpr (MaxN <= 0x7FFF) {
+					return i16();
+				} else if constexpr (MaxN <= 0x7FFFFFFF) {
+					return i32();
+				} else {
+					return i64();
+				}
+			}()
+		);
+	};
+
+	template<i64 MaxN> using MinInt = typename MinIntT<MaxN>::type;
 
 	using SSize = IntOfByteSize<sizeof(Size)>;
 

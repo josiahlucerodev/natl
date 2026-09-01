@@ -1,4 +1,4 @@
-#pragma once 
+#pragma once
 
 //@begin_non_modules
 //std
@@ -31,12 +31,12 @@ namespace natl {
 		mutable mapped_type* valuePtr;
 
 	public:
-		//constructor 
+		//constructor
 		constexpr KeyValueRef() noexcept = default;
-		constexpr KeyValueRef(key_type* keyPtrIn, mapped_type* valuePtrIn) 
+		constexpr KeyValueRef(key_type* keyPtrIn, mapped_type* valuePtrIn)
 			: keyPtr(keyPtrIn), valuePtr(valuePtrIn) {}
 
-		//destructor 
+		//destructor
 		constexpr ~KeyValueRef() noexcept = default;
 
 		//convert
@@ -64,10 +64,10 @@ namespace natl {
 	public:
 		//constructor
 		constexpr MapInsertResult() noexcept = default;
-		constexpr MapInsertResult(Bool successfulIn, iterator locationIn) noexcept 
+		constexpr MapInsertResult(Bool successfulIn, iterator locationIn) noexcept
 			: successful(successfulIn), location(locationIn) {};
 
-		//deconstructor 
+		//deconstructor
 		constexpr ~MapInsertResult() noexcept = default;
 
 		//accessors
@@ -123,7 +123,7 @@ namespace natl {
 				}
 			}
 
-			//destructor 
+			//destructor
 			constexpr ~FlatMapHashKeyValueUnit() noexcept {
 				if (isActive) {
 					natl::deconstruct(&key_detachedLifetime.key);
@@ -174,7 +174,7 @@ namespace natl {
 				return self();
 			}
 
-			//accessors 
+			//accessors
 			constexpr Bool hasValue() const noexcept { return isActive; }
 			constexpr Bool doesNotHaveValue() const noexcept { return !hasValue(); }
 
@@ -401,14 +401,14 @@ namespace natl {
 				: mapSize(other.mapSize), storageArray(natl::move(other.storageArray)) {
 			}
 
-			//deconstructor 
+			//deconstructor
 			constexpr ~BaseFlatHashMap() noexcept {}
 
-			//util 
+			//util
 			constexpr BaseFlatHashMap& self() noexcept { return *this; }
 			constexpr const BaseFlatHashMap& self() const noexcept { return *this; }
 
-			//assignment 
+			//assignment
 			constexpr BaseFlatHashMap& operator=(const BaseFlatHashMap& other) noexcept {
 				mapSize = other.mapSize;
 				storageArray = other.storageArray;
@@ -976,7 +976,7 @@ namespace std {
 		using type = natl::Conditional<Index == 0, KeyType, ValueType>;
 	};
 
-	
+
 	template<typename KeyType, typename ValueType>
 	struct tuple_size<natl::impl::FlatMapHashKeyValueUnit<KeyType, ValueType>> {
 		constexpr static inline natl::StdSize value = 2;

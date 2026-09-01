@@ -7,11 +7,11 @@
 
 //@export
 namespace natl {
-	template<typename DataType> 
+	template<typename DataType>
 	constexpr DataType min(const DataType& a, const DataType& b) noexcept {
 		return (b < a) ? b : a;
 	}
-	template<typename DataType> 
+	template<typename DataType>
 	constexpr DataType max(const DataType& a, const DataType& b) noexcept {
 		return (b > a) ? b : a;
 	}
@@ -216,7 +216,7 @@ namespace natl {
 				constexpr Size distanceThreshold = (sizeof(ui64) * 50) / sizeof(value_type);
 				const Size distance = iterDistance(first, last);
 				if (distance <= distanceThreshold) {
-					//insertion sort if small amount of elements 
+					//insertion sort if small amount of elements
 					insertionSort(first, last, compare);
 				} else if (depthLimit == 0) {
 					//heap sort if depth is too deep
@@ -252,6 +252,38 @@ namespace natl {
 		for (auto i = last - first - 1; i > 0; --i) {
 			auto utilRg = UtilRandomGenerator(randomGeneratorRef(rg));
 			swap(first[i], first[utilRg.randomI64(0, i)]);
+		}
+	}
+
+	template <typename InputIter1, typename InputIter2, typename OutputIterator,
+		typename Compare = CompareLess<typename IteratorTraits<InputIter1>::value_type, typename IteratorTraits<InputIter2>::value_type>>
+		requires(IsInputIteratorC<InputIter1> && IsInputIteratorC<InputIter2>)
+	constexpr void mergeSorted(
+			InputIter1 first1, InputIter1 last1,
+			InputIter2 first2, InputIter2 last2,
+			OutputIterator output, Compare comp = {}) {
+		while (first1 != last1 && first2 != last2) {
+			if (comp(*first2, *first1)) {
+				*output = *first2;
+				advance(first2, 1);
+			} else {
+				*output = *first1;
+				advance(first1, 1);
+			}
+
+			advance(output, 1);
+		}
+
+		while (first1 != last1) {
+			*output = *first1;
+			advance(first1, 1);
+			advance(output, 1);
+		}
+
+		while (first2 != last2) {
+			*output = *first2;
+			advance(first2, 1);
+			advance(output, 1);
 		}
 	}
 }

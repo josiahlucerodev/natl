@@ -49,7 +49,9 @@ namespace natl {
 		size_type arraySizeAndSmallArrayFlag;
 		pointer arrayDataPtr;
 		size_type arrayCapacity;
-		value_type smallArrayStorage[bufferSize];
+		union {
+			value_type smallArrayStorage[bufferSize];
+		};
 
 		//small array 
 	private:
@@ -955,7 +957,7 @@ namespace natl {
 			const size_type newSize = index + 1;
 			factorReserve(newSize);
 			setSize(newSize);
-			return set(index, forward<value_type>(value));;
+			return set(index, forward<value_type>(value));
 		}
 
 		template<typename... Args >

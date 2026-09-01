@@ -36,8 +36,8 @@ namespace natl {
 		size_type activeBatchSize;
 
 	public:
-		//constructor 
-		constexpr MonotonicBatchPoolBase() noexcept 
+		//constructor
+		constexpr MonotonicBatchPoolBase() noexcept
 			: batchs(), activeBatchIndex(0), activeBatchSize(0) {}
 		constexpr MonotonicBatchPoolBase(const MonotonicBatchPoolBase& other) = delete;
 
@@ -55,20 +55,14 @@ namespace natl {
 				return;
 			}
 
-			if (activeBatchIndex > 1) {
-				for (size_type i = 0; i < activeBatchIndex - 1; i++) {
-					pointer batch = batchs[i];
-					deconstructAll<value_type>(batch, BatchSize);
-				}
-
-				for (size_type i = 0; i < activeBatchIndex - 1; i++) {
-					deallocateBatch(batchs[i]);
-				}
+			for (size_type i = 0; i < activeBatchIndex; ++i) {
+				deconstructAll<value_type>(batchs[i], BatchSize);
 			}
-				
-			pointer activeBatch = batchs[activeBatchIndex];
-			deconstructAll<value_type>(activeBatch, activeBatchSize);
-			deallocateBatch(activeBatch);
+			deconstructAll<value_type>(batchs[activeBatchIndex], activeBatchSize);
+
+			for (pointer batch : batchs) {
+				deallocateBatch(batch);
+			}
 		}
 
 	public:
@@ -76,11 +70,11 @@ namespace natl {
 			deconstruct();
 		}
 
-		//util 
+		//util
 		constexpr MonotonicBatchPoolBase& self() noexcept { return *this; }
 		constexpr const MonotonicBatchPoolBase& self() const noexcept { return *this; }
 
-		//assignment 
+		//assignment
 		constexpr MonotonicBatchPoolBase& operator=(const MonotonicBatchPoolBase& other) = delete;
 		constexpr MonotonicBatchPoolBase& operator=(MonotonicBatchPoolBase&& other) noexcept {
 			deconstruct();
@@ -99,9 +93,8 @@ namespace natl {
 		constexpr size_type size() const noexcept {
 			if (batchs.isEmpty()) {
 				return 0;
-			} else {
-				return (BatchSize * activeBatchIndex) + batchs[activeBatchIndex].size();
 			}
+			return (BatchSize * activeBatchIndex) + activeBatchSize;
 		}
 		constexpr size_type batchSize() const noexcept { return BatchSize; }
 		constexpr static size_type staticBatchSize() noexcept { return BatchSize; }
@@ -109,7 +102,7 @@ namespace natl {
 		constexpr Bool isNotEmpty() const noexcept { return Bool(size()); }
 		explicit constexpr operator Bool() const noexcept { return isNotEmpty(); }
 
-		//query 
+		//query
 		constexpr Bool isFrom(const_pointer ptr) const noexcept {
 			if (ptr == nullptr) {
 				return false;
@@ -124,7 +117,7 @@ namespace natl {
 			return false;
 		}
 
-		//modifiers 
+		//modifiers
 		constexpr void reserve(const size_type newCapacity) noexcept {
 			if (capacity() < newCapacity) {
 				const size_type oldNumberOfBatch = batchs.size();
@@ -135,8 +128,7 @@ namespace natl {
 				}
 			}
 		}
-		constexpr pointer allocateConstructed() noexcept 
-			requires(IsConstructibleC<value_type>) {
+		constexpr pointer allocateConstructed() noexcept requires(IsConstructibleC<value_type>) {
 			activeBatchSize++;
 
 			pointer value;
@@ -164,11 +156,53 @@ namespace natl {
 			construct<value_type>(value);
 			return value;
 		}
+
+		constexpr natl::Bool deallocatePushback() noexcept {
+			if (batchs.isEmpty() || activeBatchSize == 0) {
+				return false;
+			}
+
+			pointer value = &batchs[activeBatchIndex][activeBatchSize - 1];
+			deconstruct(value);
+
+			activeBatchSize--;
+
+			if (activeBatchSize == 0 && activeBatchIndex != 0) {
+				activeBatchIndex--;
+				activeBatchSize = BatchSize;
+			}
+
+			return true;
+		}
+
 		constexpr void clear() noexcept {
 			deconstruct();
 			batchs.clear();
 			activeBatchIndex = 0;
 			activeBatchSize = 0;
+		}
+
+		constexpr void shrinkToFit() noexcept {
+			if (batchs.isEmpty()) {
+				return;
+			}
+
+			if (activeBatchSize == 0 && activeBatchIndex == 0) {
+				for (pointer batch : batchs) {
+					deallocateBatch(batch);
+				}
+
+				batchs.clear();
+				return;
+			}
+
+			const size_type requiredBatchCount = activeBatchIndex + 1;
+
+			for (size_type i = requiredBatchCount; i < batchs.size(); ++i) {
+				deallocateBatch(batchs[i]);
+			}
+
+			batchs.resize(requiredBatchCount);
 		}
 
 	private:
@@ -254,7 +288,7 @@ namespace natl {
 		constexpr Bool isNotEmpty() const noexcept { return Bool(size()); }
 		explicit constexpr operator Bool() const noexcept { return isNotEmpty(); }
 
-		//query 
+		//query
 		constexpr Bool isFrom(const_pointer ptr) const noexcept {
 			return pool.isFrom(ptr);
 		}
@@ -344,12 +378,12 @@ namespace natl {
 			UninitializedValue<value_type> data;
 		};
 
-		//array of bytes that contain 
+		//array of bytes that contain
 		//active_mask
 		//BatchElement[]
 		using Batch = BatchElement*;
 
-		template<typename Type> 
+		template<typename Type>
 		using batchs_dyn_array_type = BatchsDynArrayType<Type>;
 		template<typename Type>
 		using free_slots_dyn_array_type = FreeSlotsDynArrayType<Type>;
@@ -366,7 +400,7 @@ namespace natl {
 		//constructor
 		constexpr BatchPoolBase() noexcept : batchs(), freeSlots(), poolSize() {}
 		constexpr BatchPoolBase(const BatchPoolBase&) noexcept = delete;
-		constexpr BatchPoolBase(BatchPoolBase&& other) noexcept : 
+		constexpr BatchPoolBase(BatchPoolBase&& other) noexcept :
 			batchs(move(other.batchs)), freeSlots(move(other.freeSlots)), poolSize(other.poolSize) {
 			other.poolSize = 0;
 		}
@@ -400,7 +434,7 @@ namespace natl {
 
 			other.poolSize = 0;
 		}
-			
+
 		//capacity
 		constexpr size_type capacity() const noexcept { return BatchSize * batchs.size(); }
 		constexpr size_type size() const noexcept {
@@ -412,7 +446,7 @@ namespace natl {
 		constexpr Bool isNotEmpty() const noexcept { return Bool(size()); }
 		explicit constexpr operator Bool() const noexcept { return isNotEmpty(); }
 
-		//query 
+		//query
 		constexpr Bool isFrom(const_pointer ptr) const noexcept {
 			if (ptr == nullptr) {
 				return false;
@@ -428,7 +462,7 @@ namespace natl {
 			return false;
 		}
 
-		//modifiers 
+		//modifiers
 		constexpr void reserve(const size_type newCapacity) noexcept {
 			if (capacity() < newCapacity) {
 				const size_type oldNumberOfBatch = batchs.size();

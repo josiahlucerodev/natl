@@ -1,7 +1,7 @@
 ﻿#VERSION
 cmake_minimum_required (VERSION 3.28)
 
-#PROJECT 
+#PROJECT
 project(natl)
 
 option(ENABLE_CODE_COVERAGE "Enable coverage reporting" OFF)
