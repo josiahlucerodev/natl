@@ -138,11 +138,11 @@ namespace natl {
 
 	template<typename... Elements>
 		requires(IsSerializableC<Decay<typename Elements::value_type>> && ...)
-	struct Serialize<Variant<Elements...>> {
+	struct Serialize<NamedVariant<Elements...>> {
 		using as_type = SerializeVariant<ui64, Decay<typename Elements::value_type>...>;
-		using type = Variant<Elements...>;
+		using type = NamedVariant<Elements...>;
 		template<typename Serializer> using error_type = StandardSerializeError<Serializer>;
-		constexpr static ConstAsciiStringView sourceName = "natl::Serialize<natl::Variant<...>>::write";
+		constexpr static ConstAsciiStringView sourceName = "natl::Serialize<natl::NamedVariant<...>>::write";
 
 		template<typename Serializer>
 		using VariantSerializeFunction = Option<error_type<Serializer>>(*)(Serializer&, const type&);
@@ -193,10 +193,10 @@ namespace natl {
 
 	template<typename... Elements>
 		requires(IsDeserializableC<Decay<typename Elements::value_type>> && ...)
-	struct Deserialize<Variant<Elements...>> {
-		using as_type = SerializeTypeOf<Variant<Elements...>>;
-		using type = Variant<Elements...>;
-		constexpr static ConstAsciiStringView sourceName = "natl::Deserialize<natl::Variant<...>>::read";
+	struct Deserialize<NamedVariant<Elements...>> {
+		using as_type = SerializeTypeOf<NamedVariant<Elements...>>;
+		using type = NamedVariant<Elements...>;
+		constexpr static ConstAsciiStringView sourceName = "natl::Deserialize<natl::NamedVariant<...>>::read";
 		template<typename Deserializer> using error_type = StandardDeserializeError<Deserializer>;
 
 		template<typename Deserializer>

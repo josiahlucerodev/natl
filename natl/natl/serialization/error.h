@@ -100,7 +100,7 @@ namespace natl {
 				TypeInfo numberInfo;
 			};
 
-			using MemberInfo = Variant<
+			using MemberInfo = NamedVariant<
 				NamedElement<"op", OpInfo>,
 				NamedElement<"enum", EnumInfo>,
 				NamedElement<"farray", FarrayInfo>,

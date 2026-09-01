@@ -1,4 +1,4 @@
-#pragma once 
+#pragma once
 
 //own
 #include "../util/basicTypes.h"
@@ -12,37 +12,6 @@
 
 //@export
 namespace natl {
-	struct BaseNamedElement {};
-	template<TemplateStringLiteral InputName, typename DataType>
-	struct NamedElement {
-		constexpr static TemplateStringLiteral name = InputName;
-		using NameType = decltype(name);
-		using value_type = DataType;
-		constexpr operator BaseNamedElement() const noexcept { return BaseNamedElement(); };
-	};
-	
-	struct BaseVariantAssign {};
-	template<TemplateStringLiteral InputName, typename DataType>
-	struct VariantAssign {
-		constexpr static TemplateStringLiteral name = InputName;
-		using NameType = decltype(name);
-		using value_type = DataType;
-		const DataType& data;
-		constexpr VariantAssign(const DataType& dataIn) noexcept : data(dataIn) {}
-		constexpr operator BaseVariantAssign() const noexcept { return BaseVariantAssign(); };
-	};
-
-	struct BaseVariantAssignMove {};
-	template<TemplateStringLiteral InputName, typename DataType>
-	struct VariantAssignMove {
-		constexpr static TemplateStringLiteral name = InputName;
-		using NameType = decltype(name);
-		using value_type = DataType;
-		DataType&& data;
-		constexpr VariantAssignMove(DataType&& dataIn) noexcept : data(forward<DataType>(dataIn)) {}
-		constexpr operator BaseVariantAssignMove() const noexcept { return BaseVariantAssignMove(); };
-	};
-
 	template<typename... DataTypes>
 	struct VariantStorage {
 		//this is need for the other function to parse
@@ -61,73 +30,25 @@ namespace natl {
 			StringLiteralCompare,
 			StringLiteralFindType,
 			SearchStringLiteralTypes...
-		>;
+			>;
 	}
 
-#ifdef _MSC_VER
-#pragma warning(disable: 4624)
-#endif //_MSC_VER
-
-	template<typename FirstDataType, typename... RestDataTypes>
-	struct VariantStorage<FirstDataType, RestDataTypes...> {
-	public:
-		constexpr VariantStorage() = default;
-		constexpr ~VariantStorage() = default;
-	public:
-		static constexpr size_t _Size = 1 + sizeof...(RestDataTypes);
-		union {
-			FirstDataType data;
-			VariantStorage<RestDataTypes...> trailingData;
-		};
-
-		template<Size Index, typename ReturnType> 
-		constexpr ReturnType& getRef(int x = 0) noexcept {
-			if constexpr (Index == 0) {
-				return data;
-			} else {
-				if constexpr (sizeof...(RestDataTypes) > 0) {
-					return trailingData.template getRef<Index - 1, ReturnType>(x);
-				}
-			}
-		}
-
-		template<Size Index, typename ReturnType>
-		constexpr const ReturnType& getRef(int x = 0) const noexcept {
-			if constexpr (Index == 0) {
-				return data;
-			} else {
-				if constexpr (sizeof...(RestDataTypes) > 0) {
-					return trailingData.template getRef<Index - 1, ReturnType>(x);
-				}
-			}
-		}
-	};
-
-#ifdef _MSC_VER
-#pragma warning(default: 4624)
-#endif
-
-	struct DidNotFindVariantType {};
-	struct VariantTypeAtIndexNotConstructable {};
-
-	template<typename... Elements>
-		requires((IsConvertibleC<Elements, BaseNamedElement> && ...))
+	// --- Variant --- //
+	template<typename... DataTypes>
 	struct Variant {
 	public:
-		constexpr static Size numberOfVariants = sizeof...(Elements);
+		constexpr static Size numberOfVariants = sizeof...(DataTypes);
 		constexpr static Size emptyVariantValue = 0;
-		using named_elements = TypePack<Elements...>;
-		using types = TypePack<typename Elements::value_type...>;
-		using elements = TypePack<typename Elements::value_type...>;
-
+		using types = TypePack<DataTypes...>;
+		using elements = types;
 
 	private:
 		Size variantIndex;
 
-		constexpr static Size byteStorageSize = TemplatePackMaxSizeOfTypes<typename Elements::value_type...>::value;
+		constexpr static Size byteStorageSize = TemplatePackMaxSizeOfTypes<DataTypes...>::value;
 		union {
-			alignas(Elements...) Byte byteStorage[byteStorageSize];
-			VariantStorage<typename Elements::value_type...> recursiveStorage;
+			alignas(DataTypes...) Byte byteStorage[byteStorageSize];
+			VariantStorage<DataTypes...> recursiveStorage;
 		};
 	public:
 		//constructor
@@ -150,7 +71,7 @@ namespace natl {
 		template<Size Index>
 		constexpr VariantCopyConstructFunction getCopyConstructFunction() noexcept {
 			return [](Variant& variant, const Variant& other) {
-				using ElementType = typename TemplatePackNthElement<Index, Elements...>::type::value_type;
+				using ElementType = typename TemplatePackNthElement<Index, DataTypes...>::type;
 
 				if (!isConstantEvaluated()) {
 					if constexpr (IsTriviallyConstRefConstructible<ElementType>) {
@@ -163,7 +84,7 @@ namespace natl {
 					addressof<ElementType>(variant.recursiveStorage.template getRef<Index, ElementType>()),
 					other.recursiveStorage.template getRef<Index, ElementType>()
 				);
-			};
+				};
 		}
 
 		using VariantMoveConstructFunction = void(*)(Variant&, Variant&&);
@@ -171,7 +92,7 @@ namespace natl {
 		template<Size Index>
 		constexpr VariantMoveConstructFunction getMoveConstructFunction() noexcept {
 			return [](Variant& variant, Variant&& other) {
-				using ElementType = typename TemplatePackNthElement<Index, Elements...>::type::value_type;
+				using ElementType = typename TemplatePackNthElement<Index, DataTypes...>::type;
 
 				if (!isConstantEvaluated()) {
 					if constexpr (IsTriviallyMoveConstructible<ElementType>) {
@@ -181,23 +102,22 @@ namespace natl {
 				}
 
 				natl::construct<ElementType, ElementType>(
-					addressof<ElementType>(variant.recursiveStorage.template getRef<Index, ElementType>()), 
+					addressof<ElementType>(variant.recursiveStorage.template getRef<Index, ElementType>()),
 					move(other.recursiveStorage.template getRef<Index, ElementType>())
 				);
-			};
+				};
 		}
 
 		constexpr void constRefConstruct(const Variant& other) {
 			variantIndex = other.variantIndex;
 
-			VariantCopyConstructFunction copyFunctions[numberOfVariants] = { getCopyConstructFunction<TemplatePackFindIndexOfType<Elements, Elements...>::value>()... };
+			VariantCopyConstructFunction copyFunctions[numberOfVariants] = { getCopyConstructFunction<TemplatePackFindIndexOfType<DataTypes, DataTypes...>::value>()... };
 			VariantCopyConstructFunction& copyFunction = copyFunctions[other.getIndex() - 1];
 
 			if (isConstantEvaluated()) {
 				copyFunction(self(), other);
-			}
-			else {
-				if constexpr (!IsTriviallyConstRefConstructibleC<Variant<Elements...>>) {
+			} else {
+				if constexpr (!IsTriviallyConstRefConstructibleC<Variant<DataTypes...>>) {
 					copyFunction(self(), other);
 				} else {
 					uninitializedCopyInternalStorage(byteStorage, other.byteStorage);
@@ -208,7 +128,7 @@ namespace natl {
 		constexpr void moveConstruct(Variant&& other) noexcept {
 			variantIndex = other.variantIndex;
 
-			VariantMoveConstructFunction moveFunctions[numberOfVariants] = { getMoveConstructFunction<TemplatePackFindIndexOfType<Elements, Elements...>::value>()... };
+			VariantMoveConstructFunction moveFunctions[numberOfVariants] = { getMoveConstructFunction<TemplatePackFindIndexOfType<DataTypes, DataTypes...>::value>()... };
 			VariantMoveConstructFunction& moveFunction = moveFunctions[other.getIndex() - 1];
 
 			if (isConstantEvaluated()) {
@@ -243,7 +163,7 @@ namespace natl {
 			destoryValue();
 		}
 
-		//util 
+		//util
 		constexpr Variant& self() noexcept { return *this; }
 		constexpr const Variant& self() const noexcept { return *this; }
 
@@ -255,7 +175,7 @@ namespace natl {
 		template<Size Index>
 		constexpr VariantDestructFunction getDestructionFunction() noexcept {
 			return [](Variant& variant) {
-				using ElementType = typename TemplatePackNthElement<Index, Elements...>::type::value_type;
+				using ElementType = typename TemplatePackNthElement<Index, DataTypes...>::type;
 
 				if (!isConstantEvaluated()) {
 					if constexpr (IsTriviallyDestructible<ElementType>) {
@@ -264,10 +184,10 @@ namespace natl {
 				}
 
 				natl::deconstruct<ElementType>(natl::addressof<ElementType>(variant.recursiveStorage.template getRef<Index, ElementType>()));
-			};
+				};
 		}
 		constexpr void actuallyDestoryValue() noexcept {
-			VariantDestructFunction destructFunctions[numberOfVariants] = { getDestructionFunction<TemplatePackFindIndexOfType<Elements, Elements...>::value>()... };
+			VariantDestructFunction destructFunctions[numberOfVariants] = { getDestructionFunction<TemplatePackFindIndexOfType<DataTypes, DataTypes...>::value>()... };
 			if (variantIndex != emptyVariantValue) [[likely]] {
 				VariantDestructFunction& destructFunction = destructFunctions[variantIndex - 1];
 				destructFunction(self());
@@ -282,20 +202,6 @@ namespace natl {
 	public:
 		constexpr static Size getIndexOfEmpty() noexcept { return 0; }
 
-		template<TemplateStringLiteral FindName> 
-		constexpr static Size getIndexOf() noexcept {
-			constexpr Size index = impl::FindIndexofStringLiteral<StringLiteral<FindName>, StringLiteral<Elements::name>...>::value;
-			static_assert(index != IndexNotFound::value, "natl: variant error - getIndex() - could not find variant element with name");
-			return index + 1;
-		}
-
-		template<TemplateStringLiteral FindName>
-		constexpr Size getIndexOf_NotStatic() const noexcept {
-			constexpr Size index = impl::FindIndexofStringLiteral<StringLiteral<FindName>, StringLiteral<Elements::name>...>::value;
-			static_assert(index != IndexNotFound::value, "natl: variant error - getIndex() - could not find variant element with name");
-			return index + 1;
-		}
-
 		//assignment
 	private:
 		using VariantCopyFunction = void(*)(Variant&, const Variant&);
@@ -303,7 +209,7 @@ namespace natl {
 		template<Size Index>
 		constexpr VariantCopyFunction getCopyFunction() noexcept {
 			return [](Variant& variant, const Variant& other) {
-				using ElementType = typename TemplatePackNthElement<Index, Elements...>::type::value_type;
+				using ElementType = typename TemplatePackNthElement<Index, DataTypes...>::type;
 
 				if (!isConstantEvaluated()) {
 					if constexpr (IsTriviallyConstRefAssignable<ElementType>) {
@@ -313,14 +219,14 @@ namespace natl {
 				}
 
 				variant.recursiveStorage.template getRef<Index, ElementType>() = other.recursiveStorage.template getRef<Index, ElementType>();
-			};
+				};
 		}
 		using VariantMoveFunction = void(*)(Variant&, Variant&&);
 
 		template<Size Index>
 		constexpr VariantMoveFunction getMoveFunction() noexcept {
 			return [](Variant& variant, Variant&& other) {
-				using ElementType = typename TemplatePackNthElement<Index, Elements...>::type::value_type;
+				using ElementType = typename TemplatePackNthElement<Index, DataTypes...>::type;
 
 				if (!isConstantEvaluated()) {
 					if constexpr (IsTriviallyMoveAssignable<ElementType>) {
@@ -330,7 +236,7 @@ namespace natl {
 				}
 
 				variant.recursiveStorage.template getRef<Index, ElementType>() = move(other.recursiveStorage.template getRef<Index, ElementType>());
-			};
+				};
 		}
 	public:
 
@@ -339,7 +245,7 @@ namespace natl {
 				destoryValue();
 				variantIndex = 0;
 			} else if (variantIndex == other.variantIndex) {
-				VariantCopyFunction copyFunctions[numberOfVariants] = { getCopyFunction<TemplatePackFindIndexOfType<Elements, Elements...>::value>()... };
+				VariantCopyFunction copyFunctions[numberOfVariants] = { getCopyFunction<TemplatePackFindIndexOfType<DataTypes, DataTypes...>::value>()... };
 				VariantCopyFunction& copyFunction = copyFunctions[other.getIndex() - 1];
 
 				if (isConstantEvaluated()) {
@@ -364,7 +270,7 @@ namespace natl {
 				destoryValue();
 				other.variantIndex = 0;
 			} else if (variantIndex == other.variantIndex) {
-				VariantMoveFunction moveFunctions[numberOfVariants] = { getMoveFunction<TemplatePackFindIndexOfType<Elements, Elements...>::value>()... };
+				VariantMoveFunction moveFunctions[numberOfVariants] = { getMoveFunction<TemplatePackFindIndexOfType<DataTypes, DataTypes...>::value>()... };
 				VariantMoveFunction& moveFunction = moveFunctions[other.getIndex() - 1];
 
 				if (isConstantEvaluated()) {
@@ -385,7 +291,7 @@ namespace natl {
 
 		template<Size Index, typename DataType>
 		constexpr Variant& assign(DataType&& value) noexcept {
-			using variant_type_at_index = TemplatePackNthElement<Index, Elements...>::type::value_type;
+			using variant_type_at_index = TemplatePackNthElement<Index, DataTypes...>::type;
 
 			if (variantIndex == Index + 1) {
 				if (isConstantEvaluated()) {
@@ -413,6 +319,493 @@ namespace natl {
 
 		template<Size Index, typename DataType>
 		constexpr Variant& assign(const DataType& value) noexcept {
+			using variant_type_at_index = TemplatePackNthElement<Index, DataTypes...>::type;
+
+			if (variantIndex == Index + 1) {
+				if (isConstantEvaluated()) {
+					recursiveStorage.template getRef<Index, variant_type_at_index>() = forward<DataType>(value);
+				} else {
+					*reinterpret_cast<DataType*>(byteStorage) = forward<DataType>(value);
+				}
+			} else {
+				destoryValue();
+				if (isConstantEvaluated()) {
+					natl::construct<variant_type_at_index, variant_type_at_index>(
+						&recursiveStorage.template getRef<Index, variant_type_at_index>(),
+						forward<DataType>(value)
+					);
+				} else {
+					natl::construct<variant_type_at_index, variant_type_at_index>(
+						reinterpret_cast<DataType*>(byteStorage),
+						forward<DataType>(value)
+					);
+				}
+			}
+			variantIndex = Index + 1;
+			return self();
+		}
+
+
+	private:
+		template<Size Index>
+		constexpr void testValidIndex() const noexcept {
+			if (variantIndex != Index + 1) [[unlikely]] {
+				natl::fatalError("variant index violation");
+			}
+		}
+
+	public:
+		template<Size Index>
+		constexpr auto& get() noexcept {
+			testValidIndex<Index>();
+			using variant_type_at_index = TemplatePackNthElement<Index, DataTypes...>::type;
+			if (isConstantEvaluated()) {
+				return recursiveStorage.template getRef<Index, variant_type_at_index>();
+			} else {
+				return *reinterpret_cast<variant_type_at_index*>(byteStorage);
+			}
+		}
+
+	public:
+		template<Size Index>
+		constexpr const auto& get() const noexcept {
+			testValidIndex<Index>();
+			using variant_type_at_index = TemplatePackNthElement<Index, DataTypes...>::type;
+			if (isConstantEvaluated()) {
+				return recursiveStorage.template getRef<Index, variant_type_at_index>();
+			} else {
+				return *reinterpret_cast<const variant_type_at_index*>(byteStorage);
+			}
+		}
+
+
+		constexpr Bool doesNotHaveValue() const noexcept {
+			return variantIndex == emptyVariantValue;
+		}
+		constexpr Bool hasValue() const noexcept {
+			return variantIndex != emptyVariantValue;
+		}
+		constexpr Size getIndex() const noexcept {
+			return variantIndex;
+		}
+	};
+
+	template<typename... DataTypes>
+	struct IsTriviallyRelocatableV<Variant<DataTypes...>>
+		: BoolConstant<(IsTriviallyRelocatableC<DataTypes> && ...)> {
+	};
+	template<typename... DataTypes>
+	struct IsTriviallyConstructibleV<Variant<DataTypes...>>
+		: TrueType {
+	};
+	template<typename... DataTypes>
+	struct IsTriviallyDestructibleV<Variant<DataTypes...>>
+		: BoolConstant<(IsTriviallyDestructibleC<DataTypes> && ...)> {
+	};
+
+	template<typename... DataTypes>
+	struct IsTriviallyConstRefConstructibleV<Variant<DataTypes...>>
+		: BoolConstant<(IsTriviallyConstRefConstructibleC<DataTypes> && ...)
+		&& IsTriviallyDestructibleC<Variant<DataTypes...>>> {
+	};
+	template<typename... DataTypes>
+	struct IsTriviallyMoveConstructibleV<Variant<DataTypes...>>
+		: BoolConstant<(IsTriviallyMoveConstructibleC<DataTypes> && ...)
+		&& IsTriviallyDestructibleC<Variant<DataTypes...>>> {
+	};
+
+	template<typename... DataTypes>
+	struct IsTriviallyConstRefAssignableV<Variant<DataTypes...>>
+		: BoolConstant<(IsTriviallyConstRefAssignableC<DataTypes> && ...)
+		&& IsTriviallyDestructibleC<Variant<DataTypes...>>> {
+	};
+	template<typename... DataTypes>
+	struct IsTriviallyMoveAssignableV<Variant<DataTypes...>>
+		: BoolConstant<(IsTriviallyMoveAssignableC<DataTypes> && ...)
+		&& IsTriviallyDestructibleC<Variant<DataTypes...>>> {
+	};
+
+	// --- Named Variant --- //
+
+	struct BaseNamedElement {};
+	template<TemplateStringLiteral InputName, typename DataType>
+	struct NamedElement {
+		constexpr static TemplateStringLiteral name = InputName;
+		using NameType = decltype(name);
+		using value_type = DataType;
+		constexpr operator BaseNamedElement() const noexcept { return BaseNamedElement(); };
+	};
+
+	struct BaseVariantAssign {};
+	template<TemplateStringLiteral InputName, typename DataType>
+	struct VariantAssign {
+		constexpr static TemplateStringLiteral name = InputName;
+		using NameType = decltype(name);
+		using value_type = DataType;
+		const DataType& data;
+		constexpr VariantAssign(const DataType& dataIn) noexcept : data(dataIn) {}
+		constexpr operator BaseVariantAssign() const noexcept { return BaseVariantAssign(); };
+	};
+
+	struct BaseVariantAssignMove {};
+	template<TemplateStringLiteral InputName, typename DataType>
+	struct VariantAssignMove {
+		constexpr static TemplateStringLiteral name = InputName;
+		using NameType = decltype(name);
+		using value_type = DataType;
+		DataType&& data;
+		constexpr VariantAssignMove(DataType&& dataIn) noexcept : data(forward<DataType>(dataIn)) {}
+		constexpr operator BaseVariantAssignMove() const noexcept { return BaseVariantAssignMove(); };
+	};
+
+#ifdef _MSC_VER
+#pragma warning(disable: 4624)
+#endif //_MSC_VER
+
+	template<typename FirstDataType, typename... RestDataTypes>
+	struct VariantStorage<FirstDataType, RestDataTypes...> {
+	public:
+		constexpr VariantStorage() = default;
+		constexpr ~VariantStorage() = default;
+	public:
+		static constexpr size_t _Size = 1 + sizeof...(RestDataTypes);
+		union {
+			FirstDataType data;
+			VariantStorage<RestDataTypes...> trailingData;
+		};
+
+		template<Size Index, typename ReturnType>
+		constexpr ReturnType& getRef(int x = 0) noexcept {
+			if constexpr (Index == 0) {
+				return data;
+			} else {
+				if constexpr (sizeof...(RestDataTypes) > 0) {
+					return trailingData.template getRef<Index - 1, ReturnType>(x);
+				}
+			}
+		}
+
+		template<Size Index, typename ReturnType>
+		constexpr const ReturnType& getRef(int x = 0) const noexcept {
+			if constexpr (Index == 0) {
+				return data;
+			} else {
+				if constexpr (sizeof...(RestDataTypes) > 0) {
+					return trailingData.template getRef<Index - 1, ReturnType>(x);
+				}
+			}
+		}
+	};
+
+#ifdef _MSC_VER
+#pragma warning(default: 4624)
+#endif
+
+	struct DidNotFindVariantType {};
+	struct VariantTypeAtIndexNotConstructable {};
+
+	template<typename... Elements>
+		requires((IsConvertibleC<Elements, BaseNamedElement> && ...))
+	struct NamedVariant {
+	public:
+		constexpr static Size numberOfVariants = sizeof...(Elements);
+		constexpr static Size emptyVariantValue = 0;
+		using named_elements = TypePack<Elements...>;
+		using types = TypePack<typename Elements::value_type...>;
+		using elements = TypePack<typename Elements::value_type...>;
+
+
+	private:
+		Size variantIndex;
+
+		constexpr static Size byteStorageSize = TemplatePackMaxSizeOfTypes<typename Elements::value_type...>::value;
+		union {
+			alignas(Elements...) Byte byteStorage[byteStorageSize];
+			VariantStorage<typename Elements::value_type...> recursiveStorage;
+		};
+	public:
+		//constructor
+		constexpr NamedVariant() noexcept : variantIndex(emptyVariantValue), byteStorage{} {}
+
+
+	private:
+		static void uninitializedCopyInternalStorage(Byte* dst, const Byte* src) noexcept {
+			const natl::Byte* copySrcFirst = src;
+			const natl::Byte* copySrcLast = copySrcFirst + byteStorageSize;
+			uninitializedCopyNoOverlap<const natl::Byte*, natl::Byte*>(copySrcFirst, copySrcLast, dst);
+		}
+		static void copyInternalStorage(Byte* dst, const Byte* src) noexcept {
+			const natl::Byte* copySrcFirst = src;
+			const natl::Byte* copySrcLast = copySrcFirst + byteStorageSize;
+			copyNoOverlap<const natl::Byte*, natl::Byte*>(copySrcFirst, copySrcLast, dst);
+		}
+		using VariantCopyConstructFunction = void(*)(NamedVariant&, const NamedVariant&);
+
+		template<Size Index>
+		constexpr VariantCopyConstructFunction getCopyConstructFunction() noexcept {
+			return [](NamedVariant& variant, const NamedVariant& other) {
+				using ElementType = typename TemplatePackNthElement<Index, Elements...>::type::value_type;
+
+				if (!isConstantEvaluated()) {
+					if constexpr (IsTriviallyConstRefConstructible<ElementType>) {
+						uninitializedCopyInternalStorage(variant.byteStorage, other.byteStorage);
+						return;
+					}
+				}
+
+				natl::construct<ElementType>(
+					addressof<ElementType>(variant.recursiveStorage.template getRef<Index, ElementType>()),
+					other.recursiveStorage.template getRef<Index, ElementType>()
+				);
+				};
+		}
+
+		using VariantMoveConstructFunction = void(*)(NamedVariant&, NamedVariant&&);
+
+		template<Size Index>
+		constexpr VariantMoveConstructFunction getMoveConstructFunction() noexcept {
+			return [](NamedVariant& variant, NamedVariant&& other) {
+				using ElementType = typename TemplatePackNthElement<Index, Elements...>::type::value_type;
+
+				if (!isConstantEvaluated()) {
+					if constexpr (IsTriviallyMoveConstructible<ElementType>) {
+						uninitializedCopyInternalStorage(variant.byteStorage, other.byteStorage);
+						return;
+					}
+				}
+
+				natl::construct<ElementType, ElementType>(
+					addressof<ElementType>(variant.recursiveStorage.template getRef<Index, ElementType>()),
+					move(other.recursiveStorage.template getRef<Index, ElementType>())
+				);
+				};
+		}
+
+		constexpr void constRefConstruct(const NamedVariant& other) {
+			variantIndex = other.variantIndex;
+
+			VariantCopyConstructFunction copyFunctions[numberOfVariants] = { getCopyConstructFunction<TemplatePackFindIndexOfType<Elements, Elements...>::value>()... };
+			VariantCopyConstructFunction& copyFunction = copyFunctions[other.getIndex() - 1];
+
+			if (isConstantEvaluated()) {
+				copyFunction(self(), other);
+			} else {
+				if constexpr (!IsTriviallyConstRefConstructibleC<NamedVariant<Elements...>>) {
+					copyFunction(self(), other);
+				} else {
+					uninitializedCopyInternalStorage(byteStorage, other.byteStorage);
+				}
+			}
+		}
+
+		constexpr void moveConstruct(NamedVariant&& other) noexcept {
+			variantIndex = other.variantIndex;
+
+			VariantMoveConstructFunction moveFunctions[numberOfVariants] = { getMoveConstructFunction<TemplatePackFindIndexOfType<Elements, Elements...>::value>()... };
+			VariantMoveConstructFunction& moveFunction = moveFunctions[other.getIndex() - 1];
+
+			if (isConstantEvaluated()) {
+				moveFunction(self(), forward<NamedVariant>(other));
+			} else {
+				if constexpr (!IsTriviallyMoveConstructibleC<NamedVariant>) {
+					moveFunction(self(), forward<NamedVariant>(other));
+				} else {
+					uninitializedCopyInternalStorage(byteStorage, other.byteStorage);
+				}
+			}
+		}
+
+	public:
+		constexpr NamedVariant(const NamedVariant& other) noexcept {
+			if (!other.hasValue()) {
+				variantIndex = 0;
+				return;
+			}
+			constRefConstruct(other);
+		}
+
+		constexpr NamedVariant(NamedVariant&& other) noexcept {
+			if (!other.hasValue()) {
+				variantIndex = 0;
+				return;
+			}
+			moveConstruct(forward<NamedVariant>(other));
+		}
+
+		constexpr ~NamedVariant() noexcept {
+			destoryValue();
+		}
+
+		//util
+		constexpr NamedVariant& self() noexcept { return *this; }
+		constexpr const NamedVariant& self() const noexcept { return *this; }
+
+
+
+	private:
+		using VariantDestructFunction = void(*)(NamedVariant&);
+
+		template<Size Index>
+		constexpr VariantDestructFunction getDestructionFunction() noexcept {
+			return [](NamedVariant& variant) {
+				using ElementType = typename TemplatePackNthElement<Index, Elements...>::type::value_type;
+
+				if (!isConstantEvaluated()) {
+					if constexpr (IsTriviallyDestructible<ElementType>) {
+						return;
+					}
+				}
+
+				natl::deconstruct<ElementType>(natl::addressof<ElementType>(variant.recursiveStorage.template getRef<Index, ElementType>()));
+				};
+		}
+		constexpr void actuallyDestoryValue() noexcept {
+			VariantDestructFunction destructFunctions[numberOfVariants] = { getDestructionFunction<TemplatePackFindIndexOfType<Elements, Elements...>::value>()... };
+			if (variantIndex != emptyVariantValue) [[likely]] {
+				VariantDestructFunction& destructFunction = destructFunctions[variantIndex - 1];
+				destructFunction(self());
+			}
+		}
+		constexpr void destoryValue() noexcept {
+			if (isConstantEvaluated() || !IsTriviallyDestructibleC<NamedVariant>) {
+				actuallyDestoryValue();
+			}
+		}
+
+	public:
+		constexpr static Size getIndexOfEmpty() noexcept { return 0; }
+
+		template<TemplateStringLiteral FindName>
+		constexpr static Size getIndexOf() noexcept {
+			constexpr Size index = impl::FindIndexofStringLiteral<StringLiteral<FindName>, StringLiteral<Elements::name>...>::value;
+			static_assert(index != IndexNotFound::value, "natl: variant error - getIndex() - could not find variant element with name");
+			return index + 1;
+		}
+
+		template<TemplateStringLiteral FindName>
+		constexpr Size getIndexOf_NotStatic() const noexcept {
+			constexpr Size index = impl::FindIndexofStringLiteral<StringLiteral<FindName>, StringLiteral<Elements::name>...>::value;
+			static_assert(index != IndexNotFound::value, "natl: variant error - getIndex() - could not find variant element with name");
+			return index + 1;
+		}
+
+		//assignment
+	private:
+		using VariantCopyFunction = void(*)(NamedVariant&, const NamedVariant&);
+
+		template<Size Index>
+		constexpr VariantCopyFunction getCopyFunction() noexcept {
+			return [](NamedVariant& variant, const NamedVariant& other) {
+				using ElementType = typename TemplatePackNthElement<Index, Elements...>::type::value_type;
+
+				if (!isConstantEvaluated()) {
+					if constexpr (IsTriviallyConstRefAssignable<ElementType>) {
+						copyInternalStorage(variant.byteStorage, other.byteStorage);
+						return;
+					}
+				}
+
+				variant.recursiveStorage.template getRef<Index, ElementType>() = other.recursiveStorage.template getRef<Index, ElementType>();
+				};
+		}
+		using VariantMoveFunction = void(*)(NamedVariant&, NamedVariant&&);
+
+		template<Size Index>
+		constexpr VariantMoveFunction getMoveFunction() noexcept {
+			return [](NamedVariant& variant, NamedVariant&& other) {
+				using ElementType = typename TemplatePackNthElement<Index, Elements...>::type::value_type;
+
+				if (!isConstantEvaluated()) {
+					if constexpr (IsTriviallyMoveAssignable<ElementType>) {
+						copyInternalStorage(variant.byteStorage, other.byteStorage);
+						return;
+					}
+				}
+
+				variant.recursiveStorage.template getRef<Index, ElementType>() = move(other.recursiveStorage.template getRef<Index, ElementType>());
+				};
+		}
+	public:
+
+		constexpr NamedVariant& operator=(const NamedVariant& other) noexcept {
+			if (other.variantIndex == emptyVariantValue) {
+				destoryValue();
+				variantIndex = 0;
+			} else if (variantIndex == other.variantIndex) {
+				VariantCopyFunction copyFunctions[numberOfVariants] = { getCopyFunction<TemplatePackFindIndexOfType<Elements, Elements...>::value>()... };
+				VariantCopyFunction& copyFunction = copyFunctions[other.getIndex() - 1];
+
+				if (isConstantEvaluated()) {
+					copyFunction(self(), other);
+				} else {
+					if constexpr (!IsTriviallyConstRefConstructibleC<NamedVariant>) {
+						copyFunction(self(), other);
+					} else {
+						copyInternalStorage(byteStorage, other.byteStorage);
+					}
+				}
+			} else {
+				destoryValue();
+				constRefConstruct(other);
+			}
+			return self();
+		}
+
+
+		NamedVariant& operator=(NamedVariant&& other) noexcept {
+			if (other.variantIndex == emptyVariantValue) {
+				destoryValue();
+				other.variantIndex = 0;
+			} else if (variantIndex == other.variantIndex) {
+				VariantMoveFunction moveFunctions[numberOfVariants] = { getMoveFunction<TemplatePackFindIndexOfType<Elements, Elements...>::value>()... };
+				VariantMoveFunction& moveFunction = moveFunctions[other.getIndex() - 1];
+
+				if (isConstantEvaluated()) {
+					moveFunction(self(), forward<NamedVariant>(other));
+				} else {
+					if constexpr (!IsTriviallyMoveConstructibleC<NamedVariant>) {
+						moveFunction(self(), forward<NamedVariant>(other));
+					} else {
+						copyInternalStorage(byteStorage, other.byteStorage);
+					}
+				}
+			} else {
+				destoryValue();
+				moveConstruct(forward<NamedVariant>(other));
+			}
+			return self();
+		}
+
+		template<Size Index, typename DataType>
+		constexpr NamedVariant& assign(DataType&& value) noexcept {
+			using variant_type_at_index = TemplatePackNthElement<Index, Elements...>::type::value_type;
+
+			if (variantIndex == Index + 1) {
+				if (isConstantEvaluated()) {
+					recursiveStorage.template getRef<Index, variant_type_at_index>() = forward<DataType>(value);
+				} else {
+					*reinterpret_cast<DataType*>(byteStorage) = forward<DataType>(value);
+				}
+			} else {
+				destoryValue();
+				if (isConstantEvaluated()) {
+					natl::construct<variant_type_at_index, variant_type_at_index>(
+						&recursiveStorage.template getRef<Index, variant_type_at_index>(),
+						forward<DataType>(value)
+					);
+				} else {
+					natl::construct<variant_type_at_index, variant_type_at_index>(
+						reinterpret_cast<DataType*>(byteStorage),
+						forward<DataType>(value)
+					);
+				}
+			}
+			variantIndex = Index + 1;
+			return self();
+		}
+
+		template<Size Index, typename DataType>
+		constexpr NamedVariant& assign(const DataType& value) noexcept {
 			using variant_type_at_index = TemplatePackNthElement<Index, Elements...>::type::value_type;
 
 			if (variantIndex == Index + 1) {
@@ -440,7 +833,7 @@ namespace natl {
 		}
 
 		template<TemplateStringLiteral name, typename DataType>
-		constexpr Variant& assign(DataType&& value) noexcept {
+		constexpr NamedVariant& assign(DataType&& value) noexcept {
 			constexpr Size index = impl::FindIndexofStringLiteral<StringLiteral<name>, StringLiteral<Elements::name>...>::value;
 			using decayed_data_type = Decay<DataType>;
 			if constexpr (index != IndexNotFound::value) {
@@ -483,7 +876,7 @@ namespace natl {
 			}
 		}
 		template<TemplateStringLiteral name, typename DataType>
-		constexpr Variant& assign(const DataType& value) noexcept {
+		constexpr NamedVariant& assign(const DataType& value) noexcept {
 			constexpr Size index = impl::FindIndexofStringLiteral<StringLiteral<name>, StringLiteral<Elements::name>...>::value;
 			if constexpr (index != IndexNotFound::value) {
 				using VariantTypeAtIndex = typename TemplatePackNthElement<index, Elements...>::type::value_type;
@@ -525,10 +918,10 @@ namespace natl {
 			}
 			return self();
 		}
-		private:
+	private:
 		template<TemplateStringLiteral name>
 		using TypeAtIndexOfName = typename TemplatePackNthElement<getIndexOf<name>() - 1, Elements...>::type::value_type;
-		
+
 		template<Size Index>
 		constexpr void testValidIndex() const noexcept {
 			if (variantIndex != Index + 1) [[unlikely]] {
@@ -536,7 +929,7 @@ namespace natl {
 			}
 		}
 
-		public:
+	public:
 		template<Size Index>
 		constexpr auto& get() noexcept {
 			testValidIndex<Index>();
@@ -548,7 +941,7 @@ namespace natl {
 			}
 		}
 
-		public:
+	public:
 		template<Size Index>
 		constexpr const auto& get() const noexcept {
 			testValidIndex<Index>();
@@ -615,17 +1008,17 @@ namespace natl {
 			return variantIndex == getIndexOf<name>();
 		}
 
-		//special 
+		//special
 	private:
 		using test_element_str_function = Bool(*)(const ConstAsciiStringView&);
 		template<Size Index, typename Element>
 		constexpr static test_element_str_function getTestElementStrFunction() noexcept {
 			return [](const ConstAsciiStringView& str) -> Bool {
 				return str == Element::name;
-			};
+				};
 		}
 
-		public:
+	public:
 		constexpr static Option<Size> stringToIndexStatic(const ConstAsciiStringView& str) noexcept {
 			return[&] <Size... Indices>(IndexSequence<Indices...>) -> Option<Size> {
 				test_element_str_function testFunctions[sizeof...(Elements)] = {
@@ -668,30 +1061,37 @@ namespace natl {
 	};
 
 	template<typename... Elements>
-	struct IsTriviallyRelocatableV<Variant<Elements...>>
-		: BoolConstant<(IsTriviallyRelocatableC<typename Elements::value_type> && ...)> {};
+	struct IsTriviallyRelocatableV<NamedVariant<Elements...>>
+		: BoolConstant<(IsTriviallyRelocatableC<typename Elements::value_type> && ...)> {
+	};
 	template<typename... Elements>
-	struct IsTriviallyConstructibleV<Variant<Elements...>>
-		: TrueType {};
+	struct IsTriviallyConstructibleV<NamedVariant<Elements...>>
+		: TrueType {
+	};
 	template<typename... Elements>
-	struct IsTriviallyDestructibleV<Variant<Elements...>>
-		: BoolConstant<(IsTriviallyDestructibleC<typename Elements::value_type> && ...)> {};
+	struct IsTriviallyDestructibleV<NamedVariant<Elements...>>
+		: BoolConstant<(IsTriviallyDestructibleC<typename Elements::value_type> && ...)> {
+	};
 
 	template<typename... Elements>
-	struct IsTriviallyConstRefConstructibleV<Variant<Elements...>>
+	struct IsTriviallyConstRefConstructibleV<NamedVariant<Elements...>>
 		: BoolConstant<(IsTriviallyConstRefConstructibleC<typename Elements::value_type> && ...)
-		&& IsTriviallyDestructibleC<Variant<Elements...>>> {};
+		&& IsTriviallyDestructibleC<NamedVariant<Elements...>>> {
+	};
 	template<typename... Elements>
-	struct IsTriviallyMoveConstructibleV<Variant<Elements...>>
+	struct IsTriviallyMoveConstructibleV<NamedVariant<Elements...>>
 		: BoolConstant<(IsTriviallyMoveConstructibleC<typename Elements::value_type> && ...)
-		&& IsTriviallyDestructibleC<Variant<Elements...>>> {};
+		&& IsTriviallyDestructibleC<NamedVariant<Elements...>>> {
+	};
 
 	template<typename... Elements>
-	struct IsTriviallyConstRefAssignableV<Variant<Elements...>>
+	struct IsTriviallyConstRefAssignableV<NamedVariant<Elements...>>
 		: BoolConstant<(IsTriviallyConstRefAssignableC<typename Elements::value_type> && ...)
-		&& IsTriviallyDestructibleC<Variant<Elements...>>> {};
+		&& IsTriviallyDestructibleC<NamedVariant<Elements...>>> {
+	};
 	template<typename... Elements>
-	struct IsTriviallyMoveAssignableV<Variant<Elements...>>
+	struct IsTriviallyMoveAssignableV<NamedVariant<Elements...>>
 		: BoolConstant<(IsTriviallyMoveAssignableC<typename Elements::value_type> && ...)
-		&& IsTriviallyDestructibleC<Variant<Elements...>>> {};
+		&& IsTriviallyDestructibleC<NamedVariant<Elements...>>> {
+	};
 }
