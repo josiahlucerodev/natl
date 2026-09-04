@@ -1,5 +1,3 @@
-//@file_not_module
-
 //@begin_non_modules
 //natl
 #include <natl/util/testMacros.h>
@@ -7,23 +5,13 @@
 
 //natl
 #include <natl/container/variant.h>
-#include <natl/container/dynArray.h>
 #include <natl/util/test.h>
 
 struct VariantTestSuite : public natl::TestSuite<VariantTestSuite> {};
 
 template<typename test_suite_type = VariantTestSuite>
 struct VariantTestSuiteTests {
-	using NamedVariantTestType = natl::NamedVariant<
-		natl::NamedElement<"i8", natl::i8>,
-		natl::NamedElement<"i64", natl::i64>,
-		natl::NamedElement<"ui8", natl::ui8>,
-		natl::NamedElement<"ui64", natl::ui64>,
-		natl::NamedElement<"f32", natl::f32>,
-		natl::NamedElement<"f64", natl::f64>
-	>;
-
-	using VariantTestType = natl::Variant<
+	using TestType = natl::Variant<
 		natl::i8,
 		natl::i64,
 		natl::ui8,
@@ -32,398 +20,290 @@ struct VariantTestSuiteTests {
 		natl::f64
 	>;
 
-	constexpr static void namedVariantDefault(test_suite_type& ts) noexcept {
-		NamedVariantTestType value;
+	template<natl::Size vIndex, typename ValueType>
+	constexpr static void assignAndCheck(
+		test_suite_type& ts,
+		TestType& value,
+		const ValueType& first,
+		const ValueType& second) noexcept {
+		value.template assign<vIndex>(first);
+		ts.assertEqual(first, value.template get<vIndex>());
+		ts.assertEqual(natl::Size(vIndex), value.getIndex());
+		ts.assertEqual(true, value.template isIndex<vIndex>());
 
+		value.template assign<vIndex>(second);
+		ts.assertEqual(second, value.template get<vIndex>());
+	}
+
+	constexpr static void defaultState(test_suite_type& ts) noexcept {
+		TestType value;
 		ts.assertEqual(true, value.doesNotHaveValue());
 		ts.assertEqual(false, value.hasValue());
-		ts.assertEqual(NamedVariantTestType::getIndexOfEmpty(), value.getIndex());
-		ts.assertEqual(natl::Size(0), value.getIndex());
+		ts.assertEqual(TestType::getIndexOfEmpty(), value.getIndex());
 	}
-	NATL_REGISTER_TEST_CONSTEXPR(namedVariantDefault);
+	NATL_REGISTER_TEST_CONSTEXPR(defaultState);
 
-	constexpr static void namedVariantAssignByName(test_suite_type& ts) noexcept {
-		NamedVariantTestType value;
+	constexpr static void assignAndAccess(test_suite_type& ts) noexcept {
+		TestType value;
 
-		value.assign<"i8">(natl::Limits<natl::i8>::min());
-		ts.assertEqual(natl::Limits<natl::i8>::min(), value.get<"i8">());
-		value.assign<"i8">(natl::Limits<natl::i8>::max());
-		ts.assertEqual(natl::Limits<natl::i8>::max(), value.get<"i8">());
-
-		value.assign<"i64">(natl::Limits<natl::i64>::min());
-		ts.assertEqual(natl::Limits<natl::i64>::min(), value.get<"i64">());
-		value.assign<"i64">(natl::Limits<natl::i64>::max());
-		ts.assertEqual(natl::Limits<natl::i64>::max(), value.get<"i64">());
-
-		value.assign<"ui8">(natl::Limits<natl::ui8>::min());
-		ts.assertEqual(natl::Limits<natl::ui8>::min(), value.get<"ui8">());
-		value.assign<"ui8">(natl::Limits<natl::ui8>::max());
-		ts.assertEqual(natl::Limits<natl::ui8>::max(), value.get<"ui8">());
-
-		value.assign<"ui64">(natl::Limits<natl::ui64>::min());
-		ts.assertEqual(natl::Limits<natl::ui64>::min(), value.get<"ui64">());
-		value.assign<"ui64">(natl::Limits<natl::ui64>::max());
-		ts.assertEqual(natl::Limits<natl::ui64>::max(), value.get<"ui64">());
-
-		value.assign<"f32">(natl::Limits<natl::f32>::min());
-		ts.assertEqual(natl::Limits<natl::f32>::min(), value.get<"f32">());
-		value.assign<"f32">(natl::Limits<natl::f32>::max());
-		ts.assertEqual(natl::Limits<natl::f32>::max(), value.get<"f32">());
-
-		value.assign<"f64">(natl::Limits<natl::f64>::min());
-		ts.assertEqual(natl::Limits<natl::f64>::min(), value.get<"f64">());
-		value.assign<"f64">(natl::Limits<natl::f64>::max());
-		ts.assertEqual(natl::Limits<natl::f64>::max(), value.get<"f64">());
+		assignAndCheck<0>(ts, value, natl::Limits<natl::i8>::min(), natl::Limits<natl::i8>::max());
+		assignAndCheck<1>(ts, value, natl::Limits<natl::i64>::min(), natl::Limits<natl::i64>::max());
+		assignAndCheck<2>(ts, value, natl::Limits<natl::ui8>::min(), natl::Limits<natl::ui8>::max());
+		assignAndCheck<3>(ts, value, natl::Limits<natl::ui64>::min(), natl::Limits<natl::ui64>::max());
+		assignAndCheck<4>(ts, value, natl::Limits<natl::f32>::min(), natl::Limits<natl::f32>::max());
+		assignAndCheck<5>(ts, value, natl::Limits<natl::f64>::min(), natl::Limits<natl::f64>::max());
 	}
-	NATL_REGISTER_TEST_CONSTEXPR(namedVariantAssignByName);
+	NATL_REGISTER_TEST_CONSTEXPR(assignAndAccess);
 
-	constexpr static void namedVariantState(test_suite_type& ts) noexcept {
-		NamedVariantTestType value;
+	constexpr static void typeAndIndexState(test_suite_type& ts) noexcept {
+		ts.assertEqual(natl::Size(0), TestType::getIndexOf<natl::i8>());
+		ts.assertEqual(natl::Size(1), TestType::getIndexOf<natl::i64>());
+		ts.assertEqual(natl::Size(2), TestType::getIndexOf<natl::ui8>());
+		ts.assertEqual(natl::Size(3), TestType::getIndexOf<natl::ui64>());
+		ts.assertEqual(natl::Size(4), TestType::getIndexOf<natl::f32>());
+		ts.assertEqual(natl::Size(5), TestType::getIndexOf<natl::f64>());
 
-		value.assign<"i8">(natl::i8(1));
+		TestType value;
+		value.assign(natl::i64(42));
 		ts.assertEqual(true, value.hasValue());
 		ts.assertEqual(false, value.doesNotHaveValue());
+		ts.assertEqual(true, value.isValue<natl::i64>());
+		ts.assertEqual(false, value.isValue<natl::f64>());
+		ts.assertEqual(true, value.isIndex<1>());
+		ts.assertEqual(natl::Size(1), value.getIndex());
+	}
+	NATL_REGISTER_TEST_CONSTEXPR(typeAndIndexState);
+
+	constexpr static void valueConstructionAndAssignment(test_suite_type& ts) noexcept {
+		TestType value(natl::i64(10));
+		ts.assertEqual(true, value.isValue<natl::i64>());
+		ts.assertEqual(natl::i64(10), value.get<1>());
+
+		value = natl::f64(20.5);
+		ts.assertEqual(true, value.isValue<natl::f64>());
+		ts.assertEqual(natl::f64(20.5), value.get<5>());
+
+		const natl::i8 source = natl::i8(-7);
+		value = source;
+		ts.assertEqual(true, value.isValue<natl::i8>());
+		ts.assertEqual(source, value.get<0>());
+	}
+	NATL_REGISTER_TEST_CONSTEXPR(valueConstructionAndAssignment);
+
+	constexpr static void copyAndMoveConstruction(test_suite_type& ts) noexcept {
+		TestType empty;
+		TestType emptyCopy(empty);
+		ts.assertEqual(false, emptyCopy.hasValue());
+		ts.assertEqual(TestType::getIndexOfEmpty(), emptyCopy.getIndex());
+
+		TestType source(natl::i64(123456789));
+		TestType copy(source);
+		ts.assertEqual(natl::i64(123456789), copy.get<1>());
+		source.assign(natl::i64(1));
+		ts.assertEqual(natl::i64(123456789), copy.get<1>());
+
+		TestType moveSource(natl::ui64(987654321));
+		TestType moved(natl::move(moveSource));
+		ts.assertEqual(true, moved.isValue<natl::ui64>());
+		ts.assertEqual(natl::ui64(987654321), moved.get<3>());
+	}
+	NATL_REGISTER_TEST_CONSTEXPR(copyAndMoveConstruction);
+
+	constexpr static void copyAndMoveAssignment(test_suite_type& ts) noexcept {
+		TestType lhs(natl::i64(100));
+		TestType sameType(natl::i64(200));
+		lhs = sameType;
+		ts.assertEqual(natl::i64(200), lhs.get<1>());
+
+		TestType differentType(natl::f64(123.5));
+		lhs = differentType;
+		ts.assertEqual(true, lhs.isValue<natl::f64>());
+		ts.assertEqual(natl::f64(123.5), lhs.get<5>());
+
+		TestType moveSource(natl::ui64(999));
+		lhs = natl::move(moveSource);
+		ts.assertEqual(true, lhs.isValue<natl::ui64>());
+		ts.assertEqual(natl::ui64(999), lhs.get<3>());
+
+		TestType empty;
+		lhs = empty;
+		ts.assertEqual(false, lhs.hasValue());
+		ts.assertEqual(TestType::getIndexOfEmpty(), lhs.getIndex());
+
+		lhs.assign(natl::i8(1));
+		lhs = natl::move(empty);
+		ts.assertEqual(false, lhs.hasValue());
+		ts.assertEqual(TestType::getIndexOfEmpty(), lhs.getIndex());
+	}
+	NATL_REGISTER_TEST_CONSTEXPR(copyAndMoveAssignment);
+
+	constexpr static void constGet(test_suite_type& ts) noexcept {
+		TestType value(natl::i64(123));
+		const TestType& constValue = value;
+		ts.assertEqual(natl::i64(123), constValue.get<1>());
+		ts.assertEqual(natl::Size(1), constValue.getIndex());
+	}
+	NATL_REGISTER_TEST_CONSTEXPR(constGet);
+};
+
+struct NamedVariantTestSuite : public natl::TestSuite<NamedVariantTestSuite> {};
+
+template<typename test_suite_type = NamedVariantTestSuite>
+struct NamedVariantTestSuiteTests {
+	using TestType = natl::NamedVariant<
+		natl::NamedElement<"i8", natl::i8>,
+		natl::NamedElement<"i64", natl::i64>,
+		natl::NamedElement<"ui8", natl::ui8>,
+		natl::NamedElement<"ui64", natl::ui64>,
+		natl::NamedElement<"f32", natl::f32>,
+		natl::NamedElement<"f64", natl::f64>
+	>;
+
+	template<natl::TemplateStringLiteral vName, natl::Size vIndex, typename ValueType>
+	constexpr static void assignByNameAndCheck(
+		test_suite_type& ts,
+		TestType& value,
+		const ValueType& first,
+		const ValueType& second
+	) noexcept {
+		value.template assign<vName>(first);
+		ts.assertEqual(first, value.template get<vName>());
+		ts.assertEqual(true, value.template isValue<vName>());
+		ts.assertEqual(true, value.template isIndex<vIndex>());
+		ts.assertEqual(natl::Size(vIndex), value.getIndex());
+
+		value.template assign<vName>(second);
+		ts.assertEqual(second, value.template get<vName>());
+	}
+
+	constexpr static void defaultState(test_suite_type& ts) noexcept {
+		TestType value;
+		ts.assertEqual(true, value.doesNotHaveValue());
+		ts.assertEqual(false, value.hasValue());
+		ts.assertEqual(TestType::getIndexOfEmpty(), value.getIndex());
+	}
+	NATL_REGISTER_TEST_CONSTEXPR(defaultState);
+
+	constexpr static void assignByName(test_suite_type& ts) noexcept {
+		TestType value;
+
+		assignByNameAndCheck<"i8", 0>(ts, value, natl::Limits<natl::i8>::min(), natl::Limits<natl::i8>::max());
+		assignByNameAndCheck<"i64", 1>(ts, value, natl::Limits<natl::i64>::min(), natl::Limits<natl::i64>::max());
+		assignByNameAndCheck<"ui8", 2>(ts, value, natl::Limits<natl::ui8>::min(), natl::Limits<natl::ui8>::max());
+		assignByNameAndCheck<"ui64", 3>(ts, value, natl::Limits<natl::ui64>::min(), natl::Limits<natl::ui64>::max());
+		assignByNameAndCheck<"f32", 4>(ts, value, natl::Limits<natl::f32>::min(), natl::Limits<natl::f32>::max());
+		assignByNameAndCheck<"f64", 5>(ts, value, natl::Limits<natl::f64>::min(), natl::Limits<natl::f64>::max());
+	}
+	NATL_REGISTER_TEST_CONSTEXPR(assignByName);
+
+	constexpr static void assignByIndex(test_suite_type& ts) noexcept {
+		TestType value;
+
+		value.assign<0>(natl::i8(12));
+		ts.assertEqual(natl::i8(12), value.get<0>());
+		value.assign<1>(natl::i64(123456));
+		ts.assertEqual(natl::i64(123456), value.get<1>());
+		value.assign<2>(natl::ui8(200));
+		ts.assertEqual(natl::ui8(200), value.get<2>());
+		value.assign<3>(natl::ui64(123456789));
+		ts.assertEqual(natl::ui64(123456789), value.get<3>());
+		value.assign<4>(natl::f32(12.5f));
+		ts.assertEqual(natl::f32(12.5f), value.get<4>());
+		value.assign<5>(natl::f64(123.25));
+		ts.assertEqual(natl::f64(123.25), value.get<5>());
+		ts.assertEqual(natl::Size(5), value.getIndex());
+	}
+	NATL_REGISTER_TEST_CONSTEXPR(assignByIndex);
+
+	constexpr static void nameAndIndexState(test_suite_type& ts) noexcept {
+		ts.assertEqual(natl::Size(0), TestType::getIndexOf<"i8">());
+		ts.assertEqual(natl::Size(1), TestType::getIndexOf<"i64">());
+		ts.assertEqual(natl::Size(2), TestType::getIndexOf<"ui8">());
+		ts.assertEqual(natl::Size(3), TestType::getIndexOf<"ui64">());
+		ts.assertEqual(natl::Size(4), TestType::getIndexOf<"f32">());
+		ts.assertEqual(natl::Size(5), TestType::getIndexOf<"f64">());
+
+		TestType value;
+		value.assign<"i8">(natl::i8(1));
+		ts.assertEqual(true, value.hasValue());
 		ts.assertEqual(true, value.isValue<"i8">());
 		ts.assertEqual(false, value.isValue<"i64">());
-		ts.assertEqual(NamedVariantTestType::getIndexOf<"i8">(), value.getIndex());
+		ts.assertEqual(true, value.isIndex<0>());
+		ts.assertEqual(natl::Size(0), value.getIndex());
 
 		value.assign<"f64">(natl::f64(2.0));
 		ts.assertEqual(true, value.isValue<"f64">());
 		ts.assertEqual(false, value.isValue<"i8">());
-		ts.assertEqual(NamedVariantTestType::getIndexOf<"f64">(), value.getIndex());
-	}
-	NATL_REGISTER_TEST_CONSTEXPR(namedVariantState);
-
-	constexpr static void namedVariantIndexMapping(test_suite_type& ts) noexcept {
-		ts.assertEqual(natl::Size(1), NamedVariantTestType::getIndexOf<"i8">());
-		ts.assertEqual(natl::Size(2), NamedVariantTestType::getIndexOf<"i64">());
-		ts.assertEqual(natl::Size(3), NamedVariantTestType::getIndexOf<"ui8">());
-		ts.assertEqual(natl::Size(4), NamedVariantTestType::getIndexOf<"ui64">());
-		ts.assertEqual(natl::Size(5), NamedVariantTestType::getIndexOf<"f32">());
-		ts.assertEqual(natl::Size(6), NamedVariantTestType::getIndexOf<"f64">());
-	}
-	NATL_REGISTER_TEST_CONSTEXPR(namedVariantIndexMapping);
-
-	constexpr static void namedVariantAssignByIndex(test_suite_type& ts) noexcept {
-		NamedVariantTestType value;
-
-		value.assign<0>(natl::i8(12));
-		ts.assertEqual(natl::i8(12), value.get<0>());
-		ts.assertEqual(natl::Size(1), value.getIndex());
-
-		value.assign<1>(natl::i64(123456));
-		ts.assertEqual(natl::i64(123456), value.get<1>());
-		ts.assertEqual(natl::Size(2), value.getIndex());
-
-		value.assign<2>(natl::ui8(200));
-		ts.assertEqual(natl::ui8(200), value.get<2>());
-		ts.assertEqual(natl::Size(3), value.getIndex());
-
-		value.assign<3>(natl::ui64(123456789));
-		ts.assertEqual(natl::ui64(123456789), value.get<3>());
-		ts.assertEqual(natl::Size(4), value.getIndex());
-
-		value.assign<4>(natl::f32(12.5f));
-		ts.assertEqual(natl::f32(12.5f), value.get<4>());
+		ts.assertEqual(true, value.isIndex<5>());
 		ts.assertEqual(natl::Size(5), value.getIndex());
-
-		value.assign<5>(natl::f64(123.25));
-		ts.assertEqual(natl::f64(123.25), value.get<5>());
-		ts.assertEqual(natl::Size(6), value.getIndex());
 	}
-	NATL_REGISTER_TEST_CONSTEXPR(namedVariantAssignByIndex);
+	NATL_REGISTER_TEST_CONSTEXPR(nameAndIndexState);
 
-	constexpr static void namedVariantSameTypeReassign(test_suite_type& ts) noexcept {
-		NamedVariantTestType value;
+	constexpr static void copyAndMoveConstruction(test_suite_type& ts) noexcept {
+		TestType empty;
+		TestType emptyCopy(empty);
+		ts.assertEqual(false, emptyCopy.hasValue());
+		ts.assertEqual(TestType::getIndexOfEmpty(), emptyCopy.getIndex());
 
-		value.assign<"i64">(natl::i64(10));
-		ts.assertEqual(natl::i64(10), value.get<"i64">());
-
-		value.assign<"i64">(natl::i64(20));
-		ts.assertEqual(natl::i64(20), value.get<"i64">());
-
-		value.assign<"i64">(natl::i64(-30));
-		ts.assertEqual(natl::i64(-30), value.get<"i64">());
-		ts.assertEqual(NamedVariantTestType::getIndexOf<"i64">(), value.getIndex());
-	}
-	NATL_REGISTER_TEST_CONSTEXPR(namedVariantSameTypeReassign);
-
-	constexpr static void namedVariantCopyConstruct(test_suite_type& ts) noexcept {
-		NamedVariantTestType value;
-		value.assign<"i64">(natl::i64(123456789));
-
-		NamedVariantTestType copy(value);
-
-		ts.assertEqual(true, copy.hasValue());
-		ts.assertEqual(value.getIndex(), copy.getIndex());
+		TestType source;
+		source.assign<"i64">(natl::i64(123456789));
+		TestType copy(source);
+		ts.assertEqual(natl::i64(123456789), copy.get<"i64">());
+		source.assign<"i64">(natl::i64(1));
 		ts.assertEqual(natl::i64(123456789), copy.get<"i64">());
 
-		value.assign<"i64">(natl::i64(1));
-
-		ts.assertEqual(natl::i64(1), value.get<"i64">());
-		ts.assertEqual(natl::i64(123456789), copy.get<"i64">());
+		TestType moveSource;
+		moveSource.assign<"ui64">(natl::ui64(987654321));
+		TestType moved(natl::move(moveSource));
+		ts.assertEqual(true, moved.isValue<"ui64">());
+		ts.assertEqual(natl::ui64(987654321), moved.get<"ui64">());
 	}
-	NATL_REGISTER_TEST_CONSTEXPR(namedVariantCopyConstruct);
+	NATL_REGISTER_TEST_CONSTEXPR(copyAndMoveConstruction);
 
-	constexpr static void namedVariantCopyConstructEmpty(test_suite_type& ts) noexcept {
-		NamedVariantTestType value;
-		NamedVariantTestType copy(value);
-
-		ts.assertEqual(false, copy.hasValue());
-		ts.assertEqual(true, copy.doesNotHaveValue());
-		ts.assertEqual(natl::Size(0), copy.getIndex());
-	}
-	NATL_REGISTER_TEST_CONSTEXPR(namedVariantCopyConstructEmpty);
-
-	constexpr static void namedVariantCopyAssignSameType(test_suite_type& ts) noexcept {
-		NamedVariantTestType lhs;
-		NamedVariantTestType rhs;
+	constexpr static void copyAndMoveAssignment(test_suite_type& ts) noexcept {
+		TestType lhs;
+		TestType rhs;
 
 		lhs.assign<"i64">(natl::i64(100));
 		rhs.assign<"i64">(natl::i64(200));
-
 		lhs = rhs;
-
 		ts.assertEqual(natl::i64(200), lhs.get<"i64">());
-		ts.assertEqual(rhs.getIndex(), lhs.getIndex());
-	}
-	NATL_REGISTER_TEST_CONSTEXPR(namedVariantCopyAssignSameType);
 
-	constexpr static void namedVariantCopyAssignDifferentType(test_suite_type& ts) noexcept {
-		NamedVariantTestType lhs;
-		NamedVariantTestType rhs;
-
-		lhs.assign<"i8">(natl::i8(10));
 		rhs.assign<"f64">(natl::f64(100.5));
-
 		lhs = rhs;
-
 		ts.assertEqual(true, lhs.isValue<"f64">());
 		ts.assertEqual(natl::f64(100.5), lhs.get<"f64">());
-		ts.assertEqual(rhs.getIndex(), lhs.getIndex());
-	}
-	NATL_REGISTER_TEST_CONSTEXPR(namedVariantCopyAssignDifferentType);
 
-	constexpr static void namedVariantAssignEmpty(test_suite_type& ts) noexcept {
-		NamedVariantTestType lhs;
-		NamedVariantTestType rhs;
+		TestType moveSource;
+		moveSource.assign<"ui64">(natl::ui64(999));
+		lhs = natl::move(moveSource);
+		ts.assertEqual(true, lhs.isValue<"ui64">());
+		ts.assertEqual(natl::ui64(999), lhs.get<"ui64">());
 
-		lhs.assign<"i64">(natl::i64(100));
-		lhs = rhs;
-
+		TestType empty;
+		lhs = empty;
 		ts.assertEqual(false, lhs.hasValue());
-		ts.assertEqual(true, lhs.doesNotHaveValue());
-		ts.assertEqual(natl::Size(0), lhs.getIndex());
-	}
-	NATL_REGISTER_TEST_CONSTEXPR(namedVariantAssignEmpty);
+		ts.assertEqual(TestType::getIndexOfEmpty(), lhs.getIndex());
 
-	constexpr static void namedVariantConstGet(test_suite_type& ts) noexcept {
-		NamedVariantTestType value;
+		lhs.assign<"i8">(natl::i8(1));
+		lhs = natl::move(empty);
+		ts.assertEqual(false, lhs.hasValue());
+		ts.assertEqual(TestType::getIndexOfEmpty(), lhs.getIndex());
+	}
+	NATL_REGISTER_TEST_CONSTEXPR(copyAndMoveAssignment);
+
+	constexpr static void constGet(test_suite_type& ts) noexcept {
+		TestType value;
 		value.assign<"i64">(natl::i64(123));
-
-		const NamedVariantTestType& constValue = value;
-
+		const TestType& constValue = value;
 		ts.assertEqual(natl::i64(123), constValue.get<"i64">());
-		ts.assertEqual(NamedVariantTestType::getIndexOf<"i64">(), constValue.getIndex());
-	}
-	NATL_REGISTER_TEST_CONSTEXPR(namedVariantConstGet);
-
-	constexpr static void variantDefault(test_suite_type& ts) noexcept {
-		VariantTestType value;
-
-		ts.assertEqual(true, value.doesNotHaveValue());
-		ts.assertEqual(false, value.hasValue());
-		ts.assertEqual(VariantTestType::getIndexOfEmpty(), value.getIndex());
-		ts.assertEqual(natl::Size(0), value.getIndex());
-	}
-	NATL_REGISTER_TEST_CONSTEXPR(variantDefault);
-
-	constexpr static void variantAssign(test_suite_type& ts) noexcept {
-		VariantTestType value;
-
-		value.assign<0>(natl::Limits<natl::i8>::min());
-		ts.assertEqual(natl::Limits<natl::i8>::min(), value.get<0>());
-		value.assign<0>(natl::Limits<natl::i8>::max());
-		ts.assertEqual(natl::Limits<natl::i8>::max(), value.get<0>());
-
-		value.assign<1>(natl::Limits<natl::i64>::min());
-		ts.assertEqual(natl::Limits<natl::i64>::min(), value.get<1>());
-		value.assign<1>(natl::Limits<natl::i64>::max());
-		ts.assertEqual(natl::Limits<natl::i64>::max(), value.get<1>());
-
-		value.assign<2>(natl::Limits<natl::ui8>::min());
-		ts.assertEqual(natl::Limits<natl::ui8>::min(), value.get<2>());
-		value.assign<2>(natl::Limits<natl::ui8>::max());
-		ts.assertEqual(natl::Limits<natl::ui8>::max(), value.get<2>());
-
-		value.assign<3>(natl::Limits<natl::ui64>::min());
-		ts.assertEqual(natl::Limits<natl::ui64>::min(), value.get<3>());
-		value.assign<3>(natl::Limits<natl::ui64>::max());
-		ts.assertEqual(natl::Limits<natl::ui64>::max(), value.get<3>());
-
-		value.assign<4>(natl::Limits<natl::f32>::min());
-		ts.assertEqual(natl::Limits<natl::f32>::min(), value.get<4>());
-		value.assign<4>(natl::Limits<natl::f32>::max());
-		ts.assertEqual(natl::Limits<natl::f32>::max(), value.get<4>());
-
-		value.assign<5>(natl::Limits<natl::f64>::min());
-		ts.assertEqual(natl::Limits<natl::f64>::min(), value.get<5>());
-		value.assign<5>(natl::Limits<natl::f64>::max());
-		ts.assertEqual(natl::Limits<natl::f64>::max(), value.get<5>());
-	}
-	NATL_REGISTER_TEST_CONSTEXPR(variantAssign);
-
-	constexpr static void variantIndex(test_suite_type& ts) noexcept {
-		VariantTestType value;
-
-		value.assign<0>(natl::i8(1));
-		ts.assertEqual(natl::Size(1), value.getIndex());
-
-		value.assign<1>(natl::i64(2));
-		ts.assertEqual(natl::Size(2), value.getIndex());
-
-		value.assign<2>(natl::ui8(3));
-		ts.assertEqual(natl::Size(3), value.getIndex());
-
-		value.assign<3>(natl::ui64(4));
-		ts.assertEqual(natl::Size(4), value.getIndex());
-
-		value.assign<4>(natl::f32(5));
-		ts.assertEqual(natl::Size(5), value.getIndex());
-
-		value.assign<5>(natl::f64(6));
-		ts.assertEqual(natl::Size(6), value.getIndex());
-	}
-	NATL_REGISTER_TEST_CONSTEXPR(variantIndex);
-
-	constexpr static void variantSameTypeReassign(test_suite_type& ts) noexcept {
-		VariantTestType value;
-
-		value.assign<1>(natl::i64(10));
-		ts.assertEqual(natl::i64(10), value.get<1>());
-
-		value.assign<1>(natl::i64(20));
-		ts.assertEqual(natl::i64(20), value.get<1>());
-
-		value.assign<1>(natl::i64(-30));
-		ts.assertEqual(natl::i64(-30), value.get<1>());
-		ts.assertEqual(natl::Size(2), value.getIndex());
-	}
-	NATL_REGISTER_TEST_CONSTEXPR(variantSameTypeReassign);
-
-	constexpr static void variantSwitchType(test_suite_type& ts) noexcept {
-		VariantTestType value;
-
-		value.assign<0>(natl::i8(10));
-		ts.assertEqual(natl::Size(1), value.getIndex());
-		ts.assertEqual(natl::i8(10), value.get<0>());
-
-		value.assign<5>(natl::f64(64.5));
-		ts.assertEqual(natl::Size(6), value.getIndex());
-		ts.assertEqual(natl::f64(64.5), value.get<5>());
-
-		value.assign<2>(natl::ui8(42));
-		ts.assertEqual(natl::Size(3), value.getIndex());
-		ts.assertEqual(natl::ui8(42), value.get<2>());
-
-		value.assign<3>(natl::ui64(999999));
-		ts.assertEqual(natl::Size(4), value.getIndex());
-		ts.assertEqual(natl::ui64(999999), value.get<3>());
-	}
-	NATL_REGISTER_TEST_CONSTEXPR(variantSwitchType);
-
-	constexpr static void variantCopyConstruct(test_suite_type& ts) noexcept {
-		VariantTestType value;
-		value.assign<1>(natl::i64(123456789));
-
-		VariantTestType copy(value);
-
-		ts.assertEqual(true, copy.hasValue());
-		ts.assertEqual(value.getIndex(), copy.getIndex());
-		ts.assertEqual(natl::i64(123456789), copy.get<1>());
-
-		value.assign<1>(natl::i64(1));
-
-		ts.assertEqual(natl::i64(1), value.get<1>());
-		ts.assertEqual(natl::i64(123456789), copy.get<1>());
-	}
-	NATL_REGISTER_TEST_CONSTEXPR(variantCopyConstruct);
-
-	constexpr static void variantCopyConstructEmpty(test_suite_type& ts) noexcept {
-		VariantTestType value;
-		VariantTestType copy(value);
-
-		ts.assertEqual(false, copy.hasValue());
-		ts.assertEqual(true, copy.doesNotHaveValue());
-		ts.assertEqual(natl::Size(0), copy.getIndex());
-	}
-	NATL_REGISTER_TEST_CONSTEXPR(variantCopyConstructEmpty);
-
-	constexpr static void variantMoveConstruct(test_suite_type& ts) noexcept {
-		VariantTestType value;
-		value.assign<3>(natl::ui64(987654321));
-
-		VariantTestType moved(natl::move(value));
-
-		ts.assertEqual(true, moved.hasValue());
-		ts.assertEqual(natl::Size(4), moved.getIndex());
-		ts.assertEqual(natl::ui64(987654321), moved.get<3>());
-	}
-	NATL_REGISTER_TEST_CONSTEXPR(variantMoveConstruct);
-
-	constexpr static void variantCopyAssignSameType(test_suite_type& ts) noexcept {
-		VariantTestType lhs;
-		VariantTestType rhs;
-
-		lhs.assign<1>(natl::i64(100));
-		rhs.assign<1>(natl::i64(200));
-
-		lhs = rhs;
-
-		ts.assertEqual(natl::i64(200), lhs.get<1>());
-		ts.assertEqual(rhs.getIndex(), lhs.getIndex());
-	}
-	NATL_REGISTER_TEST_CONSTEXPR(variantCopyAssignSameType);
-
-	constexpr static void variantCopyAssignDifferentType(test_suite_type& ts) noexcept {
-		VariantTestType lhs;
-		VariantTestType rhs;
-
-		lhs.assign<0>(natl::i8(100));
-		rhs.assign<5>(natl::f64(123.5));
-
-		lhs = rhs;
-
-		ts.assertEqual(natl::Size(6), lhs.getIndex());
-		ts.assertEqual(natl::f64(123.5), lhs.get<5>());
-	}
-	NATL_REGISTER_TEST_CONSTEXPR(variantCopyAssignDifferentType);
-
-	constexpr static void variantAssignEmpty(test_suite_type& ts) noexcept {
-		VariantTestType lhs;
-		VariantTestType rhs;
-
-		lhs.assign<1>(natl::i64(100));
-		lhs = rhs;
-
-		ts.assertEqual(false, lhs.hasValue());
-		ts.assertEqual(true, lhs.doesNotHaveValue());
-		ts.assertEqual(natl::Size(0), lhs.getIndex());
-	}
-	NATL_REGISTER_TEST_CONSTEXPR(variantAssignEmpty);
-
-	constexpr static void variantConstGet(test_suite_type& ts) noexcept {
-		VariantTestType value;
-		value.assign<1>(natl::i64(123));
-
-		const VariantTestType& constValue = value;
-
 		ts.assertEqual(natl::i64(123), constValue.get<1>());
-		ts.assertEqual(natl::Size(2), constValue.getIndex());
+		ts.assertEqual(natl::Size(1), constValue.getIndex());
 	}
-	NATL_REGISTER_TEST_CONSTEXPR(variantConstGet);
+	NATL_REGISTER_TEST_CONSTEXPR(constGet);
 };
 
 NATL_REGISTER_STD_TESTS(VariantTestSuite);
+NATL_REGISTER_STD_TESTS(NamedVariantTestSuite);
 
 NATL_TESTS_MAIN();

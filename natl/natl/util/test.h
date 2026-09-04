@@ -27,19 +27,19 @@ namespace natl {
 		TestTypeStdOut(TestTypeStdOut&&) noexcept { println("moved constructed"); }
 		TestTypeStdOut(const TestTypeStdOut&&) noexcept { println("const moved constructed"); }
 
-		//destructor 
+		//destructor
 		~TestTypeStdOut() noexcept { println("destructed\n"); }
 
 		//util
 		constexpr TestTypeStdOut& self() { return *this; }
 
-		//assignment 
+		//assignment
 		TestTypeStdOut& operator=(TestTypeStdOut&) { println("ref assigned"); return self(); }
 		TestTypeStdOut& operator=(const TestTypeStdOut&) { println("const ref assigned"); return self(); }
 		TestTypeStdOut& operator=(TestTypeStdOut&&) noexcept { println("moved assigned"); return self(); }
 		TestTypeStdOut& operator=(const TestTypeStdOut&&) noexcept { println("const moved assigned"); return self(); }
 	};
-	//custom 
+	//custom
 	struct TestTypeTrivialStdOut {
 		ui8 addressableData;
 	public:
@@ -50,19 +50,19 @@ namespace natl {
 		TestTypeTrivialStdOut(TestTypeTrivialStdOut&&) noexcept : addressableData(0) { println("moved constructed"); }
 		TestTypeTrivialStdOut(const TestTypeTrivialStdOut&&) noexcept : addressableData(0) { println("const moved constructed"); }
 
-		//destructor 
+		//destructor
 		~TestTypeTrivialStdOut() noexcept { println("destructed"); }
 
 		//util
 		constexpr TestTypeTrivialStdOut& self() { return *this; }
 
-		//assignment 
+		//assignment
 		TestTypeTrivialStdOut& operator=(TestTypeTrivialStdOut&) { println("ref assigned"); return self(); }
 		TestTypeTrivialStdOut& operator=(const TestTypeTrivialStdOut&) { println("const ref assigned"); return self(); }
 		TestTypeTrivialStdOut& operator=(TestTypeTrivialStdOut&&) noexcept { println("moved assigned"); return self(); }
 		TestTypeTrivialStdOut& operator=(const TestTypeTrivialStdOut&&) noexcept { println("const moved assigned"); return self(); }
 
-		//element access 
+		//element access
 		const ui8* getAddress() const noexcept { return &addressableData; }
 	};
 
@@ -402,7 +402,7 @@ namespace natl {
 	public:
 		constexpr TestSuiteBase() noexcept : data(nullptr), activeTestName("unknown"), failedActiveTest(false), rng() {}
 		constexpr ~TestSuiteBase() noexcept = default;
-	
+
 	public:
 		constexpr void setTestingConfig(ObserverPtr<TestSuiteTestingData> dataDst, ConstAsciiStringView suiteName) noexcept {
 			data = dataDst;
@@ -456,7 +456,7 @@ namespace natl {
 		void signalAssert(Bool success, const SourceLocation location) noexcept {
 			getAssertData(location).signalAssert(success);
 			getFailData().signalAssert(success);
-			
+
 			if (success) {
 				data->assertCount++;
 			} else {
@@ -646,21 +646,21 @@ namespace natl {
 				types.append("typename T" + str(j + 1))
 			print(", ".join(types), end='')
 			print(">\n", end='')
-    
+
 			print("constexpr void trace(", end='')
 			args = []
 			for j in range(i):
 				args.append("T" + str(j + 1) + "&& a" + str(j + 1))
 			print(", ".join(args), end='')
 			print(", const SourceLocation location = SourceLocation::current()) noexcept {\n", end='')
-    
+
 			print("traceImpl(location, ", end='');
 			params = []
 			for j in range(i):
 				params.append("forward(a" + str(j + 1) + ")")
 			print(", ".join(params), end='')
 			print(");\n", end='')
-    
+
 			print("}\n", end='')
 		*/
 		constexpr void trace(const SourceLocation location = SourceLocation::current()) noexcept {
@@ -712,21 +712,21 @@ namespace natl {
 				types.append("typename T" + str(j + 1))
 			print(", ".join(types), end='')
 			print(">\n", end='')
-    
+
 			print("constexpr void tassert(natl::Bool c,", end='')
 			args = []
 			for j in range(i):
 				args.append("T" + str(j + 1) + "&& a" + str(j + 1))
 			print(", ".join(args), end='')
 			print(", const SourceLocation location = SourceLocation::current()) noexcept {\n", end='')
-    
+
 			print("assertImpl(c, \"tassert\", location, ", end='');
 			params = []
 			for j in range(i):
 				params.append("forward<T" + str(j + 1) + ">(a" + str(j + 1) + ")")
 			print(", ".join(params), end='')
 			print(");\n", end='')
-    
+
 			print("}\n", end='')
 		*/
 		constexpr void tassert(Bool condition, const SourceLocation location = SourceLocation::current()) noexcept {
@@ -777,7 +777,7 @@ namespace natl {
 		constexpr TestSuite() noexcept = default;
 		constexpr TestSuite(const TestSuite&) noexcept = delete;
 		constexpr TestSuite(TestSuite&&) noexcept = delete;
-	
+
 		constexpr ~TestSuite() noexcept = default;
 
 		TestSuite& operator=(const TestSuite&) noexcept = delete;
